@@ -43,18 +43,21 @@ const {
 
 const { toast } = useToast()
 
-// Manual merge modal
+// Modal states
 const showMergeModal = ref(false)
 const selectedStreamer = ref('')
-
-// Confirm run modal
 const showConfirmModal = ref(false)
 const confirmTask = ref('')
 const confirmTarget = ref('')
 const confirmLabel = ref('')
 
-// Log tab
+// Tab navigation
 const activeTab = ref('history')
+const tabs = [
+  { id: 'history', name: '操作历史' },
+  { id: 'logs', name: '系统日志' },
+  { id: 'config', name: '设置' },
+]
 
 function handleRun(task, streamer) {
   confirmTask.value = task
@@ -65,13 +68,11 @@ function handleRun(task, streamer) {
 
 function confirmRun() {
   showConfirmModal.value = false
-
   const onComplete = () => {
     fetchStatus()
     fetchDetail()
     fetchConfig()
   }
-
   run(confirmTask.value, confirmTarget.value, { onComplete })
 }
 
@@ -82,13 +83,11 @@ function handleOpenManualMerge(streamer) {
 
 function handleMerge(files) {
   showMergeModal.value = false
-
   const onComplete = () => {
     fetchStatus()
     fetchDetail()
     fetchConfig()
   }
-
   startManualMerge(selectedStreamer.value, files, { onComplete })
 }
 
@@ -99,7 +98,6 @@ async function handleSaveConfig() {
 
 async function handleRecommend() {
   toast('正在分析配置...', 'info')
-  // TODO: Implement recommend
 }
 
 // Initialize
@@ -109,7 +107,6 @@ onMounted(async () => {
   await fetchSchedule()
   await fetchDetail()
 
-  // Auto-refresh every minute
   setInterval(async () => {
     if (!running.value) {
       await fetchDetail()
@@ -119,188 +116,129 @@ onMounted(async () => {
 </script>
 
 <template>
-  <TopNav :running="running" />
+  <div class="min-h-screen bg-gray-50">
+    <!-- Top navigation -->
+    <TopNav :running="running" />
 
-  <StatusDashboard
-    :disk-usage="diskUsage"
-    :total-g-b="totalGB"
-    :schedule="detail.schedule"
-    :running="running"
-    @run="handleRun"
-  />
+    <!-- Main content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-  <div class="main-grid">
-    <StreamerList
-      :streamers="streamers"
-      :total-g-b="totalGB"
-      :running="running"
-      :loading="false"
-      @run="handleRun"
-      @open-manual-merge="handleOpenManualMerge"
-      @refresh="fetchStatus"
+      <!-- Dashboard -->
+      <StatusDashboard
+        :disk-usage="diskUsage"
+        :total-g-b="totalGB"
+        :schedule="detail.schedule"
+        :running="running"
+        @run="handleRun"
+      />
+
+      <!-- Two-column layout (desktop) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left: Streamer list (2/3) -->
+        <div class="lg:col-span-2">
+          <StreamerList
+            :streamers="streamers"
+            :total-g-b="totalGB"
+            :running="running"
+            :loading="false"
+            @run="handleRun"
+            @open-manual-merge="handleOpenManualMerge"
+            @refresh="fetchStatus"
+          />
+        </div>
+
+        <!-- Right: Tab panel (1/3) -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <!-- Tab switcher -->
+          <div class="flex border-b border-gray-200">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              :class="[
+                'flex-1 px-4 py-3 text-sm font-medium transition-colors',
+                activeTab === tab.id
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              ]"
+            >
+              {{ tab.name }}
+            </button>
+          </div>
+
+          <!-- Tab content -->
+          <div class="h-[480px] overflow-hidden">
+            <TaskHistory v-show="activeTab === 'history'" />
+            <LogViewer v-show="activeTab === 'logs'" />
+            <ConfigPanel v-show="activeTab === 'config'" :config="config" :schedule="schedule" @save="handleSaveConfig" @recommend="handleRecommend" />
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Manual merge modal -->
+    <ManualMerge
+      :visible="showMergeModal"
+      :streamer="selectedStreamer"
+      @close="showMergeModal = false"
+      @merge="handleMerge"
     />
 
-    <div class="card">
-      <div class="card-head" style="gap: 12px;">
-        <select v-model="activeTab" class="tab-select" style="cursor:pointer; width: auto; min-width: 90px;">
-          <option value="history">操作历史</option>
-          <option value="logs">系统日志</option>
-        </select>
-      </div>
-
-      <div style="flex:1; display:flex; flex-direction:column; overflow:hidden">
-        <TaskHistory v-show="activeTab === 'history'" />
-        <LogViewer v-show="activeTab === 'logs'" />
-      </div>
-    </div>
-  </div>
-
-  <ConfigPanel
-    :config="config"
-    :schedule="schedule"
-    @save="handleSaveConfig"
-    @recommend="handleRecommend"
-  />
-
-  <ManualMerge
-    :visible="showMergeModal"
-    :streamer="selectedStreamer"
-    @close="showMergeModal = false"
-    @merge="handleMerge"
-  />
-
-  <!-- Confirm Run Modal -->
-  <div v-if="showConfirmModal" class="overlay" @click.self="showConfirmModal = false">
-    <div class="modal">
-      <div class="card-head" style="display:flex; justify-content:space-between;">
-        <h2 style="margin:0;">确认{{ confirmLabel }}</h2>
-        <button class="modal-x" @click="showConfirmModal = false">&times;</button>
-      </div>
-      <div style="padding:32px 24px;text-align:center">
-        <p style="font-size:15px;color:var(--text);font-weight:500;margin-bottom:8px">
-          即将对 <strong>{{ confirmTarget }}</strong> 执行 <b>{{ confirmLabel }}</b>
-        </p>
-        <p style="font-size:13px;color:var(--muted)">此操作将立即开始，且无法中途撤销。</p>
-      </div>
-      <div class="card-foot" style="display:flex;gap:12px;justify-content:flex-end">
-        <button class="btn btn-ghost auto-w" @click="showConfirmModal = false">取消</button>
-        <button class="btn btn-pri auto-w" @click="confirmRun">确认执行</button>
-      </div>
-    </div>
+    <!-- Confirm run modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" @click.self="showConfirmModal = false">
+          <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">确认{{ confirmLabel }}</h3>
+                <button @click="showConfirmModal = false" class="text-gray-400 hover:text-gray-600">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <p class="text-gray-600 mb-2">
+                即将对 <span class="font-semibold text-gray-900">{{ confirmTarget }}</span> 执行 <span class="font-semibold text-gray-900">{{ confirmLabel }}</span>
+              </p>
+              <p class="text-sm text-gray-500">此操作将立即开始，且无法中途撤销。</p>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+              <button @click="showConfirmModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-lg hover:bg-gray-50">
+                取消
+              </button>
+              <button @click="confirmRun" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                确认执行
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <style>
-.main-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: var(--gap);
-  align-items: stretch;
-  margin-bottom: var(--gap);
+/* Transition animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-@media (max-width: 1024px) {
-  .main-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
 }
 
-.card-head {
-  height: var(--row-h);
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg-sub) 50%, transparent);
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.card-body {
-  padding: 20px;
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.card-foot {
-  padding: 12px 20px;
-  background: var(--bg-sub);
-  border-top: 1px solid var(--border);
-}
-
-.tab-select {
-  border: none !important;
-  background: transparent !important;
-  font-weight: 600;
-  font-size: 14px;
-  padding-left: 0;
-  box-shadow: none !important;
-  color: var(--text) !important;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  animation: fade-in 0.2s ease-out;
-}
-
-.modal {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
-  animation: pop-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.modal-x {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--muted);
-  line-height: 1;
-  padding: 4px;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-
-.modal-x:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes pop-up {
-  0% { opacity: 0; transform: scale(0.96) translateY(10px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
 }
 </style>
