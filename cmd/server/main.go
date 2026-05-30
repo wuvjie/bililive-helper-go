@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -72,12 +73,10 @@ func main() {
 
 	// Serve index.html for Vue Router History mode
 	r.NoRoute(func(c *gin.Context) {
-		// 如果是 API 请求，返回 404
-		if len(c.Request.URL.Path) > 4 && c.Request.URL.Path[:5] == "/api/" {
+		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
 			c.JSON(404, gin.H{"error": "API not found"})
 			return
 		}
-		// 其他所有路由返回 index.html（支持 Vue Router History 模式）
 		c.File("./templates/index.html")
 	})
 
