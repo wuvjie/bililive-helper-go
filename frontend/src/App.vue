@@ -28,7 +28,7 @@ const {
 // 侧边栏宽度（动态，移动端无边距）
 const sidebarWidth = computed(() => {
   if (appStore.isMobile) return '0px'
-  return appStore.sidebarExpanded ? '220px' : '64px'
+  return appStore.sidebarExpanded ? '200px' : '64px'
 })
 
 // 移动端底部导航项
