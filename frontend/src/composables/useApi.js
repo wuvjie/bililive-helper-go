@@ -1,75 +1,54 @@
 import { ref } from 'vue'
 
+// 如果前后端分离开发，可以改为完整的后端地址，例如 http://localhost:8080/api
+const BASE_URL = '/api'
+
 export function useApi() {
+  const loading = ref(false)
   const error = ref(null)
 
-  async function request(url, options = {}) {
+  const fetchApi = async (endpoint, options = {}) => {
+    loading.value = true
     error.value = null
-
-    const defaultOptions = {
-      headers: {
-        'Accept': 'application/json',
-        ...options.headers
-      },
-      redirect: 'manual'
-    }
-
-    const mergedOptions = { ...defaultOptions, ...options }
-
     try {
-      const response = await fetch(url, mergedOptions)
+      const token = localStorage.getItem('token') || ''
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
 
-      // Handle 401 unauthorized
-      if (response.status === 401 || response.type === 'opaqueredirect') {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        ...options,
+        headers: { ...headers, ...options.headers }
+      })
+
+      if (response.status === 401) {
         window.location.href = '/login'
-        throw new Error('未登录')
+        throw new Error('未授权，请重新登录')
       }
 
-      // Handle 403 forbidden
-      if (response.status === 403) {
-        throw new Error('无权限')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || `请求失败: ${response.status}`)
       }
 
-      // Parse response
-      const contentType = response.headers.get('content-type') || ''
-
-      if (contentType.includes('application/json')) {
-        const data = await response.json()
-        if (!response.ok) {
-          throw new Error(data.error || '请求失败')
-        }
-        return data
-      } else {
-        const text = await response.text()
-        if (!response.ok) {
-          throw new Error(text || '请求失败')
-        }
-        return text
-      }
+      return data
     } catch (err) {
       error.value = err.message
       throw err
+    } finally {
+      loading.value = false
     }
   }
 
-  async function get(url) {
-    return request(url)
-  }
-
-  async function post(url, data) {
-    return request(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-  }
-
   return {
+    loading,
     error,
-    get,
-    post,
-    request
+    getStatus: () => fetchApi('/status'),
+    getConfig: () => fetchApi('/config'),
+    saveConfig: (data) => fetchApi('/config', { method: 'POST', body: JSON.stringify(data) }),
+    getHistory: () => fetchApi('/history'),
+    triggerMerge: (data) => fetchApi('/merge', { method: 'POST', body: JSON.stringify(data) })
   }
 }

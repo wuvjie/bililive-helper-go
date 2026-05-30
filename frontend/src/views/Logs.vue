@@ -1,64 +1,66 @@
-<script setup>
-import { ref, watch } from 'vue'
-import { useApi } from '../composables/useApi'
-
-const { get } = useApi()
-const logType = ref('merge')
-const logFiles = ref([])
-const selectedFile = ref('')
-const content = ref('')
-const contentHtml = ref('')
-const autoScroll = ref(true)
-
-async function loadLogFiles() {
-  try {
-    const data = await get('/api/logs/list/' + logType.value)
-    logFiles.value = data || []
-    if (data?.length) { selectedFile.value = data[0].filename; await showLog() }
-  } catch (e) { console.error(e) }
-}
-
-async function showLog() {
-  contentHtml.value = '<span style="color:#9ca3af">加载中...</span>'
-  try {
-    const r = await fetch('/api/logs/content/' + logType.value + '?file=' + selectedFile.value)
-    const t = await r.text()
-    content.value = t || '(空)'
-    contentHtml.value = highlight(content.value)
-    if (autoScroll.value) setTimeout(() => { const el = document.getElementById('logView'); if (el) el.scrollTop = el.scrollHeight }, 50)
-  } catch { contentHtml.value = '<span style="color:#ef4444">加载失败</span>' }
-}
-
-function highlight(t) {
-  return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/ERROR/gi,'<span style="color:#f87171;font-weight:600">ERROR</span>')
-    .replace(/WARN/gi,'<span style="color:#fbbf24;font-weight:600">WARN</span>')
-    .replace(/✅|SUCCESS/gi,'<span style="color:#34d399">$&</span>')
-    .replace(/❌/g,'<span style="color:#f87171">❌</span>')
-}
-
-watch(logType, () => loadLogFiles())
-loadLogFiles()
-</script>
-
 <template>
-  <div class="p-8">
-    <h1 class="text-xl font-semibold text-gray-900 mb-5">操作日志</h1>
+  <div class="feishu-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="margin: 0; font-size: 18px;">历史记录</h3>
+      <button class="feishu-btn feishu-btn-outline" @click="fetchHistory" :disabled="loading">刷新列表</button>
+    </div>
 
-    <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
-      <div class="flex items-center gap-3 p-4 border-b border-gray-100">
-        <select v-model="logType" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="merge">合并日志</option><option value="clean">清理日志</option></select>
-        <select v-model="selectedFile" @change="showLog" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option v-for="f in logFiles" :key="f.filename" :value="f.filename">{{ f.date }}</option>
-        </select>
-        <label class="flex items-center gap-1.5 text-sm text-gray-500 cursor-pointer whitespace-nowrap">
-          <input type="checkbox" v-model="autoScroll" class="rounded border-gray-300"> 自动滚动
-        </label>
-        <button @click="showLog" class="px-3 py-2 text-sm text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">刷新</button>
-      </div>
-      <div id="logView" class="bg-gray-900 p-4 h-[600px] overflow-auto font-mono text-xs leading-relaxed">
-        <div class="text-gray-300 whitespace-pre-wrap" v-html="contentHtml||content||'选择日志文件'"></div>
+    <div v-if="error" style="color: #f54a45; padding-bottom: 16px;">{{ error }}</div>
+
+    <div class="table-container">
+      <table v-if="historyList.length > 0" class="feishu-table">
+        <thead>
+          <tr>
+            <th>时间 (Time)</th>
+            <th>类型 (Type)</th>
+            <th>详情 (Details)</th>
+            <th>状态 (Status)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(item, index) in historyList" :key="index">
+            <td>{{ item.time || item.timestamp || '-' }}</td>
+            <td><span class="tag">{{ item.type || item.action || '系统' }}</span></td>
+            <td>{{ item.detail || item.message || JSON.stringify(item) }}</td>
+            <td :style="{ color: item.status === 'success' ? '#34a853' : (item.status === 'error' ? '#f54a45' : '#1f2329') }">
+              {{ item.status || '已完成' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-else-if="!loading" class="empty-state">
+        暂无历史数据
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useApi } from '../composables/useApi'
+
+const { loading, error, getHistory } = useApi()
+const historyList = ref([])
+
+const fetchHistory = async () => {
+  try {
+    const res = await getHistory()
+    historyList.value = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : [])
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+onMounted(fetchHistory)
+</script>
+
+<style scoped>
+.table-container { overflow-x: auto; border: 1px solid #dee0e3; border-radius: 6px; border-bottom: none; }
+.feishu-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.feishu-table th { background: #f8f9fa; padding: 12px 16px; color: #646a73; font-weight: 500; border-bottom: 1px solid #dee0e3; }
+.feishu-table td { padding: 12px 16px; border-bottom: 1px solid #dee0e3; color: #1f2329; }
+.feishu-table tbody tr:hover { background-color: #f5f6f7; }
+.tag { background: #e1eaff; color: #3370ff; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+.empty-state { text-align: center; padding: 40px; color: #8f959e; border-bottom: 1px solid #dee0e3;}
+</style>
