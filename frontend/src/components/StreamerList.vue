@@ -24,8 +24,6 @@ const emit = defineEmits(['run', 'openManualMerge', 'refresh'])
 
 const searchQuery = ref('')
 const currentPage = ref(1)
-const sortBy = ref('size')
-const sortAsc = ref(false)
 const pageSize = 10
 
 const filtered = computed(() => {
@@ -39,31 +37,11 @@ const filtered = computed(() => {
   return list
 })
 
-const sorted = computed(() => {
-  return [...filtered.value].sort((a, b) => {
-    let va, vb
-
-    if (sortBy.value === 'name') {
-      va = a.name
-      vb = b.name
-      return sortAsc.value ? va.localeCompare(vb) : vb.localeCompare(va)
-    } else if (sortBy.value === 'files') {
-      va = a.files
-      vb = b.files
-    } else {
-      va = a.size_gb
-      vb = b.size_gb
-    }
-
-    return sortAsc.value ? va - vb : vb - va
-  })
-})
-
-const totalPages = computed(() => Math.max(1, Math.ceil(sorted.value.length / pageSize)))
+const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize)))
 
 const paginated = computed(() => {
   const start = (currentPage.value - 1) * pageSize
-  return sorted.value.slice(start, start + pageSize)
+  return filtered.value.slice(start, start + pageSize)
 })
 
 watch(totalPages, (newVal) => {
@@ -72,15 +50,6 @@ watch(totalPages, (newVal) => {
   }
 })
 
-function toggleSort(col) {
-  if (sortBy.value === col) {
-    sortAsc.value = !sortAsc.value
-  } else {
-    sortBy.value = col
-    sortAsc.value = col === 'name'
-  }
-}
-
 function prevPage() {
   currentPage.value = Math.max(1, currentPage.value - 1)
 }
@@ -88,221 +57,147 @@ function prevPage() {
 function nextPage() {
   currentPage.value = Math.min(totalPages.value, currentPage.value + 1)
 }
+
+function getUsagePercent(sizeGB) {
+  return Math.min(100, (sizeGB / props.totalGB) * 100)
+}
+
+function getUsageColor(sizeGB) {
+  const percent = (sizeGB / props.totalGB) * 100
+  if (percent > 15) return 'bg-red-500'
+  if (percent > 10) return 'bg-amber-500'
+  return 'bg-blue-500'
+}
 </script>
 
 <template>
-  <div class="card">
-    <div class="card-head head-grid" style="grid-template-columns: auto 1fr auto;">
-      <h2 style="margin:0; font-size:14px;">主播 · {{ filtered.length }}</h2>
-
-      <div class="search" style="min-width: 0;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="M21 21l-4.35-4.35"/>
-        </svg>
-        <input type="text" v-model="searchQuery" placeholder="搜索主播...">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- 顶部工具栏 -->
+    <div class="p-4 border-b border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">
+          主播列表
+          <span class="ml-2 text-sm font-normal text-gray-500">({{ filtered.length }})</span>
+        </h2>
+        <button
+          @click="emit('refresh')"
+          :disabled="loading"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+        >
+          刷新
+        </button>
       </div>
 
-      <button class="btn btn-ghost auto-w" @click="emit('refresh')" :disabled="loading">
-        刷新
-      </button>
+      <!-- 搜索框 -->
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜索主播..."
+          class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+        >
+      </div>
     </div>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:35%" class="sortable" :class="{asc: sortBy==='name' && sortAsc, desc: sortBy==='name' && !sortAsc}" @click="toggleSort('name')">
-              主播
-            </th>
-            <th style="width:35%" class="sortable" :class="{asc: sortBy==='size' && sortAsc, desc: sortBy==='size' && !sortAsc}" @click="toggleSort('size')">
-              占用
-            </th>
-            <th style="width:12%;text-align:center" class="sortable" :class="{asc: sortBy==='files' && sortAsc, desc: sortBy==='files' && !sortAsc}" @click="toggleSort('files')">
-              文件
-            </th>
-            <th style="width:18%;text-align:right">
-              操作
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="s in paginated" :key="s.name">
-            <td style="font-weight:500;max-width:120px;" :title="s.name">
-              <span class="task-dot" style="display:inline-block;margin-right:6px" :class="s.is_running ? 'on' : 'off'"></span>
-              {{ s.name }}
-            </td>
-            <td>
-              <div style="display:flex;align-items:center;gap:12px">
-                <span style="font-family:var(--font-mono);font-size:12px;min-width:56px;color:var(--text2)">
-                  {{ s.size_gb.toFixed(1) }} GB
-                </span>
-                <div class="bar">
-                  <div class="bar-fill" :style="{width: Math.min(100, s.size_gb / totalGB * 100) + '%'}"></div>
-                </div>
-              </div>
-            </td>
-            <td style="color:var(--muted);font-family:var(--font-mono);text-align:center">
-              {{ s.files }}
-            </td>
-            <td style="text-align:right">
-              <div style="display:flex;justify-content:flex-end;gap:6px">
-                <button class="btn btn-ghost btn-sm auto-w" @click="emit('run', 'merge', s.name)" :disabled="running">
-                  合并
-                </button>
-                <button class="btn btn-ghost btn-sm auto-w" @click="emit('run', 'clean', s.name)" :disabled="running">
-                  清理
-                </button>
-                <button class="btn btn-ghost btn-sm auto-w" style="color:var(--info)" @click="emit('openManualMerge', s.name)" :disabled="running">
-                  手动
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="paginated.length === 0">
-            <td colspan="4" style="text-align:center;color:var(--faint);height:200px;vertical-align:middle">
-              <div style="font-size:13px">未找到匹配的主播数据</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- 主播卡片列表 -->
+    <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+      <div v-if="paginated.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400">
+        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <p class="text-sm">未找到匹配的主播</p>
+      </div>
+
+      <div
+        v-for="s in paginated"
+        :key="s.name"
+        class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+      >
+        <div class="flex items-start justify-between">
+          <!-- 左侧信息 -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-2">
+              <span :class="[
+                'w-2 h-2 rounded-full flex-shrink-0',
+                s.is_running ? 'bg-green-500 animate-pulse' : 'bg-gray-300'
+              ]"></span>
+              <h3 class="font-medium text-gray-900 truncate">{{ s.name }}</h3>
+            </div>
+
+            <div class="flex items-center gap-4 text-sm text-gray-500 mb-3">
+              <span class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                </svg>
+                {{ s.size_gb.toFixed(1) }} GB
+              </span>
+              <span class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                {{ s.files }} 文件
+              </span>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div
+                :class="['h-2 rounded-full transition-all duration-500', getUsageColor(s.size_gb)]"
+                :style="{ width: getUsagePercent(s.size_gb) + '%' }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- 右侧操作按钮 -->
+          <div class="flex flex-col gap-2 ml-4">
+            <button
+              @click="emit('run', 'merge', s.name)"
+              :disabled="running"
+              class="px-4 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              合并
+            </button>
+            <button
+              @click="emit('run', 'clean', s.name)"
+              :disabled="running"
+              class="px-4 py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              清理
+            </button>
+            <button
+              @click="emit('openManualMerge', s.name)"
+              :disabled="running"
+              class="px-4 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              手动
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div v-if="totalPages > 1" class="card-foot" style="display:flex;justify-content:center;align-items:center;gap:16px;">
-      <button class="btn btn-ghost btn-sm auto-w" @click="prevPage" :disabled="currentPage <= 1">
+    <!-- 分页 -->
+    <div v-if="totalPages > 1" class="px-4 py-3 border-t border-gray-100 flex items-center justify-center gap-4">
+      <button
+        @click="prevPage"
+        :disabled="currentPage <= 1"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
         上一页
       </button>
-      <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);">
+      <span class="text-sm text-gray-500">
         {{ currentPage }} / {{ totalPages }}
       </span>
-      <button class="btn btn-ghost btn-sm auto-w" @click="nextPage" :disabled="currentPage >= totalPages">
+      <button
+        @click="nextPage"
+        :disabled="currentPage >= totalPages"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
         下一页
       </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--card-shadow);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 600px;
-}
-
-.card-head {
-  height: var(--row-h);
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg-sub) 50%, transparent);
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 16px;
-}
-
-.head-grid {
-  display: grid;
-  gap: 16px;
-}
-
-.search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-}
-
-.search svg {
-  position: absolute;
-  left: 10px;
-  width: 14px;
-  height: 14px;
-  color: var(--muted);
-  pointer-events: none;
-}
-
-.search input {
-  padding-left: 30px;
-  width: 100%;
-}
-
-.table-container {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  scrollbar-gutter: stable;
-}
-
-th.sortable {
-  cursor: pointer;
-  user-select: none;
-}
-
-th.sortable:hover {
-  color: var(--text);
-}
-
-th.sortable::after {
-  content: '\2195';
-  margin-left: 4px;
-  opacity: 0.3;
-}
-
-th.asc::after {
-  content: '\2191';
-  opacity: 1;
-  color: var(--text);
-}
-
-th.desc::after {
-  content: '\2193';
-  opacity: 1;
-  color: var(--text);
-}
-
-.bar {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border-sub);
-  overflow: hidden;
-  flex: 1;
-}
-
-.bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  background: var(--pri);
-  transition: width 0.6s ease;
-}
-
-@media (max-width: 768px) {
-  .card {
-    min-height: auto;
-  }
-
-  .card-head {
-    padding: 0 12px;
-    height: auto;
-    min-height: 40px;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-
-  .table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  table {
-    min-width: 480px;
-  }
-}
-</style>
