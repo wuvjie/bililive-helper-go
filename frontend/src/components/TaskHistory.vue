@@ -57,7 +57,7 @@ function formatHistoryTime(ts) {
   yesterday.setDate(yesterday.getDate() - 1)
 
   if (date.toDateString() === yesterday.toDateString()) {
-    return `<span style="color:var(--muted)">昨天</span> ${t}`
+    return `昨天 ${t}`
   }
 
   return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${t}`
@@ -87,54 +87,86 @@ fetchHistory()
 </script>
 
 <template>
-  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:25%">时间</th>
-            <th style="width:55%">详情</th>
-            <th style="width:20%;text-align:center">状态</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in items" :key="r.id">
-            <td style="font-family:var(--font-mono);font-size:12px" v-html="formatHistoryTime(r.time)"></td>
-            <td style="font-size:12px">{{ r.detail || r.streamer }}</td>
-            <td style="text-align:center">
-              <span :style="{color: r.status === 'success' ? 'var(--ok)' : 'var(--err)', fontWeight: 'bold'}">
-                {{ r.status === 'success' ? '✓' : '✗' }}
-              </span>
-            </td>
-          </tr>
-          <tr v-if="items.length === 0">
-            <td colspan="3" style="text-align:center;color:var(--faint);height:200px;vertical-align:middle">
-              <div style="font-size:12px">暂无操作记录</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="h-full flex flex-col">
+    <!-- 顶部工具栏 -->
+    <div class="p-4 border-b border-gray-100">
+      <div class="flex items-center justify-between">
+        <select
+          v-model="taskFilter"
+          class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">全部任务</option>
+          <option value="merge">仅合并</option>
+          <option value="clean">仅清理</option>
+        </select>
+      </div>
     </div>
 
-    <div v-if="pages > 1" class="card-foot" style="display:flex;justify-content:center;gap:16px">
-      <button class="btn btn-ghost btn-sm auto-w" @click="prevPage" :disabled="currentPage <= 1">
+    <!-- 历史列表 -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-3">
+      <div v-if="loading" class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+
+      <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400">
+        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sm">暂无操作记录</p>
+      </div>
+
+      <div
+        v-for="r in items"
+        :key="r.id"
+        class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+      >
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-sm font-medium text-gray-900">
+              {{ r.task === 'merge' ? '合并' : '清理' }}任务
+            </span>
+          </div>
+          <p class="text-sm text-gray-500 truncate">
+            {{ r.detail || r.streamer }}
+          </p>
+          <p class="text-xs text-gray-400 mt-1">
+            {{ formatHistoryTime(r.time) }}
+          </p>
+        </div>
+        <div class="ml-4">
+          <span
+            :class="[
+              'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+              r.status === 'success'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            ]"
+          >
+            {{ r.status === 'success' ? '成功' : '失败' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div v-if="pages > 1" class="px-4 py-3 border-t border-gray-100 flex items-center justify-center gap-4">
+      <button
+        @click="prevPage"
+        :disabled="currentPage <= 1"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
         上一页
       </button>
-      <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);line-height:26px">
+      <span class="text-sm text-gray-500">
         {{ currentPage }} / {{ pages }}
       </span>
-      <button class="btn btn-ghost btn-sm auto-w" @click="nextPage" :disabled="currentPage >= pages">
+      <button
+        @click="nextPage"
+        :disabled="currentPage >= pages"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
         下一页
       </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.table-container {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  scrollbar-gutter: stable;
-}
-</style>
