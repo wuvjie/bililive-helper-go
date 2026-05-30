@@ -1,26 +1,58 @@
 <template>
-  <div class="feishu-app">
+  <div class="app-layout">
     <aside class="sidebar">
-      <div class="logo">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 8px; color: #3370ff;">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-        </svg>
-        <h2>BiliLive Helper</h2>
+      <div class="brand">
+        <div class="logo-icon">▶</div>
+        <h1 class="brand-name">BiliLive Helper</h1>
       </div>
-      <nav class="nav-menu">
-        <router-link to="/" class="nav-item">运行状态</router-link>
-        <router-link to="/merge" class="nav-item">手动合并</router-link>
-        <router-link to="/history" class="nav-item">任务历史</router-link>
-        <router-link to="/settings" class="nav-item">系统设置</router-link>
-      </nav>
+
+      <div class="nav-group">
+        <div class="nav-title">监控大盘</div>
+        <router-link to="/" class="nav-item">
+          <span class="icon">📊</span> 概览视图
+        </router-link>
+        <router-link to="/streamers" class="nav-item">
+          <span class="icon">👥</span> 主播管理
+        </router-link>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-title">系统与任务</div>
+        <router-link to="/tasks" class="nav-item">
+          <span class="icon">⚙️</span> 任务调度
+        </router-link>
+        <router-link to="/history" class="nav-item">
+          <span class="icon">📝</span> 审计日志
+        </router-link>
+        <router-link to="/settings" class="nav-item">
+          <span class="icon">🛠️</span> 全局设置
+        </router-link>
+      </div>
     </aside>
 
-    <main class="main-container">
+    <main class="main-wrapper">
       <header class="top-header">
-        <div class="breadcrumb">管理后台 / <span style="color: #1f2329; font-weight: 500;">{{ currentRouteName }}</span></div>
+        <div class="header-left">
+          <div class="breadcrumb">
+            管理后台 <span class="separator">/</span>
+            <span class="current">{{ currentRouteName }}</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn">🔔</button>
+          <div class="user-profile">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="avatar" class="avatar">
+            <span class="username">Admin</span>
+          </div>
+        </div>
       </header>
-      <div class="content-area">
-        <router-view></router-view>
+
+      <div class="page-content">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </div>
     </main>
   </div>
@@ -32,90 +64,120 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const routeNameMap = {
-  '/': '运行状态',
-  '/merge': '手动合并任务',
-  '/history': '任务执行历史',
-  '/settings': '全局系统设置'
+  '/': '概览视图 (Dashboard)',
+  '/streamers': '主播录播管理',
+  '/tasks': '任务调度中心',
+  '/history': '系统审计日志',
+  '/settings': '全局配置'
 }
 const currentRouteName = computed(() => routeNameMap[route.path] || '页面')
 </script>
 
-<style>
-/* --- 全局飞书风格 CSS --- */
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #f5f6f7;
-  color: #1f2329;
+<style scoped>
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-body);
 }
-* { box-sizing: border-box; }
 
-.feishu-app { display: flex; height: 100vh; overflow: hidden; }
-
-/* 侧边栏 */
+/* --- 侧边栏 --- */
 .sidebar {
-  width: 240px;
-  background-color: #ffffff;
-  border-right: 1px solid #dee0e3;
+  width: 260px;
+  background-color: var(--bg-base);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
+  z-index: 10;
 }
-.logo {
-  height: 60px;
+.brand {
+  height: 64px;
   display: flex;
   align-items: center;
   padding: 0 24px;
-  border-bottom: 1px solid #dee0e3;
+  border-bottom: 1px solid var(--border-color);
+  gap: 12px;
 }
-.logo h2 { font-size: 16px; font-weight: 600; margin: 0; }
-.nav-menu { padding: 16px 8px; display: flex; flex-direction: column; gap: 4px; }
-.nav-item {
-  padding: 10px 16px;
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary);
+  color: white;
   border-radius: 6px;
-  text-decoration: none;
-  color: #646a73;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
+}
+.brand-name { font-size: 16px; font-weight: 600; color: var(--text-title); margin: 0; }
+
+.nav-group { padding: 16px 12px 0; }
+.nav-title {
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--text-placeholder);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-regular);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 4px;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
 }
-.nav-item:hover { background-color: #f5f6f7; }
-.nav-item.router-link-active { background-color: #e1eaff; color: #3370ff; font-weight: 500; }
+.nav-item .icon { margin-right: 12px; font-size: 16px; }
+.nav-item:hover { background-color: var(--bg-hover); color: var(--text-title); }
 
-/* 主体 */
-.main-container { flex: 1; display: flex; flex-direction: column; }
+/* 选中态 */
+.nav-item.router-link-active {
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* --- 右侧主体 --- */
+.main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* Header */
 .top-header {
-  height: 60px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #dee0e3;
+  height: 64px;
+  background-color: var(--bg-base);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+  z-index: 9;
 }
-.breadcrumb { font-size: 14px; color: #8f959e; }
-.content-area { flex: 1; padding: 24px; overflow-y: auto; background-color: #f5f6f7; }
+.breadcrumb { font-size: 14px; color: var(--text-regular); }
+.breadcrumb .separator { margin: 0 8px; color: var(--text-placeholder); }
+.breadcrumb .current { color: var(--text-title); font-weight: 500; }
 
-/* 飞书风格 UI 组件池 (供各个 View 直接使用) */
-.feishu-card {
-  background: #ffffff; border: 1px solid #dee0e3; border-radius: 8px;
-  padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 2px rgba(31, 35, 41, 0.04);
+.header-right { display: flex; align-items: center; gap: 20px; }
+.icon-btn {
+  background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-regular);
 }
-.feishu-btn {
-  background-color: #3370ff; color: #fff; border: none; padding: 8px 16px;
-  border-radius: 6px; font-size: 14px; cursor: pointer; transition: 0.2s;
-  display: inline-flex; align-items: center; justify-content: center;
+.user-profile {
+  display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: var(--radius-md); cursor: pointer; transition: 0.2s;
 }
-.feishu-btn:hover { background-color: #5384ff; }
-.feishu-btn:active { background-color: #2458d3; }
-.feishu-btn:disabled { background-color: #a9c4ff; cursor: not-allowed; }
-.feishu-btn-outline {
-  background-color: #ffffff; color: #1f2329; border: 1px solid #dee0e3;
-}
-.feishu-btn-outline:hover { background-color: #f5f6f7; }
+.user-profile:hover { background-color: var(--bg-hover); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #e1eaff; }
+.username { font-size: 14px; font-weight: 500; color: var(--text-title); }
 
-.feishu-input {
-  width: 100%; padding: 8px 12px; border: 1px solid #dee0e3; border-radius: 6px;
-  font-size: 14px; outline: none; transition: border 0.2s; color: #1f2329;
+/* 核心内容区 */
+.page-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
 }
-.feishu-input:focus { border-color: #3370ff; box-shadow: 0 0 0 2px rgba(51,112,255,0.1); }
+
+/* 页面切换动画 */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(5px); }
 </style>
