@@ -68,7 +68,7 @@ onMounted(async () => {
       <Header />
 
       <!-- 页面内容 -->
-      <main :class="['pt-14 min-h-screen', appStore.isMobile ? 'pb-16' : '']">
+      <main :class="['pt-20 min-h-screen', appStore.isMobile ? 'pb-16' : '']">
         <router-view
           v-slot="{ Component }"
           :streamers="streamers"

@@ -57,25 +57,25 @@ function formatTime(ts) {
 </script>
 
 <template>
-  <div class="p-6">
+  <div class="p-8">
     <!-- 面包屑 -->
-    <div class="mb-6">
-      <nav class="flex items-center text-sm text-gray-500">
+    <div class="mb-8">
+      <nav class="flex items-center text-sm text-gray-500 mb-2">
         <span class="text-gray-400">首页</span>
         <svg class="w-4 h-4 mx-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
         <span class="text-gray-700 font-medium">仪表盘</span>
       </nav>
-      <h1 class="mt-2 text-2xl font-bold text-gray-900">系统概览</h1>
+      <h1 class="text-3xl font-bold text-gray-900">系统概览</h1>
     </div>
 
     <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div
         v-for="stat in stats"
         :key="stat.label"
-        class="bg-white rounded-xl p-5 border border-gray-100 hover:shadow-md transition-all"
+        class="bg-white rounded-xl p-6 border border-gray-100 hover:shadow-lg transition-all"
       >
         <div class="flex items-center justify-between">
           <div>
