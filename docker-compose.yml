@@ -1,0 +1,40 @@
+services:
+  bililive-helper-go:
+    build: .
+    image: bililive-helper-go
+    container_name: bililive-helper-go
+    ports:
+      - "5689:5000"
+    volumes:
+      - /vol2:/vol2
+      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go
+      - /vol1/1000/docker/bililive-helper-go/templates:/app/templates
+    environment:
+      - PASSWORD=8888
+      - TARGET_DIR=/vol2/1000/video/bililive-go/抖音
+      - LOG_DIR=/vol1/1000/docker/bililive-helper-go
+      - SECRET_KEY=bililive-helper-secret-key
+      - TZ=Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '3.0'
+          memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - nas
+
+networks:
+  nas:
+    external: true

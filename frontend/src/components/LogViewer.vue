@@ -77,10 +77,10 @@ loadLogFiles()
 <template>
   <div class="h-full flex flex-col bg-gray-950">
     <!-- 顶部工具栏 -->
-    <div class="flex items-center gap-3 p-4 bg-gray-900 border-b border-gray-800">
+    <div class="flex items-center gap-4 p-4 bg-gray-900 border-b border-gray-800">
       <select
         v-model="logType"
-        class="px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        class="px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option value="merge">合并</option>
         <option value="clean">清理</option>
@@ -89,14 +89,14 @@ loadLogFiles()
       <select
         v-model="selectedFile"
         @change="showLog"
-        class="flex-1 px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        class="flex-1 px-4 py-2.5 bg-gray-800 text-white border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option v-for="f in logFiles" :key="f.filename" :value="f.filename">
           {{ f.date }}
         </option>
       </select>
 
-      <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+      <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer px-3 py-2">
         <input
           type="checkbox"
           v-model="autoScroll"
@@ -107,7 +107,7 @@ loadLogFiles()
 
       <button
         @click="showLog"
-        class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600 transition-colors"
+        class="px-5 py-2.5 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600 transition-colors"
       >
         刷新
       </button>
@@ -116,9 +116,9 @@ loadLogFiles()
     <!-- 日志内容 -->
     <div
       id="histLog"
-      class="flex-1 overflow-auto p-4 font-mono text-sm leading-relaxed"
+      class="flex-1 overflow-auto p-5 font-mono text-sm leading-relaxed"
     >
-      <div class="text-gray-300" v-html="contentHtml || content || '选择日志文件'"></div>
+      <div class="text-gray-300 whitespace-pre-wrap" v-html="contentHtml || content || '选择日志文件'"></div>
     </div>
   </div>
 </template>

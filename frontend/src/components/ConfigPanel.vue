@@ -128,7 +128,7 @@ function handleSave() {
     </div>
 
     <!-- 表单内容 -->
-    <div class="p-4 space-y-6">
+    <div class="p-5 space-y-6">
 
       <!-- 存储目录 -->
       <div>
@@ -149,11 +149,11 @@ function handleSave() {
           placeholder="留存,高能,勿删"
           class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-        <p class="text-xs text-gray-500 mt-1">含此词缀录像绝对免删（逗号分隔）</p>
+        <p class="text-xs text-gray-500 mt-1.5">含此词缀录像绝对免删（逗号分隔）</p>
       </div>
 
       <!-- 阈值设置 -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-5">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">空间警戒阈值</label>
           <div class="flex items-center gap-2">
@@ -181,7 +181,7 @@ function handleSave() {
       </div>
 
       <!-- 其他设置 -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-5">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">保底留存件数</label>
           <div class="flex items-center gap-2">
@@ -209,7 +209,7 @@ function handleSave() {
       </div>
 
       <!-- 时间设置 -->
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-3 gap-5">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">新文件保护期</label>
           <div class="flex items-center gap-2">

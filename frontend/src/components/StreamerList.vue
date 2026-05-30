@@ -103,74 +103,74 @@ function getUsageColor(sizeGB) {
     </div>
 
     <!-- 主播卡片列表 -->
-    <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-      <div v-if="paginated.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400">
-        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="p-5 space-y-4 max-h-[600px] overflow-y-auto">
+      <div v-if="paginated.length === 0" class="flex flex-col items-center justify-center py-16 text-gray-400">
+        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        <p class="text-sm">未找到匹配的主播</p>
+        <p class="text-base">未找到匹配的主播</p>
       </div>
 
       <div
         v-for="s in paginated"
         :key="s.name"
-        class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        class="p-5 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all"
       >
-        <div class="flex items-start justify-between">
+        <div class="flex items-center justify-between">
           <!-- 左侧信息 -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-2">
+          <div class="flex-1 min-w-0 pr-6">
+            <div class="flex items-center gap-3 mb-3">
               <span :class="[
-                'w-2 h-2 rounded-full flex-shrink-0',
+                'w-3 h-3 rounded-full flex-shrink-0',
                 s.is_running ? 'bg-green-500 animate-pulse' : 'bg-gray-300'
               ]"></span>
-              <h3 class="font-medium text-gray-900 truncate">{{ s.name }}</h3>
+              <h3 class="text-lg font-semibold text-gray-900 truncate">{{ s.name }}</h3>
             </div>
 
-            <div class="flex items-center gap-4 text-sm text-gray-500 mb-3">
-              <span class="flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center gap-6 text-sm text-gray-500 mb-4">
+              <span class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
                 </svg>
-                {{ s.size_gb.toFixed(1) }} GB
+                <span class="font-medium">{{ s.size_gb.toFixed(1) }} GB</span>
               </span>
-              <span class="flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                {{ s.files }} 文件
+                <span class="font-medium">{{ s.files }} 文件</span>
               </span>
             </div>
 
             <!-- 进度条 -->
-            <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="w-full bg-gray-100 rounded-full h-2.5">
               <div
-                :class="['h-2 rounded-full transition-all duration-500', getUsageColor(s.size_gb)]"
+                :class="['h-2.5 rounded-full transition-all duration-500', getUsageColor(s.size_gb)]"
                 :style="{ width: getUsagePercent(s.size_gb) + '%' }"
               ></div>
             </div>
           </div>
 
-          <!-- 右侧操作按钮 -->
-          <div class="flex flex-col gap-2 ml-4">
+          <!-- 右侧操作按钮 - 水平排列 -->
+          <div class="flex items-center gap-3">
             <button
               @click="emit('run', 'merge', s.name)"
               :disabled="running"
-              class="px-4 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-5 py-2.5 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
             >
               合并
             </button>
             <button
               @click="emit('run', 'clean', s.name)"
               :disabled="running"
-              class="px-4 py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-5 py-2.5 text-sm font-medium text-red-600 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               清理
             </button>
             <button
               @click="emit('openManualMerge', s.name)"
               :disabled="running"
-              class="px-4 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
             >
               手动
             </button>
