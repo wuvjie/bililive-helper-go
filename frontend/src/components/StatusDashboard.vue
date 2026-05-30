@@ -41,243 +41,121 @@ function formatSimpleTime(ts) {
 
   return `${t} (${diff < 60 ? Math.round(diff) + 'm' : Math.round(diff / 60) + 'h'}后)`
 }
+
+function getDiskColor(usage) {
+  if (usage > 85) return 'text-red-600'
+  if (usage > 65) return 'text-amber-600'
+  return 'text-gray-900'
+}
+
+function getDiskBarColor(usage) {
+  if (usage > 85) return 'bg-red-500'
+  if (usage > 65) return 'bg-amber-500'
+  return 'bg-gray-900'
+}
 </script>
 
 <template>
-  <section class="statusbar" aria-label="系统状态">
-    <div class="gauge">
-      <div class="gauge-val" :style="{color: diskUsage > 85 ? 'var(--err)' : diskUsage > 65 ? 'var(--warn)' : 'var(--text)'}">
-        {{ diskUsage.toFixed(1) }}%
-      </div>
-      <div class="gauge-lbl">
-        磁盘占用
-        <span style="font-family:var(--font-mono);font-weight:500;color:var(--faint);margin-left:6px">
-          · {{ (totalGB * (diskUsage / 100)).toFixed(1) }}G / {{ totalGB.toFixed(1) }}G
-        </span>
-      </div>
-      <div class="gauge-track">
-        <div class="gauge-fill" :style="{width: diskUsage + '%', background: diskUsage > 85 ? 'var(--err)' : diskUsage > 65 ? 'var(--warn)' : 'var(--text)'}"></div>
-      </div>
-    </div>
+  <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
 
-    <div class="tasks" v-if="schedule">
-      <div class="task-widget">
-        <div class="task-widget-head">
-          <span class="task-dot" :class="schedule.merge?.enabled ? 'on' : 'off'" style="margin-right:6px"></span>
-          自动合并
+      <!-- 磁盘占用仪表盘 -->
+      <div class="flex flex-col items-center">
+        <div class="relative w-32 h-32">
+          <!-- 环形进度条背景 -->
+          <svg class="w-32 h-32 transform -rotate-90">
+            <circle cx="64" cy="64" r="56" stroke="#e5e7eb" stroke-width="8" fill="none" />
+            <circle
+              cx="64" cy="64" r="56"
+              :class="getDiskBarColor(diskUsage)"
+              stroke-width="8"
+              fill="none"
+              stroke-linecap="round"
+              :stroke-dasharray="351.86"
+              :stroke-dashoffset="351.86 * (1 - diskUsage / 100)"
+              class="transition-all duration-1000 ease-out"
+            />
+          </svg>
+          <!-- 中心数值 -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span :class="['text-2xl font-bold', getDiskColor(diskUsage)]">
+              {{ diskUsage.toFixed(1) }}%
+            </span>
+            <span class="text-xs text-gray-500 mt-1">
+              {{ (totalGB * (diskUsage / 100)).toFixed(1) }}G / {{ totalGB.toFixed(1) }}G
+            </span>
+          </div>
         </div>
-        <div class="task-widget-data">
-          <span class="task-widget-time" :style="{color: !schedule.merge?.enabled ? 'var(--faint)' : ''}">
-            {{ schedule.merge?.enabled ? formatSimpleTime(schedule.merge?.next_run) : '-- : --' }}
-          </span>
-          <span class="task-widget-interval">
-            {{ schedule.merge?.enabled ? schedule.merge?.interval + ' MIN' : '已暂停' }}
-          </span>
+        <span class="text-sm font-medium text-gray-600 mt-3">磁盘占用</span>
+      </div>
+
+      <!-- 自动合并状态 -->
+      <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+        <div :class="[
+          'w-10 h-10 rounded-full flex items-center justify-center',
+          schedule?.merge?.enabled ? 'bg-green-100' : 'bg-gray-100'
+        ]">
+          <span :class="[
+            'w-3 h-3 rounded-full',
+            schedule?.merge?.enabled ? 'bg-green-500 animate-pulse' : 'bg-gray-300'
+          ]"></span>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900">自动合并</p>
+          <p class="text-sm text-gray-500">
+            {{ schedule?.merge?.enabled ? formatSimpleTime(schedule?.merge?.next_run) : '已暂停' }}
+          </p>
+          <p v-if="schedule?.merge?.enabled" class="text-xs text-gray-400 mt-0.5">
+            间隔 {{ schedule?.merge?.interval }} 分钟
+          </p>
         </div>
       </div>
 
-      <div class="task-widget">
-        <div class="task-widget-head">
-          <span class="task-dot" :class="schedule.clean?.enabled ? 'on' : 'off'" style="margin-right:6px"></span>
-          自动清理
+      <!-- 自动清理状态 -->
+      <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+        <div :class="[
+          'w-10 h-10 rounded-full flex items-center justify-center',
+          schedule?.clean?.enabled ? 'bg-blue-100' : 'bg-gray-100'
+        ]">
+          <span :class="[
+            'w-3 h-3 rounded-full',
+            schedule?.clean?.enabled ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'
+          ]"></span>
         </div>
-        <div class="task-widget-data">
-          <span class="task-widget-time" :style="{color: !schedule.clean?.enabled ? 'var(--faint)' : ''}">
-            {{ schedule.clean?.enabled ? formatSimpleTime(schedule.clean?.next_run) : '-- : --' }}
-          </span>
-          <span class="task-widget-interval">
-            {{ schedule.clean?.enabled ? schedule.clean?.interval + ' MIN' : '已暂停' }}
-          </span>
+        <div>
+          <p class="text-sm font-medium text-gray-900">自动清理</p>
+          <p class="text-sm text-gray-500">
+            {{ schedule?.clean?.enabled ? formatSimpleTime(schedule?.clean?.next_run) : '已暂停' }}
+          </p>
+          <p v-if="schedule?.clean?.enabled" class="text-xs text-gray-400 mt-0.5">
+            间隔 {{ schedule?.clean?.interval }} 分钟
+          </p>
         </div>
       </div>
-    </div>
 
-    <div class="actions">
-      <button class="btn btn-ghost auto-w" @click="emit('run', 'merge', '')" :disabled="running">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-        </svg>
-        全局合并
-      </button>
-      <button class="btn btn-ghost auto-w" style="color:var(--err)" @click="emit('run', 'clean', '')" :disabled="running">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-        </svg>
-        全局清理
-      </button>
+      <!-- 操作按钮 -->
+      <div class="flex flex-col gap-3">
+        <button
+          @click="emit('run', 'merge', '')"
+          :disabled="running"
+          class="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium text-sm hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          全局合并
+        </button>
+        <button
+          @click="emit('run', 'clean', '')"
+          :disabled="running"
+          class="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+          全局清理
+        </button>
+      </div>
     </div>
   </section>
 </template>
-
-<style scoped>
-.statusbar {
-  display: grid;
-  grid-template-columns: 200px 1fr auto;
-  gap: 40px;
-  align-items: center;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px 32px;
-  margin-bottom: 24px;
-  box-shadow: var(--card-shadow);
-}
-
-.gauge {
-  text-align: center;
-}
-
-.gauge-val {
-  font-family: var(--font-mono);
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -1px;
-}
-
-.gauge-lbl {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 500;
-  margin-top: 6px;
-}
-
-.gauge-track {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border-sub);
-  margin-top: 10px;
-  overflow: hidden;
-}
-
-.gauge-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  background-image: linear-gradient(45deg, rgba(255,255,255,0.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.15) 75%, transparent 75%, transparent);
-  background-size: 1rem 1rem;
-  animation: barberpole 2s linear infinite;
-}
-
-@keyframes barberpole {
-  100% { background-position: 100% 100%; }
-}
-
-.tasks {
-  display: flex;
-  align-items: center;
-  gap: 48px;
-  flex: 1;
-  padding-left: 40px;
-  border-left: 1px solid var(--border);
-  height: 56px;
-}
-
-.task-widget {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  min-width: 160px;
-}
-
-.task-widget-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.task-widget-data {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.task-widget-time {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.task-widget-interval {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text2);
-  background: var(--border-sub);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.task-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.task-dot.on {
-  background: var(--ok);
-  box-shadow: 0 0 0 3px rgba(5,150,105,0.15);
-}
-
-.task-dot.off {
-  background: var(--border);
-}
-
-.actions {
-  display: flex;
-  gap: 12px;
-}
-
-@media (max-width: 1024px) {
-  .statusbar {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 20px;
-  }
-
-  .gauge {
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .gauge-track {
-    display: none;
-  }
-
-  .tasks {
-    flex-wrap: wrap;
-    gap: 16px;
-    padding-left: 0;
-    border-left: none;
-    height: auto;
-    border-top: 1px solid var(--border);
-    padding-top: 12px;
-  }
-
-  .task-widget {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .actions {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .actions .btn {
-    flex: 1;
-    min-width: 0;
-  }
-}
-</style>
