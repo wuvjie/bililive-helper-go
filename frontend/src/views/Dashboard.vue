@@ -1,6 +1,12 @@
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAppStore } from '../stores/app'
+import { useTaskRunner } from '../composables/useTaskRunner'
+
+const router = useRouter()
+const appStore = useAppStore()
+const { run } = useTaskRunner()
 
 const props = defineProps({
   streamers: { type: Array, default: () => [] },
@@ -10,8 +16,6 @@ const props = defineProps({
   config: { type: Object, default: () => ({}) },
   schedule: { type: Object, default: () => ({}) }
 })
-
-const appStore = useAppStore()
 
 // 统计数据
 const stats = computed(() => [
@@ -53,6 +57,22 @@ function formatTime(ts) {
   if (!ts || ts <= 0) return '--:--'
   const date = new Date(ts * 1000)
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+}
+
+function handleMerge() {
+  if (confirm('确认执行全局合并？')) {
+    run('merge', '')
+  }
+}
+
+function handleClean() {
+  if (confirm('确认执行全局清理？')) {
+    run('clean', '')
+  }
+}
+
+function goToSettings() {
+  router.push('/settings')
 }
 </script>
 
@@ -100,8 +120,11 @@ function formatTime(ts) {
       <!-- 快捷操作 -->
       <div class="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-100">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">快捷操作</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button class="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors group">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <button
+            @click="handleMerge"
+            class="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+          >
             <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -110,7 +133,10 @@ function formatTime(ts) {
             <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600">全局合并</span>
           </button>
 
-          <button class="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors group">
+          <button
+            @click="handleClean"
+            class="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors group"
+          >
             <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -119,16 +145,10 @@ function formatTime(ts) {
             <span class="text-sm font-medium text-gray-700 group-hover:text-red-600">全局清理</span>
           </button>
 
-          <button class="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-green-50 hover:text-green-600 transition-colors group">
-            <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-              </svg>
-            </div>
-            <span class="text-sm font-medium text-gray-700 group-hover:text-green-600">添加主播</span>
-          </button>
-
-          <button class="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-colors group">
+          <button
+            @click="goToSettings"
+            class="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-colors group"
+          >
             <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
