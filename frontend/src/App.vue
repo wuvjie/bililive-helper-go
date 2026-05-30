@@ -27,8 +27,8 @@ const {
 
 // 侧边栏宽度（动态，移动端无边距）
 const sidebarWidth = computed(() => {
-  if (appStore.isMobile) return 'ml-0'
-  return appStore.sidebarExpanded ? 'ml-[220px]' : 'ml-[64px]'
+  if (appStore.isMobile) return '0px'
+  return appStore.sidebarExpanded ? '220px' : '64px'
 })
 
 // 移动端底部导航项
@@ -62,7 +62,7 @@ onMounted(async () => {
     <Sidebar />
 
     <!-- 主内容区 -->
-    <div :class="['transition-all duration-300', sidebarWidth]">
+    <div class="transition-all duration-300" :style="{ marginLeft: sidebarWidth }">
 
       <!-- 顶部导航栏 -->
       <Header />
