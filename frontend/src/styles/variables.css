@@ -1,44 +1,23 @@
-/* --- 全局 Design Tokens --- */
+/* Feishu Design Tokens */
 :root {
   color-scheme: light;
-  --row-h: 52px;
-  --gap: 24px;
-  --radius: 10px;
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px -8px rgba(0,0,0,0.08);
-
-  --bg: #fafafa;
-  --bg-sub: #f5f5f5;
-  --card: #ffffff;
-  --text: #171717;
-  --text2: #666666;
-  --muted: #888888;
-  --faint: #a3a3a3;
-  --border: #eaeaea;
-  --border-sub: #f0f0f0;
-  --hover: #f9f9f9;
-
-  --pri: #000000;
-  --pri-fg: #ffffff;
-  --pri-r: rgba(0, 0, 0, 0.15);
-  --pri-s: rgba(0, 0, 0, 0.04);
-
-  --ok: #059669; --ok-s: #ecfdf5;
-  --err: #e11d48; --err-s: #fff1f2;
-  --warn: #d97706; --warn-s: #fffbeb;
-  --info: #0284c7; --info-s: #f0f9ff;
-
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --feishu-blue: #3370ff;
+  --feishu-blue-light: #e8f3ff;
+  --feishu-bg: #f7f8fa;
+  --feishu-card: #ffffff;
+  --feishu-border: #dee0e3;
+  --feishu-border-light: #f0f1f5;
+  --feishu-text-primary: #1f2329;
+  --feishu-text-secondary: #4e5969;
+  --feishu-text-tertiary: #86909c;
+  --feishu-text-caption: #86909c;
+  --feishu-success: #00b578;
+  --feishu-danger: #f54a45;
+  --feishu-warning: #ff7d00;
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", Monaco, Menlo, "Courier New", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #0a0a0a; --bg-sub: #111111; --card: #141414;
-    --text: #ededed; --text2: #a1a1aa; --muted: #71717a; --faint: #3f3f46;
-    --border: #27272a; --border-sub: #1e1e1e; --hover: #1f1f1f;
-    --pri: #ffffff; --pri-fg: #000000;
-    --pri-r: rgba(255, 255, 255, 0.2); --pri-s: rgba(255, 255, 255, 0.08);
-  }
-  select { background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important; }
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); color: var(--feishu-text-primary); background: var(--feishu-bg); font-size: 14px; line-height: 1.5715; -webkit-font-smoothing: antialiased; }
+input, select, textarea, button { font-family: inherit; }

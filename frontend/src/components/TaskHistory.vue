@@ -103,40 +103,40 @@ fetchHistory()
     </div>
 
     <!-- 历史列表 -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-3">
-      <div v-if="loading" class="flex items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <div class="flex-1 overflow-y-auto p-5 space-y-4">
+      <div v-if="loading" class="flex items-center justify-center py-16">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
       </div>
 
-      <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400">
-        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-16 text-gray-400">
+        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <p class="text-sm">暂无操作记录</p>
+        <p class="text-base">暂无操作记录</p>
       </div>
 
       <div
         v-for="r in items"
         :key="r.id"
-        class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        class="flex items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all"
       >
         <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-sm font-medium text-gray-900">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-base font-semibold text-gray-900">
               {{ r.task === 'merge' ? '合并' : '清理' }}任务
             </span>
           </div>
-          <p class="text-sm text-gray-500 truncate">
+          <p class="text-sm text-gray-600 truncate mb-1">
             {{ r.detail || r.streamer }}
           </p>
-          <p class="text-xs text-gray-400 mt-1">
+          <p class="text-xs text-gray-400">
             {{ formatHistoryTime(r.time) }}
           </p>
         </div>
         <div class="ml-4">
           <span
             :class="[
-              'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
+              'inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium',
               r.status === 'success'
                 ? 'bg-green-100 text-green-800'
                 : 'bg-red-100 text-red-800'

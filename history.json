@@ -1,0 +1,88 @@
+{
+  "records": [
+    {
+      "id": "20260529_202115_merge_1780057275263620500",
+      "time": "2026-05-29 20:21:15",
+      "task": "merge",
+      "streamer": "全局",
+      "status": "success",
+      "files_count": 0,
+      "freed_bytes": 0,
+      "merged_bytes": 0,
+      "duration": 0,
+      "detail": "无待合并文件"
+    },
+    {
+      "id": "20260529_160617_merge_1780041977519561160",
+      "time": "2026-05-29 16:06:17",
+      "task": "merge",
+      "streamer": "全局",
+      "status": "success",
+      "files_count": 0,
+      "freed_bytes": 0,
+      "merged_bytes": 0,
+      "duration": 0,
+      "detail": "无待合并文件"
+    },
+    {
+      "id": "20260529_160253_config_1780041773526043553",
+      "time": "2026-05-29 16:02:53",
+      "task": "config",
+      "streamer": "全局",
+      "status": "success",
+      "files_count": 0,
+      "freed_bytes": 0,
+      "merged_bytes": 0,
+      "duration": 0,
+      "detail": "配置未变更"
+    },
+    {
+      "id": "20260529_143016_merge_1780036216679757178",
+      "time": "2026-05-29 14:30:16",
+      "task": "merge",
+      "streamer": "全局",
+      "status": "success",
+      "files_count": 0,
+      "freed_bytes": 0,
+      "merged_bytes": 0,
+      "duration": 0,
+      "detail": "无待合并文件"
+    },
+    {
+      "id": "20260529_120103_merge_1780027263536650615",
+      "time": "2026-05-29 12:01:03",
+      "task": "merge",
+      "streamer": "全局",
+      "status": "success",
+      "files_count": 0,
+      "freed_bytes": 0,
+      "merged_bytes": 0,
+      "duration": 0,
+      "detail": "无待合并文件"
+    },
+    {
+      "id": "20260530_120034_clean_1780113634456258819",
+      "time": "2026-05-30 12:00:34",
+      "task": "clean",
+      "streamer": "全局",
+      "status": "success",
+      "files_count": 0,
+      "freed_bytes": 0,
+      "merged_bytes": 0,
+      "duration": 0,
+      "detail": "磁盘 28.8% 未达阈值 80%"
+    },
+    {
+      "id": "20260530_120621_merge_1780113981910789992",
+      "time": "2026-05-30 12:06:21",
+      "task": "merge",
+      "streamer": "全局",
+      "status": "success",
+      "files_count": 1,
+      "freed_bytes": 0,
+      "merged_bytes": 9024534820,
+      "duration": 347.455948431,
+      "detail": "转换 1 个FLV"
+    }
+  ]
+}

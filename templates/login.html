@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bililive Helper - 登录</title>
+<style>
+/* Vercel / Apple 级顶级配色系统 (与 index 同步) */
+:root {
+  --bg: #fafafa;
+  --bg-sub: #f5f5f5;
+  --card: #ffffff;
+  --text: #171717;
+  --text2: #666666;
+  --muted: #888888;
+  --faint: #a3a3a3;
+  --border: #eaeaea;
+  --border-sub: #f0f0f0;
+  --pri: #000000;
+  --pri-fg: #ffffff;
+  --pri-r: rgba(0, 0, 0, 0.15);
+  --err: #e11d48;
+  --err-s: rgba(225, 29, 72, 0.08);
+  --err-border: rgba(225, 29, 72, 0.3);
+  --radius: 12px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+/* 顶级暗黑模式体系 (GitHub 深色风格) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0a0a;
+    --bg-sub: #111111;
+    --card: #141414;
+    --text: #ededed;
+    --text2: #a1a1aa;
+    --muted: #71717a;
+    --border: #27272a;
+    --border-sub: #1e1e1e;
+    --pri: #ffffff;
+    --pri-fg: #000000;
+    --pri-r: rgba(255, 255, 255, 0.2);
+    --err: #f43f5e;
+    --err-s: rgba(244, 63, 94, 0.1);
+    --err-border: rgba(244, 63, 94, 0.3);
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.6 var(--font-sans);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  /* Vercel 极客感点阵背景 */
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* 容器弹性入场 */
+.wrap { 
+  width: 100%; max-width: 400px; padding: 24px; 
+  animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; 
+}
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 极致卡片 */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 8px 32px -12px rgba(0,0,0,0.1);
+}
+
+.logo {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  margin: 0 auto 24px;
+  background: var(--pri);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px var(--pri-r);
+}
+.logo svg { width: 24px; height: 24px; color: var(--pri-fg); }
+h1 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 6px; letter-spacing: -0.5px; }
+.sub { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+
+/* 表单与交互 */
+.form-group { margin-bottom: 24px; text-align: left; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 8px; }
+input {
+  width: 100%; height: 40px; padding: 0 12px;
+  border: 1px solid var(--border); border-radius: 8px;
+  font: 14px var(--font-sans); outline: none;
+  background: var(--bg-sub); color: var(--text);
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.01);
+}
+input:hover { border-color: var(--muted); }
+input:focus { border-color: var(--pri); background: var(--card); box-shadow: 0 0 0 3px var(--pri-r); }
+input::placeholder { color: var(--faint); letter-spacing: 2px; }
+
+/* 按钮 */
+.btn {
+  width: 100%; height: 40px; border: none; border-radius: 8px;
+  font: 500 14px var(--font-sans); cursor: pointer;
+  background: var(--pri); color: var(--pri-fg);
+  transition: all 0.2s; user-select: none;
+}
+.btn:hover { opacity: 0.85; box-shadow: 0 4px 12px var(--pri-r); }
+.btn:active { transform: scale(0.98); }
+.btn:focus-visible { outline: 2px solid var(--pri-r); outline-offset: 2px; }
+
+/* 错误提示框及抖动动画 */
+.err {
+  background: var(--err-s);
+  color: var(--err);
+  border: 1px solid var(--err-border);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  margin-bottom: 20px; display: none; text-align: left;
+}
+.err.show { 
+  display: block; 
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; 
+}
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+  40%, 60% { transform: translate3d(3px, 0, 0); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+    </div>
+    <h1>Bililive Helper</h1>
+    <p class="sub">直播录像智能管理台</p>
+    
+    <div class="err" id="error"></div>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="password">管理员密码</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required autofocus>
+      </div>
+      <button type="submit" class="btn">登录</button>
+    </form>
+  </div>
+</div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var p = document.getElementById('password').value;
+  var el = document.getElementById('error');
+  
+  // 每次提交前重置动画状态，以便连续多次输错时依然能触发抖动
+  el.classList.remove('show');
+  
+  try {
+    var r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: p })
+    });
+    var d = await r.json();
+    if (r.ok) {
+      window.location.href = '/';
+    } else {
+      el.textContent = d.error || '登录失败';
+      void el.offsetWidth; // 触发重绘以重启 CSS 动画
+      el.classList.add('show');
+    }
+  } catch(err) {
+    el.textContent = '网络错误，请重试';
+    void el.offsetWidth;
+    el.classList.add('show');
+  }
+});
+</script>
+</body>
+</html>

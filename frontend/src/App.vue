@@ -56,7 +56,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f5f6f8]">
+  <div class="min-h-screen bg-[#f7f8fa]">
 
     <!-- 侧边栏 -->
     <Sidebar />

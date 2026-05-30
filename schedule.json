@@ -1,0 +1,6 @@
+{
+  "merge_interval": 360,
+  "clean_interval": 720,
+  "merge_enabled": true,
+  "clean_enabled": true
+}
