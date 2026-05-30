@@ -28,16 +28,8 @@ function isActive(path) {
     class="h-14 bg-white border-b border-[#dee0e3] flex items-center justify-between px-4 fixed top-0 right-0 z-50 transition-all duration-200"
     :style="{ left: sidebarWidth }"
   >
-    <!-- 左：Logo + 标签页 -->
+    <!-- 左：标签页 -->
     <div class="flex items-center gap-6">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-[#3370ff] rounded-lg flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-          </svg>
-        </div>
-        <span class="text-[15px] font-semibold text-[#1f2329]">Bililive Helper</span>
-      </div>
       <nav class="hidden md:flex items-center gap-1">
         <button
           v-for="tab in tabs"
