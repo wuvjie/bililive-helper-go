@@ -29,7 +29,7 @@ async function loadLogFiles() {
 }
 
 async function showLog() {
-  contentHtml.value = "<span style='color:var(--muted)'>请求中...</span>"
+  contentHtml.value = "<span class='text-gray-400'>请求中...</span>"
 
   try {
     const response = await fetch(`/api/logs/content/${logType.value}?file=${selectedFile.value}`)
@@ -44,7 +44,7 @@ async function showLog() {
       }, 50)
     }
   } catch (err) {
-    contentHtml.value = "<span style='color:var(--err)'>读取失败</span>"
+    contentHtml.value = "<span class='text-red-400'>读取失败</span>"
   }
 }
 
@@ -59,11 +59,11 @@ function escapeHtml(text) {
 
 function highlightLog(text) {
   return escapeHtml(text)
-    .replace(/ERROR/gi, '<span class="te">ERROR</span>')
-    .replace(/WARN/gi, '<span class="tw">WARN</span>')
-    .replace(/✅|SUCCESS/gi, '<span class="tok">$&</span>')
-    .replace(/ℹ|信息/g, '<span class="ti">$&</span>')
-    .replace(/❌/g, '<span class="te">❌</span>')
+    .replace(/ERROR/gi, '<span class="text-red-400 font-bold">ERROR</span>')
+    .replace(/WARN/gi, '<span class="text-yellow-400 font-bold">WARN</span>')
+    .replace(/✅|SUCCESS/gi, '<span class="text-green-400">$&</span>')
+    .replace(/ℹ|信息/g, '<span class="text-blue-400">$&</span>')
+    .replace(/❌/g, '<span class="text-red-400">❌</span>')
 }
 
 watch(logType, () => {
@@ -75,43 +75,71 @@ loadLogFiles()
 </script>
 
 <template>
-  <div class="term-wrapper">
-    <div class="term" id="histLog" v-html="contentHtml || content || '选择日志文件'"></div>
+  <div class="h-full flex flex-col bg-gray-950">
+    <!-- 顶部工具栏 -->
+    <div class="flex items-center gap-3 p-4 bg-gray-900 border-b border-gray-800">
+      <select
+        v-model="logType"
+        class="px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      >
+        <option value="merge">合并</option>
+        <option value="clean">清理</option>
+      </select>
+
+      <select
+        v-model="selectedFile"
+        @change="showLog"
+        class="flex-1 px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      >
+        <option v-for="f in logFiles" :key="f.filename" :value="f.filename">
+          {{ f.date }}
+        </option>
+      </select>
+
+      <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+        <input
+          type="checkbox"
+          v-model="autoScroll"
+          class="w-4 h-4 rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
+        >
+        自动滚动
+      </label>
+
+      <button
+        @click="showLog"
+        class="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600 transition-colors"
+      >
+        刷新
+      </button>
+    </div>
+
+    <!-- 日志内容 -->
+    <div
+      id="histLog"
+      class="flex-1 overflow-auto p-4 font-mono text-sm leading-relaxed"
+    >
+      <div class="text-gray-300" v-html="contentHtml || content || '选择日志文件'"></div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.term-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 16px;
-  min-width: 0;
+/* 终端滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.term {
-  font-family: var(--font-mono);
-  background: transparent;
-  color: inherit;
-  padding: 0;
-  border: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  word-break: break-all;
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 0;
-  box-shadow: none;
-  flex: 1;
-  min-width: 0;
-  width: 100%;
+::-webkit-scrollbar-track {
+  background: #1f2937;
 }
 
-:deep(.te) { color: #ff7b72; }
-:deep(.tw) { color: #d2a8ff; }
-:deep(.tok) { color: #7ee787; }
-:deep(.ti) { color: #79c0ff; }
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
 </style>
