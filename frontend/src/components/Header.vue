@@ -17,10 +17,19 @@ const props = defineProps({
 const initials = computed(() => {
   return props.currentUser.name.charAt(0).toUpperCase()
 })
+
+// 侧边栏宽度
+const sidebarWidth = computed(() => {
+  if (appStore.isMobile) return '0px'
+  return appStore.sidebarExpanded ? '220px' : '64px'
+})
 </script>
 
 <template>
-  <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed top-0 right-0 z-30 shadow-sm">
+  <header
+    class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 fixed top-0 right-0 z-30 shadow-sm transition-all duration-300"
+    :style="{ left: sidebarWidth }"
+  >
 
     <!-- 左侧：面包屑 / 页面标题 -->
     <div class="flex items-center">
