@@ -89,121 +89,134 @@ watch(() => props.visible, (newVal) => {
 </script>
 
 <template>
-  <div v-if="visible" class="overlay" @click.self="emit('close')">
-    <div class="modal large">
-      <div class="card-head" style="display:flex; justify-content:space-between;">
-        <div>
-          <h2 style="margin:0;">手动合并 — {{ streamer }}</h2>
-        </div>
-        <button class="modal-x" @click="emit('close')">&times;</button>
-      </div>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
+        <!-- 背景遮罩 -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-      <div style="padding:0;overflow-y:auto;flex:1;max-height:50vh;">
-        <div v-if="loading" style="text-align:center;padding:40px;color:var(--muted)">
-          加载中...
-        </div>
-        <div v-else-if="files.length === 0" style="text-align:center;padding:40px;color:var(--muted)">
-          暂无视频文件
-        </div>
-        <table v-else>
-          <thead>
-            <tr>
-              <th style="width:40px;text-align:center">
-                <input type="checkbox" @change="toggleAll" :checked="allChecked">
-              </th>
-              <th>文件名</th>
-              <th style="width:80px;text-align:right">大小</th>
-              <th style="width:60px;text-align:center">类型</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="f in files" :key="f.name" @click="toggleFile(f.name)" style="cursor:pointer" :style="{background: selected.includes(f.name) ? 'var(--hover)' : ''}">
-              <td style="text-align:center">
-                <input type="checkbox" :checked="selected.includes(f.name)" @click.stop="toggleFile(f.name)">
-              </td>
-              <td style="font-family:var(--font-mono);font-size:12px" v-text="f.name"></td>
-              <td style="text-align:right;color:var(--text2);font-family:var(--font-mono);font-size:12px" v-text="f.size_str"></td>
-              <td style="text-align:center">
-                <span class="badge" :class="f.is_merged ? 'badge-ok' : 'badge-warn'" v-text="f.is_merged ? '合并' : '原片'"></span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <!-- 弹窗内容 -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col transform transition-all">
 
-      <div class="card-foot" style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:13px;color:var(--muted)">
-          已选 {{ selected.length }} 个
-          <span v-if="selected.length > 0"> ({{ formatSize(selectedSize) }})</span>
-        </div>
-        <div style="display:flex;gap:12px">
-          <button class="btn btn-ghost auto-w" @click="selected = []" :disabled="selected.length === 0">
-            清空
-          </button>
-          <button class="btn btn-pri auto-w" @click="handleMerge" :disabled="selected.length < 2">
-            开始合并
-          </button>
+          <!-- 头部 -->
+          <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-gray-900">手动合并 — {{ streamer }}</h2>
+              <button
+                @click="emit('close')"
+                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 文件列表 -->
+          <div class="flex-1 overflow-y-auto p-6">
+            <div v-if="loading" class="flex flex-col items-center justify-center py-12">
+              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-4"></div>
+              <p class="text-gray-500">加载文件列表...</p>
+            </div>
+
+            <div v-else-if="files.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400">
+              <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+              </svg>
+              <p>暂无视频文件</p>
+            </div>
+
+            <div v-else class="space-y-2">
+              <!-- 全选 -->
+              <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <input
+                  type="checkbox"
+                  :checked="allChecked"
+                  @change="toggleAll"
+                  class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                >
+                <span class="text-sm font-medium text-gray-700">全选 ({{ files.length }} 个文件)</span>
+              </label>
+
+              <!-- 文件列表 -->
+              <div class="space-y-1">
+                <div
+                  v-for="f in files"
+                  :key="f.name"
+                  @click="toggleFile(f.name)"
+                  :class="[
+                    'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+                    selected.includes(f.name) ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50 border border-transparent'
+                  ]"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="selected.includes(f.name)"
+                    @click.stop="toggleFile(f.name)"
+                    class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  >
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ f.name }}</p>
+                    <p class="text-xs text-gray-500">{{ f.size_str }}</p>
+                  </div>
+                  <span :class="[
+                    'px-2 py-1 text-xs font-medium rounded',
+                    f.is_merged ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                  ]">
+                    {{ f.is_merged ? '合并' : '原片' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部操作栏 -->
+          <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+            <div class="flex items-center justify-between">
+              <div class="text-sm text-gray-500">
+                已选 {{ selected.length }} 个文件
+                <span v-if="selected.length > 0" class="text-gray-400">
+                  ({{ formatSize(selectedSize) }})
+                </span>
+              </div>
+              <div class="flex items-center gap-3">
+                <button
+                  @click="selected = []"
+                  :disabled="selected.length === 0"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  清空
+                </button>
+                <button
+                  @click="handleMerge"
+                  :disabled="selected.length < 2"
+                  class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  开始合并
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  animation: fade-in 0.2s ease-out;
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s ease;
 }
 
-.modal {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
-  animation: pop-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
 }
 
-.modal.large {
-  max-width: 800px;
-}
-
-.modal-x {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--muted);
-  line-height: 1;
-  padding: 4px;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-
-.modal-x:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes pop-up {
-  0% { opacity: 0; transform: scale(0.96) translateY(10px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+.modal-enter-from .relative,
+.modal-leave-to .relative {
+  transform: scale(0.95) translateY(10px);
 }
 </style>
