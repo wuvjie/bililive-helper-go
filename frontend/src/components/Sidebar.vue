@@ -55,7 +55,8 @@ function navigateTo(path) {
   <aside
     :class="[
       'h-screen bg-[#1e2126] flex flex-col transition-all duration-300 ease-in-out fixed left-0 top-0 z-40',
-      sidebarWidth
+      sidebarWidth,
+      appStore.isMobile ? 'hidden' : ''
     ]"
   >
     <!-- Logo 区域 -->

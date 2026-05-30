@@ -25,8 +25,19 @@ const {
   fetchSchedule
 } = useConfig()
 
-// 侧边栏宽度（动态）
-const sidebarWidth = computed(() => appStore.sidebarExpanded ? 'ml-[220px]' : 'ml-[64px]')
+// 侧边栏宽度（动态，移动端无边距）
+const sidebarWidth = computed(() => {
+  if (appStore.isMobile) return 'ml-0'
+  return appStore.sidebarExpanded ? 'ml-[220px]' : 'ml-[64px]'
+})
+
+// 移动端底部导航项
+const mobileNavItems = [
+  { path: '/dashboard', name: '首页', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>' },
+  { path: '/streamers', name: '主播', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.354a4 4 0 110 7.292 15.242 0 01-4.574 2.077M19 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>' },
+  { path: '/tasks', name: '任务', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>' },
+  { path: '/settings', name: '设置', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>' }
+]
 
 // 初始化
 onMounted(async () => {
@@ -57,7 +68,7 @@ onMounted(async () => {
       <Header />
 
       <!-- 页面内容 -->
-      <main class="pt-14 min-h-screen">
+      <main :class="['pt-14 min-h-screen', appStore.isMobile ? 'pb-16' : '']">
         <router-view
           v-slot="{ Component }"
           :streamers="streamers"
@@ -73,6 +84,22 @@ onMounted(async () => {
         </router-view>
       </main>
     </div>
+
+    <!-- 移动端底部导航 -->
+    <nav v-if="appStore.isMobile" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+      <div class="flex items-center justify-around py-2">
+        <router-link
+          v-for="item in mobileNavItems"
+          :key="item.path"
+          :to="item.path"
+          class="flex flex-col items-center py-1 px-3 text-gray-500 hover:text-blue-600"
+          active-class="text-blue-600"
+        >
+          <div v-html="item.svg" class="w-6 h-6 mb-1"></div>
+          <span class="text-xs">{{ item.name }}</span>
+        </router-link>
+      </div>
+    </nav>
   </div>
 </template>
 
