@@ -52,8 +52,8 @@ function dayLabel(dateStr) {
 </script>
 
 <template>
-  <div class="p-6">
-    <h1 class="text-[17px] font-semibold text-[#1f2329] mb-4">概览视图</h1>
+  <div class="p-6" style="padding: 32px 40px;">
+    <h2 class="section-title">概览视图</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">

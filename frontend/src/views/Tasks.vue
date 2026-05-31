@@ -97,8 +97,8 @@ async function startClean() {
 </script>
 
 <template>
-  <div class="p-6">
-    <h1 class="text-[17px] font-semibold text-[#1f2329] mb-5">任务中心</h1>
+  <div class="p-6" style="padding: 32px 40px;">
+    <h2 class="section-title">任务中心</h2>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -134,7 +134,7 @@ async function startClean() {
           <div class="space-y-4">
             <div>
               <label class="block text-[13px] font-medium text-[#1f2329] mb-1.5">选择主播</label>
-              <select v-model="selectedStreamer" @change="loadFiles" class="w-full px-3 py-2 border border-[#dee0e3] rounded-lg text-[14px] outline-none focus:border-[#3370ff] focus:ring-2 focus:ring-[#3370ff]/20 bg-white transition-all">
+              <select v-model="selectedStreamer" @change="loadFiles" class="feishu-input">
                 <option value="" disabled>请选择主播</option>
                 <option v-for="s in streamers" :key="s.name" :value="s.name">{{ s.name }} ({{ s.files }} 个文件, {{ s.size_gb?.toFixed(1) || 0 }} GB)</option>
               </select>
@@ -164,11 +164,11 @@ async function startClean() {
 
             <div class="flex gap-3">
               <button @click="startMerge" :disabled="sse.isRunning.value || selectedFiles.length < 2"
-                class="flex-1 py-2.5 bg-[#e1eaff] hover:bg-[#c9dcff] disabled:opacity-50 text-[#3370ff] text-[14px] font-medium rounded-lg transition-colors shadow-sm">
+                class="feishu-btn" style="flex:1;">
                 🚀 {{ sse.isRunning.value ? '执行中...' : `合并 (${selectedFiles.length} 个文件)` }}
               </button>
               <button @click="startClean" :disabled="sse.isRunning.value"
-                class="py-2.5 px-4 bg-[#fff0f0] hover:bg-[#ffe0e0] disabled:opacity-50 text-[#f54a45] text-[14px] font-medium rounded-lg transition-colors shadow-sm">
+                class="feishu-btn feishu-btn-danger">
                 🗑️ 清理
               </button>
             </div>
