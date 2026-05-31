@@ -64,11 +64,11 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const routeNameMap = {
-  '/': '概览视图 (Dashboard)',
-  '/streamers': '主播录播管理',
-  '/tasks': '任务调度中心',
-  '/history': '系统审计日志',
-  '/settings': '全局配置'
+  '/': '概览视图',
+  '/streamers': '主播管理',
+  '/tasks': '任务中心',
+  '/history': '操作日志',
+  '/settings': '系统设置'
 }
 const currentRouteName = computed(() => routeNameMap[route.path] || '页面')
 </script>
