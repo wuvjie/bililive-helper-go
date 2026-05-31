@@ -1,0 +1,1 @@
+import{u as c}from"./useApi-xCRPCJPH.js";import{o as n,j as r}from"./index-DDcQXfbx.js";function f(){const{get:s}=c(),o=r({});async function t(){try{const e=await s("/schedule");o.value=e}catch(e){console.error("获取调度配置失败",e)}}return n(t),{schedule:o,fetchSchedule:t}}export{f as u};

@@ -11,10 +11,10 @@ function formatSize(gb) {
 </script>
 
 <template>
-  <div class="p-6">
+  <div class="p-6" style="padding: 32px 40px;">
     <div class="flex items-center justify-between mb-5">
-      <h1 class="text-[17px] font-semibold text-[#1f2329]">主播管理</h1>
-      <button class="px-4 py-2 border border-[#dee0e3] hover:bg-gray-50 text-[#1f2329] text-sm rounded-lg transition-colors shadow-sm bg-white" @click="$router.push('/tasks')">
+      <h2 class="section-title" style="margin-bottom:0;">主播管理</h2>
+      <button class="feishu-btn" @click="$router.push('/tasks')">
         ⚙️ 任务中心
       </button>
     </div>

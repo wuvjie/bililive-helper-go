@@ -103,20 +103,20 @@ onMounted(fetchLogs)
 </script>
 
 <template>
-  <div class="p-6">
+  <div class="p-6" style="padding: 32px 40px;">
     <div class="flex items-center justify-between mb-5">
-      <h1 class="text-[17px] font-semibold text-[#1f2329]">操作日志</h1>
+      <h2 class="section-title" style="margin-bottom:0;">操作日志</h2>
       <div class="flex gap-2">
-        <select v-model="filterTask" @change="page = 1; fetchLogs()" class="px-3 py-2 border border-[#dee0e3] rounded-lg text-[13px] bg-white outline-none">
+        <select v-model="filterTask" @change="page = 1; fetchLogs()" class="feishu-input" style="width:auto;padding:6px 12px;">
           <option value="">全部类型</option>
           <option value="merge">合并</option>
           <option value="clean">清理</option>
           <option value="config">配置</option>
         </select>
-        <button @click="fetchLogs" class="px-3 py-2 border border-[#dee0e3] hover:bg-gray-50 text-[13px] rounded-lg bg-white">
+        <button @click="fetchLogs" class="feishu-btn feishu-btn-outline" style="padding:6px 12px;font-size:13px;">
           {{ loading ? '...' : '刷新' }}
         </button>
-        <button @click="doExport" class="px-3 py-2 border border-[#dee0e3] hover:bg-gray-50 text-[13px] rounded-lg bg-white">
+        <button @click="doExport" class="feishu-btn feishu-btn-outline" style="padding:6px 12px;font-size:13px;">
           导出
         </button>
       </div>
@@ -179,10 +179,10 @@ onMounted(fetchLogs)
         <span class="text-[#8f959e]">共 {{ total }} 条记录</span>
         <div class="flex items-center gap-1">
           <button @click="goToPage(page - 1)" :disabled="page <= 1"
-            class="px-3 py-1.5 rounded border border-[#dee0e3] bg-white disabled:opacity-40 hover:bg-gray-50">上一页</button>
+            class="feishu-btn feishu-btn-outline" style="padding:4px 12px;font-size:13px;">上一页</button>
           <span class="px-3 py-1.5 text-[#1f2329] font-medium">{{ page }} / {{ pages }}</span>
           <button @click="goToPage(page + 1)" :disabled="page >= pages"
-            class="px-3 py-1.5 rounded border border-[#dee0e3] bg-white disabled:opacity-40 hover:bg-gray-50">下一页</button>
+            class="feishu-btn feishu-btn-outline" style="padding:4px 12px;font-size:13px;">下一页</button>
         </div>
       </div>
     </div>
