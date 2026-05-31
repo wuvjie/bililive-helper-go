@@ -20,7 +20,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'dist',
-    emptyOutDir: true
+    outDir: '../templates',
+    emptyOutDir: false
   }
 })
