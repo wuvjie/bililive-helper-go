@@ -56,45 +56,45 @@ function dayLabel(dateStr) {
     <h1 class="text-[17px] font-semibold text-[#1f2329] mb-4">概览视图</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3]">
-        <div class="text-[13px] text-[#646a73] mb-2">今日合并</div>
-        <div class="flex items-end gap-2">
-          <span class="text-2xl font-bold text-[#1f2329]">{{ stats.today.merge_count }}</span>
-          <span class="text-[13px] text-[#8f959e] mb-0.5">次</span>
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#e8f3ff] text-[#3370ff] flex items-center justify-center text-xl flex-shrink-0">✨</div>
+        <div>
+          <div class="text-[13px] text-[#646a73] mb-1">今日合并</div>
+          <div class="text-2xl font-bold text-[#1f2329]">{{ stats.today.merge_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
+          <div class="text-[12px] text-[#8f959e]">{{ formatBytes(stats.today.merge_bytes) }}</div>
         </div>
-        <div class="text-[12px] text-[#8f959e] mt-1">{{ formatBytes(stats.today.merge_bytes) }}</div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3]">
-        <div class="text-[13px] text-[#646a73] mb-2">今日清理</div>
-        <div class="flex items-end gap-2">
-          <span class="text-2xl font-bold text-[#1f2329]">{{ stats.today.clean_count }}</span>
-          <span class="text-[13px] text-[#8f959e] mb-0.5">次</span>
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#fff2e8] text-[#f88339] flex items-center justify-center text-xl flex-shrink-0">🧹</div>
+        <div>
+          <div class="text-[13px] text-[#646a73] mb-1">今日清理</div>
+          <div class="text-2xl font-bold text-[#1f2329]">{{ stats.today.clean_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
+          <div class="text-[12px] text-[#8f959e]">{{ formatBytes(stats.today.clean_bytes) }}</div>
         </div>
-        <div class="text-[12px] text-[#8f959e] mt-1">{{ formatBytes(stats.today.clean_bytes) }}</div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3]">
-        <div class="text-[13px] text-[#646a73] mb-2">本月合并</div>
-        <div class="flex items-end gap-2">
-          <span class="text-2xl font-bold text-[#1f2329]">{{ stats.month.merge_count }}</span>
-          <span class="text-[13px] text-[#8f959e] mb-0.5">次</span>
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#e8f8f0] text-[#00b578] flex items-center justify-center text-xl flex-shrink-0">📊</div>
+        <div>
+          <div class="text-[13px] text-[#646a73] mb-1">本月合并</div>
+          <div class="text-2xl font-bold text-[#1f2329]">{{ stats.month.merge_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
+          <div class="text-[12px] text-[#8f959e]">{{ formatBytes(stats.month.merge_bytes) }}</div>
         </div>
-        <div class="text-[12px] text-[#8f959e] mt-1">{{ formatBytes(stats.month.merge_bytes) }}</div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3]">
-        <div class="text-[13px] text-[#646a73] mb-2">本月清理</div>
-        <div class="flex items-end gap-2">
-          <span class="text-2xl font-bold text-[#1f2329]">{{ stats.month.clean_count }}</span>
-          <span class="text-[13px] text-[#8f959e] mb-0.5">次</span>
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#fff0f0] text-[#f54a45] flex items-center justify-center text-xl flex-shrink-0">📦</div>
+        <div>
+          <div class="text-[13px] text-[#646a73] mb-1">本月清理</div>
+          <div class="text-2xl font-bold text-[#1f2329]">{{ stats.month.clean_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
+          <div class="text-[12px] text-[#8f959e]">{{ formatBytes(stats.month.clean_bytes) }}</div>
         </div>
-        <div class="text-[12px] text-[#8f959e] mt-1">{{ formatBytes(stats.month.clean_bytes) }}</div>
       </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] flex items-center gap-4">
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
         <div class="w-12 h-12 rounded-xl flex items-center justify-center" :class="health?.ffmpeg_ok ? 'bg-[#e8f8f0] text-[#00b578]' : 'bg-[#fff0f0] text-[#f54a45]'">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
@@ -106,7 +106,7 @@ function dayLabel(dateStr) {
         </div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] flex items-center gap-4">
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
         <div class="w-12 h-12 rounded-xl bg-[#e8f8f0] text-[#00b578] flex items-center justify-center">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581"/></svg>
         </div>
@@ -116,7 +116,7 @@ function dayLabel(dateStr) {
         </div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] flex items-center gap-4">
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
         <div class="w-12 h-12 rounded-xl bg-[#fff0f0] text-[#f54a45] flex items-center justify-center">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
         </div>
@@ -129,7 +129,7 @@ function dayLabel(dateStr) {
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3]">
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow">
         <h3 class="text-[15px] font-semibold text-[#1f2329] mb-4">存储状态</h3>
         <div>
           <div class="flex items-center justify-between mb-2">
@@ -151,7 +151,7 @@ function dayLabel(dateStr) {
         </div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3]">
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow">
         <h3 class="text-[15px] font-semibold text-[#1f2329] mb-4">近 7 天趋势</h3>
         <div v-if="stats.daily?.length" class="flex items-end gap-2 h-[140px]">
           <div v-for="day in stats.daily" :key="day.date" class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
@@ -168,7 +168,7 @@ function dayLabel(dateStr) {
         </div>
       </div>
 
-      <div class="bg-white rounded-xl p-5 border border-[#dee0e3]">
+      <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-[15px] font-semibold text-[#1f2329]">最近操作</h3>
           <router-link to="/history" class="text-[13px] text-[#3370ff] hover:underline">查看全部</router-link>

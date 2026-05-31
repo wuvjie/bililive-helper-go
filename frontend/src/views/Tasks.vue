@@ -103,7 +103,7 @@ async function startClean() {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
       <div class="space-y-5">
-        <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm">
+        <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow">
           <h3 class="text-[15px] font-semibold text-[#1f2329] mb-3">定时任务状态</h3>
           <div class="space-y-3">
             <div class="flex items-center justify-between p-3 bg-[#f8f9fa] rounded-lg">
@@ -127,14 +127,14 @@ async function startClean() {
           </div>
         </div>
 
-        <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm">
+        <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow">
           <h3 class="text-[15px] font-semibold text-[#1f2329] mb-1">手动操作</h3>
           <p class="text-[13px] text-[#8f959e] mb-4">选择主播和文件后手动触发合并，至少选择 2 个文件。</p>
 
           <div class="space-y-4">
             <div>
               <label class="block text-[13px] font-medium text-[#1f2329] mb-1.5">选择主播</label>
-              <select v-model="selectedStreamer" @change="loadFiles" class="w-full px-3 py-2 border border-[#dee0e3] rounded-lg text-[14px] outline-none focus:border-[#3370ff] focus:ring-1 focus:ring-[#3370ff] bg-white">
+              <select v-model="selectedStreamer" @change="loadFiles" class="w-full px-3 py-2 border border-[#dee0e3] rounded-lg text-[14px] outline-none focus:border-[#3370ff] focus:ring-2 focus:ring-[#3370ff]/20 bg-white transition-all">
                 <option value="" disabled>请选择主播</option>
                 <option v-for="s in streamers" :key="s.name" :value="s.name">{{ s.name }} ({{ s.files }} 个文件, {{ s.size_gb?.toFixed(1) || 0 }} GB)</option>
               </select>
