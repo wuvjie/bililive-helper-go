@@ -75,6 +75,17 @@ async function startMerge() {
 }
 
 async function startClean() {
+  try {
+    const est = await api.get('/clean/estimate')
+    if (est && est.file_count > 0) {
+      if (!confirm(`预估将清理 ${est.file_count} 个文件，释放 ${est.total_size_gb} GB 空间。\n\n确定执行清理吗？`)) return
+    } else if (est) {
+      if (!confirm('当前没有可清理的文件。是否仍要执行清理任务？')) return
+    }
+  } catch (e) {
+    if (!confirm('无法获取清理预估，是否强制执行？')) return
+  }
+
   sse.clear()
   sse.addLine('开始清理任务...')
   const ok = await sse.startSSE('/api/clean', { streamer: selectedStreamer.value || '' })
