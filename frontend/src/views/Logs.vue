@@ -153,8 +153,12 @@ onMounted(fetchLogs)
               </div>
             </td>
             <td class="px-5 py-3.5">
-              <span v-if="item.status === 'success'" class="text-[#00b578] font-medium text-[13px]">✓ 成功</span>
-              <span v-else-if="item.status === 'error'" class="text-[#f54a45] font-medium text-[13px]">✗ 失败</span>
+              <span v-if="item.status === 'success'" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#e8f8f0] text-[#00b578] text-xs font-medium rounded-md">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#00b578]"></span>成功
+              </span>
+              <span v-else-if="item.status === 'error'" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#fff0f0] text-[#f54a45] text-xs font-medium rounded-md">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#f54a45]"></span>失败
+              </span>
               <span v-else class="text-[#646a73] text-[13px]">{{ item.status || '-' }}</span>
             </td>
             <td class="px-5 py-3.5">

@@ -164,37 +164,40 @@ async function startClean() {
 
             <div class="flex gap-3">
               <button @click="startMerge" :disabled="sse.isRunning.value || selectedFiles.length < 2"
-                class="flex-1 py-2.5 bg-[#3370ff] hover:bg-[#5384ff] disabled:bg-[#a9c4ff] text-white text-[14px] font-medium rounded-lg transition-colors">
-                {{ sse.isRunning.value ? '执行中...' : `合并 (${selectedFiles.length} 个文件)` }}
+                class="flex-1 py-2.5 bg-[#e1eaff] hover:bg-[#c9dcff] disabled:opacity-50 text-[#3370ff] text-[14px] font-medium rounded-lg transition-colors shadow-sm">
+                🚀 {{ sse.isRunning.value ? '执行中...' : `合并 (${selectedFiles.length} 个文件)` }}
               </button>
               <button @click="startClean" :disabled="sse.isRunning.value"
-                class="py-2.5 px-4 border border-[#dee0e3] hover:bg-gray-50 disabled:opacity-50 text-[#f54a45] text-[14px] font-medium rounded-lg transition-colors bg-white">
-                清理
+                class="py-2.5 px-4 bg-[#fff0f0] hover:bg-[#ffe0e0] disabled:opacity-50 text-[#f54a45] text-[14px] font-medium rounded-lg transition-colors shadow-sm">
+                🗑️ 清理
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="bg-[#1e1e1e] rounded-xl p-4 border border-[#333] flex flex-col h-[520px]">
-        <div class="flex items-center justify-between mb-3 pb-3 border-b border-[#333]">
+      <div class="bg-[#1e1e1e] rounded-xl border border-[#333] flex flex-col h-[520px] shadow-2xl overflow-hidden">
+        <div class="h-11 bg-[#2d2d2d] border-b border-[#000] flex items-center px-5 justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex gap-1.5">
-              <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-              <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-              <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+            <div class="flex gap-2">
+              <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-inner"></div>
+              <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-inner"></div>
+              <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-inner"></div>
             </div>
-            <span class="text-[#858585] text-xs font-mono">task_output.log</span>
+            <span class="text-[#858585] text-[12px] font-mono tracking-wider flex items-center gap-2">
+              <span v-if="sse.isRunning.value" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              Terminal Output
+            </span>
           </div>
-          <span v-if="sse.isRunning.value" class="text-[#27c93f] text-xs animate-pulse">● 运行中</span>
+          <button @click="sse.lines.value = []" class="text-[12px] text-[#858585] hover:text-white transition-colors bg-[#3a3a3a] px-3 py-1 rounded">清屏</button>
         </div>
-        <div class="flex-1 overflow-y-auto font-mono text-[13px] space-y-1">
-          <div v-if="sse.lines.value.length === 0" class="text-[#5c6370]">等待任务触发...</div>
+        <div class="flex-1 p-5 overflow-y-auto font-mono text-[13px] leading-relaxed space-y-1.5">
+          <div v-if="sse.lines.value.length === 0" class="text-[#5c6370] italic select-none">Waiting for task execution...</div>
           <div v-for="(line, i) in sse.lines.value" :key="i"
-            :class="line.type === 'error' ? 'text-[#ff6b6b]' : line.type === 'success' ? 'text-[#27c93f]' : 'text-[#ccc]'">
+            :class="line.type === 'error' ? 'text-[#e06c75]' : line.type === 'success' ? 'text-[#98c379]' : 'text-[#abb2bf]'">
             <span class="text-[#5c6370]">[{{ line.time }}]</span> {{ line.text }}
           </div>
-          <div v-if="sse.isRunning.value" class="text-[#ccc] animate-pulse">▋</div>
+          <div v-if="sse.isRunning.value" class="animate-pulse font-bold mt-2 text-white">_</div>
         </div>
       </div>
 

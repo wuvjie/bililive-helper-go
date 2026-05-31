@@ -41,7 +41,8 @@ function formatSize(gb) {
             </td>
           </tr>
           <tr v-if="!streamers || streamers.length === 0">
-            <td colspan="3" class="px-6 py-12 text-center text-[#8f959e] text-sm">
+            <td colspan="3" class="px-6 py-16 text-center text-[#8f959e]">
+              <div class="text-4xl mb-3 opacity-50">📂</div>
               暂无录播数据
             </td>
           </tr>
