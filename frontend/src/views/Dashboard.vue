@@ -57,7 +57,7 @@ function dayLabel(dateStr) {
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-[#e8f3ff] text-[#3370ff] flex items-center justify-center text-xl flex-shrink-0">✨</div>
+        <div class="w-10 h-10 rounded-lg bg-[#e8f3ff] text-[#3370ff] flex items-center justify-center text-xl flex-shrink-0">✨</div>
         <div>
           <div class="text-[13px] text-[#646a73] mb-1">今日合并</div>
           <div class="text-2xl font-bold text-[#1f2329]">{{ stats.today.merge_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
@@ -66,7 +66,7 @@ function dayLabel(dateStr) {
       </div>
 
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-[#fff2e8] text-[#f88339] flex items-center justify-center text-xl flex-shrink-0">🧹</div>
+        <div class="w-10 h-10 rounded-lg bg-[#fff2e8] text-[#f88339] flex items-center justify-center text-xl flex-shrink-0">🧹</div>
         <div>
           <div class="text-[13px] text-[#646a73] mb-1">今日清理</div>
           <div class="text-2xl font-bold text-[#1f2329]">{{ stats.today.clean_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
@@ -75,7 +75,7 @@ function dayLabel(dateStr) {
       </div>
 
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-[#e8f8f0] text-[#00b578] flex items-center justify-center text-xl flex-shrink-0">📊</div>
+        <div class="w-10 h-10 rounded-lg bg-[#e8f8f0] text-[#00b578] flex items-center justify-center text-xl flex-shrink-0">📊</div>
         <div>
           <div class="text-[13px] text-[#646a73] mb-1">本月合并</div>
           <div class="text-2xl font-bold text-[#1f2329]">{{ stats.month.merge_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
@@ -84,7 +84,7 @@ function dayLabel(dateStr) {
       </div>
 
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-[#fff0f0] text-[#f54a45] flex items-center justify-center text-xl flex-shrink-0">📦</div>
+        <div class="w-10 h-10 rounded-lg bg-[#fff0f0] text-[#f54a45] flex items-center justify-center text-xl flex-shrink-0">📦</div>
         <div>
           <div class="text-[13px] text-[#646a73] mb-1">本月清理</div>
           <div class="text-2xl font-bold text-[#1f2329]">{{ stats.month.clean_count }} <span class="text-[13px] font-normal text-[#8f959e]">次</span></div>
@@ -95,8 +95,8 @@ function dayLabel(dateStr) {
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center" :class="health?.ffmpeg_ok ? 'bg-[#e8f8f0] text-[#00b578]' : 'bg-[#fff0f0] text-[#f54a45]'">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg" :class="health?.ffmpeg_ok ? 'bg-[#e8f8f0]' : 'bg-[#fff0f0]'">
+          {{ health?.ffmpeg_ok ? '✅' : '⚠️' }}
         </div>
         <div>
           <div class="text-[13px] text-[#646a73] mb-1">系统状态</div>
@@ -107,9 +107,7 @@ function dayLabel(dateStr) {
       </div>
 
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-[#e8f8f0] text-[#00b578] flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581"/></svg>
-        </div>
+        <div class="w-10 h-10 rounded-lg bg-[#e8f8f0] flex items-center justify-center text-lg">🔄</div>
         <div>
           <div class="text-[13px] text-[#646a73] mb-1">下次合并</div>
           <div class="text-xl font-bold text-[#1f2329]">{{ schedule?.merge?.enabled ? fmtTime(schedule.merge.next_run) : '已暂停' }}</div>
@@ -117,9 +115,7 @@ function dayLabel(dateStr) {
       </div>
 
       <div class="bg-white rounded-xl p-5 border border-[#dee0e3] shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-[#fff0f0] text-[#f54a45] flex items-center justify-center">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-        </div>
+        <div class="w-10 h-10 rounded-lg bg-[#fff0f0] flex items-center justify-center text-lg">🗑️</div>
         <div>
           <div class="text-[13px] text-[#646a73] mb-1">下次清理</div>
           <div class="text-xl font-bold text-[#1f2329]">{{ schedule?.clean?.enabled ? fmtTime(schedule.clean.next_run) : '已暂停' }}</div>
