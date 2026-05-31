@@ -468,8 +468,9 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		fd.Close()
 	}
 
-	// FLV→MP4 conversion via TS pipeline
-	if outputIsFLV {
+	// FLV→MP4 conversion: only needed when concatOutputPath != outputPath
+	// (i.e. concat wrote to a different file that needs renaming/converting)
+	if outputIsFLV && concatOutputPath != filepath.Join(folder, utils.MakeMP4Name(output)) {
 		mp4Name := utils.MakeMP4Name(output)
 		mp4Path := filepath.Join(folder, mp4Name)
 		onProgress(fmt.Sprintf("🔄 转换 FLV→MP4: %s", mp4Name))
@@ -480,12 +481,16 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 			s.logToFile("merge", "❌ MP4 输出损坏，保留 FLV")
 			utils.SafeUnlink(mp4Path)
 		} else {
-			// Preserve original recording time on the final MP4
 			if !latestSrcMtime.IsZero() {
 				os.Chtimes(mp4Path, latestSrcMtime, latestSrcMtime)
 			}
 			utils.SafeUnlink(concatOutputPath)
 			s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 → %s", mp4Name))
+		}
+	} else if outputIsFLV {
+		// ConcatTS already wrote the MP4 directly — just preserve timestamp
+		if !latestSrcMtime.IsZero() {
+			os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime)
 		}
 	} else {
 		// Non-FLV output: preserve recording time on the merged file
