@@ -122,7 +122,7 @@ onMounted(fetchLogs)
       </div>
     </div>
 
-    <div class="bg-white border border-[#dee0e3] rounded-xl overflow-hidden shadow-sm">
+    <div class="bg-white border border-[#dee0e3] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <table class="w-full text-left text-[14px]">
         <thead class="bg-[#f8f9fa] text-[#646a73] border-b border-[#dee0e3]">
           <tr>

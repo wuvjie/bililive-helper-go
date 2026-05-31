@@ -78,3 +78,9 @@ html, body {
   box-shadow: 0 0 0 2px rgba(51, 112, 255, 0.15);
 }
 .feishu-input::placeholder { color: var(--text-placeholder); }
+
+/* --- 🎨 滚动条美化 --- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cdd0d6; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a8abb2; }
