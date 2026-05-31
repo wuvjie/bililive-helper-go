@@ -1,0 +1,1 @@
+import{S as e,h as t}from"./index-DKm3GUv3.js";import{t as n}from"./useApi-DcMUZnU-.js";function r(){let{get:r,post:i}=n(),a=e({});async function o(){try{a.value=await r(`/schedule`)}catch(e){console.error(`获取调度配置失败`,e)}}return t(o),{schedule:a,fetchSchedule:o}}export{r as t};
