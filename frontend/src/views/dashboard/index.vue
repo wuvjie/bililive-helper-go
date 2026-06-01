@@ -53,7 +53,10 @@
 
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">近7天趋势</div>
+        <div class="card-title">
+          <span>近7天趋势</span>
+          <span class="trend-range">{{ trendRange }}</span>
+        </div>
         <div class="card-body">
           <div class="trend-chart">
             <div v-for="day in stats?.daily" :key="day.date" class="trend-col">
@@ -78,7 +81,7 @@
       <div class="card">
         <div class="card-title">
           <span>最近操作</span>
-          <el-button text type="primary" size="small" @click="$router.push('/history')">查看全部</el-button>
+          <el-button text type="primary" size="small" class="title-link" @click="$router.push('/history')">查看全部</el-button>
         </div>
         <div class="card-body">
           <el-table :data="recentHistory" size="small" :show-header="false">
@@ -160,6 +163,7 @@ onMounted(async () => {
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .card { background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--r-lg); overflow: hidden; }
 .card-title { padding: 14px 20px; font-size: 15px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--hairline-soft); display: flex; justify-content: space-between; align-items: center; }
+.card-title .title-link { height: auto; padding: 0; font-size: 13px; }
 .card-body { padding: 20px; }
 
 .disk-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 15px; color: var(--slate); }
