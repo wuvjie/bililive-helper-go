@@ -1,0 +1,33 @@
+// Element Plus dark mode overrides
+.dark {
+  --el-bg-color: #1a1a1a;
+  --el-bg-color-overlay: #1a1a1a;
+  --el-bg-color-page: #0a0a0a;
+  --el-text-color-primary: #e5e5e5;
+  --el-text-color-regular: #a0a0a0;
+  --el-border-color: #2a2a2a;
+  --el-border-color-light: #222;
+  --el-fill-color-blank: #1a1a1a;
+  --el-fill-color-light: #222;
+
+  .el-card {
+    --el-card-bg-color: #1a1a1a;
+    border-color: var(--border-color);
+  }
+
+  .el-table {
+    --el-table-bg-color: #1a1a1a;
+    --el-table-tr-bg-color: #1a1a1a;
+    --el-table-header-bg-color: #222;
+    --el-table-row-hover-bg-color: #222;
+  }
+
+  .el-dialog {
+    --el-dialog-bg-color: #1a1a1a;
+  }
+
+  .el-menu {
+    --el-menu-bg-color: transparent;
+    --el-menu-hover-bg-color: var(--bg-sidebar-hover);
+  }
+}
