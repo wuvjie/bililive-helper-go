@@ -1,119 +1,124 @@
-// Element Plus Vercel-style overrides
+// Element Plus Resend-style overrides
 :root {
-  --el-color-primary: #171717;
-  --el-color-primary-light-3: #444;
-  --el-color-primary-light-5: #666;
-  --el-color-primary-light-7: #999;
-  --el-color-primary-light-8: #bbb;
-  --el-color-primary-light-9: #ddd;
-  --el-color-primary-dark-2: #000;
+  --el-color-primary: #fcfdff;
+  --el-color-primary-light-3: #ddd;
+  --el-color-primary-light-5: #aaa;
+  --el-color-primary-light-7: #777;
+  --el-color-primary-light-8: #555;
+  --el-color-primary-light-9: #333;
+  --el-color-primary-dark-2: #e0e0e0;
 
-  --el-bg-color: #ffffff;
-  --el-bg-color-overlay: #ffffff;
-  --el-bg-color-page: #fafafa;
-  --el-text-color-primary: #171717;
-  --el-text-color-regular: #4d4d4d;
-  --el-text-color-secondary: #888888;
-  --el-text-color-placeholder: #a1a1a1;
-  --el-border-color: #ebebeb;
-  --el-border-color-light: #f0f0f0;
-  --el-fill-color-blank: #ffffff;
-  --el-fill-color-light: #fafafa;
-  --el-fill-color-lighter: #f5f5f5;
+  --el-bg-color: #0a0a0c;
+  --el-bg-color-overlay: #0a0a0c;
+  --el-bg-color-page: #000000;
+  --el-text-color-primary: #fcfdff;
+  --el-text-color-regular: rgba(252, 253, 255, 0.86);
+  --el-text-color-secondary: rgba(252, 253, 255, 0.7);
+  --el-text-color-placeholder: #a1a4a5;
+  --el-border-color: rgba(255, 255, 255, 0.06);
+  --el-border-color-light: rgba(255, 255, 255, 0.04);
+  --el-fill-color-blank: #0a0a0c;
+  --el-fill-color-light: #101012;
+  --el-fill-color-lighter: #141416;
 
-  --el-color-success: #0070f3;
-  --el-color-danger: #ee0000;
-  --el-color-warning: #f5a623;
+  --el-color-success: #11ff99;
+  --el-color-danger: #ff2047;
+  --el-color-warning: #ffc53d;
 
-  --el-border-radius-base: 6px;
-  --el-border-radius-small: 4px;
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
 
   --el-font-family: var(--font-sans);
   --el-font-size-base: 14px;
-  --el-font-size-small: 13px;
 }
 
-// Component overrides
+// Component overrides - no shadows, translucent borders
 .el-card {
-  --el-card-bg-color: #ffffff;
-  --el-card-border-color: #ebebeb;
-  border: 1px solid var(--hairline) !important;
-  box-shadow: var(--shadow-sm) !important;
-  border-radius: var(--r-md) !important;
+  --el-card-bg-color: #0a0a0c;
+  --el-card-border-color: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+  border-radius: var(--r-lg) !important;
 }
 
 .el-dialog {
-  --el-dialog-bg-color: #ffffff;
-  border: 1px solid var(--hairline);
+  --el-dialog-bg-color: #0a0a0c;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--r-lg) !important;
-  box-shadow: var(--shadow-lg) !important;
+  box-shadow: none;
 }
 
 .el-table {
-  --el-table-bg-color: #ffffff;
-  --el-table-tr-bg-color: #ffffff;
-  --el-table-header-bg-color: #fafafa;
-  --el-table-row-hover-bg-color: #fafafa;
-  --el-table-border-color: #ebebeb;
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: #06060a;
+  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.03);
+  --el-table-border-color: rgba(255, 255, 255, 0.06);
   th.el-table__cell {
-    font-family: var(--font-mono);
     font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: var(--mute);
+    font-weight: 500;
   }
 }
 
 .el-menu {
   --el-menu-bg-color: transparent;
-  --el-menu-hover-bg-color: #f5f5f5;
-  --el-menu-active-color: #171717;
-  --el-menu-text-color: #888888;
+  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.04);
+  --el-menu-active-color: #fcfdff;
+  --el-menu-text-color: #a1a4a5;
   --el-menu-item-height: 36px;
 }
 
 .el-input {
-  --el-input-bg-color: #ffffff;
-  --el-input-border-color: #ebebeb;
-  --el-input-hover-border-color: #a1a1a1;
-  --el-input-focus-border-color: #171717;
-  --el-input-text-color: #171717;
+  --el-input-bg-color: #0a0a0c;
+  --el-input-border-color: rgba(255, 255, 255, 0.14);
+  --el-input-hover-border-color: rgba(255, 255, 255, 0.3);
+  --el-input-focus-border-color: #fcfdff;
+  --el-input-text-color: #fcfdff;
 }
 
 .el-button {
-  border-radius: var(--r-sm) !important;
+  border-radius: var(--r-md) !important;
   font-weight: 500;
   font-size: 14px;
 }
 .el-button--primary {
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
+  background: #fcfdff !important;
+  border-color: #fcfdff !important;
+  color: #000 !important;
+}
+.el-button--primary:hover {
+  background: #e8e8e8 !important;
+  border-color: #e8e8e8 !important;
 }
 
 .el-tag {
   border-radius: var(--r-full);
   font-size: 12px;
+  border: none;
 }
 
 .el-progress {
-  --el-progress-border-radius: var(--r-sm);
+  --el-progress-border-radius: 2px;
 }
 
 .el-descriptions {
-  --el-descriptions-item-bordered-label-background: #fafafa;
+  --el-descriptions-item-bordered-label-background: #06060a;
 }
 
 .el-breadcrumb {
-  --el-breadcrumb-text-color: #888;
-  --el-breadcrumb-last-text-color: #171717;
+  --el-breadcrumb-text-color: #888e90;
+  --el-breadcrumb-last-text-color: #fcfdff;
 }
 
 .el-pagination {
   --el-pagination-bg-color: transparent;
-  --el-pagination-button-bg-color: #ffffff;
-  --el-pagination-hover-color: #171717;
+  --el-pagination-button-bg-color: #0a0a0c;
+  --el-pagination-hover-color: #fcfdff;
 }
 
 .el-loading-mask {
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(0, 0, 0, 0.85);
 }
