@@ -1,43 +1,48 @@
 @use "./element-overrides.scss";
 
-// Resend-inspired design system
+// Notion-inspired design system
 :root {
-  // Primary - white is the loudest color on black
-  --primary: #fcfdff;
-  --primary-on: #000000;
+  // Primary
+  --primary: #5645d4;
+  --primary-pressed: #4534b3;
+  --on-primary: #ffffff;
 
   // Surfaces
-  --canvas: #000000;
-  --surface-card: #0a0a0c;
-  --surface-elevated: #101012;
-  --surface-deep: #06060a;
+  --canvas: #ffffff;
+  --surface: #f6f5f4;
+  --surface-soft: #fafaf9;
 
-  // Borders - translucent white
-  --hairline: rgba(255, 255, 255, 0.06);
-  --hairline-strong: rgba(255, 255, 255, 0.14);
+  // Borders
+  --hairline: #e5e3df;
+  --hairline-soft: #ede9e4;
+  --hairline-strong: #c8c4be;
 
-  // Text hierarchy
-  --ink: #fcfdff;
-  --body-text: rgba(252, 253, 255, 0.86);
-  --charcoal: rgba(252, 253, 255, 0.7);
-  --mute: #a1a4a5;
-  --ash: #888e90;
-  --stone: #464a4d;
-
-  // Accents - atmospheric only
-  --accent-blue: #3b9eff;
-  --accent-green: #11ff99;
-  --accent-red: #ff2047;
-  --accent-orange: #ff801f;
-  --accent-yellow: #ffc53d;
+  // Text (warm charcoal palette)
+  --ink: #1a1a1a;
+  --charcoal: #37352f;
+  --slate: #5d5b54;
+  --steel: #787671;
+  --stone: #a4a097;
+  --muted: #bbb8b1;
 
   // Link
-  --link: #3b9eff;
+  --link: #0075de;
+
+  // Semantic
+  --success: #1aae39;
+  --warning: #dd5b00;
+  --error: #e03131;
+
+  // Pastel tints
+  --tint-peach: #ffe8d4;
+  --tint-rose: #fde0ec;
+  --tint-mint: #d9f3e1;
+  --tint-lavender: #e6e0f5;
+  --tint-sky: #dcecfa;
+  --tint-yellow: #fef7d6;
 
   // Typography
-  --font-display: Georgia, "Times New Roman", "Noto Serif SC", serif;
-  --font-sans: "Inter", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --font-sans: "Inter", -apple-system, system-ui, "Segoe UI", Helvetica, sans-serif;
 
   // Radius
   --r-xs: 4px;
@@ -56,13 +61,13 @@ html, body, #app {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--canvas);
-  color: var(--ink);
+  color: var(--charcoal);
   font-size: 14px;
   line-height: 1.5;
 }
 
 a { color: var(--link); text-decoration: none; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 4px; }
+::-webkit-scrollbar-track { background: var(--surface); }

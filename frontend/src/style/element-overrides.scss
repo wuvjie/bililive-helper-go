@@ -1,29 +1,29 @@
-// Element Plus Resend-style overrides
+// Element Plus Notion-style overrides
 :root {
-  --el-color-primary: #fcfdff;
-  --el-color-primary-light-3: #ddd;
-  --el-color-primary-light-5: #aaa;
-  --el-color-primary-light-7: #777;
-  --el-color-primary-light-8: #555;
-  --el-color-primary-light-9: #333;
-  --el-color-primary-dark-2: #e0e0e0;
+  --el-color-primary: #5645d4;
+  --el-color-primary-light-3: #7b6de0;
+  --el-color-primary-light-5: #9d92e9;
+  --el-color-primary-light-7: #bfb8f1;
+  --el-color-primary-light-8: #d2cdf5;
+  --el-color-primary-light-9: #e8e5fa;
+  --el-color-primary-dark-2: #4534b3;
 
-  --el-bg-color: #0a0a0c;
-  --el-bg-color-overlay: #0a0a0c;
-  --el-bg-color-page: #000000;
-  --el-text-color-primary: #fcfdff;
-  --el-text-color-regular: rgba(252, 253, 255, 0.86);
-  --el-text-color-secondary: rgba(252, 253, 255, 0.7);
-  --el-text-color-placeholder: #a1a4a5;
-  --el-border-color: rgba(255, 255, 255, 0.06);
-  --el-border-color-light: rgba(255, 255, 255, 0.04);
-  --el-fill-color-blank: #0a0a0c;
-  --el-fill-color-light: #101012;
-  --el-fill-color-lighter: #141416;
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-bg-color-page: #ffffff;
+  --el-text-color-primary: #37352f;
+  --el-text-color-regular: #5d5b54;
+  --el-text-color-secondary: #787671;
+  --el-text-color-placeholder: #a4a097;
+  --el-border-color: #e5e3df;
+  --el-border-color-light: #ede9e4;
+  --el-fill-color-blank: #ffffff;
+  --el-fill-color-light: #f6f5f4;
+  --el-fill-color-lighter: #fafaf9;
 
-  --el-color-success: #11ff99;
-  --el-color-danger: #ff2047;
-  --el-color-warning: #ffc53d;
+  --el-color-success: #1aae39;
+  --el-color-danger: #e03131;
+  --el-color-warning: #dd5b00;
 
   --el-border-radius-base: 8px;
   --el-border-radius-small: 6px;
@@ -32,51 +32,43 @@
   --el-font-size-base: 14px;
 }
 
-// Component overrides - no shadows, translucent borders
 .el-card {
-  --el-card-bg-color: #0a0a0c;
-  --el-card-border-color: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: none !important;
+  --el-card-bg-color: #ffffff;
+  --el-card-border-color: #e5e3df;
+  border: 1px solid var(--hairline) !important;
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.04) !important;
   border-radius: var(--r-lg) !important;
 }
 
 .el-dialog {
-  --el-dialog-bg-color: #0a0a0c;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  --el-dialog-bg-color: #ffffff;
+  border: 1px solid var(--hairline);
   border-radius: var(--r-lg) !important;
-  box-shadow: none;
+  box-shadow: 0 16px 48px -8px rgba(15, 15, 15, 0.16) !important;
 }
 
 .el-table {
-  --el-table-bg-color: transparent;
-  --el-table-tr-bg-color: transparent;
-  --el-table-header-bg-color: #06060a;
-  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.03);
-  --el-table-border-color: rgba(255, 255, 255, 0.06);
-  th.el-table__cell {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--mute);
-    font-weight: 500;
-  }
+  --el-table-bg-color: #ffffff;
+  --el-table-tr-bg-color: #ffffff;
+  --el-table-header-bg-color: #f6f5f4;
+  --el-table-row-hover-bg-color: #fafaf9;
+  --el-table-border-color: #e5e3df;
 }
 
 .el-menu {
   --el-menu-bg-color: transparent;
-  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.04);
-  --el-menu-active-color: #fcfdff;
-  --el-menu-text-color: #a1a4a5;
+  --el-menu-hover-bg-color: #f6f5f4;
+  --el-menu-active-color: #5645d4;
+  --el-menu-text-color: #787671;
   --el-menu-item-height: 36px;
 }
 
 .el-input {
-  --el-input-bg-color: #0a0a0c;
-  --el-input-border-color: rgba(255, 255, 255, 0.14);
-  --el-input-hover-border-color: rgba(255, 255, 255, 0.3);
-  --el-input-focus-border-color: #fcfdff;
-  --el-input-text-color: #fcfdff;
+  --el-input-bg-color: #ffffff;
+  --el-input-border-color: #c8c4be;
+  --el-input-hover-border-color: #a4a097;
+  --el-input-focus-border-color: #5645d4;
+  --el-input-text-color: #37352f;
 }
 
 .el-button {
@@ -85,40 +77,35 @@
   font-size: 14px;
 }
 .el-button--primary {
-  background: #fcfdff !important;
-  border-color: #fcfdff !important;
-  color: #000 !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
 .el-button--primary:hover {
-  background: #e8e8e8 !important;
-  border-color: #e8e8e8 !important;
+  background: var(--primary-pressed) !important;
+  border-color: var(--primary-pressed) !important;
 }
 
 .el-tag {
-  border-radius: var(--r-full);
-  font-size: 12px;
-  border: none;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .el-progress {
-  --el-progress-border-radius: 2px;
+  --el-progress-border-radius: var(--r-sm);
 }
 
 .el-descriptions {
-  --el-descriptions-item-bordered-label-background: #06060a;
+  --el-descriptions-item-bordered-label-background: #f6f5f4;
 }
 
 .el-breadcrumb {
-  --el-breadcrumb-text-color: #888e90;
-  --el-breadcrumb-last-text-color: #fcfdff;
+  --el-breadcrumb-text-color: #a4a097;
+  --el-breadcrumb-last-text-color: #37352f;
 }
 
 .el-pagination {
   --el-pagination-bg-color: transparent;
-  --el-pagination-button-bg-color: #0a0a0c;
-  --el-pagination-hover-color: #fcfdff;
-}
-
-.el-loading-mask {
-  background-color: rgba(0, 0, 0, 0.85);
+  --el-pagination-button-bg-color: #ffffff;
+  --el-pagination-hover-color: #5645d4;
 }
