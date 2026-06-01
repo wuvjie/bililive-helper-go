@@ -45,6 +45,7 @@ declare module 'vue' {
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
     ElTimePicker: typeof import('element-plus/es')['ElTimePicker']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ReDialog: typeof import('./components/ReDialog/index.vue')['default']
     ReDrawer: typeof import('./components/ReDrawer/index.vue')['default']
     ReTerminal: typeof import('./components/ReTerminal/index.vue')['default']

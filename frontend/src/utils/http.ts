@@ -38,5 +38,3 @@ export function get<T = any>(url: string, params?: any, config?: AxiosRequestCon
 export function post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
   return http.post(url, data, config);
 }
-
-export default http;
