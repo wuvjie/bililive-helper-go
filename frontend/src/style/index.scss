@@ -1,27 +1,27 @@
 @use "./element-overrides.scss";
 
-// Zapier-inspired design system
 :root {
-  --primary: #ff4f00;
-  --on-primary: #fffefb;
+  --primary: #9fe870;
+  --on-primary: #0e0f0c;
+  --primary-active: #cdffad;
+  --primary-pale: #e2f6d5;
 
-  --canvas: #fffefb;
-  --canvas-soft: #f8f4f0;
+  --canvas: #ffffff;
+  --canvas-soft: #e8ebe6;
 
-  --ink: #201515;
-  --ink-soft: #2f2a26;
-  --ink-mid: #36342e;
-  --body-text: #605d52;
-  --body-mid: #939084;
-  --mute: #c5c0b1;
+  --ink: #0e0f0c;
+  --body-text: #454745;
+  --mute: #868685;
 
-  --success: #2a9d60;
-  --error: #d92d20;
-  --warning: #dc6803;
+  --success: #2ead4b;
+  --error: #d03238;
+  --warning: #ffd11a;
 
   --font-sans: "Inter", -apple-system, system-ui, "Segoe UI", sans-serif;
-  --r-sm: 6px;
+  --r-sm: 8px;
   --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
   --r-pill: 9999px;
 }
 
@@ -31,14 +31,14 @@ html, body, #app {
   height: 100%;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  background: var(--canvas);
+  background: var(--canvas-soft);
   color: var(--ink);
   font-size: 16px;
   line-height: 1.5;
 }
 
-a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+a { color: var(--ink); }
 
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: var(--mute); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #c5c8c0; border-radius: 4px; }
 ::-webkit-scrollbar-track { background: var(--canvas-soft); }
