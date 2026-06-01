@@ -142,13 +142,21 @@
               <el-alert :type="riskAlertType" :closable="false" class="mb-16">
                 <template #title>
                   风险等级：<strong>{{ recommend.risk_level?.toUpperCase() }}</strong>
+                  <span v-if="recommend.reason" style="margin-left: 12px; font-weight: normal; opacity: 0.8">{{ recommend.reason }}</span>
                 </template>
               </el-alert>
+              <el-descriptions :column="3" size="small" border class="mb-16">
+                <el-descriptions-item label="磁盘使用率">{{ recommend.current_usage?.toFixed(1) }}%</el-descriptions-item>
+                <el-descriptions-item label="总容量">{{ recommend.total_gb?.toFixed(0) }} GB</el-descriptions-item>
+                <el-descriptions-item label="剩余">{{ recommend.free_gb?.toFixed(1) }} GB</el-descriptions-item>
+                <el-descriptions-item label="主播数">{{ recommend.analysis?.streamer_count || 0 }}</el-descriptions-item>
+                <el-descriptions-item label="日产出">{{ (recommend.analysis?.daily_output_gb || 0).toFixed(1) }} GB</el-descriptions-item>
+                <el-descriptions-item label="可维持">{{ (recommend.analysis?.days_until_full || 0).toFixed(0) }} 天</el-descriptions-item>
+              </el-descriptions>
               <el-table :data="recommendTable" stripe size="small" border>
                 <el-table-column prop="key" label="参数" width="200" />
                 <el-table-column prop="current" label="当前值" width="120" />
                 <el-table-column prop="recommended" label="推荐值" width="120" />
-                <el-table-column prop="desc" label="说明" />
               </el-table>
               <el-button type="primary" class="mt-16" @click="applyRecommend">应用推荐值</el-button>
             </template>
@@ -212,13 +220,19 @@ const exportJson = ref("");
 const importJson = ref("");
 
 const recommendTable = computed(() => {
-  if (!recommend.value?.recommendations) return [];
-  return Object.entries(recommend.value.recommendations).map(([key, val]) => ({
-    key,
-    current: val.current,
-    recommended: val.recommended,
-    desc: ""
-  }));
+  if (!recommend.value) return [];
+  const r = recommend.value;
+  const cfg = config;
+  return [
+    { key: "触发清理阈值 (%)", current: cfg.TRIGGER_THRESHOLD, recommended: r.TRIGGER_THRESHOLD },
+    { key: "目标清理阈值 (%)", current: cfg.TARGET_THRESHOLD, recommended: r.TARGET_THRESHOLD },
+    { key: "每主播最少保留", current: cfg.MIN_KEEP_PER_STREAMER, recommended: r.MIN_KEEP_PER_STREAMER },
+    { key: "安全期 (分钟)", current: cfg.SAFE_AGE_MINUTES, recommended: r.SAFE_AGE_MINUTES },
+    { key: "安全模式", current: cfg.SAFE_MODE, recommended: r.SAFE_MODE },
+    { key: "合并时间阈值 (分钟)", current: cfg.MERGE_AGE_MINUTES, recommended: r.MERGE_AGE_MINUTES },
+    { key: "单次最大删除数", current: cfg.MAX_DELETE_PER_RUN, recommended: r.MAX_DELETE_PER_RUN },
+    { key: "片段间隔 (分钟)", current: cfg.GAP_MINUTES, recommended: r.GAP_MINUTES }
+  ];
 });
 
 const riskAlertType = computed(() => {
@@ -269,10 +283,16 @@ async function loadRecommend() {
 }
 
 function applyRecommend() {
-  if (!recommend.value?.recommendations) return;
-  for (const [key, val] of Object.entries(recommend.value.recommendations)) {
-    config[key] = val.recommended;
-  }
+  if (!recommend.value) return;
+  const r = recommend.value;
+  config.TRIGGER_THRESHOLD = r.TRIGGER_THRESHOLD;
+  config.TARGET_THRESHOLD = r.TARGET_THRESHOLD;
+  config.MIN_KEEP_PER_STREAMER = r.MIN_KEEP_PER_STREAMER;
+  config.SAFE_AGE_MINUTES = r.SAFE_AGE_MINUTES;
+  config.SAFE_MODE = r.SAFE_MODE;
+  config.MERGE_AGE_MINUTES = r.MERGE_AGE_MINUTES;
+  config.MAX_DELETE_PER_RUN = r.MAX_DELETE_PER_RUN;
+  config.GAP_MINUTES = r.GAP_MINUTES;
   activeTab.value = "general";
   ElMessage.success("已填入推荐值，请手动保存");
 }
