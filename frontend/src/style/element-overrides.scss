@@ -1,113 +1,79 @@
-// Element Plus Notion-style overrides
 :root {
-  --el-color-primary: #5645d4;
-  --el-color-primary-light-3: #7b6de0;
-  --el-color-primary-light-5: #9d92e9;
-  --el-color-primary-light-7: #bfb8f1;
-  --el-color-primary-light-8: #d2cdf5;
-  --el-color-primary-light-9: #e8e5fa;
-  --el-color-primary-dark-2: #4534b3;
+  --el-color-primary: #ff4f00;
+  --el-color-primary-light-3: #ff7a3d;
+  --el-color-primary-light-5: #ff9e6d;
+  --el-color-primary-light-7: #ffc29e;
+  --el-color-primary-light-8: #ffd6b8;
+  --el-color-primary-light-9: #ffe8d6;
+  --el-color-primary-dark-2: #cc3f00;
 
-  --el-bg-color: #ffffff;
-  --el-bg-color-overlay: #ffffff;
-  --el-bg-color-page: #ffffff;
-  --el-text-color-primary: #37352f;
-  --el-text-color-regular: #5d5b54;
-  --el-text-color-secondary: #787671;
-  --el-text-color-placeholder: #a4a097;
-  --el-border-color: #e5e3df;
-  --el-border-color-light: #ede9e4;
-  --el-fill-color-blank: #ffffff;
-  --el-fill-color-light: #f6f5f4;
-  --el-fill-color-lighter: #fafaf9;
+  --el-bg-color: #fffefb;
+  --el-bg-color-overlay: #fffefb;
+  --el-bg-color-page: #fffefb;
+  --el-text-color-primary: #201515;
+  --el-text-color-regular: #605d52;
+  --el-text-color-secondary: #939084;
+  --el-text-color-placeholder: #c5c0b1;
+  --el-border-color: #e5e0d8;
+  --el-border-color-light: #ede9e3;
+  --el-fill-color-blank: #fffefb;
+  --el-fill-color-light: #f8f4f0;
+  --el-fill-color-lighter: #f3efe9;
 
-  --el-color-success: #1aae39;
-  --el-color-danger: #e03131;
-  --el-color-warning: #dd5b00;
+  --el-color-success: #2a9d60;
+  --el-color-danger: #d92d20;
+  --el-color-warning: #dc6803;
 
-  --el-border-radius-base: 8px;
+  --el-border-radius-base: 12px;
   --el-border-radius-small: 6px;
-
   --el-font-family: var(--font-sans);
-  --el-font-size-base: 14px;
+  --el-font-size-base: 16px;
 }
 
 .el-card {
-  --el-card-bg-color: #ffffff;
-  --el-card-border-color: #e5e3df;
-  border: 1px solid var(--hairline) !important;
-  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.04) !important;
-  border-radius: var(--r-lg) !important;
+  --el-card-bg-color: #f8f4f0;
+  --el-card-border-color: transparent;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: var(--r-md) !important;
 }
 
 .el-dialog {
-  --el-dialog-bg-color: #ffffff;
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-lg) !important;
-  box-shadow: 0 16px 48px -8px rgba(15, 15, 15, 0.16) !important;
+  --el-dialog-bg-color: #fffefb;
+  border: 1px solid #e5e0d8;
+  border-radius: var(--r-md) !important;
 }
 
 .el-table {
-  --el-table-bg-color: #ffffff;
-  --el-table-tr-bg-color: #ffffff;
-  --el-table-header-bg-color: #f6f5f4;
-  --el-table-row-hover-bg-color: #fafaf9;
-  --el-table-border-color: #e5e3df;
+  --el-table-bg-color: #fffefb;
+  --el-table-tr-bg-color: #fffefb;
+  --el-table-header-bg-color: #f8f4f0;
+  --el-table-row-hover-bg-color: #f8f4f0;
+  --el-table-border-color: #e5e0d8;
 }
 
 .el-menu {
   --el-menu-bg-color: transparent;
-  --el-menu-hover-bg-color: #f6f5f4;
-  --el-menu-active-color: #5645d4;
-  --el-menu-text-color: #787671;
-  --el-menu-item-height: 36px;
+  --el-menu-hover-bg-color: #f8f4f0;
+  --el-menu-active-color: #ff4f00;
+  --el-menu-text-color: #605d52;
+  --el-menu-item-height: 40px;
 }
 
 .el-input {
-  --el-input-bg-color: #ffffff;
-  --el-input-border-color: #c8c4be;
-  --el-input-hover-border-color: #a4a097;
-  --el-input-focus-border-color: #5645d4;
-  --el-input-text-color: #37352f;
+  --el-input-bg-color: #fffefb;
+  --el-input-border-color: #201515;
+  --el-input-hover-border-color: #36342e;
+  --el-input-focus-border-color: #ff4f00;
+  --el-input-text-color: #201515;
 }
 
-.el-button {
-  border-radius: var(--r-md) !important;
-  font-weight: 500;
-  font-size: 14px;
-}
-.el-button--primary {
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  color: #ffffff !important;
-}
-.el-button--primary:hover {
-  background: var(--primary-pressed) !important;
-  border-color: var(--primary-pressed) !important;
-  color: #ffffff !important;
-}
+.el-button { border-radius: var(--r-md) !important; font-weight: 600; font-size: 16px; }
+.el-button--primary { background: var(--primary) !important; border-color: var(--primary) !important; color: #fff !important; }
+.el-button--primary:hover { background: #cc3f00 !important; border-color: #cc3f00 !important; color: #fff !important; }
 
-.el-tag {
-  border-radius: var(--r-sm);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.el-progress {
-  --el-progress-border-radius: var(--r-sm);
-}
-
-.el-descriptions {
-  --el-descriptions-item-bordered-label-background: #f6f5f4;
-}
-
-.el-breadcrumb {
-  --el-breadcrumb-text-color: #a4a097;
-  --el-breadcrumb-last-text-color: #37352f;
-}
-
-.el-pagination {
-  --el-pagination-bg-color: transparent;
-  --el-pagination-button-bg-color: #ffffff;
-  --el-pagination-hover-color: #5645d4;
-}
+.el-tag { border-radius: var(--r-sm); font-weight: 600; }
+.el-progress { --el-progress-border-radius: var(--r-sm); }
+.el-descriptions { --el-descriptions-item-bordered-label-background: #f8f4f0; }
+.el-breadcrumb { --el-breadcrumb-text-color: #939084; --el-breadcrumb-last-text-color: #201515; }
+.el-pagination { --el-pagination-bg-color: transparent; --el-pagination-button-bg-color: #f8f4f0; --el-pagination-hover-color: #ff4f00; }
