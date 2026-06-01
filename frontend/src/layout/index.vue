@@ -3,8 +3,8 @@
     <!-- Sidebar -->
     <aside class="layout-sidebar" :class="{ collapsed: !appStore.sidebar.opened }">
       <div class="sidebar-logo">
-        <span v-if="appStore.sidebar.opened" class="logo-text">📺 Bililive</span>
-        <span v-else class="logo-text-mini">📺</span>
+        <span v-if="appStore.sidebar.opened" class="logo-text">Bililive Helper Go</span>
+        <span v-else class="logo-text-mini">BH</span>
       </div>
       <el-scrollbar>
         <el-menu
