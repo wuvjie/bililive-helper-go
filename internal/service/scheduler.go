@@ -260,8 +260,8 @@ func (s *SchedulerService) getSchedule() model.ScheduleConfig {
 
 func (s *SchedulerService) loadSchedule() model.ScheduleConfig {
 	defaultSchedule := model.ScheduleConfig{
-		MergeInterval: 120,
-		CleanInterval: 360,
+		MergeInterval: 360,
+		CleanInterval: 720,
 		MergeEnabled:  true,
 		CleanEnabled:  true,
 	}
