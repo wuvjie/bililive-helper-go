@@ -50,7 +50,7 @@ async function handleLogin() {
   border: 1px solid var(--hairline);
   border-radius: var(--r-lg);
   padding: 48px 40px; text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 24px 48px -8px rgba(0,0,0,0.12);
   animation: slideUp 0.2s ease-out;
 }
 
@@ -58,12 +58,12 @@ async function handleLogin() {
 
 .login-logo {
   width: 56px; height: 56px; margin: 0 auto 20px;
-  background: var(--ink); color: var(--on-primary);
-  border-radius: var(--r-md); display: flex; align-items: center; justify-content: center;
-  font-size: 20px; font-weight: 700;
+  background: var(--brand-green); color: var(--primary);
+  border-radius: var(--r-pill); display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
 }
 
 .login-card h1 { font-size: 24px; font-weight: 600; color: var(--ink); margin-bottom: 4px; letter-spacing: -0.5px; }
-.login-sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+.login-sub { font-size: 15px; color: var(--steel); margin-bottom: 28px; }
 .login-btn { width: 100%; }
 </style>

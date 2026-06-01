@@ -11,9 +11,8 @@
       </div>
     </div>
 
-    <!-- Stat Cards -->
     <div class="stat-grid">
-      <div v-for="(card, i) in statCards" :key="card.label" class="stat-card" :class="statColors[i]">
+      <div v-for="card in statCards" :key="card.label" class="stat-card">
         <span class="stat-label">{{ card.label }}</span>
         <span class="stat-value">{{ card.value }}</span>
         <span class="stat-sub">{{ card.sub }}</span>
@@ -21,12 +20,12 @@
     </div>
 
     <div class="grid-2">
-      <div class="card card-surface">
+      <div class="card">
         <div class="card-title">存储状态</div>
         <div class="card-body">
           <div class="disk-top">
             <span>磁盘使用率</span>
-            <span class="disk-pct">{{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%</span>
+            <span class="disk-pct" :style="{ color: diskColor }">{{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%</span>
           </div>
           <el-progress :percentage="detail?.disk?.usage_pct || 0" :color="diskColor" :stroke-width="8" :format="() => ''" style="margin-bottom: 16px" />
           <el-descriptions :column="2" size="small" border>
@@ -38,7 +37,7 @@
         </div>
       </div>
 
-      <div class="card card-surface">
+      <div class="card">
         <div class="card-title">系统状态</div>
         <div class="card-body">
           <el-descriptions :column="1" size="small" border>
@@ -53,7 +52,7 @@
     </div>
 
     <div class="grid-2">
-      <div class="card card-surface">
+      <div class="card">
         <div class="card-title">近7天趋势</div>
         <div class="card-body">
           <div class="trend-chart">
@@ -71,12 +70,12 @@
           </div>
           <div class="trend-legend">
             <span><span class="legend-dot" style="background: var(--ink)" />合并量</span>
-            <span><span class="legend-dot" style="background: var(--badge-emerald)" />释放量</span>
+            <span><span class="legend-dot" style="background: var(--brand-green)" />释放量</span>
           </div>
         </div>
       </div>
 
-      <div class="card card-surface">
+      <div class="card">
         <div class="card-title">
           <span>最近操作</span>
           <el-button text type="primary" size="small" @click="$router.push('/history')">查看全部</el-button>
@@ -116,10 +115,7 @@ const greeting = computed(() => {
   if (h < 6) return "夜深了"; if (h < 12) return "早上好"; if (h < 14) return "中午好"; if (h < 18) return "下午好"; return "晚上好";
 });
 const todayDate = computed(() => new Date().toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" }));
-const diskColor = computed(() => { const p = detail.value?.disk?.usage_pct || 0; return p >= 80 ? "var(--error)" : p >= 60 ? "var(--warning)" : "var(--success)"; });
-
-const statColors = ["stat-orange", "stat-pink", "stat-violet", "stat-emerald"];
-
+const diskColor = computed(() => { const p = detail.value?.disk?.usage_pct || 0; return p >= 80 ? "var(--error)" : p >= 60 ? "var(--warning)" : "var(--brand-green)"; });
 const statCards = computed(() => {
   const s = stats.value; if (!s) return [];
   return [
@@ -148,32 +144,25 @@ onMounted(async () => {
 
 .dash-header { display: flex; justify-content: space-between; align-items: flex-end; }
 .dash-header h1 { font-size: 28px; font-weight: 600; color: var(--ink); letter-spacing: -0.5px; line-height: 1.2; }
-.dash-date { font-size: 15px; color: var(--muted); margin-top: 4px; }
+.dash-date { font-size: 15px; color: var(--steel); margin-top: 4px; }
 .dash-badges { display: flex; gap: 6px; }
 
-.badge { display: inline-flex; padding: 4px 12px; border-radius: var(--r-pill); font-size: 13px; font-weight: 500; }
-.badge-ok { background: #ecfdf5; color: #065f46; }
-.badge-err { background: #fef2f2; color: #991b1b; }
+.badge { display: inline-flex; padding: 4px 12px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; }
+.badge-ok { background: rgba(0,212,164,0.12); color: #00b48a; }
+.badge-err { background: rgba(212,86,86,0.12); color: #d45656; }
 
-/* Stat cards with Cal.com pastel badges */
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.stat-card { border-radius: var(--r-lg); padding: 24px; display: flex; flex-direction: column; }
-.stat-orange { background: #fff7ed; }
-.stat-pink { background: #fdf2f8; }
-.stat-violet { background: #f5f3ff; }
-.stat-emerald { background: #ecfdf5; }
-
-.stat-label { font-size: 14px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+.stat-card { background: var(--surface); border-radius: var(--r-lg); padding: 24px; display: flex; flex-direction: column; border: 1px solid var(--hairline-soft); }
+.stat-label { font-size: 14px; color: var(--steel); margin-bottom: 8px; }
 .stat-value { font-size: 32px; font-weight: 600; color: var(--ink); line-height: 1; letter-spacing: -0.5px; }
-.stat-sub { font-size: 13px; color: var(--muted-soft); margin-top: 6px; }
+.stat-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
 
-/* Cards */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.card-surface { background: var(--surface-card); border-radius: var(--r-lg); overflow: hidden; }
-.card-title { padding: 14px 20px; font-size: 16px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--hairline-soft); display: flex; justify-content: space-between; align-items: center; }
+.card { background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--r-lg); overflow: hidden; }
+.card-title { padding: 14px 20px; font-size: 15px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--hairline-soft); display: flex; justify-content: space-between; align-items: center; }
 .card-body { padding: 20px; }
 
-.disk-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 15px; color: var(--body-text); }
+.disk-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 15px; color: var(--slate); }
 .disk-pct { font-size: 20px; font-weight: 600; }
 
 .trend-chart { display: flex; justify-content: space-around; align-items: flex-end; height: 100px; }
@@ -182,14 +171,14 @@ onMounted(async () => {
 .trend-bar { width: 16px; border-radius: var(--r-sm) var(--r-sm) 0 0; min-height: 4px; transition: height 0.3s; cursor: pointer; }
 .trend-bar:hover { opacity: 0.7; }
 .bar-merge { background: var(--ink); }
-.bar-clean { background: var(--badge-emerald); }
-.trend-date { font-size: 12px; color: var(--muted-soft); }
-.trend-legend { display: flex; gap: 16px; justify-content: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.bar-clean { background: var(--brand-green); }
+.trend-date { font-size: 12px; color: var(--muted); }
+.trend-legend { display: flex; gap: 16px; justify-content: center; margin-top: 14px; font-size: 13px; color: var(--steel); }
 .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
 
 .recent-info { display: flex; flex-direction: column; }
-.recent-name { font-size: 15px; font-weight: 600; color: var(--ink); }
-.recent-detail { font-size: 13px; color: var(--muted); margin-top: 1px; }
+.recent-name { font-size: 15px; font-weight: 500; color: var(--ink); }
+.recent-detail { font-size: 13px; color: var(--steel); margin-top: 1px; }
 
 @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .stat-grid { grid-template-columns: 1fr; } .dash-header { flex-direction: column; align-items: flex-start; gap: 8px; } }
