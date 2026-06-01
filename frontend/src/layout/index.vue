@@ -97,7 +97,7 @@ const appStore = useAppStore();
 const isDark = ref(false);
 
 const menuItems = [
-  { path: "/dashboard", title: "概览", icon: Monitor },
+  { path: "/dashboard", title: "系统概览", icon: Monitor },
   { path: "/streamers", title: "主播管理", icon: User },
   { path: "/tasks", title: "任务中心", icon: VideoPlay },
   { path: "/history", title: "操作日志", icon: Document },
