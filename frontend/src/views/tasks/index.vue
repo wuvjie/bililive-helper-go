@@ -82,7 +82,11 @@
         <el-table-column type="selection" width="45" :selectable="() => true" />
         <el-table-column prop="name" label="文件名" min-width="300" show-overflow-tooltip />
         <el-table-column prop="size_str" label="大小" width="100" />
-        <el-table-column prop="mtime" label="修改时间" width="170" />
+        <el-table-column prop="mtime" label="修改时间" width="170">
+          <template #default="{ row }">
+            {{ formatMtime(row.mtime) }}
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.is_merged ? 'success' : 'warning'" size="small">
@@ -124,6 +128,15 @@ const sse = useSSE();
 function formatTime(ts?: number) {
   if (!ts) return "-";
   return new Date(ts * 1000).toLocaleString("zh-CN");
+}
+
+function formatMtime(mtime: number | string) {
+  if (!mtime) return "-";
+  const ts = typeof mtime === "number" ? mtime : parseInt(mtime);
+  if (isNaN(ts)) return String(mtime);
+  // If it looks like seconds (10 digits), convert to ms
+  const ms = ts > 1e12 ? ts : ts * 1000;
+  return new Date(ms).toLocaleString("zh-CN");
 }
 
 async function loadFiles() {
