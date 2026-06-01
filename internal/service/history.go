@@ -16,11 +16,13 @@ import (
 )
 
 type HistoryService struct {
-	config *config.Config
-	logger *zap.Logger
-	mu     sync.RWMutex
-	cache  []model.HistoryRecord
-	loaded bool
+	config  *config.Config
+	logger  *zap.Logger
+	mu      sync.RWMutex
+	cache   []model.HistoryRecord
+	loaded  bool
+	loadErr error
+	once    sync.Once
 }
 
 func NewHistoryService(config *config.Config, logger *zap.Logger) *HistoryService {
@@ -51,7 +53,8 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 		record.Streamer = "全局"
 	}
 
-	records := s.loadRecords()
+	s.ensureLoaded()
+	records := append([]model.HistoryRecord{}, s.cache...)
 	records = append(records, record)
 	records = s.cleanupRecords(records)
 	s.saveRecords(records)
@@ -59,7 +62,8 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 
 func (s *HistoryService) GetRecords(task string, page, perPage int) ([]model.HistoryRecord, int) {
 	s.mu.RLock()
-	records := s.loadRecords()
+	s.ensureLoaded()
+	records := append([]model.HistoryRecord{}, s.cache...) // copy under lock
 	s.mu.RUnlock()
 
 	if records == nil {
@@ -94,7 +98,8 @@ func (s *HistoryService) GetRecords(task string, page, perPage int) ([]model.His
 
 func (s *HistoryService) GetAllRecords() []model.HistoryRecord {
 	s.mu.RLock()
-	records := s.loadRecords()
+	s.ensureLoaded()
+	records := append([]model.HistoryRecord{}, s.cache...)
 	s.mu.RUnlock()
 	if records == nil {
 		return []model.HistoryRecord{}
@@ -102,16 +107,18 @@ func (s *HistoryService) GetAllRecords() []model.HistoryRecord {
 	return records
 }
 
-func (s *HistoryService) loadRecords() []model.HistoryRecord {
+// ensureLoaded loads records from disk if not already loaded.
+// Caller MUST hold at least RLock.
+func (s *HistoryService) ensureLoaded() {
 	if s.loaded {
-		return s.cache
+		return
 	}
 	file := s.config.GetHistoryFile()
 	data, err := os.ReadFile(file)
 	if err != nil {
 		s.loaded = true
 		s.cache = nil
-		return nil
+		return
 	}
 	var wrapper struct {
 		Records []model.HistoryRecord `json:"records"`
@@ -120,15 +127,13 @@ func (s *HistoryService) loadRecords() []model.HistoryRecord {
 		s.logger.Warn("历史记录解析失败，重建空记录", zap.Error(err))
 		s.loaded = true
 		s.cache = nil
-		return nil
+		return
 	}
 	s.cache = wrapper.Records
 	s.loaded = true
-	return s.cache
 }
 
 func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
-	s.cache = records
 	file := s.config.GetHistoryFile()
 	os.MkdirAll(filepath.Dir(file), 0755)
 	wrapper := struct {
@@ -137,7 +142,11 @@ func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 	data, _ := json.MarshalIndent(wrapper, "", "  ")
 	tmp := file + ".tmp"
 	if err := os.WriteFile(tmp, data, 0644); err == nil {
-		os.Rename(tmp, file)
+		if err := os.Rename(tmp, file); err == nil {
+			s.cache = records // only update cache after successful disk write
+			return
+		}
+		os.Remove(tmp)
 	} else {
 		os.Remove(tmp)
 	}
@@ -160,7 +169,8 @@ func (s *HistoryService) cleanupRecords(records []model.HistoryRecord) []model.H
 func (s *HistoryService) CleanupOldRecords() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	records := s.loadRecords()
+	s.ensureLoaded()
+	records := append([]model.HistoryRecord{}, s.cache...)
 	cleaned := s.cleanupRecords(records)
 	if len(cleaned) != len(records) {
 		s.saveRecords(cleaned)

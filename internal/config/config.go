@@ -90,7 +90,7 @@ func Load() *Config {
 	// Generate random credentials on first run (no config file, no env var)
 	firstRun := false
 	if cfg.Password == "" {
-		cfg.Password = randomHex(4) // 8-char hex
+		cfg.Password = randomHex(12) // 24-char hex, 96-bit entropy
 		firstRun = true
 	}
 	if cfg.SecretKey == "" {
@@ -244,10 +244,14 @@ func (c *Config) Snapshot() Config {
 }
 
 // ApplyFromMap applies partial config updates from a map (JSON request body).
-// Only present keys are updated. Does not validate — call Validate() separately.
+// Only present keys are updated. Validates TARGET_DIR exists as a directory.
 func (c *Config) ApplyFromMap(m map[string]interface{}) {
 	if v, ok := m["TARGET_DIR"].(string); ok {
-		c.TargetDir = v
+		if info, err := os.Stat(v); err != nil || !info.IsDir() {
+			// Reject invalid directory — keep the old value
+		} else {
+			c.TargetDir = v
+		}
 	}
 	if v, ok := m["TRIGGER_THRESHOLD"].(float64); ok {
 		c.TriggerThreshold = v

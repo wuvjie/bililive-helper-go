@@ -319,8 +319,12 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 		s.logToFile("merge", fmt.Sprintf("⚠ 删除原始文件失败: %v", err))
 	}
 
-	info, _ := os.Stat(mp4Path)
-	s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 完成: %s (%s)", filepath.Base(mp4Path), utils.FormatSize(info.Size())))
+	info, err := os.Stat(mp4Path)
+	if err != nil {
+		s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 完成: %s", filepath.Base(mp4Path)))
+	} else {
+		s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 完成: %s (%s)", filepath.Base(mp4Path), utils.FormatSize(info.Size())))
+	}
 	onProgress(fmt.Sprintf("✅ 完成: %s", filepath.Base(mp4Path)))
 	return true
 }
@@ -355,8 +359,12 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 		os.Chtimes(outputPath, latestSrcMtime, latestSrcMtime)
 	}
 
-	info, _ := os.Stat(outputPath)
-	s.logToFile("merge", fmt.Sprintf("✅ 重编码完成: %s", utils.FormatSize(info.Size())))
+	info, err := os.Stat(outputPath)
+	if err != nil {
+		s.logToFile("merge", "✅ 重编码完成")
+	} else {
+		s.logToFile("merge", fmt.Sprintf("✅ 重编码完成: %s", utils.FormatSize(info.Size())))
+	}
 	return true
 }
 
@@ -416,7 +424,11 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	// Step 1: Convert each input to TS (if not already TS)
 	var tsFiles []string
 	tmpDir := filepath.Join(folder, ".merge_tmp_"+time.Now().Format("20060102150405"))
-	os.MkdirAll(tmpDir, 0755)
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		s.logToFile("merge", fmt.Sprintf("❌ 创建临时目录失败: %v", err))
+		onProgress(fmt.Sprintf("❌ 创建临时目录失败: %v", err))
+		return false
+	}
 	defer os.RemoveAll(tmpDir)
 
 	for _, f := range files {
