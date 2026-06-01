@@ -69,7 +69,7 @@
             </div>
           </div>
           <div class="trend-legend">
-            <span><span class="legend-dot" style="background: var(--ink)" />合并量</span>
+            <span><span class="legend-dot" style="background: var(--slate)" />合并量</span>
             <span><span class="legend-dot" style="background: var(--brand-green)" />释放量</span>
           </div>
         </div>
@@ -144,7 +144,7 @@ onMounted(async () => {
 
 .dash-header { display: flex; justify-content: space-between; align-items: flex-end; }
 .dash-header h1 { font-size: 28px; font-weight: 600; color: var(--ink); letter-spacing: -0.5px; line-height: 1.2; }
-.dash-date { font-size: 15px; color: var(--steel); margin-top: 4px; }
+.dash-date { font-size: 13px; color: var(--stone); margin-top: 4px; font-family: var(--font-mono); letter-spacing: 0; }
 .dash-badges { display: flex; gap: 6px; }
 
 .badge { display: inline-flex; padding: 4px 12px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; }
@@ -170,7 +170,7 @@ onMounted(async () => {
 .trend-bars { display: flex; gap: 4px; align-items: flex-end; }
 .trend-bar { width: 16px; border-radius: var(--r-sm) var(--r-sm) 0 0; min-height: 4px; transition: height 0.3s; cursor: pointer; }
 .trend-bar:hover { opacity: 0.7; }
-.bar-merge { background: var(--ink); }
+.bar-merge { background: var(--slate); }
 .bar-clean { background: var(--brand-green); }
 .trend-date { font-size: 12px; color: var(--muted); }
 .trend-legend { display: flex; gap: 16px; justify-content: center; margin-top: 14px; font-size: 13px; color: var(--steel); }
