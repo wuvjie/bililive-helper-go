@@ -98,8 +98,8 @@
             </div>
           </div>
           <div class="trend-legend">
-            <span class="legend-item"><span class="legend-dot merge" />合并</span>
-            <span class="legend-item"><span class="legend-dot clean" />清理</span>
+            <span class="legend-item"><span class="legend-dot merge" />合并次数</span>
+            <span class="legend-item"><span class="legend-dot clean" />清理次数</span>
           </div>
         </el-card>
       </el-col>
