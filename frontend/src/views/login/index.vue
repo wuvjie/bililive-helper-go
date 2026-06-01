@@ -1,41 +1,23 @@
 <template>
   <div class="login-container">
-    <!-- Left decorative panel -->
+    <!-- Left panel -->
     <div class="login-left">
       <div class="left-content">
-        <div class="brand-mark">
-          <span class="brand-icon">◆</span>
+        <div class="brand-badge">
+          <span class="mono-label">BILILIVE HELPER</span>
         </div>
-        <h1>Bililive Helper</h1>
-        <p class="subtitle">Smart livestream recording management</p>
-        <div class="features">
-          <div class="feature-item">
-            <span class="feature-dot" />
-            <span>自动合并录制分片</span>
-          </div>
-          <div class="feature-item">
-            <span class="feature-dot" />
-            <span>智能磁盘空间管理</span>
-          </div>
-          <div class="feature-item">
-            <span class="feature-dot" />
-            <span>定时任务调度</span>
-          </div>
-          <div class="feature-item">
-            <span class="feature-dot" />
-            <span>硬件加速转码</span>
-          </div>
-        </div>
+        <h1>Smart recording<br />management.</h1>
+        <p class="lead">自动合并录制分片、智能磁盘管理、定时任务调度、硬件加速转码。</p>
       </div>
-      <!-- Grid pattern background -->
-      <div class="grid-pattern" />
+      <!-- Mesh gradient background -->
+      <div class="mesh-gradient" />
     </div>
 
     <!-- Right form panel -->
     <div class="login-right">
-      <div class="form-wrapper">
-        <h2>Welcome back</h2>
-        <p class="form-subtitle">输入密码以继续</p>
+      <div class="form-card">
+        <h2>Welcome back.</h2>
+        <p class="form-sub">输入密码以继续</p>
         <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleLogin">
           <el-form-item prop="password">
             <el-input
@@ -56,7 +38,7 @@
               class="login-btn"
               @click="handleLogin"
             >
-              Sign in
+              Sign in →
             </el-button>
           </el-form-item>
         </el-form>
@@ -86,7 +68,7 @@ async function handleLogin() {
     await login(form.password);
     ElMessage.success("登录成功");
     router.push("/");
-  } catch { /* handled by interceptor */ }
+  } catch { /* handled */ }
   finally { loading.value = false; }
 }
 </script>
@@ -96,7 +78,7 @@ async function handleLogin() {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: var(--canvas);
+  background: #ffffff;
 }
 
 .login-left {
@@ -106,112 +88,92 @@ async function handleLogin() {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-right: 1px solid var(--hairline);
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
-.grid-pattern {
+.mesh-gradient {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(var(--hairline) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
-  background-size: 48px 48px;
-  opacity: 0.4;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(0, 112, 243, 0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(121, 40, 202, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(255, 0, 128, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 30%, rgba(80, 227, 194, 0.15) 0%, transparent 40%);
   pointer-events: none;
 }
 
 .left-content {
   position: relative;
   z-index: 2;
-  text-align: center;
   padding: 48px;
-  max-width: 400px;
+  max-width: 480px;
 }
 
-.brand-mark {
+.brand-badge {
   margin-bottom: 32px;
 }
-.brand-icon {
-  font-size: 40px;
-  color: var(--primary);
-  display: inline-block;
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  text-transform: uppercase;
 }
 
 .left-content h1 {
-  font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 48px;
   font-weight: 600;
-  letter-spacing: -1px;
-  color: var(--ink);
-  margin-bottom: 8px;
+  letter-spacing: -2.4px;
+  line-height: 1;
+  margin-bottom: 16px;
 }
 
-.subtitle {
-  font-size: 16px;
-  color: var(--ink-subtle);
-  margin-bottom: 48px;
-  letter-spacing: -0.02em;
-}
-
-.features {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-align: left;
-}
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  color: var(--ink-muted);
-}
-.feature-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--primary);
-  flex-shrink: 0;
+.lead {
+  font-size: 18px;
+  line-height: 28px;
   opacity: 0.7;
 }
 
 .login-right {
-  width: 440px;
+  width: 480px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-1);
+  background: var(--canvas-soft);
 }
 
-.form-wrapper {
-  width: 300px;
-  animation: slideUp 0.4s ease-out;
+.form-card {
+  width: 320px;
+  background: #ffffff;
+  padding: 32px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  animation: slideUp 0.3s ease-out;
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.form-wrapper h2 {
-  font-family: var(--font-display);
-  font-size: 22px;
+.form-card h2 {
+  font-size: 24px;
   font-weight: 600;
-  letter-spacing: -0.4px;
-  color: var(--ink);
+  letter-spacing: -0.96px;
   margin-bottom: 4px;
 }
 
-.form-subtitle {
+.form-sub {
   font-size: 14px;
-  color: var(--ink-subtle);
-  margin-bottom: 28px;
+  color: var(--mute);
+  margin-bottom: 24px;
 }
 
 .login-btn {
   width: 100%;
   height: 40px;
-  font-weight: 500;
+  border-radius: var(--r-sm) !important;
 }
 
 @media (max-width: 968px) {

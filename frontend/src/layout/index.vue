@@ -50,14 +50,12 @@
           </el-tooltip>
           <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-info">
-              <el-avatar :size="26" class="user-avatar">A</el-avatar>
-              <el-icon class="arrow"><ArrowDown /></el-icon>
+              <el-avatar :size="24" class="user-avatar">A</el-avatar>
+              <span class="user-name">Admin</span>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="logout">
-                  <el-icon><SwitchButton /></el-icon>退出登录
-                </el-dropdown-item>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -91,7 +89,7 @@ import {
 
 const route = useRoute();
 const appStore = useAppStore();
-const isDark = ref(true); // Linear is dark-first
+const isDark = ref(false);
 
 const menuItems = [
   { path: "/dashboard", title: "系统概览", icon: Monitor },
@@ -107,26 +105,8 @@ const currentRoute = computed(() => route);
 function toggleDark() {
   isDark.value = !isDark.value;
   document.documentElement.classList.toggle("dark", isDark.value);
-  // Linear is always dark — light mode uses inverse surfaces
-  if (!isDark.value) {
-    document.documentElement.style.setProperty("--canvas", "#ffffff");
-    document.documentElement.style.setProperty("--surface-1", "#f5f6f6");
-    document.documentElement.style.setProperty("--surface-2", "#f0f1f1");
-    document.documentElement.style.setProperty("--ink", "#000000");
-    document.documentElement.style.setProperty("--ink-muted", "#4a4e54");
-    document.documentElement.style.setProperty("--ink-subtle", "#6b7075");
-    document.documentElement.style.setProperty("--hairline", "#e0e0e0");
-  } else {
-    document.documentElement.style.removeProperty("--canvas");
-    document.documentElement.style.removeProperty("--surface-1");
-    document.documentElement.style.removeProperty("--surface-2");
-    document.documentElement.style.removeProperty("--ink");
-    document.documentElement.style.removeProperty("--ink-muted");
-    document.documentElement.style.removeProperty("--ink-subtle");
-    document.documentElement.style.removeProperty("--hairline");
-  }
+  localStorage.setItem("theme", isDark.value ? "dark" : "light");
 }
-
 function refreshPage() { window.location.reload(); }
 function toggleFullscreen() {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen();
@@ -135,11 +115,9 @@ function toggleFullscreen() {
 function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 
 onMounted(() => {
-  const saved = localStorage.getItem("theme");
-  if (saved === "light") {
-    isDark.value = false;
-    toggleDark(); // apply light vars
-    isDark.value = false; // reset since toggleDark flipped it
+  if (localStorage.getItem("theme") === "dark") {
+    isDark.value = true;
+    document.documentElement.classList.add("dark");
   }
 });
 </script>
@@ -153,9 +131,9 @@ onMounted(() => {
 
 .layout-sidebar {
   width: 220px;
-  background: var(--surface-1);
+  background: #ffffff;
   border-right: 1px solid var(--hairline);
-  transition: width 0.2s ease;
+  transition: width 0.15s ease;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -165,7 +143,7 @@ onMounted(() => {
 }
 
 .sidebar-logo {
-  height: 52px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,13 +155,11 @@ onMounted(() => {
     font-size: 14px;
     font-weight: 600;
     letter-spacing: -0.3px;
-    font-family: var(--font-display);
   }
   .logo-text-mini {
     color: var(--ink);
     font-size: 15px;
     font-weight: 700;
-    font-family: var(--font-display);
   }
 }
 
@@ -192,20 +168,21 @@ onMounted(() => {
   padding: 4px 6px;
 
   .el-menu-item {
-    border-radius: var(--r-md);
-    margin-bottom: 2px;
+    border-radius: var(--r-sm);
+    margin-bottom: 1px;
     font-size: 14px;
-    color: var(--ink-subtle);
-    transition: background 0.15s, color 0.15s;
+    color: var(--mute);
+    transition: background 0.1s, color 0.1s;
 
     &:hover {
-      background: var(--surface-2);
-      color: var(--ink-muted);
+      background: var(--canvas-soft-2);
+      color: var(--ink);
     }
 
     &.is-active {
-      background: var(--surface-2);
+      background: var(--canvas-soft-2);
       color: var(--ink);
+      font-weight: 500;
     }
   }
 }
@@ -215,16 +192,16 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--canvas);
+  background: var(--canvas-soft);
 }
 
 .layout-navbar {
-  height: 52px;
-  background: var(--canvas);
+  height: 48px;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
   z-index: 10;
@@ -232,23 +209,23 @@ onMounted(() => {
   .navbar-left, .navbar-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 }
 
 .collapse-btn {
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  color: var(--ink-subtle);
-  transition: color 0.15s;
+  color: var(--mute);
+  transition: color 0.1s;
   &:hover { color: var(--ink); }
 }
 
 .nav-icon {
-  font-size: 17px;
+  font-size: 16px;
   cursor: pointer;
-  color: var(--ink-subtle);
-  transition: color 0.15s;
+  color: var(--mute);
+  transition: color 0.1s;
   &:hover { color: var(--ink); }
 }
 
@@ -257,13 +234,17 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  transition: background 0.1s;
+  &:hover { background: var(--canvas-soft-2); }
   .user-avatar {
     background: var(--primary);
-    color: var(--primary-text);
-    font-size: 12px;
+    color: var(--on-primary);
+    font-size: 11px;
     font-weight: 600;
   }
-  .arrow { font-size: 12px; color: var(--ink-subtle); }
+  .user-name { font-size: 13px; color: var(--ink); font-weight: 500; }
 }
 
 .layout-content {
@@ -272,24 +253,17 @@ onMounted(() => {
   padding: 20px;
 }
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.15s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
+.fade-enter-active, .fade-leave-active { transition: opacity 0.1s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
 @media (max-width: 768px) {
   .layout-sidebar {
     position: fixed;
     z-index: 100;
     height: 100vh;
-    transform: translateX(0);
-    transition: transform 0.25s ease;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.08);
   }
-  .sidebar-collapsed .layout-sidebar {
-    transform: translateX(-100%);
-  }
+  .sidebar-collapsed .layout-sidebar { display: none; }
   .layout-content { padding: 12px; }
 }
 </style>
