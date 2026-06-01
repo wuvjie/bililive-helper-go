@@ -98,7 +98,7 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 
 /* Mintlify-grade sidebar header */
 .sidebar-header {
-  height: 56px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
