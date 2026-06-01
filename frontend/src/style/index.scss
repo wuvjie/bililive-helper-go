@@ -1,23 +1,33 @@
 @use "./element-overrides.scss";
 
 :root {
-  --primary: #9fe870;
-  --on-primary: #0e0f0c;
-  --primary-active: #cdffad;
-  --primary-pale: #e2f6d5;
+  --primary: #0a0a0a;
+  --on-primary: #ffffff;
+  --primary-active: #1f1f1f;
 
-  --canvas: #ffffff;
-  --canvas-soft: #e8ebe6;
+  --canvas: #fffaf0;
+  --canvas-soft: #faf5e8;
+  --surface-card: #f5f0e0;
+  --surface-strong: #ebe6d6;
 
-  --ink: #0e0f0c;
-  --body-text: #454745;
-  --mute: #868685;
+  --ink: #0a0a0a;
+  --body-text: #3a3a3a;
+  --muted: #6a6a6a;
+  --muted-soft: #9a9a9a;
+  --hairline: #e5e5e5;
 
-  --success: #2ead4b;
-  --error: #d03238;
-  --warning: #ffd11a;
+  --brand-pink: #ff4d8b;
+  --brand-teal: #1a3a3a;
+  --brand-lavender: #b8a4ed;
+  --brand-peach: #ffb084;
+  --brand-ochre: #e8b94a;
+  --brand-mint: #a4d4c5;
 
-  --font-sans: "Inter", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
@@ -31,14 +41,14 @@ html, body, #app {
   height: 100%;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  background: var(--canvas-soft);
+  background: var(--canvas);
   color: var(--ink);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 a { color: var(--ink); }
 
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: #c5c8c0; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #d5d0c6; border-radius: 4px; }
 ::-webkit-scrollbar-track { background: var(--canvas-soft); }

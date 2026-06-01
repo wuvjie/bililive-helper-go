@@ -11,11 +11,27 @@
       </div>
     </div>
 
+    <!-- Stat Cards - Clay saturated feature cards -->
     <div class="stat-grid">
-      <div v-for="card in statCards" :key="card.label" class="stat-card">
-        <span class="stat-label">{{ card.label }}</span>
-        <span class="stat-value">{{ card.value }}</span>
-        <span class="stat-sub">{{ card.sub }}</span>
+      <div class="stat-card stat-pink">
+        <span class="stat-label">今日合并</span>
+        <span class="stat-value">{{ stats?.today.merge_count || 0 }}</span>
+        <span class="stat-sub">{{ stats?.today.merge_bytes ? formatBytes(stats.today.merge_bytes) : '—' }}</span>
+      </div>
+      <div class="stat-card stat-teal">
+        <span class="stat-label">今日清理</span>
+        <span class="stat-value">{{ stats?.today.clean_count || 0 }}</span>
+        <span class="stat-sub">{{ stats?.today.clean_bytes ? formatBytes(stats.today.clean_bytes) : '—' }}</span>
+      </div>
+      <div class="stat-card stat-lavender">
+        <span class="stat-label">本月合并</span>
+        <span class="stat-value">{{ stats?.month.merge_count || 0 }}</span>
+        <span class="stat-sub">{{ stats?.month.merge_bytes ? formatBytes(stats.month.merge_bytes) : '—' }}</span>
+      </div>
+      <div class="stat-card stat-peach">
+        <span class="stat-label">本月清理</span>
+        <span class="stat-value">{{ stats?.month.clean_count || 0 }}</span>
+        <span class="stat-sub">{{ stats?.month.clean_bytes ? formatBytes(stats.month.clean_bytes) : '—' }}</span>
       </div>
     </div>
 
@@ -27,7 +43,7 @@
             <span>磁盘使用率</span>
             <span class="disk-pct" :style="{ color: diskColor }">{{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%</span>
           </div>
-          <el-progress :percentage="detail?.disk?.usage_pct || 0" :color="diskColor" :stroke-width="12" :format="() => ''" style="margin-bottom: 16px" />
+          <el-progress :percentage="detail?.disk?.usage_pct || 0" :color="diskColor" :stroke-width="10" :format="() => ''" style="margin-bottom: 16px" />
           <el-descriptions :column="2" size="small" border>
             <el-descriptions-item label="总容量">{{ detail?.disk?.total_gb?.toFixed(1) }} GB</el-descriptions-item>
             <el-descriptions-item label="已用">{{ detail?.disk?.used_gb?.toFixed(1) }} GB</el-descriptions-item>
@@ -69,8 +85,8 @@
             </div>
           </div>
           <div class="trend-legend">
-            <span><span class="legend-dot" style="background: var(--ink)" />合并量</span>
-            <span><span class="legend-dot" style="background: var(--success)" />释放量</span>
+            <span><span class="legend-dot" style="background: var(--brand-pink)" />合并量</span>
+            <span><span class="legend-dot" style="background: var(--brand-mint)" />释放量</span>
           </div>
         </div>
       </div>
@@ -143,42 +159,51 @@ onMounted(async () => {
 .dashboard { display: flex; flex-direction: column; gap: 24px; }
 
 .dash-header { display: flex; justify-content: space-between; align-items: flex-end; }
-.dash-header h1 { font-size: 40px; font-weight: 900; color: var(--ink); line-height: 34px; letter-spacing: -0.5px; }
-.dash-date { font-size: 16px; color: var(--body-text); margin-top: 8px; }
+.dash-header h1 { font-size: 40px; font-weight: 500; color: var(--ink); line-height: 1.1; letter-spacing: -1px; }
+.dash-date { font-size: 16px; color: var(--muted); margin-top: 4px; }
 .dash-badges { display: flex; gap: 8px; }
 
-.badge { display: inline-flex; padding: 4px 14px; border-radius: var(--r-pill); font-size: 14px; font-weight: 600; }
-.badge-ok { background: var(--primary-pale); color: #054d28; }
-.badge-err { background: #fde8e8; color: #a72027; }
+.badge { display: inline-flex; padding: 4px 14px; border-radius: var(--r-pill); font-size: 14px; font-weight: 500; }
+.badge-ok { background: #d1fae5; color: #065f46; }
+.badge-err { background: #fde8e8; color: #991b1b; }
 
+/* Clay saturated feature cards */
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.stat-card { background: var(--canvas); border-radius: var(--r-xl); padding: 24px; display: flex; flex-direction: column; }
-.stat-label { font-size: 16px; color: var(--mute); margin-bottom: 8px; }
-.stat-value { font-size: 40px; font-weight: 900; color: var(--ink); line-height: 1; }
-.stat-sub { font-size: 14px; color: var(--body-text); margin-top: 6px; }
+.stat-card {
+  border-radius: var(--r-xl); padding: 28px;
+  display: flex; flex-direction: column;
+}
+.stat-pink { background: var(--brand-pink); color: #fff; }
+.stat-teal { background: var(--brand-teal); color: #fff; }
+.stat-lavender { background: var(--brand-lavender); color: var(--ink); }
+.stat-peach { background: var(--brand-peach); color: var(--ink); }
+
+.stat-label { font-size: 15px; opacity: 0.85; margin-bottom: 8px; }
+.stat-value { font-size: 44px; font-weight: 500; line-height: 1; letter-spacing: -1.5px; }
+.stat-sub { font-size: 14px; opacity: 0.75; margin-top: 6px; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.card { background: var(--canvas); border-radius: var(--r-xl); overflow: hidden; }
-.card-title { padding: 16px 24px; font-size: 20px; font-weight: 900; color: var(--ink); border-bottom: 1px solid var(--canvas-soft); display: flex; justify-content: space-between; align-items: center; }
+.card { background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--r-lg); overflow: hidden; }
+.card-title { padding: 16px 24px; font-size: 18px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; align-items: center; }
 .card-body { padding: 24px; }
 
 .disk-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 16px; color: var(--body-text); }
-.disk-pct { font-size: 24px; font-weight: 900; }
+.disk-pct { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
 
 .trend-chart { display: flex; justify-content: space-around; align-items: flex-end; height: 110px; }
 .trend-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .trend-bars { display: flex; gap: 5px; align-items: flex-end; }
-.trend-bar { width: 20px; border-radius: var(--r-sm) var(--r-sm) 0 0; min-height: 4px; transition: height 0.3s; cursor: pointer; }
+.trend-bar { width: 18px; border-radius: var(--r-sm) var(--r-sm) 0 0; min-height: 4px; transition: height 0.3s; cursor: pointer; }
 .trend-bar:hover { opacity: 0.75; }
-.bar-merge { background: var(--ink); }
-.bar-clean { background: var(--success); }
-.trend-date { font-size: 13px; color: var(--mute); }
-.trend-legend { display: flex; gap: 20px; justify-content: center; margin-top: 16px; font-size: 14px; color: var(--body-text); }
+.bar-merge { background: var(--brand-pink); }
+.bar-clean { background: var(--brand-mint); }
+.trend-date { font-size: 13px; color: var(--muted-soft); }
+.trend-legend { display: flex; gap: 20px; justify-content: center; margin-top: 16px; font-size: 14px; color: var(--muted); }
 .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
 
 .recent-info { display: flex; flex-direction: column; }
 .recent-name { font-size: 16px; font-weight: 600; color: var(--ink); }
-.recent-detail { font-size: 14px; color: var(--mute); margin-top: 2px; }
+.recent-detail { font-size: 14px; color: var(--muted); margin-top: 2px; }
 
 @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .stat-grid { grid-template-columns: 1fr; } .dash-header { flex-direction: column; align-items: flex-start; gap: 10px; } }

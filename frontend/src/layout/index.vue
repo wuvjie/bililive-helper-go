@@ -18,29 +18,15 @@
     <div class="layout-main">
       <header class="layout-navbar">
         <div class="navbar-left">
-          <el-icon class="collapse-btn" @click="appStore.toggleSidebar">
-            <component :is="appStore.sidebar.opened ? 'Fold' : 'Expand'" />
-          </el-icon>
-          <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="currentRoute.meta.title">{{ currentRoute.meta.title }}</el-breadcrumb-item>
-          </el-breadcrumb>
+          <el-icon class="collapse-btn" @click="appStore.toggleSidebar"><component :is="appStore.sidebar.opened ? 'Fold' : 'Expand'" /></el-icon>
+          <el-breadcrumb separator="/"><el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item><el-breadcrumb-item v-if="currentRoute.meta.title">{{ currentRoute.meta.title }}</el-breadcrumb-item></el-breadcrumb>
         </div>
         <div class="navbar-right">
-          <el-tooltip content="刷新" placement="bottom">
-            <el-icon class="nav-icon" @click="refreshPage"><Refresh /></el-icon>
-          </el-tooltip>
-          <el-tooltip content="全屏" placement="bottom">
-            <el-icon class="nav-icon" @click="toggleFullscreen"><FullScreen /></el-icon>
-          </el-tooltip>
+          <el-tooltip content="刷新" placement="bottom"><el-icon class="nav-icon" @click="refreshPage"><Refresh /></el-icon></el-tooltip>
+          <el-tooltip content="全屏" placement="bottom"><el-icon class="nav-icon" @click="toggleFullscreen"><FullScreen /></el-icon></el-tooltip>
           <el-dropdown trigger="click" @command="handleCommand">
-            <span class="user-info">
-              <el-avatar :size="28" class="user-avatar">A</el-avatar>
-              <span class="user-name">Admin</span>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu><el-dropdown-item command="logout">退出登录</el-dropdown-item></el-dropdown-menu>
-            </template>
+            <span class="user-info"><el-avatar :size="28" class="user-avatar">A</el-avatar><span class="user-name">Admin</span></span>
+            <template #dropdown><el-dropdown-menu><el-dropdown-item command="logout">退出登录</el-dropdown-item></el-dropdown-menu></template>
           </el-dropdown>
         </div>
       </header>
@@ -82,46 +68,46 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 .layout-container { display: flex; height: 100vh; overflow: hidden; }
 
 .layout-sidebar {
-  width: 240px; background: var(--canvas);
-  border-right: 1px solid var(--canvas-soft);
+  width: 240px; background: var(--canvas-soft);
+  border-right: 1px solid var(--hairline);
   transition: width 0.15s; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
   &.collapsed { width: 56px; }
 }
 
 .sidebar-logo {
   height: 56px; display: flex; align-items: center; justify-content: center;
-  border-bottom: 1px solid var(--canvas-soft); flex-shrink: 0;
-  .logo-text { font-size: 16px; font-weight: 900; color: var(--ink); letter-spacing: -0.5px; }
-  .logo-text-mini { font-size: 17px; font-weight: 900; color: var(--ink); }
+  border-bottom: 1px solid var(--hairline); flex-shrink: 0;
+  .logo-text { font-size: 16px; font-weight: 500; color: var(--ink); letter-spacing: -0.5px; }
+  .logo-text-mini { font-size: 17px; font-weight: 500; color: var(--ink); }
 }
 
 :deep(.el-menu) {
-  border-right: none; padding: 8px 8px;
+  border-right: none; padding: 8px;
   .el-menu-item {
-    border-radius: var(--r-xl); margin-bottom: 2px;
-    font-size: 16px; font-weight: 600; color: var(--mute);
+    border-radius: var(--r-lg); margin-bottom: 2px;
+    font-size: 16px; font-weight: 500; color: var(--muted);
     transition: background 0.1s, color 0.1s;
-    &:hover { background: var(--canvas-soft); color: var(--ink); }
-    &.is-active { background: var(--primary-pale); color: var(--ink); }
+    &:hover { background: var(--surface-card); color: var(--ink); }
+    &.is-active { background: var(--surface-card); color: var(--ink); font-weight: 600; }
   }
 }
 
-.layout-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas-soft); }
+.layout-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); }
 
 .layout-navbar {
   height: 56px; background: var(--canvas);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; border-bottom: 1px solid var(--canvas-soft);
+  padding: 0 24px; border-bottom: 1px solid var(--hairline);
   flex-shrink: 0; z-index: 10;
   .navbar-left, .navbar-right { display: flex; align-items: center; gap: 12px; }
 }
 
-.collapse-btn { font-size: 20px; cursor: pointer; color: var(--mute); &:hover { color: var(--ink); } }
-.nav-icon { font-size: 18px; cursor: pointer; color: var(--mute); &:hover { color: var(--ink); } }
+.collapse-btn { font-size: 20px; cursor: pointer; color: var(--muted); &:hover { color: var(--ink); } }
+.nav-icon { font-size: 18px; cursor: pointer; color: var(--muted); &:hover { color: var(--ink); } }
 
 .user-info {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
-  .user-avatar { background: var(--ink); color: var(--primary); font-size: 13px; font-weight: 800; }
+  .user-avatar { background: var(--ink); color: var(--on-primary); font-size: 13px; font-weight: 600; }
   .user-name { font-size: 16px; color: var(--ink); font-weight: 600; }
 }
 
