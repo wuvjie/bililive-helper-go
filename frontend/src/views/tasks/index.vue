@@ -152,10 +152,7 @@ function handleSelectionChange(rows: StreamerFile[]) {
 }
 
 function selectAllUnmerged() {
-  // Triggered via table ref - simplified: use the table's toggleAllSelection
-  // For now, filter the unmerged files and we'll set them
-  const table = document.querySelector(".el-table") as any;
-  // Simple workaround: just select all via reactivity
+  selectedFiles.value = files.value.filter(f => !f.is_merged);
 }
 
 async function handleMerge() {
