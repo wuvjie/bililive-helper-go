@@ -39,9 +39,7 @@
               <span class="user-name">Admin</span>
             </span>
             <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
+              <el-dropdown-menu><el-dropdown-item command="logout">退出登录</el-dropdown-item></el-dropdown-menu>
             </template>
           </el-dropdown>
         </div>
@@ -58,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useAppStore } from "@/store/modules/app";
 import { logout } from "@/api/auth";
@@ -84,46 +82,46 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 .layout-container { display: flex; height: 100vh; overflow: hidden; }
 
 .layout-sidebar {
-  width: 240px; background: var(--canvas-soft);
-  border-right: 1px solid #e5e0d8;
+  width: 240px; background: var(--canvas);
+  border-right: 1px solid var(--canvas-soft);
   transition: width 0.15s; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
   &.collapsed { width: 56px; }
 }
 
 .sidebar-logo {
   height: 56px; display: flex; align-items: center; justify-content: center;
-  border-bottom: 1px solid #e5e0d8; flex-shrink: 0;
-  .logo-text { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
-  .logo-text-mini { font-size: 16px; font-weight: 800; color: var(--ink); }
+  border-bottom: 1px solid var(--canvas-soft); flex-shrink: 0;
+  .logo-text { font-size: 16px; font-weight: 900; color: var(--ink); letter-spacing: -0.5px; }
+  .logo-text-mini { font-size: 17px; font-weight: 900; color: var(--ink); }
 }
 
 :deep(.el-menu) {
   border-right: none; padding: 8px 8px;
   .el-menu-item {
-    border-radius: var(--r-md); margin-bottom: 2px;
-    font-size: 16px; font-weight: 500; color: var(--body-text);
+    border-radius: var(--r-xl); margin-bottom: 2px;
+    font-size: 16px; font-weight: 600; color: var(--mute);
     transition: background 0.1s, color 0.1s;
-    &:hover { background: rgba(0, 0, 0, 0.04); color: var(--ink); }
-    &.is-active { background: rgba(255, 79, 0, 0.08); color: var(--primary); }
+    &:hover { background: var(--canvas-soft); color: var(--ink); }
+    &.is-active { background: var(--primary-pale); color: var(--ink); }
   }
 }
 
-.layout-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); }
+.layout-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas-soft); }
 
 .layout-navbar {
   height: 56px; background: var(--canvas);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; border-bottom: 1px solid #e5e0d8;
+  padding: 0 24px; border-bottom: 1px solid var(--canvas-soft);
   flex-shrink: 0; z-index: 10;
   .navbar-left, .navbar-right { display: flex; align-items: center; gap: 12px; }
 }
 
-.collapse-btn { font-size: 20px; cursor: pointer; color: var(--body-mid); &:hover { color: var(--ink); } }
-.nav-icon { font-size: 18px; cursor: pointer; color: var(--body-mid); &:hover { color: var(--ink); } }
+.collapse-btn { font-size: 20px; cursor: pointer; color: var(--mute); &:hover { color: var(--ink); } }
+.nav-icon { font-size: 18px; cursor: pointer; color: var(--mute); &:hover { color: var(--ink); } }
 
 .user-info {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
-  .user-avatar { background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; }
+  .user-avatar { background: var(--ink); color: var(--primary); font-size: 13px; font-weight: 800; }
   .user-name { font-size: 16px; color: var(--ink); font-weight: 600; }
 }
 
@@ -133,7 +131,7 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 @media (max-width: 768px) {
-  .layout-sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 2px 0 12px rgba(0,0,0,0.08); }
+  .layout-sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 2px 0 12px rgba(0,0,0,0.06); }
   .sidebar-collapsed .layout-sidebar { display: none; }
   .layout-content { padding: 16px; }
 }
