@@ -87,19 +87,19 @@
           <div class="trend-chart">
             <div v-for="day in stats?.daily" :key="day.date" class="trend-col">
               <div class="trend-bars">
-                <el-tooltip :content="`合并 ${day.merge_count} 次`" placement="top">
-                  <div class="trend-bar merge" :style="{ height: barHeight(day.merge_count) + 'px' }" />
+                <el-tooltip :content="`合并 ${formatBytes(day.merge_bytes)}`" placement="top">
+                  <div class="trend-bar merge" :style="{ height: barHeight(day.merge_bytes) + 'px' }" />
                 </el-tooltip>
-                <el-tooltip :content="`清理 ${day.clean_count} 次`" placement="top">
-                  <div class="trend-bar clean" :style="{ height: barHeight(day.clean_count) + 'px' }" />
+                <el-tooltip :content="`释放 ${formatBytes(day.clean_bytes)}`" placement="top">
+                  <div class="trend-bar clean" :style="{ height: barHeight(day.clean_bytes) + 'px' }" />
                 </el-tooltip>
               </div>
               <div class="trend-date">{{ day.date.slice(5) }}</div>
             </div>
           </div>
           <div class="trend-legend">
-            <span class="legend-item"><span class="legend-dot merge" />合并次数</span>
-            <span class="legend-item"><span class="legend-dot clean" />清理次数</span>
+            <span class="legend-item"><span class="legend-dot merge" />合并量</span>
+            <span class="legend-item"><span class="legend-dot clean" />释放量</span>
           </div>
         </el-card>
       </el-col>
@@ -194,9 +194,9 @@ const statusItems = computed(() => [
   { label: "总大小", value: `${(setup.value?.total_size_gb || 0).toFixed(1)} GB`, ok: true }
 ]);
 
-const maxCount = computed(() => {
+const maxBytes = computed(() => {
   if (!stats.value?.daily) return 1;
-  return Math.max(...stats.value.daily.map(d => Math.max(d.merge_count, d.clean_count)), 1);
+  return Math.max(...stats.value.daily.map(d => Math.max(d.merge_bytes, d.clean_bytes)), 1);
 });
 
 function formatBytes(bytes: number): string {
@@ -206,8 +206,8 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
 }
 
-function barHeight(count: number): number {
-  return Math.max(4, (count / maxCount.value) * 100);
+function barHeight(bytes: number): number {
+  return Math.max(4, (bytes / maxBytes.value) * 100);
 }
 
 function formatDetail(row: HistoryRecord) {
