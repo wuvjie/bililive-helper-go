@@ -1,4 +1,4 @@
-import { get, post } from "@/utils/http";
+import { get } from "@/utils/http";
 import type { StatusResponse, DetailResponse, StatsResponse, StreamerInfo, StreamerFile } from "./types";
 
 export function getStatus() {

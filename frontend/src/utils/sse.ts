@@ -32,6 +32,7 @@ export function useSSE() {
   }
 
   async function startSSE(url: string, body?: Record<string, any>) {
+    abort(); // cancel any in-flight request
     clear();
     isRunning.value = true;
     abortController = new AbortController();
