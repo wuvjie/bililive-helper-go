@@ -18,20 +18,15 @@
             </el-form-item>
             <el-form-item label="安全模式">
               <el-select v-model="config.SAFE_MODE" style="width: 200px">
-                <el-option label="关闭" value="off" />
                 <el-option label="按小时" value="hours" />
                 <el-option label="按天" value="days" />
-                <el-option label="按数量" value="count" />
               </el-select>
             </el-form-item>
-            <el-form-item v-if="config.SAFE_MODE === 'hours'" label="安全期(小时)">
-              <el-input-number v-model="config.SAFE_HOURS" :min="1" :max="720" />
+            <el-form-item v-if="config.SAFE_MODE === 'hours'" label="安全期(分钟)">
+              <el-input-number v-model="config.SAFE_AGE_MINUTES" :min="10" :max="1440" />
             </el-form-item>
             <el-form-item v-if="config.SAFE_MODE === 'days'" label="安全期(天)">
               <el-input-number v-model="config.SAFE_DAYS" :min="1" :max="365" />
-            </el-form-item>
-            <el-form-item v-if="config.SAFE_MODE === 'count'" label="最少保留数">
-              <el-input-number v-model="config.SAFE_COUNT" :min="1" :max="100" />
             </el-form-item>
             <el-form-item label="单次最大删除数">
               <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" />
@@ -55,7 +50,7 @@
               <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="(v: number) => v + '%'" show-input />
             </el-form-item>
             <el-form-item label="每主播最少保留">
-              <el-input-number v-model="config.MIN_KEEP_PER_STREAMER" :min="0" :max="50" />
+              <el-input-number v-model="config.MIN_KEEP_PER_STREAMER" :min="1" :max="50" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" :loading="saving" @click="handleSaveConfig">保存配置</el-button>
@@ -245,7 +240,12 @@ const riskAlertType = computed(() => {
 async function handleSaveConfig() {
   saving.value = true;
   try {
-    await saveConfig(config);
+    const payload = { ...config };
+    // Convert whitelist string to array
+    if (typeof payload.WHITELIST_KEYWORDS === "string") {
+      payload.WHITELIST_KEYWORDS = payload.WHITELIST_KEYWORDS.split(",").map((s: string) => s.trim()).filter(Boolean);
+    }
+    await saveConfig(payload);
     ElMessage.success("配置已保存");
   } finally {
     saving.value = false;
@@ -344,6 +344,10 @@ onMounted(async () => {
   ]);
   if (c.status === "fulfilled") {
     Object.assign(config, c.value);
+    // Convert whitelist array to comma-separated string
+    if (Array.isArray(c.value.WHITELIST_KEYWORDS)) {
+      config.WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
+    }
     // Load backup window from config
     const cv = c.value;
     if (cv.BACKUP_START_HOUR != null) {
