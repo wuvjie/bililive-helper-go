@@ -79,10 +79,12 @@
 .el-button--primary {
   background: var(--primary) !important;
   border-color: var(--primary) !important;
+  color: #ffffff !important;
 }
 .el-button--primary:hover {
   background: var(--primary-pressed) !important;
   border-color: var(--primary-pressed) !important;
+  color: #ffffff !important;
 }
 
 .el-tag {
