@@ -1,9 +1,24 @@
 <template>
   <div class="layout-container" :class="{ 'sidebar-collapsed': !appStore.sidebar.opened }">
     <aside class="layout-sidebar" :class="{ collapsed: !appStore.sidebar.opened }">
-      <div class="sidebar-logo">
-        <span v-if="appStore.sidebar.opened" class="logo-text">Bililive Helper</span>
-        <span v-else class="logo-text-mini">BH</span>
+      <!-- Sidebar Header: Mintlify-grade left-aligned skeleton -->
+      <div class="sidebar-header">
+        <template v-if="appStore.sidebar.opened">
+          <div class="sidebar-header-left">
+            <!-- Physical pulsing status dot (Mintlify signature mint-green) -->
+            <span class="status-dot-wrapper">
+              <span class="status-dot-ping" />
+              <span class="status-dot-core" />
+            </span>
+            <!-- Title: Inter sans, semi-bold, tight tracking -->
+            <h1 class="sidebar-title">Bililive Helper</h1>
+          </div>
+          <!-- Version micro-badge: Geist Mono, uppercase, hairline border -->
+          <span class="sidebar-version">v1.0</span>
+        </template>
+        <template v-else>
+          <span class="sidebar-title-mini">BH</span>
+        </template>
       </div>
       <el-scrollbar>
         <el-menu :default-active="activeMenu" :collapse="!appStore.sidebar.opened" :collapse-transition="false" router>
@@ -79,6 +94,93 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
   border-bottom: 1px solid var(--hairline-soft); flex-shrink: 0;
   .logo-text { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; }
   .logo-text-mini { font-size: 16px; font-weight: 700; color: var(--ink); }
+}
+
+/* Mintlify-grade sidebar header */
+.sidebar-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--hairline-soft);
+  flex-shrink: 0;
+}
+
+.sidebar-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Physical pulsing status dot */
+.status-dot-wrapper {
+  position: relative;
+  display: flex;
+  height: 8px;
+  width: 8px;
+  flex-shrink: 0;
+}
+
+.status-dot-ping {
+  position: absolute;
+  display: inline-flex;
+  height: 100%;
+  width: 100%;
+  border-radius: 9999px;
+  background-color: var(--brand-green);
+  opacity: 0.75;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.status-dot-core {
+  position: relative;
+  display: inline-flex;
+  border-radius: 9999px;
+  height: 8px;
+  width: 8px;
+  background-color: var(--brand-green);
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Title: Inter sans, semi-bold, tight tracking */
+.sidebar-title {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Version micro-badge: mono font, uppercase, hairline */
+.sidebar-version {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--steel);
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--hairline);
+  text-transform: uppercase;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Collapsed state mini title */
+.sidebar-title-mini {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 :deep(.el-menu) {
