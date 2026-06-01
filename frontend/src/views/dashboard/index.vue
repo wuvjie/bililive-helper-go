@@ -1,143 +1,115 @@
 <template>
   <div class="dashboard">
-    <!-- Greeting Banner -->
-    <div class="greeting-banner">
-      <div class="greeting-left">
-        <h2>{{ greeting }}，Admin 👋</h2>
-        <p>{{ todayDate }} · 直播录制管理看板</p>
+    <!-- Header -->
+    <div class="dash-header">
+      <div>
+        <h1>{{ greeting }}</h1>
+        <p class="dash-date">{{ todayDate }}</p>
       </div>
-      <div class="greeting-right">
-        <el-tag :type="setup?.ffmpeg_ok ? 'success' : 'danger'" effect="dark" round>
-          FFmpeg {{ setup?.ffmpeg_ok ? '正常' : '异常' }}
-        </el-tag>
-        <el-tag :type="setup?.target_dir_exists ? 'success' : 'danger'" effect="dark" round>
-          存储 {{ setup?.target_dir_exists ? '正常' : '异常' }}
-        </el-tag>
+      <div class="dash-status">
+        <span class="status-pill" :class="setup?.ffmpeg_ok ? 'status-ok' : 'status-err'">
+          FFmpeg {{ setup?.ffmpeg_ok ? 'OK' : 'ERR' }}
+        </span>
+        <span class="status-pill" :class="setup?.target_dir_exists ? 'status-ok' : 'status-err'">
+          Storage {{ setup?.target_dir_exists ? 'OK' : 'ERR' }}
+        </span>
       </div>
     </div>
 
     <!-- Stat Cards -->
-    <el-row :gutter="16">
-      <el-col :xs="12" :sm="6" v-for="(card, i) in statCards" :key="card.label">
-        <div class="stat-card" :class="`stat-card--${card.theme}`">
-          <div class="stat-card__icon">{{ card.icon }}</div>
-          <div class="stat-card__info">
-            <div class="stat-card__label">{{ card.label }}</div>
-            <div class="stat-card__value">{{ card.value }}</div>
-            <div class="stat-card__sub">{{ card.sub }}</div>
+    <div class="stat-grid">
+      <div v-for="card in statCards" :key="card.label" class="stat-card">
+        <div class="stat-card__icon">{{ card.icon }}</div>
+        <div class="stat-card__body">
+          <span class="stat-card__label">{{ card.label }}</span>
+          <span class="stat-card__value">{{ card.value }}</span>
+          <span class="stat-card__sub">{{ card.sub }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Disk Usage -->
+      <div class="panel">
+        <div class="panel-header">存储状态</div>
+        <div class="panel-body">
+          <div class="disk-row">
+            <span class="disk-label">磁盘使用率</span>
+            <span class="disk-pct" :style="{ color: diskColor }">{{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%</span>
+          </div>
+          <div class="disk-bar-bg">
+            <div class="disk-bar" :style="{ width: (detail?.disk?.usage_pct || 0) + '%', background: diskColor }" />
+          </div>
+          <div class="disk-meta">
+            <span>总容量 {{ detail?.disk?.total_gb?.toFixed(1) }} GB</span>
+            <span>已用 {{ detail?.disk?.used_gb?.toFixed(1) }} GB</span>
+            <span>剩余 {{ detail?.disk?.free_gb?.toFixed(1) }} GB</span>
+            <span>待合并 {{ detail?.pending?.original_files || 0 }} 个文件</span>
           </div>
         </div>
-      </el-col>
-    </el-row>
-
-    <el-row :gutter="16">
-      <!-- Disk Usage -->
-      <el-col :xs="24" :sm="12">
-        <el-card shadow="never" class="section-card">
-          <template #header>
-            <div class="card-header"><span>💾 存储状态</span></div>
-          </template>
-          <div class="disk-info">
-            <div class="disk-header">
-              <span>磁盘使用率</span>
-              <span class="disk-pct" :style="{ color: diskColor }">{{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%</span>
-            </div>
-            <el-progress
-              :percentage="detail?.disk?.usage_pct || 0"
-              :color="diskColor"
-              :stroke-width="16"
-              :format="(p: number) => ''"
-            />
-            <el-descriptions :column="2" size="small" border class="disk-detail">
-              <el-descriptions-item label="总容量">{{ detail?.disk?.total_gb?.toFixed(1) }} GB</el-descriptions-item>
-              <el-descriptions-item label="已用">{{ detail?.disk?.used_gb?.toFixed(1) }} GB</el-descriptions-item>
-              <el-descriptions-item label="剩余">{{ detail?.disk?.free_gb?.toFixed(1) }} GB</el-descriptions-item>
-              <el-descriptions-item label="待合并">{{ detail?.pending?.original_files || 0 }} 个文件 ({{ (detail?.pending?.original_size_gb || 0).toFixed(2) }} GB)</el-descriptions-item>
-            </el-descriptions>
-          </div>
-        </el-card>
-      </el-col>
+      </div>
 
       <!-- System Status -->
-      <el-col :xs="24" :sm="12">
-        <el-card shadow="never" class="section-card">
-          <template #header>
-            <div class="card-header"><span>🔧 系统状态</span></div>
-          </template>
-          <div class="status-grid">
-            <div class="status-item" v-for="item in statusItems" :key="item.label">
-              <div class="status-dot" :class="item.ok ? 'status-dot--ok' : 'status-dot--err'" />
-              <div class="status-info">
-                <span class="status-label">{{ item.label }}</span>
-                <span class="status-value">{{ item.value }}</span>
-              </div>
+      <div class="panel">
+        <div class="panel-header">系统状态</div>
+        <div class="panel-body">
+          <div class="status-list">
+            <div v-for="item in statusItems" :key="item.label" class="status-row">
+              <span class="status-dot" :class="item.ok ? 'dot-ok' : 'dot-err'" />
+              <span class="status-label">{{ item.label }}</span>
+              <span class="status-value">{{ item.value }}</span>
             </div>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </div>
+      </div>
+    </div>
 
-    <el-row :gutter="16">
-      <!-- 7-Day Trend -->
-      <el-col :xs="24" :sm="12">
-        <el-card shadow="never" class="section-card">
-          <template #header>
-            <div class="card-header"><span>📊 近7天趋势</span></div>
-          </template>
+    <div class="grid-2">
+      <!-- Trend -->
+      <div class="panel">
+        <div class="panel-header">近7天趋势</div>
+        <div class="panel-body">
           <div class="trend-chart">
             <div v-for="day in stats?.daily" :key="day.date" class="trend-col">
               <div class="trend-bars">
                 <el-tooltip :content="`合并 ${formatBytes(day.merge_bytes)}`" placement="top">
-                  <div class="trend-bar merge" :style="{ height: barHeight(day.merge_bytes) + 'px' }" />
+                  <div class="trend-bar bar-merge" :style="{ height: barHeight(day.merge_bytes) + 'px' }" />
                 </el-tooltip>
                 <el-tooltip :content="`释放 ${formatBytes(day.clean_bytes)}`" placement="top">
-                  <div class="trend-bar clean" :style="{ height: barHeight(day.clean_bytes) + 'px' }" />
+                  <div class="trend-bar bar-clean" :style="{ height: barHeight(day.clean_bytes) + 'px' }" />
                 </el-tooltip>
               </div>
-              <div class="trend-date">{{ day.date.slice(5) }}</div>
+              <span class="trend-date">{{ day.date.slice(5) }}</span>
             </div>
           </div>
           <div class="trend-legend">
-            <span class="legend-item"><span class="legend-dot merge" />合并量</span>
-            <span class="legend-item"><span class="legend-dot clean" />释放量</span>
+            <span><span class="legend-dot bar-merge" />合并量</span>
+            <span><span class="legend-dot bar-clean" />释放量</span>
           </div>
-        </el-card>
-      </el-col>
+        </div>
+      </div>
 
       <!-- Recent Operations -->
-      <el-col :xs="24" :sm="12">
-        <el-card shadow="never" class="section-card">
-          <template #header>
-            <div class="card-header">
-              <span>📋 最近操作</span>
-              <el-button text type="primary" size="small" @click="$router.push('/history')">查看全部</el-button>
+      <div class="panel">
+        <div class="panel-header">
+          <span>最近操作</span>
+          <button class="link-btn" @click="$router.push('/history')">查看全部</button>
+        </div>
+        <div class="panel-body">
+          <div v-for="row in recentHistory" :key="row.id" class="recent-row">
+            <span class="recent-icon">{{ row.task === 'merge' ? '↗' : row.task === 'clean' ? '↙' : '⚙' }}</span>
+            <div class="recent-info">
+              <span class="recent-name">{{ row.streamer || '系统' }}</span>
+              <span class="recent-detail">{{ row.detail || formatDetail(row) }}</span>
             </div>
-          </template>
-          <el-table :data="recentHistory" size="small" :show-header="false" class="recent-table">
-            <el-table-column width="40">
-              <template #default="{ row }">
-                <span class="task-icon">{{ row.task === 'merge' ? '🔄' : row.task === 'clean' ? '🧹' : '⚙️' }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column>
-              <template #default="{ row }">
-                <div class="recent-item">
-                  <span class="recent-streamer">{{ row.streamer || '系统' }}</span>
-                  <span class="recent-detail">{{ row.detail || formatDetail(row) }}</span>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column width="100" align="right">
-              <template #default="{ row }">
-                <el-tag :type="row.status === 'success' ? 'success' : 'danger'" size="small" round>
-                  {{ row.status === 'success' ? '成功' : '失败' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
+            <span class="status-pill" :class="row.status === 'success' ? 'status-ok' : 'status-err'" style="font-size: 11px">
+              {{ row.status === 'success' ? 'OK' : 'ERR' }}
+            </span>
+          </div>
+          <div v-if="recentHistory.length === 0" class="empty-text">暂无操作记录</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -156,32 +128,31 @@ const recentHistory = ref<HistoryRecord[]>([]);
 const greeting = computed(() => {
   const h = new Date().getHours();
   if (h < 6) return "夜深了";
-  if (h < 9) return "早上好";
-  if (h < 12) return "上午好";
+  if (h < 12) return "早上好";
   if (h < 14) return "中午好";
   if (h < 18) return "下午好";
   return "晚上好";
 });
 
-const todayDate = computed(() => {
-  return new Date().toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
-});
+const todayDate = computed(() =>
+  new Date().toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })
+);
 
 const diskColor = computed(() => {
   const pct = detail.value?.disk?.usage_pct || 0;
-  if (pct >= 80) return "#f56c6c";
-  if (pct >= 60) return "#e6a23c";
-  return "#67c23a";
+  if (pct >= 80) return "var(--danger)";
+  if (pct >= 60) return "var(--warning)";
+  return "var(--success)";
 });
 
 const statCards = computed(() => {
   const s = stats.value;
   if (!s) return [];
   return [
-    { label: "今日合并次数", value: s.today.merge_count, sub: s.today.merge_bytes > 0 ? `合并 ${formatBytes(s.today.merge_bytes)}` : "暂无合并", icon: "🔄", theme: "blue" },
-    { label: "今日清理次数", value: s.today.clean_count, sub: s.today.clean_bytes > 0 ? `释放 ${formatBytes(s.today.clean_bytes)}` : "暂无清理", icon: "🧹", theme: "green" },
-    { label: "本月合并次数", value: s.month.merge_count, sub: s.month.merge_bytes > 0 ? `合并 ${formatBytes(s.month.merge_bytes)}` : "暂无合并", icon: "📦", theme: "purple" },
-    { label: "本月清理次数", value: s.month.clean_count, sub: s.month.clean_bytes > 0 ? `释放 ${formatBytes(s.month.clean_bytes)}` : "暂无清理", icon: "💨", theme: "orange" }
+    { label: "今日合并", value: s.today.merge_count, sub: s.today.merge_bytes > 0 ? formatBytes(s.today.merge_bytes) : "—", icon: "↗" },
+    { label: "今日清理", value: s.today.clean_count, sub: s.today.clean_bytes > 0 ? formatBytes(s.today.clean_bytes) : "—", icon: "↙" },
+    { label: "本月合并", value: s.month.merge_count, sub: s.month.merge_bytes > 0 ? formatBytes(s.month.merge_bytes) : "—", icon: "↗" },
+    { label: "本月清理", value: s.month.clean_count, sub: s.month.clean_bytes > 0 ? formatBytes(s.month.clean_bytes) : "—", icon: "↙" }
   ];
 });
 
@@ -207,14 +178,14 @@ function formatBytes(bytes: number): string {
 }
 
 function barHeight(bytes: number): number {
-  return Math.max(4, (bytes / maxBytes.value) * 100);
+  return Math.max(3, (bytes / maxBytes.value) * 100);
 }
 
 function formatDetail(row: HistoryRecord) {
   const parts = [];
   if (row.files_count) parts.push(`${row.files_count}个文件`);
   if (row.duration) parts.push(`${row.duration}s`);
-  return parts.join(", ") || "-";
+  return parts.join(", ") || "—";
 }
 
 onMounted(async () => {
@@ -229,120 +200,222 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.dashboard { display: flex; flex-direction: column; gap: 16px; }
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-/* Greeting */
-.greeting-banner {
-  background: linear-gradient(135deg, #3370ff 0%, #5e8fff 100%);
-  border-radius: var(--radius-lg);
-  padding: 24px 28px;
-  color: #fff;
+/* Header */
+.dash-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+  align-items: flex-end;
 }
-.greeting-left h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-.greeting-left p { font-size: 14px; opacity: 0.85; }
-.greeting-right { display: flex; gap: 8px; }
+.dash-header h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+  color: var(--ink);
+}
+.dash-date { font-size: 13px; color: var(--ink-subtle); margin-top: 2px; }
+.dash-status { display: flex; gap: 8px; }
 
-/* Stat Cards */
-.stat-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  display: flex;
-  gap: 16px;
+/* Status pill */
+.status-pill {
+  display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border-color);
-  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
-  cursor: default;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--surface-2);
+  color: var(--ink-muted);
 }
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.status-ok { color: var(--success); }
+.status-err { color: var(--danger); }
+
+/* Stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.stat-card {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  transition: border-color 0.15s;
 }
+.stat-card:hover { border-color: var(--hairline-strong); }
+
 .stat-card__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 18px;
   flex-shrink: 0;
 }
-.stat-card--blue .stat-card__icon { background: #ecf2ff; }
-.stat-card--green .stat-card__icon { background: #e8f5e9; }
-.stat-card--purple .stat-card__icon { background: #f3e5f5; }
-.stat-card--orange .stat-card__icon { background: #fff3e0; }
 
-.stat-card__label { font-size: 13px; color: var(--text-regular); margin-bottom: 4px; }
-.stat-card__value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
-.stat-card__sub { font-size: 12px; color: var(--text-placeholder); margin-top: 2px; }
+.stat-card__body { display: flex; flex-direction: column; }
+.stat-card__label { font-size: 12px; color: var(--ink-subtle); }
+.stat-card__value {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.stat-card__sub { font-size: 12px; color: var(--ink-tertiary); margin-top: 1px; }
 
-/* Section Cards */
-.section-card { background: var(--bg-card); transition: background 0.3s; }
-.section-card :deep(.el-card__header) { padding: 14px 20px; border-bottom: 1px solid var(--border-color); }
-.card-header { display: flex; justify-content: space-between; align-items: center; }
+/* Panels */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-/* Status Grid */
-.status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.status-item { display: flex; align-items: center; gap: 10px; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.status-dot--ok { background: #67c23a; box-shadow: 0 0 6px rgba(103, 194, 58, 0.4); }
-.status-dot--err { background: #f56c6c; box-shadow: 0 0 6px rgba(245, 108, 108, 0.4); }
-.status-info { display: flex; flex-direction: column; }
-.status-label { font-size: 12px; color: var(--text-placeholder); }
-.status-value { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.panel {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 14px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-body { padding: 18px 20px; }
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+.link-btn:hover { color: var(--primary-hover); }
 
 /* Disk */
-.disk-info { display: flex; flex-direction: column; gap: 12px; }
-.disk-header { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-regular); }
-.disk-pct { font-weight: 700; font-size: 16px; }
-.disk-detail { margin-top: 8px; }
+.disk-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.disk-label { font-size: 13px; color: var(--ink-subtle); }
+.disk-pct { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+
+.disk-bar-bg {
+  height: 6px;
+  background: var(--surface-3);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.disk-bar {
+  height: 100%;
+  border-radius: var(--r-sm);
+  transition: width 0.5s ease;
+}
+
+.disk-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--ink-subtle);
+}
+
+/* Status list */
+.status-list { display: flex; flex-direction: column; gap: 12px; }
+.status-row { display: flex; align-items: center; gap: 10px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-ok { background: var(--success); }
+.dot-err { background: var(--danger); }
+.status-label { font-size: 13px; color: var(--ink-subtle); min-width: 60px; }
+.status-value { font-size: 13px; color: var(--ink-muted); font-weight: 500; }
 
 /* Trend */
 .trend-chart {
   display: flex;
   justify-content: space-around;
   align-items: flex-end;
-  height: 120px;
-  padding: 0 8px;
+  height: 100px;
 }
 .trend-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .trend-bars { display: flex; gap: 4px; align-items: flex-end; }
 .trend-bar {
-  width: 16px;
-  border-radius: 4px 4px 0 0;
-  min-height: 4px;
-  transition: height 0.4s ease;
+  width: 14px;
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: height 0.3s ease;
   cursor: pointer;
 }
-.trend-bar.merge { background: linear-gradient(180deg, #409eff, #66b1ff); }
-.trend-bar.clean { background: linear-gradient(180deg, #67c23a, #85ce61); }
-.trend-bar:hover { opacity: 0.8; }
-.trend-date { font-size: 11px; color: var(--text-placeholder); }
-.trend-legend { display: flex; justify-content: center; gap: 20px; margin-top: 12px; }
-.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-regular); }
-.legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-.legend-dot.merge { background: #409eff; }
-.legend-dot.clean { background: #67c23a; }
+.trend-bar:hover { opacity: 0.75; }
+.bar-merge { background: var(--primary); }
+.bar-clean { background: var(--success); }
+.trend-date { font-size: 11px; color: var(--ink-tertiary); }
 
-/* Recent */
-.recent-table { --el-table-border: none; }
-.task-icon { font-size: 16px; }
-.recent-item { display: flex; flex-direction: column; }
-.recent-streamer { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-.recent-detail { font-size: 12px; color: var(--text-placeholder); margin-top: 2px; }
+.trend-legend {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--ink-subtle);
+}
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
 
-@media (max-width: 768px) {
-  .stat-card { padding: 14px; gap: 10px; }
-  .stat-card__icon { width: 40px; height: 40px; font-size: 20px; }
-  .stat-card__value { font-size: 22px; }
-  .status-grid { grid-template-columns: repeat(2, 1fr); }
-  .greeting-banner { padding: 16px 20px; }
-  .greeting-left h2 { font-size: 18px; }
+/* Recent operations */
+.recent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.recent-row:last-child { border-bottom: none; }
+
+.recent-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.recent-info { flex: 1; min-width: 0; }
+.recent-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.recent-detail { display: block; font-size: 12px; color: var(--ink-subtle); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.empty-text { font-size: 13px; color: var(--ink-tertiary); text-align: center; padding: 24px 0; }
+
+@media (max-width: 1024px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .dash-header { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 </style>
