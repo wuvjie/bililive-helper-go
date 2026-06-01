@@ -342,7 +342,17 @@ onMounted(async () => {
     setupCheck(),
     getCleanEstimate()
   ]);
-  if (c.status === "fulfilled") Object.assign(config, c.value);
+  if (c.status === "fulfilled") {
+    Object.assign(config, c.value);
+    // Load backup window from config
+    const cv = c.value;
+    if (cv.BACKUP_START_HOUR != null) {
+      backupStart.value = `${String(cv.BACKUP_START_HOUR).padStart(2, "0")}:${String(cv.BACKUP_START_MINUTE || 0).padStart(2, "0")}`;
+    }
+    if (cv.BACKUP_END_HOUR != null) {
+      backupEnd.value = `${String(cv.BACKUP_END_HOUR).padStart(2, "0")}:${String(cv.BACKUP_END_MINUTE || 0).padStart(2, "0")}`;
+    }
+  }
   if (s.status === "fulfilled") {
     const sv = s.value;
     scheduleForm.merge_enabled = sv.merge_enabled;
