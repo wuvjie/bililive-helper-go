@@ -1,37 +1,37 @@
 @use "./element-overrides.scss";
 
 :root {
-  --primary: #0a0a0a;
+  --primary: #111111;
+  --primary-active: #242424;
   --on-primary: #ffffff;
-  --primary-active: #1f1f1f;
 
-  --canvas: #fffaf0;
-  --canvas-soft: #faf5e8;
-  --surface-card: #f5f0e0;
-  --surface-strong: #ebe6d6;
+  --canvas: #ffffff;
+  --surface-soft: #f8f9fa;
+  --surface-card: #f5f5f5;
+  --surface-strong: #e5e7eb;
+  --surface-dark: #101010;
 
-  --ink: #0a0a0a;
-  --body-text: #3a3a3a;
-  --muted: #6a6a6a;
-  --muted-soft: #9a9a9a;
-  --hairline: #e5e5e5;
+  --ink: #111111;
+  --body-text: #374151;
+  --muted: #6b7280;
+  --muted-soft: #898989;
+  --hairline: #e5e7eb;
+  --hairline-soft: #f3f4f6;
 
-  --brand-pink: #ff4d8b;
-  --brand-teal: #1a3a3a;
-  --brand-lavender: #b8a4ed;
-  --brand-peach: #ffb084;
-  --brand-ochre: #e8b94a;
-  --brand-mint: #a4d4c5;
-
-  --success: #22c55e;
+  --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
+  --accent-blue: #3b82f6;
+  --badge-orange: #fb923c;
+  --badge-pink: #ec4899;
+  --badge-violet: #8b5cf6;
+  --badge-emerald: #34d399;
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 24px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
   --r-pill: 9999px;
 }
 
@@ -44,11 +44,11 @@ html, body, #app {
   background: var(--canvas);
   color: var(--ink);
   font-size: 16px;
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
-a { color: var(--ink); }
+a { color: var(--accent-blue); text-decoration: none; }
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: #d5d0c6; border-radius: 4px; }
-::-webkit-scrollbar-track { background: var(--canvas-soft); }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--surface-strong); border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }

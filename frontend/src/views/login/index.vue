@@ -42,27 +42,28 @@ async function handleLogin() {
 <style scoped>
 .login-container {
   height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: var(--canvas-soft);
+  background: var(--canvas);
 }
 
 .login-card {
-  width: 420px; background: var(--canvas);
+  width: 400px; background: var(--canvas);
   border: 1px solid var(--hairline);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-lg);
   padding: 48px 40px; text-align: center;
-  animation: slideUp 0.25s ease-out;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+  animation: slideUp 0.2s ease-out;
 }
 
-@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
 .login-logo {
-  width: 64px; height: 64px; margin: 0 auto 24px;
-  background: var(--brand-peach); color: var(--ink);
-  border-radius: var(--r-xl); display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 700;
+  width: 56px; height: 56px; margin: 0 auto 20px;
+  background: var(--ink); color: var(--on-primary);
+  border-radius: var(--r-md); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700;
 }
 
-.login-card h1 { font-size: 32px; font-weight: 500; color: var(--ink); margin-bottom: 4px; letter-spacing: -1px; }
-.login-sub { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
-.login-btn { width: 100%; height: 48px; }
+.login-card h1 { font-size: 24px; font-weight: 600; color: var(--ink); margin-bottom: 4px; letter-spacing: -0.5px; }
+.login-sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+.login-btn { width: 100%; }
 </style>
