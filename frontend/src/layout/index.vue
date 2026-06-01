@@ -37,24 +37,21 @@
           </el-breadcrumb>
         </div>
         <div class="navbar-right">
-          <el-tooltip content="刷新页面" placement="bottom">
+          <el-tooltip content="刷新" placement="bottom">
             <el-icon class="nav-icon" @click="refreshPage"><Refresh /></el-icon>
           </el-tooltip>
-          <el-tooltip :content="isDark ? '浅色模式' : '深色模式'" placement="bottom">
+          <el-tooltip :content="isDark ? 'Light' : 'Dark'" placement="bottom">
             <el-icon class="nav-icon" @click="toggleDark">
               <component :is="isDark ? 'Sunny' : 'Moon'" />
             </el-icon>
           </el-tooltip>
-          <el-tooltip content="全屏" placement="bottom">
-            <el-icon class="nav-icon" @click="toggleFullscreen">
-              <FullScreen />
-            </el-icon>
+          <el-tooltip content="Fullscreen" placement="bottom">
+            <el-icon class="nav-icon" @click="toggleFullscreen"><FullScreen /></el-icon>
           </el-tooltip>
           <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-info">
-              <el-avatar :size="28" class="user-avatar">A</el-avatar>
-              <span class="username">Admin</span>
-              <el-icon><ArrowDown /></el-icon>
+              <el-avatar :size="26" class="user-avatar">A</el-avatar>
+              <el-icon class="arrow"><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -70,7 +67,7 @@
       <!-- Content -->
       <main class="layout-content">
         <router-view v-slot="{ Component }">
-          <transition name="fade-transform" mode="out-in">
+          <transition name="fade" mode="out-in">
             <keep-alive>
               <component :is="Component" :key="currentRoute.fullPath" />
             </keep-alive>
@@ -94,7 +91,7 @@ import {
 
 const route = useRoute();
 const appStore = useAppStore();
-const isDark = ref(false);
+const isDark = ref(true); // Linear is dark-first
 
 const menuItems = [
   { path: "/dashboard", title: "系统概览", icon: Monitor },
@@ -110,30 +107,39 @@ const currentRoute = computed(() => route);
 function toggleDark() {
   isDark.value = !isDark.value;
   document.documentElement.classList.toggle("dark", isDark.value);
-  localStorage.setItem("theme", isDark.value ? "dark" : "light");
-}
-
-function refreshPage() {
-  window.location.reload();
-}
-
-function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen();
+  // Linear is always dark — light mode uses inverse surfaces
+  if (!isDark.value) {
+    document.documentElement.style.setProperty("--canvas", "#ffffff");
+    document.documentElement.style.setProperty("--surface-1", "#f5f6f6");
+    document.documentElement.style.setProperty("--surface-2", "#f0f1f1");
+    document.documentElement.style.setProperty("--ink", "#000000");
+    document.documentElement.style.setProperty("--ink-muted", "#4a4e54");
+    document.documentElement.style.setProperty("--ink-subtle", "#6b7075");
+    document.documentElement.style.setProperty("--hairline", "#e0e0e0");
   } else {
-    document.exitFullscreen();
+    document.documentElement.style.removeProperty("--canvas");
+    document.documentElement.style.removeProperty("--surface-1");
+    document.documentElement.style.removeProperty("--surface-2");
+    document.documentElement.style.removeProperty("--ink");
+    document.documentElement.style.removeProperty("--ink-muted");
+    document.documentElement.style.removeProperty("--ink-subtle");
+    document.documentElement.style.removeProperty("--hairline");
   }
 }
 
-function handleCommand(cmd: string) {
-  if (cmd === "logout") logout();
+function refreshPage() { window.location.reload(); }
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
 }
+function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 
 onMounted(() => {
   const saved = localStorage.getItem("theme");
-  if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-    isDark.value = true;
-    document.documentElement.classList.add("dark");
+  if (saved === "light") {
+    isDark.value = false;
+    toggleDark(); // apply light vars
+    isDark.value = false; // reset since toggleDark flipped it
   }
 });
 </script>
@@ -147,42 +153,61 @@ onMounted(() => {
 
 .layout-sidebar {
   width: 220px;
-  background: var(--bg-sidebar);
-  transition: width 0.28s;
+  background: var(--surface-1);
+  border-right: 1px solid var(--hairline);
+  transition: width 0.2s ease;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
 
-  &.collapsed { width: 64px; }
+  &.collapsed { width: 52px; }
 }
 
 .sidebar-logo {
-  height: 56px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
 
   .logo-text {
-    color: #fff;
-    font-size: 16px;
+    color: var(--ink);
+    font-size: 14px;
     font-weight: 600;
-    white-space: nowrap;
-    letter-spacing: 1px;
+    letter-spacing: -0.3px;
+    font-family: var(--font-display);
   }
-  .logo-text-mini { font-size: 22px; }
+  .logo-text-mini {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-display);
+  }
 }
 
 :deep(.el-menu) {
   border-right: none;
-  background: transparent !important;
-  --el-menu-bg-color: transparent;
-  --el-menu-hover-bg-color: var(--bg-sidebar-hover);
-  --el-menu-text-color: #bfcbd9;
-  --el-menu-active-color: #409eff;
-  --el-menu-item-height: 48px;
+  padding: 4px 6px;
+
+  .el-menu-item {
+    border-radius: var(--r-md);
+    margin-bottom: 2px;
+    font-size: 14px;
+    color: var(--ink-subtle);
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: var(--surface-2);
+      color: var(--ink-muted);
+    }
+
+    &.is-active {
+      background: var(--surface-2);
+      color: var(--ink);
+    }
+  }
 }
 
 .layout-main {
@@ -190,65 +215,69 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-page);
-  transition: background 0.3s;
+  background: var(--canvas);
 }
 
 .layout-navbar {
   height: 52px;
-  background: var(--bg-card);
+  background: var(--canvas);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
   z-index: 10;
-  transition: background 0.3s;
 
   .navbar-left, .navbar-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
 }
 
 .collapse-btn {
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
-  color: var(--text-regular);
-  transition: color 0.2s;
-  &:hover { color: var(--primary); }
+  color: var(--ink-subtle);
+  transition: color 0.15s;
+  &:hover { color: var(--ink); }
 }
 
 .nav-icon {
-  font-size: 18px;
+  font-size: 17px;
   cursor: pointer;
-  color: var(--text-regular);
-  transition: color 0.2s, transform 0.2s;
-  &:hover { color: var(--primary); transform: scale(1.1); }
+  color: var(--ink-subtle);
+  transition: color 0.15s;
+  &:hover { color: var(--ink); }
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  .user-avatar { background: var(--primary); color: #fff; font-size: 13px; }
-  .username { font-size: 14px; color: var(--text-primary); }
+  .user-avatar {
+    background: var(--primary);
+    color: var(--primary-text);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .arrow { font-size: 12px; color: var(--ink-subtle); }
 }
 
 .layout-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
 }
 
-.fade-transform-enter-active, .fade-transform-leave-active {
-  transition: all 0.2s;
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.15s ease;
 }
-.fade-transform-enter-from { opacity: 0; transform: translateX(-10px); }
-.fade-transform-leave-to { opacity: 0; transform: translateX(10px); }
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
 
 @media (max-width: 768px) {
   .layout-sidebar {
@@ -256,10 +285,11 @@ onMounted(() => {
     z-index: 100;
     height: 100vh;
     transform: translateX(0);
-    transition: transform 0.3s;
+    transition: transform 0.25s ease;
   }
   .sidebar-collapsed .layout-sidebar {
     transform: translateX(-100%);
   }
+  .layout-content { padding: 12px; }
 }
 </style>
