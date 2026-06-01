@@ -97,7 +97,7 @@ export interface HistoryResponse {
 export interface LogFile {
   date: string;
   filename: string;
-  mtime: string;
+  mtime: number;
   task: string;
 }
 
@@ -105,7 +105,7 @@ export interface StreamerFile {
   name: string;
   size: number;
   size_str: string;
-  mtime: string;
+  mtime: number;
   is_merged: boolean;
 }
 
@@ -122,7 +122,6 @@ export interface SetupCheck {
   disk_total_gb: number;
   disk_free_gb: number;
   disk_usage_pct: number;
-  process_group_ok: boolean;
 }
 
 export interface CleanEstimate {

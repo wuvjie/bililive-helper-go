@@ -101,18 +101,22 @@ const activeLogFile = ref("");
 const logContent = ref("");
 const logLoading = ref(false);
 
+let loadSeq = 0;
+
 async function loadHistory(page: number) {
+  const seq = ++loadSeq;
   loading.value = true;
   try {
-    const params: any = { page, per_page: 20 };
+    const params: Record<string, any> = { page, per_page: 20 };
     if (filterTask.value) params.task = filterTask.value;
     const res = await getHistory(params);
+    if (seq !== loadSeq) return; // stale response, discard
     history.value = res.items || [];
     totalItems.value = res.total;
     totalPages.value = res.pages;
     currentPage.value = page;
   } finally {
-    loading.value = false;
+    if (seq === loadSeq) loading.value = false;
   }
 }
 

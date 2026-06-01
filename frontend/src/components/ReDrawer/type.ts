@@ -10,6 +10,5 @@ export interface DrawerOptions {
   cancelText?: string;
   contentComponent?: Component;
   contentProps?: Record<string, any>;
-  contentHtml?: string;
   closeCallback?: () => void;
 }

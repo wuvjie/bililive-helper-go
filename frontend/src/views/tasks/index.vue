@@ -72,6 +72,7 @@
 
       <el-table
         v-if="files.length > 0"
+        ref="tableRef"
         :data="files"
         size="small"
         stripe
@@ -82,7 +83,7 @@
         <el-table-column type="selection" width="45" :selectable="() => true" />
         <el-table-column prop="name" label="文件名" min-width="300" show-overflow-tooltip />
         <el-table-column prop="size_str" label="大小" width="100" />
-        <el-table-column prop="mtime" label="修改时间" width="170">
+        <el-table-column label="修改时间" width="170">
           <template #default="{ row }">
             {{ formatMtime(row.mtime) }}
           </template>
@@ -107,12 +108,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, nextTick, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox, type TableInstance } from "element-plus";
 import { getStreamers, getStreamerFiles } from "@/api/status";
 import { getSchedule } from "@/api/schedule";
-import { runMerge, runClean, getCleanEstimate } from "@/api/task";
+import { getCleanEstimate } from "@/api/task";
 import { useSSE } from "@/utils/sse";
 import ReTerminal from "@/components/ReTerminal/index.vue";
 import type { ScheduleStatus, StreamerInfo, StreamerFile } from "@/api/types";
@@ -123,6 +124,7 @@ const streamers = ref<StreamerInfo[]>([]);
 const selectedStreamer = ref("");
 const files = ref<StreamerFile[]>([]);
 const selectedFiles = ref<StreamerFile[]>([]);
+const tableRef = ref<TableInstance>();
 const sse = useSSE();
 
 function formatTime(ts?: number) {
@@ -130,13 +132,9 @@ function formatTime(ts?: number) {
   return new Date(ts * 1000).toLocaleString("zh-CN");
 }
 
-function formatMtime(mtime: number | string) {
+function formatMtime(mtime: number) {
   if (!mtime) return "-";
-  const ts = typeof mtime === "number" ? mtime : parseInt(mtime);
-  if (isNaN(ts)) return String(mtime);
-  // If it looks like seconds (10 digits), convert to ms
-  const ms = ts > 1e12 ? ts : ts * 1000;
-  return new Date(ms).toLocaleString("zh-CN");
+  return new Date(mtime * 1000).toLocaleString("zh-CN");
 }
 
 async function loadFiles() {
@@ -144,7 +142,12 @@ async function loadFiles() {
     files.value = [];
     return;
   }
-  files.value = await getStreamerFiles(selectedStreamer.value);
+  try {
+    files.value = await getStreamerFiles(selectedStreamer.value);
+  } catch {
+    files.value = [];
+    ElMessage.error("加载文件列表失败");
+  }
 }
 
 function handleSelectionChange(rows: StreamerFile[]) {
@@ -152,7 +155,17 @@ function handleSelectionChange(rows: StreamerFile[]) {
 }
 
 function selectAllUnmerged() {
-  selectedFiles.value = files.value.filter(f => !f.is_merged);
+  if (!tableRef.value) return;
+  // Clear current selection first
+  tableRef.value.clearSelection();
+  // Select each unmerged row visually
+  nextTick(() => {
+    files.value.forEach(row => {
+      if (!row.is_merged) {
+        tableRef.value!.toggleRowSelection(row, true);
+      }
+    });
+  });
 }
 
 async function handleMerge() {
@@ -176,7 +189,7 @@ async function handleClean() {
     );
     sse.startSSE("/api/clean", { streamer: selectedStreamer.value });
   } catch {
-    // User cancelled
+    // User cancelled confirm dialog — API errors handled by interceptor
   }
 }
 
@@ -185,7 +198,6 @@ onMounted(async () => {
   if (s.status === "fulfilled") schedule.value = s.value;
   if (st.status === "fulfilled") streamers.value = st.value;
 
-  // Pre-select streamer from query param
   const queryStreamer = route.query.streamer as string;
   if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
     selectedStreamer.value = queryStreamer;

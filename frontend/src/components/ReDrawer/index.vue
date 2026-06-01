@@ -13,7 +13,6 @@
         :is="drawer.contentComponent"
         v-bind="drawer.contentProps || {}"
       />
-      <div v-else-if="drawer.contentHtml" v-html="drawer.contentHtml" />
 
       <template #footer v-if="drawer.showFooter !== false">
         <el-button @click="handleClose(drawer, index)">

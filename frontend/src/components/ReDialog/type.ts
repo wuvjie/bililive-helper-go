@@ -16,7 +16,6 @@ export interface DialogOptions {
   sureLoading?: boolean;
   contentComponent?: Component;
   contentProps?: Record<string, any>;
-  contentHtml?: string;
   closeCallback?: () => void;
   beforeCancel?: () => void;
   beforeSure?: () => void;

@@ -16,7 +16,6 @@
         :is="dialog.contentComponent"
         v-bind="dialog.contentProps || {}"
       />
-      <div v-else-if="dialog.contentHtml" v-html="dialog.contentHtml" />
 
       <template #footer v-if="dialog.showFooter !== false">
         <el-button
