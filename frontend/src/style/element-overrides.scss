@@ -30,6 +30,7 @@
   --el-font-size-base: 16px;
 }
 
+/* ── Cards ── */
 .el-card {
   --el-card-bg-color: #ffffff;
   --el-card-border-color: #e5e5e5;
@@ -38,6 +39,7 @@
   border-radius: var(--r-lg) !important;
 }
 
+/* ── Dialog ── */
 .el-dialog {
   --el-dialog-bg-color: #ffffff;
   border: 1px solid var(--hairline);
@@ -45,6 +47,7 @@
   box-shadow: 0 24px 48px -8px rgba(0,0,0,0.12) !important;
 }
 
+/* ── Table ── */
 .el-table {
   --el-table-bg-color: #ffffff;
   --el-table-tr-bg-color: #ffffff;
@@ -53,6 +56,7 @@
   --el-table-border-color: #e5e5e5;
 }
 
+/* ── Menu ── */
 .el-menu {
   --el-menu-bg-color: transparent;
   --el-menu-hover-bg-color: #f7f7f7;
@@ -61,6 +65,7 @@
   --el-menu-item-height: 36px;
 }
 
+/* ── Input ── */
 .el-input {
   --el-input-bg-color: #ffffff;
   --el-input-border-color: #e5e5e5;
@@ -69,12 +74,148 @@
   --el-input-text-color: #0a0a0a;
 }
 
-.el-button { border-radius: var(--r-pill) !important; font-weight: 500; font-size: 14px; height: 40px; }
-.el-button--primary { background: var(--primary) !important; border-color: var(--primary) !important; color: var(--on-primary) !important; }
-.el-button--primary:hover { background: #1c1c1e !important; border-color: #1c1c1e !important; color: var(--on-primary) !important; }
+/* ── Textarea ── */
+.el-textarea {
+  --el-input-bg-color: #ffffff;
+  --el-input-border-color: #e5e5e5;
+  --el-input-hover-border-color: #d1d5db;
+  --el-input-focus-border-color: #00d4a4;
+}
+.el-textarea__inner {
+  border-radius: var(--r-md) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  border-color: var(--hairline) !important;
+  padding: 12px 16px !important;
+}
+.el-textarea__inner:focus {
+  border-color: var(--brand-green) !important;
+  box-shadow: none !important;
+}
 
-.el-tag { border-radius: var(--r-sm); font-weight: 500; }
-.el-progress { --el-progress-border-radius: var(--r-sm); }
-.el-descriptions { --el-descriptions-item-bordered-label-background: #f7f7f7; }
-.el-breadcrumb { --el-breadcrumb-text-color: #a8a8aa; --el-breadcrumb-last-text-color: #0a0a0a; }
-.el-pagination { --el-pagination-bg-color: transparent; --el-pagination-button-bg-color: #ffffff; --el-pagination-hover-color: #0a0a0a; }
+/* ── Buttons: all pill-shaped (rounded-full) ── */
+.el-button {
+  border-radius: var(--r-pill) !important;
+  font-weight: 500;
+  font-size: 14px;
+  height: 40px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.el-button--primary {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+.el-button--primary:hover {
+  background: #1c1c1e !important;
+  border-color: #1c1c1e !important;
+  color: var(--on-primary) !important;
+}
+.el-button--warning {
+  background: transparent !important;
+  border: 1px solid var(--hairline) !important;
+  color: var(--ink) !important;
+}
+.el-button--warning:hover {
+  background: var(--surface) !important;
+  border-color: var(--steel) !important;
+}
+.el-button--info {
+  background: transparent !important;
+  border: 1px solid var(--hairline) !important;
+  color: var(--ink) !important;
+}
+.el-button--info:hover {
+  background: var(--surface) !important;
+  border-color: var(--steel) !important;
+}
+.el-button--success {
+  background: var(--brand-green) !important;
+  border-color: var(--brand-green) !important;
+  color: var(--primary) !important;
+}
+
+/* ── Tags: badge-type style (light gray + green dot for success) ── */
+.el-tag {
+  border-radius: var(--r-xs) !important;
+  font-weight: 500;
+  font-size: 13px;
+  border: 1px solid var(--hairline-soft) !important;
+}
+.el-tag--success {
+  background: #f7f7f7 !important;
+  color: #5a5a5c !important;
+  border-color: #ededed !important;
+}
+.el-tag--success::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-green);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.el-tag--danger {
+  background: rgba(212, 86, 86, 0.08) !important;
+  color: #d45656 !important;
+  border-color: rgba(212, 86, 86, 0.2) !important;
+}
+.el-tag--primary {
+  background: #f7f7f7 !important;
+  color: #3a3a3c !important;
+  border-color: #ededed !important;
+}
+.el-tag--info {
+  background: #f7f7f7 !important;
+  color: #5a5a5c !important;
+  border-color: #ededed !important;
+}
+.el-tag--warning {
+  background: rgba(195, 125, 13, 0.08) !important;
+  color: #c37d0d !important;
+  border-color: rgba(195, 125, 13, 0.2) !important;
+}
+
+/* ── Progress: mint green track ── */
+.el-progress {
+  --el-progress-border-radius: var(--r-sm);
+}
+.el-progress-bar__outer {
+  background-color: #f7f7f7 !important;
+}
+
+/* ── Slider: mint green active track ── */
+.el-slider__runway {
+  background-color: #e5e5e5 !important;
+  height: 4px !important;
+}
+.el-slider__bar {
+  background-color: var(--brand-green) !important;
+}
+.el-slider__button {
+  background-color: #ffffff !important;
+  border: 2px solid var(--brand-green) !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* ── Descriptions ── */
+.el-descriptions {
+  --el-descriptions-item-bordered-label-background: #f7f7f7;
+}
+
+/* ── Breadcrumb ── */
+.el-breadcrumb {
+  --el-breadcrumb-text-color: #a8a8aa;
+  --el-breadcrumb-last-text-color: #0a0a0a;
+}
+
+/* ── Pagination ── */
+.el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: #ffffff;
+  --el-pagination-hover-color: #0a0a0a;
+}
