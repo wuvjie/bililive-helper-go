@@ -6,12 +6,7 @@
         <span v-else class="logo-text-mini">BH</span>
       </div>
       <el-scrollbar>
-        <el-menu
-          :default-active="activeMenu"
-          :collapse="!appStore.sidebar.opened"
-          :collapse-transition="false"
-          router
-        >
+        <el-menu :default-active="activeMenu" :collapse="!appStore.sidebar.opened" :collapse-transition="false" router>
           <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
             <el-icon><component :is="item.icon" /></el-icon>
             <template #title>{{ item.title }}</template>
@@ -40,7 +35,7 @@
           </el-tooltip>
           <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-info">
-              <el-avatar :size="24" class="user-avatar">A</el-avatar>
+              <el-avatar :size="28" class="user-avatar">A</el-avatar>
               <span class="user-name">Admin</span>
             </span>
             <template #dropdown>
@@ -51,13 +46,10 @@
           </el-dropdown>
         </div>
       </header>
-
       <main class="layout-content">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <keep-alive>
-              <component :is="Component" :key="currentRoute.fullPath" />
-            </keep-alive>
+            <keep-alive><component :is="Component" :key="currentRoute.fullPath" /></keep-alive>
           </transition>
         </router-view>
       </main>
@@ -70,14 +62,10 @@ import { computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useAppStore } from "@/store/modules/app";
 import { logout } from "@/api/auth";
-import {
-  Monitor, User, VideoPlay, Document, Setting,
-  Fold, Expand, Refresh, FullScreen
-} from "@element-plus/icons-vue";
+import { Monitor, User, VideoPlay, Document, Setting, Fold, Expand, Refresh, FullScreen } from "@element-plus/icons-vue";
 
 const route = useRoute();
 const appStore = useAppStore();
-
 const menuItems = [
   { path: "/dashboard", title: "系统概览", icon: Monitor },
   { path: "/streamers", title: "主播管理", icon: User },
@@ -85,15 +73,10 @@ const menuItems = [
   { path: "/history", title: "操作日志", icon: Document },
   { path: "/settings", title: "全局设置", icon: Setting }
 ];
-
 const activeMenu = computed(() => route.path);
 const currentRoute = computed(() => route);
-
 function refreshPage() { window.location.reload(); }
-function toggleFullscreen() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-  else document.exitFullscreen();
-}
+function toggleFullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
 function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 </script>
 
@@ -101,61 +84,57 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 .layout-container { display: flex; height: 100vh; overflow: hidden; }
 
 .layout-sidebar {
-  width: 240px;
-  background: var(--surface);
-  border-right: 1px solid var(--hairline);
-  transition: width 0.15s ease;
-  display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
-  &.collapsed { width: 52px; }
+  width: 240px; background: var(--canvas-soft);
+  border-right: 1px solid #e5e0d8;
+  transition: width 0.15s; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+  &.collapsed { width: 56px; }
 }
 
 .sidebar-logo {
-  height: 52px;
-  display: flex; align-items: center; justify-content: center;
-  border-bottom: 1px solid var(--hairline); flex-shrink: 0;
-  .logo-text { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; }
-  .logo-text-mini { font-size: 15px; font-weight: 700; color: var(--ink); }
+  height: 56px; display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid #e5e0d8; flex-shrink: 0;
+  .logo-text { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
+  .logo-text-mini { font-size: 16px; font-weight: 800; color: var(--ink); }
 }
 
 :deep(.el-menu) {
-  border-right: none; padding: 6px 8px;
+  border-right: none; padding: 8px 8px;
   .el-menu-item {
-    border-radius: var(--r-sm); margin-bottom: 1px;
-    font-size: 14px; color: var(--steel);
+    border-radius: var(--r-md); margin-bottom: 2px;
+    font-size: 16px; font-weight: 500; color: var(--body-text);
     transition: background 0.1s, color 0.1s;
-    &:hover { background: rgba(0, 0, 0, 0.03); color: var(--charcoal); }
-    &.is-active { background: rgba(85, 69, 212, 0.06); color: var(--primary); font-weight: 500; }
+    &:hover { background: rgba(0, 0, 0, 0.04); color: var(--ink); }
+    &.is-active { background: rgba(255, 79, 0, 0.08); color: var(--primary); }
   }
 }
 
 .layout-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); }
 
 .layout-navbar {
-  height: 52px; background: var(--canvas);
+  height: 56px; background: var(--canvas);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--hairline);
+  padding: 0 24px; border-bottom: 1px solid #e5e0d8;
   flex-shrink: 0; z-index: 10;
-  .navbar-left, .navbar-right { display: flex; align-items: center; gap: 10px; }
+  .navbar-left, .navbar-right { display: flex; align-items: center; gap: 12px; }
 }
 
-.collapse-btn { font-size: 18px; cursor: pointer; color: var(--steel); &:hover { color: var(--charcoal); } }
-.nav-icon { font-size: 17px; cursor: pointer; color: var(--steel); &:hover { color: var(--charcoal); } }
+.collapse-btn { font-size: 20px; cursor: pointer; color: var(--body-mid); &:hover { color: var(--ink); } }
+.nav-icon { font-size: 18px; cursor: pointer; color: var(--body-mid); &:hover { color: var(--ink); } }
 
 .user-info {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
-  .user-avatar { background: var(--primary); color: var(--on-primary); font-size: 12px; font-weight: 600; }
-  .user-name { font-size: 14px; color: var(--charcoal); font-weight: 500; }
+  .user-avatar { background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; }
+  .user-name { font-size: 16px; color: var(--ink); font-weight: 600; }
 }
 
 .layout-content { flex: 1; overflow-y: auto; padding: 24px; }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.12s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 @media (max-width: 768px) {
-  .layout-sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
+  .layout-sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 2px 0 12px rgba(0,0,0,0.08); }
   .sidebar-collapsed .layout-sidebar { display: none; }
-  .layout-content { padding: 12px; }
+  .layout-content { padding: 16px; }
 }
 </style>
