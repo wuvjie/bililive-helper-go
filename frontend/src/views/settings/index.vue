@@ -124,11 +124,6 @@
                 {{ setupData?.target_dir_writable ? '是' : '否' }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="进程组创建">
-              <el-tag :type="setupData?.process_group_ok ? 'success' : 'danger'" size="small">
-                {{ setupData?.process_group_ok ? '正常' : '异常' }}
-              </el-tag>
-            </el-descriptions-item>
             <el-descriptions-item label="主播数">{{ setupData?.streamer_count || 0 }}</el-descriptions-item>
             <el-descriptions-item label="视频数">{{ setupData?.video_count || 0 }}</el-descriptions-item>
             <el-descriptions-item label="总大小">{{ setupData?.total_size_gb?.toFixed(2) }} GB</el-descriptions-item>
