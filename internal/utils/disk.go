@@ -19,6 +19,9 @@ func GetDiskUsage(path string) (*DiskUsage, error) {
 	total := stat.Blocks * uint64(stat.Bsize)
 	free := stat.Bavail * uint64(stat.Bsize)
 	used := total - free
-	usedPct := float64(used) / float64(total) * 100
+	var usedPct float64
+	if total > 0 {
+		usedPct = float64(used) / float64(total) * 100
+	}
 	return &DiskUsage{Total: total, Used: used, Free: free, UsedPct: usedPct}, nil
 }

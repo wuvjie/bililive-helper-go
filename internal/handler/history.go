@@ -112,7 +112,7 @@ func (h *Handler) GetLogContent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "无效文件"})
 		return
 	}
-	if strings.Contains(file, "..") || strings.Contains(file, "/") || strings.Contains(file, "\\") {
+	if strings.Contains(file, "..") || strings.Contains(file, "/") || strings.Contains(file, "\\") || strings.Contains(file, "\x00") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "无效文件"})
 		return
 	}
