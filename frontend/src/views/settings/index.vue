@@ -207,8 +207,8 @@ const config = reactive<Record<string, any>>({});
 const scheduleForm = reactive({
   merge_enabled: true,
   clean_enabled: true,
-  merge_interval: 360,
-  clean_interval: 720
+  merge_interval: 120,
+  clean_interval: 360
 });
 const backupStart = ref("");
 const backupEnd = ref("");
