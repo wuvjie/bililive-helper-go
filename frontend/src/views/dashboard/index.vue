@@ -178,10 +178,10 @@ const statCards = computed(() => {
   const s = stats.value;
   if (!s) return [];
   return [
-    { label: "今日合并", value: s.today.merge_count, sub: formatBytes(s.today.merge_bytes), icon: "🔄", theme: "blue" },
-    { label: "今日清理", value: s.today.clean_count, sub: formatBytes(s.today.clean_bytes), icon: "🧹", theme: "green" },
-    { label: "本月合并", value: s.month.merge_count, sub: formatBytes(s.month.merge_bytes), icon: "📦", theme: "purple" },
-    { label: "本月清理", value: s.month.clean_count, sub: formatBytes(s.month.clean_bytes), icon: "💨", theme: "orange" }
+    { label: "今日合并次数", value: s.today.merge_count, sub: s.today.merge_bytes > 0 ? `合并 ${formatBytes(s.today.merge_bytes)}` : "暂无合并", icon: "🔄", theme: "blue" },
+    { label: "今日清理次数", value: s.today.clean_count, sub: s.today.clean_bytes > 0 ? `释放 ${formatBytes(s.today.clean_bytes)}` : "暂无清理", icon: "🧹", theme: "green" },
+    { label: "本月合并次数", value: s.month.merge_count, sub: s.month.merge_bytes > 0 ? `合并 ${formatBytes(s.month.merge_bytes)}` : "暂无合并", icon: "📦", theme: "purple" },
+    { label: "本月清理次数", value: s.month.clean_count, sub: s.month.clean_bytes > 0 ? `释放 ${formatBytes(s.month.clean_bytes)}` : "暂无清理", icon: "💨", theme: "orange" }
   ];
 });
 
