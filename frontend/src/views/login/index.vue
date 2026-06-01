@@ -1,39 +1,29 @@
 <template>
   <div class="login-container">
-    <div class="login-left">
-      <!-- Atmospheric glow -->
-      <div class="glow glow-blue" />
-      <div class="glow glow-orange" />
-      <div class="left-content">
-        <p class="mono-eyebrow">BILILIVE HELPER</p>
-        <h1>Smart recording<br />management.</h1>
-        <p class="lead">自动合并录制分片、智能磁盘管理、定时任务调度、硬件加速转码。</p>
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">BH</div>
+        <h1>Bililive Helper</h1>
+        <p>直播录制管理系统</p>
       </div>
-    </div>
-
-    <div class="login-right">
-      <div class="form-card">
-        <h2>Welcome back.</h2>
-        <p class="form-sub">输入密码以继续</p>
-        <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleLogin">
-          <el-form-item prop="password">
-            <el-input
-              v-model="form.password"
-              type="password"
-              placeholder="Password"
-              size="large"
-              show-password
-              :prefix-icon="Lock"
-              @keyup.enter="handleLogin"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" size="large" :loading="loading" class="login-btn" @click="handleLogin">
-              Sign in →
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </div>
+      <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleLogin">
+        <el-form-item prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="输入密码"
+            size="large"
+            show-password
+            :prefix-icon="Lock"
+            @keyup.enter="handleLogin"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" size="large" :loading="loading" class="login-btn" @click="handleLogin">
+            登录
+          </el-button>
+        </el-form-item>
+      </el-form>
     </div>
   </div>
 </template>
@@ -65,64 +55,31 @@ async function handleLogin() {
 </script>
 
 <style scoped>
-.login-container { display: flex; height: 100vh; overflow: hidden; background: var(--canvas); }
-
-.login-left {
-  flex: 1; position: relative; display: flex;
-  align-items: center; justify-content: center; overflow: hidden;
+.login-container {
+  height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--surface);
 }
 
-/* Atmospheric glows */
-.glow { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(80px); }
-.glow-blue {
-  width: 500px; height: 500px; top: 10%; left: 20%;
-  background: radial-gradient(circle, rgba(59, 158, 255, 0.18) 0%, transparent 70%);
-}
-.glow-orange {
-  width: 400px; height: 400px; bottom: 10%; right: 10%;
-  background: radial-gradient(circle, rgba(255, 128, 31, 0.12) 0%, transparent 70%);
-}
-
-.left-content { position: relative; z-index: 2; padding: 48px; max-width: 500px; }
-
-.mono-eyebrow {
-  font-family: var(--font-mono); font-size: 12px;
-  letter-spacing: 0.1em; color: var(--mute); margin-bottom: 24px;
-}
-
-.left-content h1 {
-  font-family: var(--font-display); font-size: 52px; font-weight: 400;
-  line-height: 1.05; letter-spacing: -0.5px; color: var(--ink);
-  margin-bottom: 20px;
-}
-
-.lead { font-size: 18px; line-height: 1.6; color: var(--body-text); }
-
-.login-right {
-  width: 480px; display: flex; align-items: center; justify-content: center;
-  background: var(--surface-card); border-left: 1px solid var(--hairline);
-}
-
-.form-card {
-  width: 320px; padding: 32px;
-  background: var(--surface-elevated);
-  border: 1px solid var(--hairline-strong);
+.login-card {
+  width: 400px; background: var(--canvas);
+  border: 1px solid var(--hairline);
   border-radius: var(--r-lg);
-  animation: slideUp 0.3s ease-out;
+  padding: 40px;
+  box-shadow: 0 4px 12px rgba(15, 15, 15, 0.06);
+  animation: slideUp 0.25s ease-out;
 }
 
-@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-.form-card h2 {
-  font-family: var(--font-display); font-size: 24px; font-weight: 400;
-  letter-spacing: -0.3px; margin-bottom: 4px;
+.login-header { text-align: center; margin-bottom: 32px; }
+.login-logo {
+  width: 48px; height: 48px; margin: 0 auto 16px;
+  background: var(--primary); color: var(--on-primary);
+  border-radius: var(--r-md); display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
 }
-.form-sub { font-size: 14px; color: var(--mute); margin-bottom: 24px; }
+.login-header h1 { font-size: 22px; font-weight: 600; color: var(--ink); margin-bottom: 4px; letter-spacing: -0.3px; }
+.login-header p { font-size: 14px; color: var(--steel); }
 
 .login-btn { width: 100%; height: 40px; }
-
-@media (max-width: 968px) {
-  .login-left { display: none; }
-  .login-right { width: 100%; border-left: none; }
-}
 </style>

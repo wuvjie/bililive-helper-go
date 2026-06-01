@@ -35,12 +35,12 @@
           <el-tooltip content="刷新" placement="bottom">
             <el-icon class="nav-icon" @click="refreshPage"><Refresh /></el-icon>
           </el-tooltip>
-          <el-tooltip content="Fullscreen" placement="bottom">
+          <el-tooltip content="全屏" placement="bottom">
             <el-icon class="nav-icon" @click="toggleFullscreen"><FullScreen /></el-icon>
           </el-tooltip>
           <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-info">
-              <div class="user-dot" />
+              <el-avatar :size="24" class="user-avatar">A</el-avatar>
               <span class="user-name">Admin</span>
             </span>
             <template #dropdown>
@@ -101,8 +101,8 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 .layout-container { display: flex; height: 100vh; overflow: hidden; }
 
 .layout-sidebar {
-  width: 220px;
-  background: var(--surface-card);
+  width: 240px;
+  background: var(--surface);
   border-right: 1px solid var(--hairline);
   transition: width 0.15s ease;
   display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
@@ -110,56 +110,51 @@ function handleCommand(cmd: string) { if (cmd === "logout") logout(); }
 }
 
 .sidebar-logo {
-  height: 48px;
+  height: 52px;
   display: flex; align-items: center; justify-content: center;
   border-bottom: 1px solid var(--hairline); flex-shrink: 0;
-  .logo-text {
-    font-family: var(--font-display);
-    font-size: 15px; font-weight: 400; color: var(--ink);
-    font-style: italic; letter-spacing: -0.3px;
-  }
-  .logo-text-mini { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .logo-text { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; }
+  .logo-text-mini { font-size: 15px; font-weight: 700; color: var(--ink); }
 }
 
 :deep(.el-menu) {
-  border-right: none; padding: 4px 6px;
+  border-right: none; padding: 6px 8px;
   .el-menu-item {
-    border-radius: var(--r-md); margin-bottom: 1px;
-    font-size: 14px; color: var(--mute);
+    border-radius: var(--r-sm); margin-bottom: 1px;
+    font-size: 14px; color: var(--steel);
     transition: background 0.1s, color 0.1s;
-    &:hover { background: rgba(255, 255, 255, 0.04); color: var(--charcoal); }
-    &.is-active { background: rgba(255, 255, 255, 0.06); color: var(--ink); }
+    &:hover { background: rgba(0, 0, 0, 0.03); color: var(--charcoal); }
+    &.is-active { background: rgba(85, 69, 212, 0.06); color: var(--primary); font-weight: 500; }
   }
 }
 
 .layout-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); }
 
 .layout-navbar {
-  height: 48px;
-  background: var(--canvas);
+  height: 52px; background: var(--canvas);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 20px;
   border-bottom: 1px solid var(--hairline);
   flex-shrink: 0; z-index: 10;
   .navbar-left, .navbar-right { display: flex; align-items: center; gap: 10px; }
 }
 
-.collapse-btn { font-size: 16px; cursor: pointer; color: var(--mute); &:hover { color: var(--ink); } }
-.nav-icon { font-size: 16px; cursor: pointer; color: var(--mute); &:hover { color: var(--ink); } }
+.collapse-btn { font-size: 18px; cursor: pointer; color: var(--steel); &:hover { color: var(--charcoal); } }
+.nav-icon { font-size: 17px; cursor: pointer; color: var(--steel); &:hover { color: var(--charcoal); } }
 
 .user-info {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
-  .user-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); }
-  .user-name { font-size: 13px; color: var(--charcoal); }
+  .user-avatar { background: var(--primary); color: var(--on-primary); font-size: 12px; font-weight: 600; }
+  .user-name { font-size: 14px; color: var(--charcoal); font-weight: 500; }
 }
 
 .layout-content { flex: 1; overflow-y: auto; padding: 24px; }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.1s; }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 @media (max-width: 768px) {
-  .layout-sidebar { position: fixed; z-index: 100; height: 100vh; }
+  .layout-sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
   .sidebar-collapsed .layout-sidebar { display: none; }
   .layout-content { padding: 12px; }
 }
