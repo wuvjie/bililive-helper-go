@@ -132,6 +132,18 @@ export interface CleanEstimate {
 
 export interface ConfigRecommend {
   risk_level: string;
+  reason: string;
   analysis: Record<string, any>;
-  recommendations: Record<string, { current: any; recommended: any }>;
+  current_usage: number;
+  total_gb: number;
+  free_gb: number;
+  need_to_free_gb: number;
+  TRIGGER_THRESHOLD: number;
+  TARGET_THRESHOLD: number;
+  MIN_KEEP_PER_STREAMER: number;
+  SAFE_AGE_MINUTES: number;
+  SAFE_MODE: string;
+  MERGE_AGE_MINUTES: number;
+  MAX_DELETE_PER_RUN: number;
+  GAP_MINUTES: number;
 }
