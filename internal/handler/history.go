@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetHistory 分页查询历史记录，支持按任务类型过滤。
 func (h *Handler) GetHistory(c *gin.Context) {
 	task := c.Query("task")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -38,10 +39,12 @@ func (h *Handler) GetHistory(c *gin.Context) {
 	})
 }
 
+// ExportHistory 导出全部历史记录。
 func (h *Handler) ExportHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, h.history.GetAllRecords())
 }
 
+// GetLogList 返回指定任务的日志文件列表（按日期倒序）。
 func (h *Handler) GetLogList(c *gin.Context) {
 	task := c.Param("task")
 	if !utils.ValidateFilename(task) {
@@ -51,6 +54,7 @@ func (h *Handler) GetLogList(c *gin.Context) {
 	c.JSON(http.StatusOK, h.listLogFiles(task))
 }
 
+// listLogFiles 扫描日志目录，返回匹配指定任务的日志文件元信息列表。
 func (h *Handler) listLogFiles(task string) []gin.H {
 	logDir := filepath.Join(h.config.LogDir, task+"_log")
 	baseName := task + "_videos.log"
@@ -100,6 +104,7 @@ func (h *Handler) listLogFiles(task string) []gin.H {
 	return files
 }
 
+// GetLogContent 返回指定日志文件的内容（最近 200 行）。
 func (h *Handler) GetLogContent(c *gin.Context) {
 	task := c.Param("task")
 	if !utils.ValidateFilename(task) {

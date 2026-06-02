@@ -1,3 +1,5 @@
+// Package main 是 Bililive Helper 应用程序的入口。
+// 负责初始化配置、创建业务服务、注册 HTTP 路由、启动服务器并处理优雅停机。
 package main
 
 import (
@@ -24,18 +26,22 @@ import (
 	"go.uber.org/zap"
 )
 
+// main 是应用程序入口函数。
+// 负责加载配置、初始化服务、注册路由、启动 HTTP 服务器，并监听系统信号实现优雅停机。
 func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
+	// 加载配置：config.json -> 环境变量覆盖 -> 自动生成凭据
 	cfg := config.Load()
 
+	// 按依赖顺序创建服务：history -> merge/clean -> scheduler
 	historyService := service.NewHistoryService(cfg, logger)
 	mergeService := service.NewMergeService(cfg, logger, historyService)
 	cleanService := service.NewCleanService(cfg, logger, historyService)
 	schedulerService := service.NewSchedulerService(cfg, logger, mergeService, cleanService, historyService)
 
-	// Check ffmpeg availability at startup
+	// 启动前检测 FFmpeg/FFprobe 是否可用，避免运行时才发现缺失
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		log.Fatal("ffmpeg 未安装或不在 PATH 中，请先安装 ffmpeg")
 	}
@@ -44,7 +50,7 @@ func main() {
 	}
 	logger.Info("ffmpeg / ffprobe 检测通过")
 
-	// Clean up leftover temp files from previous crashes
+	// 清理上次异常退出遗留的临时文件（.merge_tmp_*、.concat_* 等）
 	if n := mergeService.CleanupTempFiles(); n > 0 {
 		logger.Info("清理残留临时文件", zap.Int("count", n))
 	}
@@ -57,21 +63,25 @@ func main() {
 	r := gin.Default()
 
 	store := cookie.NewStore([]byte(cfg.SecretKey))
+	// Session 安全配置：HttpOnly 防 XSS、SameSiteLax 防 CSRF、可选 Secure 标志
+	secure := os.Getenv("COOKIE_SECURE") == "true"
 	store.Options(sessions.Options{
 		Path:     "/",
 		MaxAge:   7 * 86400,
 		HttpOnly: true,
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 	})
 	r.Use(sessions.Sessions("session", store))
 	r.Use(middleware.SecurityHeaders())
 
+	// 加载登录页模板
 	r.LoadHTMLFiles("templates/login.html")
 
-	// Serve frontend assets (Vue SPA build)
+	// 提供 Vue SPA 静态资源
 	r.Static("/assets", "./templates/assets")
 
-	// Serve index.html for Vue Router History mode
+	// Vue Router History 模式：非 API 路由统一返回 index.html
 	r.NoRoute(func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
 			c.JSON(404, gin.H{"error": "API not found"})
@@ -85,14 +95,22 @@ func main() {
 	r.GET("/logout", h.Logout)
 	r.GET("/favicon.ico", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 
+	// 注册 API 路由
 	api := r.Group("/api")
 	{
+		// 公开接口（无需认证）
 		api.POST("/login", h.Login)
 		api.GET("/health", h.Health)
+		api.GET("/setup/status", h.SetupStatus)
+		api.POST("/setup/init", h.SetupInit)
 
+		// 需要认证的接口
 		auth := api.Group("")
 		auth.Use(middleware.AuthRequired())
+		auth.Use(middleware.RateLimiter(60)) // 已认证接口：60 次 POST/分钟/IP
 		{
+			auth.GET("/auth/check", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })
+			auth.POST("/auth/change-password", h.ChangePassword)
 			auth.GET("/status", h.Status)
 			auth.GET("/status/detail", h.StatusDetail)
 			auth.GET("/stats", h.Stats)
@@ -128,7 +146,7 @@ func main() {
 		port = 5000
 	}
 
-	// Startup summary
+	// 打印启动摘要（配置、FFmpeg 信息、端口等）
 	utils.LogStartup(logger, cfg.TargetDir, cfg.TriggerThreshold, cfg.TargetThreshold,
 		cfg.GapMinutes, cfg.MergeAgeMinutes,
 		cfg.BackupStartHour, cfg.BackupStartMinute, cfg.BackupEndHour, cfg.BackupEndMinute,
@@ -142,12 +160,14 @@ func main() {
 		Handler: r,
 	}
 
+	// 在独立 goroutine 中启动 HTTP 服务器
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("服务器启动失败: %v", err)
 		}
 	}()
 
+	// 等待中断信号（SIGINT/SIGTERM），实现优雅停机
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

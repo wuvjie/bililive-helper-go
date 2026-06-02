@@ -5,52 +5,60 @@
         <div class="card-header">
           <span>📋 操作日志</span>
           <div class="header-actions">
-            <el-select v-model="filterTask" placeholder="全部类型" clearable style="width: 120px" @change="loadHistory(1)">
+            <el-select v-model="filterTask" placeholder="全部类型" clearable size="small" style="width: 112px" @change="loadHistory(1)">
               <el-option label="合并" value="merge" />
               <el-option label="清理" value="clean" />
               <el-option label="配置" value="config" />
             </el-select>
-            <el-button size="small" @click="loadHistory(currentPage)">
-              <el-icon><Refresh /></el-icon>刷新
-            </el-button>
-            <el-button size="small" type="success" @click="handleExport">
-              <el-icon><Download /></el-icon>导出
-            </el-button>
+            <span class="action-divider"></span>
+            <button class="text-action" @click="loadHistory(currentPage)">
+              <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+              刷新
+            </button>
+            <button class="text-action" @click="handleExport">
+              <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+              导出
+            </button>
           </div>
         </div>
       </template>
 
-      <el-table :data="history" stripe v-loading="loading">
-        <el-table-column prop="time" label="时间" width="170" />
-        <el-table-column prop="task" label="类型" width="80" align="center">
+      <el-table :data="history" v-loading="loading" class="history-table">
+        <el-table-column prop="time" label="时间" width="180" sortable>
           <template #default="{ row }">
-            <el-tag :type="taskType(row.task)" size="small">{{ taskLabel(row.task) }}</el-tag>
+            <span class="mono-time">{{ row.time }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="task" label="类型" width="90" align="center" sortable>
+          <template #default="{ row }">
+            <span class="type-label">
+              <span class="type-icon" :class="{ 'type-icon-gear': row.task === 'config' }">{{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : '⚙️' }}</span>
+              {{ taskLabel(row.task) }}
+            </span>
           </template>
         </el-table-column>
         <el-table-column prop="streamer" label="主播" width="120" show-overflow-tooltip />
         <el-table-column label="详情" min-width="250">
           <template #default="{ row }">
-            {{ row.detail || formatDetail(row) }}
+            <span class="detail-text">{{ row.detail || formatDetail(row) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="80" align="center">
+        <el-table-column prop="status" label="状态" width="100" align="left" header-align="left">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'success' ? 'success' : 'danger'" size="small">
+            <span class="status-dot-text" :class="row.status === 'success' ? 'dot-success' : 'dot-fail'">
               {{ row.status === 'success' ? '成功' : '失败' }}
-            </el-tag>
+            </span>
           </template>
         </el-table-column>
-        <el-table-column label="日志" width="80" align="center">
+        <el-table-column label="" width="80" align="center">
           <template #default="{ row }">
-            <el-button
+            <button
               v-if="row.task === 'merge' || row.task === 'clean'"
-              type="primary"
-              link
-              size="small"
+              class="log-view-btn"
               @click="viewLog(row)"
             >
               查看
-            </el-button>
+            </button>
           </template>
         </el-table-column>
       </el-table>
@@ -82,10 +90,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onActivated } from "vue";
 import { ElMessage } from "element-plus";
-import { Refresh, Download } from "@element-plus/icons-vue";
 import { getHistory, exportHistory, getLogList, getLogContent } from "@/api/history";
+import { formatBytes } from "@/utils/format";
 import type { HistoryRecord, LogFile } from "@/api/types";
 
 const history = ref<HistoryRecord[]>([]);
@@ -110,7 +118,7 @@ async function loadHistory(page: number) {
     const params: Record<string, any> = { page, per_page: 20 };
     if (filterTask.value) params.task = filterTask.value;
     const res = await getHistory(params);
-    if (seq !== loadSeq) return; // stale response, discard
+    if (seq !== loadSeq) return;
     history.value = res.items || [];
     totalItems.value = res.total;
     totalPages.value = res.pages;
@@ -120,12 +128,6 @@ async function loadHistory(page: number) {
   }
 }
 
-function taskType(task: string) {
-  if (task === "merge") return "primary" as const;
-  if (task === "clean") return "success" as const;
-  return "info" as const;
-}
-
 function taskLabel(task: string) {
   const map: Record<string, string> = { merge: "合并", clean: "清理", config: "配置" };
   return map[task] || task;
@@ -133,10 +135,10 @@ function taskLabel(task: string) {
 
 function formatDetail(row: HistoryRecord) {
   const parts = [];
-  if (row.files_count) parts.push(`${row.files_count}个文件`);
-  if (row.merged_bytes) parts.push(`合并${(row.merged_bytes / 1024 ** 3).toFixed(2)}GB`);
-  if (row.freed_bytes) parts.push(`释放${(row.freed_bytes / 1024 ** 3).toFixed(2)}GB`);
-  if (row.duration) parts.push(`耗时${row.duration}秒`);
+  if (row.files_count) parts.push(`${row.files_count} 个文件`);
+  if (row.merged_bytes) parts.push(`合并 ${formatBytes(row.merged_bytes)}`);
+  if (row.freed_bytes) parts.push(`释放 ${formatBytes(row.freed_bytes)}`);
+  if (row.duration) parts.push(`耗时 ${row.duration}s`);
   return parts.join(", ") || "-";
 }
 
@@ -184,6 +186,9 @@ async function handleExport() {
 }
 
 onMounted(() => loadHistory(1));
+
+// Refresh data when component is re-activated by keep-alive router-view
+onActivated(() => loadHistory(currentPage.value));
 </script>
 
 <style scoped>
@@ -194,19 +199,95 @@ onMounted(() => loadHistory(1));
   flex-wrap: wrap;
   gap: 8px;
 }
-.header-actions { display: flex; gap: 8px; align-items: center; }
-.pagination { margin-top: 16px; display: flex; justify-content: flex-end; }
+.header-actions { display: flex; gap: 8px; align-items: center; margin-right: -4px; }
+.action-divider { width: 1px; height: 14px; background: var(--hairline); flex-shrink: 0; }
+/* Pure text action buttons with inline SVG icons */
+.text-action {
+  background: transparent; border: none; padding: 0;
+  font-size: 13px; font-weight: 500; color: var(--steel);
+  cursor: pointer; transition: color 0.15s;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.text-action:hover { color: var(--ink); }
+.action-icon { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* Sort arrow alignment — compensate leftward push on sortable headers */
+.history-table :deep(.el-table__header) th.is-sortable .cell {
+  padding-left: 3px;
+}
+
+/* Pagination — align right edge with table border */
+.pagination { margin-top: 16px; display: flex; justify-content: flex-end; padding-right: 0; }
+.pagination :deep(.el-pagination) { padding: 0; }
+
+/* Time column */
+.mono-time { font-family: var(--font-mono); font-size: 12px; color: var(--slate); letter-spacing: 0.2px; }
+
+/* Type label — pure text + icon, no background */
+.type-label {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--slate); font-weight: 500;
+}
+.type-icon { font-size: 12px; transform: translateY(0.5px); }
+/* Reduce visual weight of gear icon (config type) */
+.type-icon-gear { opacity: 0.7; }
+
+/* Detail text — mono for technical params */
+.detail-text { font-size: 13px; color: var(--charcoal); font-family: var(--font-mono); letter-spacing: -0.2px; }
+
+/* Status dot — no background block */
+.status-dot-text {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500;
+}
+.status-dot-text::before {
+  content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+}
+.dot-success { color: var(--slate); }
+.dot-success::before { background: #448361; }
+.dot-fail { color: var(--slate); }
+.dot-fail::before { background: #e03131; }
+
+/* View log button — default invisible, hover appears */
+.log-view-btn {
+  background: transparent; border: none; padding: 2px 6px;
+  font-size: 13px; color: transparent; cursor: pointer;
+  border-radius: var(--r-xs); transition: all 0.15s;
+}
+.history-table :deep(.el-table__row:hover) .log-view-btn {
+  color: var(--ink);
+}
+.log-view-btn:hover {
+  text-decoration: underline;
+}
+
+/* Log viewer dialog */
 .log-content {
-  background: #1e1e1e;
-  color: #d4d4d4;
-  padding: 16px;
-  border-radius: 6px;
+  background: #191919;
+  color: #b0b0b0;
+  padding: 16px 24px 16px 16px;
+  border: 1px solid #2e2e2e;
+  border-radius: var(--r-sm);
   max-height: 60vh;
   overflow-y: auto;
-  font-family: "SF Mono", Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
-  word-break: break-all;
+  word-break: break-word;
+}
+
+/* Dialog overrides for Notion style */
+.history :deep(.el-dialog) {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+.history :deep(.el-dialog__header) {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f1ef;
+  margin-right: 0;
+}
+.history :deep(.el-dialog__body) {
+  padding: 0;
 }
 </style>

@@ -5,12 +5,6 @@ export interface StreamerInfo {
   size_gb: number;
 }
 
-export interface StatusResponse {
-  disk_usage: number;
-  streamers: StreamerInfo[];
-  total_gb: number;
-}
-
 export interface DiskInfo {
   usage_pct: number;
   total_gb: number;

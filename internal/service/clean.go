@@ -1,3 +1,5 @@
+// Package service 提供核心业务逻辑。
+// 包含合并服务、清理服务、历史记录服务、调度服务和日志管理。
 package service
 
 import (
@@ -5,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
 
 	"bililive-helper/internal/config"
@@ -14,12 +15,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// CleanService 提供智能清理功能。
+// 根据磁盘使用率阈值触发清理，支持白名单保护、安全期保护和每主播保底数量。
 type CleanService struct {
 	config  *config.Config
 	logger  *zap.Logger
 	history *HistoryService
 }
 
+// NewCleanService 创建清理服务实例。
 func NewCleanService(config *config.Config, logger *zap.Logger, history *HistoryService) *CleanService {
 	return &CleanService{config: config, logger: logger, history: history}
 }
@@ -29,11 +33,16 @@ func (s *CleanService) logToFile(task, message string) {
 	logToFile(cfg.LogDir, task, message, s.logger)
 }
 
+// CleanResult 保存清理操作的结果。
 type CleanResult struct {
 	Deleted int
 	Freed   int64
 }
 
+// Run 执行清理任务。
+// 全局模式：检查磁盘阈值，未达阈值则跳过；已合并文件优先删除。
+// 单主播模式：仅清理指定主播的文件。
+// 参数 streamer 为空表示全局清理；onProgress 用于 SSE 进度回调。
 func (s *CleanService) Run(streamer string, onProgress ProgressFunc) (*CleanResult, error) {
 	start := time.Now()
 	cfg := s.config.Snapshot()
@@ -116,7 +125,7 @@ func (s *CleanService) Run(streamer string, onProgress ProgressFunc) (*CleanResu
 	onProgress(fmt.Sprintf("🔍 发现 %d 个候选文件", len(candidates)))
 
 	sort.Slice(candidates, func(i, j int) bool {
-		// Priority: merged files first, then originals by age
+	// 排序策略：已合并文件优先删除（安全），其次按文件年龄从老到新
 		iMerged := utils.IsMergedFile(candidates[i].Name)
 		jMerged := utils.IsMergedFile(candidates[j].Name)
 		if iMerged != jMerged {
@@ -135,7 +144,7 @@ func (s *CleanService) Run(streamer string, onProgress ProgressFunc) (*CleanResu
 	s.logToFile("clean", fmt.Sprintf("⏹ 结束 · 删除 %d 文件 | 释放 %s", deleted, utils.FormatSize(freed)))
 	onProgress(msg)
 
-	// Show disk usage after deletion
+	// Show disk usage after deletion for user feedback
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
 		onProgress(fmt.Sprintf("📊 当前磁盘 %.1f%%", diskAfter.UsedPct))
 	}
@@ -154,6 +163,7 @@ type candidateFile struct {
 	Mtime float64
 }
 
+// calculateNeedToFree 计算需要释放的字节数以达到目标阈值。
 func (s *CleanService) calculateNeedToFree(disk *utils.DiskUsage, cfg config.Config) int64 {
 	if disk.UsedPct <= cfg.TargetThreshold {
 		return 0
@@ -168,6 +178,8 @@ type streamerStats struct {
 	skipped   int
 }
 
+// collectCandidates 扫描所有主播目录，收集可清理的候选文件。
+// 返回候选文件列表和每个主播的统计信息（总数、候选数、跳过数）。
 func (s *CleanService) collectCandidates(root, streamer string, cfg config.Config) ([]candidateFile, map[string]streamerStats) {
 	var candidates []candidateFile
 	perStreamer := make(map[string]streamerStats)
@@ -210,6 +222,8 @@ func (s *CleanService) countVideos(folder string) int {
 	return count
 }
 
+// collectStreamerCandidates 收集单个主播目录下的可清理候选文件。
+// 应用保底数量、白名单过滤和安全期保护规则。
 func (s *CleanService) collectStreamerCandidates(folder, streamerName string, candidates *[]candidateFile, cfg config.Config) {
 	minKeep := cfg.MinKeepPerStreamer
 	wl := cfg.WhitelistKeywords
@@ -251,7 +265,7 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 	videos = videos[:len(videos)-minKeep]
 
 	for _, v := range videos {
-		if containsAny(v.Name, wl) || containsAny(streamerName, wl) {
+		if utils.ContainsAny(v.Name, wl) || utils.ContainsAny(streamerName, wl) {
 			continue
 		}
 		if cfg.SafeMode == "days" {
@@ -269,11 +283,13 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 	}
 }
 
+// deleteFiles 执行文件删除，使用双快照检测跳过正在写入的文件。
+// 受单次删除上限和目标释放量双重约束。
 func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64, cfg config.Config, onProgress ProgressFunc) (int, int64) {
 	deleted := 0
 	freed := int64(0)
 
-	// 1. Batch record initial sizes
+	// 1. 记录所有候选文件的大小（第一次快照）
 	sizeMap1 := make(map[string]int64)
 	for _, f := range candidates {
 		if info, err := os.Stat(f.Path); err == nil {
@@ -281,10 +297,10 @@ func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64,
 		}
 	}
 
-	// 2. Single sleep for all files
+	// 2. 等待 1 秒后再次记录大小 — 正在写入的文件大小会不同
 	time.Sleep(1 * time.Second)
 
-	// 3. Batch record post-sleep sizes
+	// 3. 记录第二次快照
 	sizeMap2 := make(map[string]int64)
 	for _, f := range candidates {
 		if info, err := os.Stat(f.Path); err == nil {
@@ -292,7 +308,7 @@ func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64,
 		}
 	}
 
-	// 4. Execute cleanup
+	// 4. 执行删除 — 跳过两次快照间大小变化的文件（正在写入）
 	for _, f := range candidates {
 		if deleted >= cfg.MaxDeletePerRun {
 			s.logToFile("clean", fmt.Sprintf("ℹ 已达单次删除上限 %d 个文件", cfg.MaxDeletePerRun))
@@ -306,7 +322,7 @@ func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64,
 			continue
 		}
 
-		// Compare two batch stats to detect files being written
+		// 对比两次快照，检测正在写入的文件
 		s1, ok1 := sizeMap1[f.Path]
 		s2, ok2 := sizeMap2[f.Path]
 		if ok1 && ok2 && s1 != s2 {
@@ -331,14 +347,4 @@ func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64,
 	}
 
 	return deleted, freed
-}
-
-func containsAny(s string, keywords []string) bool {
-	s = strings.ToLower(s)
-	for _, kw := range keywords {
-		if strings.Contains(s, strings.ToLower(kw)) {
-			return true
-		}
-	}
-	return false
 }

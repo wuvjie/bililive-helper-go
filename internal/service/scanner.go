@@ -1,3 +1,5 @@
+// scanner.go 提供录制文件的扫描、分组和场次划分逻辑。
+// 解析 bililive-go 文件名格式，按时间间隔将同一主播的文件划分为合并批次。
 package service
 
 import (
@@ -16,19 +18,21 @@ import (
 	"go.uber.org/zap"
 )
 
-// videoFile holds parsed metadata for a single video file.
+// videoFile 保存单个视频文件的解析元数据。
 type videoFile struct {
 	Name     string
 	Key      string
 	Datetime time.Time
 }
 
+// mergeTask 表示一个待合并的任务（多个文件合并为一个输出）。
 type mergeTask struct {
 	Files  []string
 	Folder string
 	SizeGB float64
 }
 
+// convertTask 表示一个待转换的任务（FLV 转 MP4）。
 type convertTask struct {
 	FlvPath string
 	Mp4Path string
@@ -36,8 +40,8 @@ type convertTask struct {
 	Name    string
 }
 
-// isFileBeingWritten checks if file size changes over an interval.
-// Returns true if file is being written, missing, or size changed.
+// isFileBeingWritten 通过比较两次文件大小来检测文件是否正在被写入。
+// 文件缺失、不可访问或大小变化时返回 true。
 func isFileBeingWritten(path string, interval time.Duration) bool {
 	info1, err := os.Stat(path)
 	if err != nil {
@@ -51,8 +55,8 @@ func isFileBeingWritten(path string, interval time.Duration) bool {
 	return info1.Size() != info2.Size()
 }
 
-// isFileSizeStable checks if file size hasn't changed over an interval.
-// Used as final safety check before processing — catches hung write processes.
+// isFileSizeStable 检查文件大小在指定间隔内是否保持稳定。
+// 最终安全检查 — 捕获挂起的写入进程。
 func isFileSizeStable(path string, interval time.Duration) bool {
 	info1, err := os.Stat(path)
 	if err != nil {
@@ -66,15 +70,15 @@ func isFileSizeStable(path string, interval time.Duration) bool {
 	return info1.Size() == info2.Size()
 }
 
-// getVideoFiles returns all non-merged video files with parsed metadata.
-// Also self-heals: if a valid MP4 exists, leftover FLV/TS with the same base name are deleted.
+// getVideoFiles 返回目录中所有非已合并的视频文件及其解析元数据。
+// 具有自愈能力：如果存在有效的 MP4 文件，会清理同名的残留 FLV/TS 文件。
 func (s *MergeService) getVideoFiles(folder string) []videoFile {
 	entries, err := os.ReadDir(folder)
 	if err != nil {
 		return nil
 	}
 
-	// Pass 1: index base names that have valid-sized MP4 files
+	// 第一遍：索引有有效 MP4 文件的基础文件名
 	mp4Bases := make(map[string]bool)
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -94,7 +98,7 @@ func (s *MergeService) getVideoFiles(folder string) []videoFile {
 		}
 	}
 
-	// Pass 2: collect videos, clean up residuals
+	// 第二遍：收集视频文件，清理上次删除失败的残留
 	var videos []videoFile
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -111,7 +115,7 @@ func (s *MergeService) getVideoFiles(folder string) []videoFile {
 		ext := strings.ToLower(filepath.Ext(name))
 		base := strings.TrimSuffix(name, ext)
 
-		// Residual cleanup: if MP4 exists, the FLV/TS is a leftover from a previous failed delete
+		// 残留清理：如果已存在有效的 MP4，同名的 FLV/TS 是上次删除失败的残留
 		if ext != ".mp4" && mp4Bases[base] {
 			path := filepath.Join(folder, name)
 			if err := utils.SafeUnlink(path); err != nil {
@@ -131,9 +135,8 @@ func (s *MergeService) getVideoFiles(folder string) []videoFile {
 	return videos
 }
 
-// isStreamActive checks if the LATEST file with the same key is currently being written to.
-// Only probes the newest file — avoids the "collateral skip" where older batches are
-// blocked by the mere existence of newer batches from a different session.
+// isStreamActive 检查指定 key 的最新文件是否正在被录制写入。
+// 只探测最新文件，避免因新批次存在而导致旧批次被错误跳过。
 func isStreamActive(folder string, batchKey string) bool {
 	entries, err := os.ReadDir(folder)
 	if err != nil {
@@ -170,6 +173,8 @@ func isStreamActive(folder string, batchKey string) bool {
 	return isFileBeingWritten(newestPath, 1*time.Second)
 }
 
+// scanTasks 扫描录制目录，将文件按主播分组、按时间排序、按间隔分场次。
+// 返回待合并任务列表和待转换任务列表（FLV→MP4）。
 func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]mergeTask, []convertTask) {
 	var tasks []mergeTask
 	var convertTasks []convertTask
@@ -197,14 +202,14 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 			continue
 		}
 
-		// Group by key
+		// 按文件名中的 key（主播+标题）分组
 		groups := make(map[string][]videoFile)
 		for _, v := range videos {
 			groups[v.Key] = append(groups[v.Key], v)
 		}
 
-		// For each group: sort by datetime (from filename), split by time gap
-		// Use Datetime exclusively — mtime is unreliable (changes on copy/touch/scan)
+		// 每组按文件名中的时间排序，按时间间隔分批次
+		// 仅使用 Datetime — mtime 不可靠（复制/扫描会改变 mtime）
 		for key, items := range groups {
 			sort.Slice(items, func(i, j int) bool {
 				return items[i].Datetime.Before(items[j].Datetime)
@@ -241,7 +246,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 					continue
 				}
 
-				// Filter: remove corrupt files (< 1MB or < 5s) BEFORE routing
+				// 过滤：移除损坏文件（<1MB 或时长<5s）后再路由
 				var names []string
 				var size int64
 				for _, v := range batch {
@@ -268,13 +273,13 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 					continue
 				}
 
-				// Single file after filtering — route by format
+				// 过滤后只剩单文件 — 按格式路由（FLV 需转换，MP4 跳过）
 				if len(names) == 1 {
 					singleName := names[0]
 					ext := strings.ToLower(filepath.Ext(singleName))
 
+					// FLV → MP4 转换路径
 					if ext == ".flv" {
-						// FLV → MP4 conversion path
 						flvPath := filepath.Join(folder, singleName)
 						flvInfo, flvErr := os.Stat(flvPath)
 						if flvErr != nil {
@@ -312,11 +317,11 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 					} else if ext == ".ts" {
 						s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %s → 孤立TS，等待清理", entry.Name(), singleName))
 					}
-					// Single MP4: no action needed, skip silently
+					// 单个 MP4 无需操作，静默跳过
 					continue
 				}
 
-				// Multi-file merge (len(names) >= 2)
+				// 多文件合并（过滤后 >=2 个文件）
 				lastFile := filepath.Join(folder, names[len(names)-1])
 				if isFileBeingWritten(lastFile, 2*time.Second) {
 					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %d个文件 → 录制中，跳过", entry.Name(), len(names)))

@@ -1,3 +1,5 @@
+// validate.go 提供视频文件的输出校验功能。
+// 通过容器元数据检查、时长-大小合理性验证和多点解码测试，确保输出文件可正常播放。
 package ffmpeg
 
 import (
@@ -8,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"bililive-helper/internal/utils"
 )
 
 const (
@@ -16,16 +20,15 @@ const (
 	probeTimeout     = 30 * time.Second
 )
 
-// ValidateOutput checks if a video file is playable and complete.
-// Designed for live stream recordings which may have minor timestamp glitches.
+// ValidateOutput 检查视频文件是否可播放且完整。
+// 针对直播录制设计，能容忍轻微的时间戳不连续。
 //
-// Strategy:
-//  1. Container integrity: ffprobe can read duration + stream info
-//  2. Multi-point decode: sample 3 points (10%, 50%, 90%) with -v warning (not error)
-//  3. Duration-size sanity: file is large enough for its duration
-//  4. Stream presence: at least one video stream exists
+// 校验策略：
+//  1. 容器完整性：ffprobe 能读取时长和流信息
+//  2. 时长-大小合理性：文件大小与报告时长匹配
+//  3. 多点解码：在 10%、50%、90% 位置采样解码，使用 -v warning（非 error）容忍轻微时间戳问题
 //
-// Returns nil if the file is considered playable.
+// 返回 nil 表示文件可正常播放。
 func ValidateOutput(ctx context.Context, path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -35,7 +38,7 @@ func ValidateOutput(ctx context.Context, path string) error {
 		return fmt.Errorf("文件过小: %s (%d bytes)", path, info.Size())
 	}
 
-	// Step 1: Read container metadata (duration, streams)
+	// 步骤 1：读取容器元数据（时长、流数量）
 	duration, streams, err := probeMetadata(ctx, path)
 	if err != nil {
 		return fmt.Errorf("容器损坏，无法读取元数据: %w", err)
@@ -47,18 +50,16 @@ func ValidateOutput(ctx context.Context, path string) error {
 		return fmt.Errorf("无媒体流")
 	}
 
-	// Step 2: Duration-size sanity check
-	// For live recordings, expect at least 5KB/s (very conservative —
-	// even audio-only streams are ~16KB/s at 128kbps)
+	// 步骤 2：时长-大小合理性检查
+	// 直播录制预期最低 5KB/s（非常保守 — 纯音频 128kbps 约 16KB/s）
 	expectedMinSize := int64(duration * minSizePerSecond)
 	if info.Size() < expectedMinSize {
-		return fmt.Errorf("文件过小(时长%.0fs但只有%s)，可能截断", duration, formatSize(info.Size()))
+		return fmt.Errorf("文件过小(时长%.0fs但只有%s)，可能截断", duration, utils.FormatSize(info.Size()))
 	}
 
-	// Step 3: Multi-point decode test
-	// Sample at 10%, 50%, 90% of the file to catch corruption anywhere.
-	// Use -v warning (not error) to tolerate minor timestamp glitches
-	// common in live stream recordings.
+	// 步骤 3：多点解码测试
+	// 在 10%、50%、90% 位置采样，捕获文件任意位置的损坏。
+	// 使用 -v warning（非 error）容忍直播录制中的轻微时间戳问题。
 	if err := multiPointDecode(ctx, path, duration); err != nil {
 		return err
 	}
@@ -66,7 +67,8 @@ func ValidateOutput(ctx context.Context, path string) error {
 	return nil
 }
 
-// probeMetadata reads duration and stream count via ffprobe.
+// probeMetadata 通过 ffprobe 读取时长和流数量。
+// 出错时返回部分结果（例如时长可能已获取但流数量失败）。
 func probeMetadata(ctx context.Context, path string) (duration float64, streams int, err error) {
 	probeCtx, cancel := context.WithTimeout(ctx, probeTimeout)
 	defer cancel()
@@ -104,10 +106,10 @@ func probeMetadata(ctx context.Context, path string) (duration float64, streams 
 	return duration, streams, nil
 }
 
-// multiPointDecode decodes short segments at 3 positions in the file.
-// Uses -v warning to tolerate minor timestamp discontinuities.
+// multiPointDecode 在文件的 3 个位置解码短片段（10%、50%、90%）。
+// 使用 -v warning 容忍轻微的时间戳不连续。
 func multiPointDecode(ctx context.Context, path string, duration float64) error {
-	// For very short files (< 30s), just decode the whole thing
+	// For very short files (< 30s), decode the entire file
 	if duration < 30 {
 		return singleDecode(ctx, path, 0, duration)
 	}
@@ -127,10 +129,9 @@ func multiPointDecode(ctx context.Context, path string, duration float64) error 
 	return nil
 }
 
-// singleDecode decodes a segment of the file.
-// Uses -v warning (not error) to tolerate minor timestamp issues.
-// Returns error only if ffmpeg exits with non-zero AND produces output
-// indicating fatal stream errors.
+// singleDecode 解码文件中的短片段。
+// 使用 -v warning 容忍直播录制中的轻微时间戳问题。
+// 仅对真正的致命流错误返回错误。
 func singleDecode(ctx context.Context, path string, start, durationSec float64) error {
 	decodeCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
@@ -149,25 +150,23 @@ func singleDecode(ctx context.Context, path string, start, durationSec float64) 
 		return nil
 	}
 
-	// ffmpeg returned non-zero. Check if it's a fatal error or just warnings.
-	// For live recordings, we tolerate non-zero exit if the output only contains
-	// common non-fatal warnings.
+	// ffmpeg 返回非零退出码。区分致命错误和直播录制中常见的非致命警告。
 	output := string(out)
 	fatal := isFatalFFmpegError(output)
 	if fatal {
 		return fmt.Errorf("解码段 @%.0fs 出现致命错误: %s", start, truncate(output, 200))
 	}
 
-	// Non-fatal warnings with non-zero exit — still acceptable for live recordings
+	// Non-fatal warnings with non-zero exit — acceptable for live recordings
 	return nil
 }
 
-// isFatalFFmpegError checks if ffmpeg output contains truly fatal errors
-// (as opposed to common non-fatal warnings in live recordings).
+// isFatalFFmpegError 检查 ffmpeg 输出是否包含真正的致命错误
+// （区别于直播录制中常见的非致命警告）。
 func isFatalFFmpegError(output string) bool {
 	lower := strings.ToLower(output)
 
-	// These are fatal — the file is truly broken
+	// 这些模式表明文件确实损坏
 	fatalPatterns := []string{
 		"invalid data",
 		"no such file",
@@ -176,7 +175,7 @@ func isFatalFFmpegError(output string) bool {
 		"decoding error",
 		"error decoding",
 		" corrupt",
-		"truncated",
+		"file is truncated",
 		"moov atom not found",
 		"missing mandatory",
 		"invalid NAL",
@@ -189,19 +188,17 @@ func isFatalFFmpegError(output string) bool {
 		}
 	}
 
-	// If there's no recognizable fatal pattern but ffmpeg still failed,
-	// and the output is very short (likely just a version/config issue),
-	// treat as non-fatal
+	// 空输出 + 非零退出码 — 可能是版本/配置问题，非文件损坏
 	if len(strings.TrimSpace(output)) == 0 {
 		return false
 	}
 
-	// Default: if we can't classify, be lenient for live recordings
+	// 默认：对直播录制保持宽容 — 无法判定为致命的则允许通过
 	return false
 }
 
-// quickProbe runs a fast metadata-only check (no decode).
-// Used during scanning to verify an existing output is basically readable.
+// QuickProbe 执行快速的元数据检查（无解码）。
+// 用于扫描阶段验证已存在的输出是否基本可读，不做完整校验。
 func QuickProbe(ctx context.Context, path string) error {
 	probeCtx, cancel := context.WithTimeout(ctx, probeTimeout)
 	defer cancel()

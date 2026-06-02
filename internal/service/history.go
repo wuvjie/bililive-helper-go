@@ -1,3 +1,5 @@
+// history.go 提供历史记录的持久化存储服务。
+// 支持记录的增删查、分页查询、磁盘文件的原子写入和自动清理。
 package service
 
 import (
@@ -15,6 +17,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// HistoryService 提供历史记录的持久化存储。
+// 使用内存缓存 + 磁盘文件的模式，首次访问时从磁盘加载，所有变更原子写入。
 type HistoryService struct {
 	config  *config.Config
 	logger  *zap.Logger
@@ -25,15 +29,19 @@ type HistoryService struct {
 	once    sync.Once
 }
 
+// NewHistoryService 创建历史记录服务实例。
 func NewHistoryService(config *config.Config, logger *zap.Logger) *HistoryService {
 	return &HistoryService{config: config, logger: logger}
 }
 
+// Add 添加一条简要历史记录（无统计数据）。
 func (s *HistoryService) Add(task, streamer, status, detail string) {
 	s.AddWithStats(task, streamer, status, 0, 0, 0, 0, detail)
 }
 
+// AddWithStats 添加一条带统计数据的历史记录（文件数、释放/合并字节数、耗时）。
 func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount int, freedBytes, mergedBytes int64, duration float64, detail string) {
+	s.ensureLoadedSafe()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -53,16 +61,16 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 		record.Streamer = "全局"
 	}
 
-	s.ensureLoaded()
 	records := append([]model.HistoryRecord{}, s.cache...)
 	records = append(records, record)
 	records = s.cleanupRecords(records)
 	s.saveRecords(records)
 }
 
+// GetRecords 分页查询历史记录，支持按任务类型过滤，按时间倒序排列。
 func (s *HistoryService) GetRecords(task string, page, perPage int) ([]model.HistoryRecord, int) {
+	s.ensureLoadedSafe()
 	s.mu.RLock()
-	s.ensureLoaded()
 	records := append([]model.HistoryRecord{}, s.cache...) // copy under lock
 	s.mu.RUnlock()
 
@@ -96,9 +104,10 @@ func (s *HistoryService) GetRecords(task string, page, perPage int) ([]model.His
 	return records[start:end], total
 }
 
+// GetAllRecords 返回全部历史记录（用于导出和统计）。
 func (s *HistoryService) GetAllRecords() []model.HistoryRecord {
+	s.ensureLoadedSafe()
 	s.mu.RLock()
-	s.ensureLoaded()
 	records := append([]model.HistoryRecord{}, s.cache...)
 	s.mu.RUnlock()
 	if records == nil {
@@ -107,12 +116,24 @@ func (s *HistoryService) GetAllRecords() []model.HistoryRecord {
 	return records
 }
 
-// ensureLoaded loads records from disk if not already loaded.
-// Caller MUST hold at least RLock.
-func (s *HistoryService) ensureLoaded() {
+// ensureLoadedSafe 使用双重检查锁模式确保历史记录在首次访问时从磁盘加载。
+func (s *HistoryService) ensureLoadedSafe() {
+	s.mu.RLock()
+	loaded := s.loaded
+	s.mu.RUnlock()
+	if loaded {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.loaded {
 		return
 	}
+	s.doLoad()
+}
+
+// doLoad 从磁盘读取历史记录文件。调用者必须持有写锁。
+func (s *HistoryService) doLoad() {
 	file := s.config.GetHistoryFile()
 	data, err := os.ReadFile(file)
 	if err != nil {
@@ -135,15 +156,23 @@ func (s *HistoryService) ensureLoaded() {
 
 func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 	file := s.config.GetHistoryFile()
-	os.MkdirAll(filepath.Dir(file), 0755)
+	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
+		s.logger.Warn("创建历史记录目录失败", zap.Error(err))
+		return
+	}
 	wrapper := struct {
 		Records []model.HistoryRecord `json:"records"`
 	}{Records: records}
-	data, _ := json.MarshalIndent(wrapper, "", "  ")
+	data, err := json.MarshalIndent(wrapper, "", "  ")
+	if err != nil {
+		s.logger.Warn("序列化历史记录失败", zap.Error(err))
+		return
+	}
 	tmp := file + ".tmp"
 	if err := os.WriteFile(tmp, data, 0644); err == nil {
 		if err := os.Rename(tmp, file); err == nil {
-			s.cache = records // only update cache after successful disk write
+			// 原子 rename 成功后才更新内存缓存
+			s.cache = records
 			return
 		}
 		os.Remove(tmp)
@@ -152,35 +181,31 @@ func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 	}
 }
 
+// cleanupRecords 清理超过 90 天的记录，并限制最大记录数为 1000。
 func (s *HistoryService) cleanupRecords(records []model.HistoryRecord) []model.HistoryRecord {
-	cutoff := time.Now().AddDate(0, 0, -30).Format("2006-01-02 15:04:05")
+	cutoff := time.Now().AddDate(0, 0, -90).Format("2006-01-02 15:04:05")
 	var cleaned []model.HistoryRecord
 	for _, r := range records {
 		if r.Time > cutoff {
 			cleaned = append(cleaned, r)
 		}
 	}
-	if len(cleaned) > 100 {
-		cleaned = cleaned[len(cleaned)-100:]
+	if len(cleaned) > 1000 {
+		cleaned = cleaned[len(cleaned)-1000:]
 	}
 	return cleaned
 }
 
+// CleanupOldRecords 执行历史记录清理（由调度器每日调用）。
 func (s *HistoryService) CleanupOldRecords() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.ensureLoaded()
+	if !s.loaded {
+		s.doLoad()
+	}
 	records := append([]model.HistoryRecord{}, s.cache...)
 	cleaned := s.cleanupRecords(records)
 	if len(cleaned) != len(records) {
 		s.saveRecords(cleaned)
 	}
-}
-
-// Reload forces a fresh read from disk on next access.
-func (s *HistoryService) Reload() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.loaded = false
-	s.cache = nil
 }

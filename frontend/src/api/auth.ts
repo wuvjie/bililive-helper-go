@@ -5,6 +5,9 @@ export function login(password: string) {
 }
 
 export function logout() {
-  localStorage.removeItem("token");
   window.location.href = "/logout";
+}
+
+export function changePassword(old_password: string, new_password: string) {
+  return post("/auth/change-password", { old_password, new_password });
 }

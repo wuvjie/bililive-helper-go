@@ -12,6 +12,9 @@ import (
 
 var filenameRegex = regexp.MustCompile(`^\[(\d{4}-\d{2}-\d{2}) (\d{2}-\d{2}-\d{2})\](\[.+?\]\[.+?\]).*\.(mp4|flv|ts)$`)
 
+// ParseFilename 从 bililive-go 格式的文件名中解析录制时间和主播标识。
+// 期望格式：[YYYY-MM-DD HH-MM-SS][streamer_id][title].ext
+// 返回主播标识方括号段、解析后的时间和是否成功。
 func ParseFilename(name string) (string, time.Time, bool) {
 	matches := filenameRegex.FindStringSubmatch(name)
 	if matches == nil {
@@ -24,6 +27,7 @@ func ParseFilename(name string) (string, time.Time, bool) {
 	return matches[3], dt, true
 }
 
+// GetVideoDuration 通过 ffprobe 获取视频文件的时长（秒），超时 30 秒。
 func GetVideoDuration(path string) (float64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

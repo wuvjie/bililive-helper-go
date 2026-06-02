@@ -1,3 +1,5 @@
+// Package ffmpeg 封装 FFmpeg/FFprobe 命令行工具。
+// 提供进程管理（超时、进程组）、TS 拼接、格式转换、输出校验和重编码等功能。
 package ffmpeg
 
 import (
@@ -11,18 +13,16 @@ import (
 
 const DefaultTimeout = 2 * time.Hour
 
-// Options configures an ffmpeg command execution.
+// Options 配置 ffmpeg 命令的执行参数。
 type Options struct {
 	Args     []string
 	Timeout  time.Duration    // 0 means DefaultTimeout
 	OnStdout func(line string) // called for each stdout line (for progress parsing)
 }
 
-// Run executes ffmpeg with the given options. It handles:
-// - Process group creation (Setpgid) for clean termination
-// - Context cancellation (kills entire process group)
-// - Timeout (kills entire process group)
-// - Optional stdout line callback for progress parsing
+// Run 执行 ffmpeg 命令。
+// 进程管理：创建进程组（Setpgid），上下文取消或超时时杀死整个进程组，
+// 防止产生孤立的 ffmpeg 子进程。
 func Run(ctx context.Context, opts Options) error {
 	timeout := opts.Timeout
 	if timeout == 0 {
@@ -66,7 +66,7 @@ func Run(ctx context.Context, opts Options) error {
 	}
 }
 
-// killProcessGroup sends SIGKILL to the entire process group.
+// killProcessGroup 向整个进程组发送 SIGKILL（负 PID）。
 func killProcessGroup(cmd *exec.Cmd) {
 	if cmd.Process != nil {
 		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)

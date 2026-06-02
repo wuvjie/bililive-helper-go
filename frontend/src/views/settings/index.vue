@@ -6,9 +6,9 @@
 
         <!-- Tab 1: General Config -->
         <el-tab-pane label="基本配置" name="general">
-          <el-form label-width="160px" label-position="right" v-loading="configLoading">
+          <el-form label-width="144px" label-position="left" v-loading="configLoading" class="settings-form">
             <el-form-item label="录制目录">
-              <el-input v-model="config.TARGET_DIR" placeholder="/path/to/recordings" />
+              <el-input v-model="config.TARGET_DIR" placeholder="/path/to/recordings" style="max-width: 520px" />
             </el-form-item>
             <el-form-item label="合并时间阈值(分钟)">
               <el-input-number v-model="config.MERGE_AGE_MINUTES" :min="5" :max="1440" />
@@ -32,33 +32,37 @@
               <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" />
             </el-form-item>
             <el-form-item label="白名单关键词">
-              <el-input v-model="config.WHITELIST_KEYWORDS" placeholder="关键词用逗号分隔" />
+              <el-input v-model="config.WHITELIST_KEYWORDS" placeholder="关键词用英文逗号分隔" style="max-width: 520px" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="saving" @click="handleSaveConfig">保存配置</el-button>
+              <el-button type="primary" :loading="saving" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
             </el-form-item>
           </el-form>
         </el-tab-pane>
 
         <!-- Tab 2: Storage -->
         <el-tab-pane label="存储管理" name="storage">
-          <el-form label-width="180px" label-position="right">
+          <el-form label-width="144px" label-position="left" class="settings-form">
             <el-form-item label="触发清理阈值">
-              <el-slider v-model="config.TRIGGER_THRESHOLD" :min="50" :max="99" :format-tooltip="(v: number) => v + '%'" show-input />
+              <div class="slider-row">
+                <el-slider v-model="config.TRIGGER_THRESHOLD" :min="50" :max="99" :format-tooltip="(v: number) => v + '%'" class="slider-flex" />
+              </div>
             </el-form-item>
             <el-form-item label="目标清理阈值">
-              <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="(v: number) => v + '%'" show-input />
+              <div class="slider-row">
+                <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="(v: number) => v + '%'" class="slider-flex" />
+              </div>
             </el-form-item>
             <el-form-item label="每主播最少保留">
               <el-input-number v-model="config.MIN_KEEP_PER_STREAMER" :min="1" :max="50" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="saving" @click="handleSaveConfig">保存配置</el-button>
+              <el-button type="primary" :loading="saving" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
             </el-form-item>
             <el-divider />
             <el-form-item label="清理预估">
-              <span v-if="cleanEstimate">
-                {{ cleanEstimate.file_count }} 个文件，{{ cleanEstimate.total_size_gb?.toFixed(2) }} GB
+              <span v-if="cleanEstimate" class="clean-estimate">
+                预计清理 <span class="ctx-num">{{ cleanEstimate.file_count }}</span> 个文件，共释放 <span class="ctx-num-green">{{ cleanEstimate.total_size_gb?.toFixed(2) }} GB</span>
               </span>
               <span v-else class="placeholder">加载中...</span>
             </el-form-item>
@@ -67,113 +71,194 @@
 
         <!-- Tab 3: Schedule -->
         <el-tab-pane label="定时任务" name="schedule">
-          <el-form label-width="160px" label-position="right" v-loading="scheduleLoading">
-            <el-divider content-position="left">自动合并</el-divider>
-            <el-form-item label="启用">
+          <el-form label-width="144px" label-position="left" v-loading="scheduleLoading" class="settings-form">
+            <div class="section-divider">🔄 自动合并</div>
+            <el-form-item label="是否启用">
               <el-switch v-model="scheduleForm.merge_enabled" />
             </el-form-item>
             <el-form-item label="执行间隔(分钟)">
               <el-input-number v-model="scheduleForm.merge_interval" :min="10" :max="1440" />
             </el-form-item>
-            <el-divider content-position="left">自动清理</el-divider>
-            <el-form-item label="启用">
+            <div class="section-divider">🧹 自动清理</div>
+            <el-form-item label="是否启用">
               <el-switch v-model="scheduleForm.clean_enabled" />
             </el-form-item>
             <el-form-item label="执行间隔(分钟)">
               <el-input-number v-model="scheduleForm.clean_interval" :min="10" :max="1440" />
             </el-form-item>
-            <el-divider content-position="left">备份窗口（暂停任务）</el-divider>
+            <div class="section-divider">⏳ 备份窗口（暂停任务）</div>
             <el-form-item label="开始时间">
-              <el-time-picker v-model="backupStart" format="HH:mm" value-format="HH:mm" />
+              <el-time-picker v-model="backupStart" format="HH:mm" value-format="HH:mm" style="width: 160px" />
             </el-form-item>
             <el-form-item label="结束时间">
-              <el-time-picker v-model="backupEnd" format="HH:mm" value-format="HH:mm" />
+              <el-time-picker v-model="backupEnd" format="HH:mm" value-format="HH:mm" style="width: 160px" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="saving" @click="handleSaveSchedule">保存计划</el-button>
+              <el-button type="primary" :loading="saving" style="width: 128px" @click="handleSaveSchedule">保存计划</el-button>
+            </el-form-item>
+            <div class="section-divider">🎮 手动触发</div>
+            <el-form-item>
+              <el-button :disabled="taskRunning" style="width: 148px" @click="triggerManualTask('merge')" class="ghost-trigger">
+                🔄 立即执行合并
+              </el-button>
+              <el-button :disabled="taskRunning" style="width: 148px" @click="triggerManualTask('clean')" class="ghost-trigger">
+                🧹 立即执行清理
+              </el-button>
             </el-form-item>
           </el-form>
         </el-tab-pane>
 
         <!-- Tab 4: Diagnostics -->
         <el-tab-pane label="系统诊断" name="diagnostics">
-          <el-descriptions :column="2" border v-loading="diagLoading">
-            <el-descriptions-item label="FFmpeg">
-              <el-tag :type="setupData?.ffmpeg_ok ? 'success' : 'danger'" size="small">
-                {{ setupData?.ffmpeg_ok ? '✅ 正常' : '❌ 异常' }}
-              </el-tag>
-              <span class="ml-8" style="color:#999; font-size:12px">{{ setupData?.ffmpeg_path }}</span>
-            </el-descriptions-item>
-            <el-descriptions-item label="FFprobe">
-              <el-tag :type="setupData?.ffprobe_ok ? 'success' : 'danger'" size="small">
-                {{ setupData?.ffprobe_ok ? '✅ 正常' : '❌ 异常' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="目标目录存在">
-              <el-tag :type="setupData?.target_dir_exists ? 'success' : 'danger'" size="small">
-                {{ setupData?.target_dir_exists ? '是' : '否' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="目录可写">
-              <el-tag :type="setupData?.target_dir_writable ? 'success' : 'danger'" size="small">
-                {{ setupData?.target_dir_writable ? '是' : '否' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="主播数">{{ setupData?.streamer_count || 0 }}</el-descriptions-item>
-            <el-descriptions-item label="视频数">{{ setupData?.video_count || 0 }}</el-descriptions-item>
-            <el-descriptions-item label="总大小">{{ setupData?.total_size_gb?.toFixed(2) }} GB</el-descriptions-item>
-            <el-descriptions-item label="磁盘总容量">{{ setupData?.disk_total_gb?.toFixed(1) }} GB</el-descriptions-item>
-            <el-descriptions-item label="磁盘剩余">{{ setupData?.disk_free_gb?.toFixed(1) }} GB</el-descriptions-item>
-            <el-descriptions-item label="磁盘使用率">
-              <el-progress :percentage="setupData?.disk_usage_pct || 0" :stroke-width="14" style="width:200px" />
-            </el-descriptions-item>
-          </el-descriptions>
+          <div class="diag-table" v-loading="diagLoading">
+            <div class="diag-row">
+              <span class="diag-label">FFmpeg</span>
+              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.ffmpeg_ok ? 'dot-ok' : 'dot-err'" />{{ setupData?.ffmpeg_ok ? '正常' : '异常' }}<span class="diag-path">{{ setupData?.ffmpeg_path }}</span></span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">FFprobe</span>
+              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.ffprobe_ok ? 'dot-ok' : 'dot-err'" />{{ setupData?.ffprobe_ok ? '正常' : '异常' }}</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">目标目录存在</span>
+              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.target_dir_exists ? 'dot-ok' : 'dot-err'" />{{ setupData?.target_dir_exists ? '是' : '否' }}</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">目录可写</span>
+              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.target_dir_writable ? 'dot-ok' : 'dot-err'" />{{ setupData?.target_dir_writable ? '是' : '否' }}</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">主播数</span>
+              <span class="mono-val">{{ setupData?.streamer_count || 0 }}</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">视频数</span>
+              <span class="mono-val">{{ setupData?.video_count || 0 }}</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">总大小</span>
+              <span class="mono-val">{{ setupData?.total_size_gb?.toFixed(2) }} GB</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">磁盘总容量</span>
+              <span class="mono-val">{{ setupData?.disk_total_gb?.toFixed(1) }} GB</span>
+            </div>
+            <div class="diag-row">
+              <span class="diag-label">磁盘剩余</span>
+              <span class="mono-val">{{ setupData?.disk_free_gb?.toFixed(1) }} GB</span>
+            </div>
+            <div class="diag-row diag-row-last">
+              <span class="diag-label">磁盘使用率</span>
+              <div class="diag-progress">
+                <el-progress :percentage="setupData?.disk_usage_pct || 0" :stroke-width="6" :format="() => ''" style="flex:1" />
+                <span class="mono-val diag-pct">{{ (setupData?.disk_usage_pct || 0).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
         </el-tab-pane>
 
         <!-- Tab 5: AI Recommendation -->
         <el-tab-pane label="智能推荐" name="recommend">
-          <div v-loading="recommendLoading">
-            <template v-if="recommend">
-              <el-alert :type="riskAlertType" :closable="false" class="mb-16">
-                <template #title>
-                  风险等级：<strong>{{ recommend.risk_level?.toUpperCase() }}</strong>
-                  <span v-if="recommend.reason" style="margin-left: 12px; font-weight: normal; opacity: 0.8">{{ recommend.reason }}</span>
-                </template>
-              </el-alert>
-              <el-descriptions :column="3" size="small" border class="mb-16">
-                <el-descriptions-item label="磁盘使用率">{{ recommend.current_usage?.toFixed(1) }}%</el-descriptions-item>
-                <el-descriptions-item label="总容量">{{ recommend.total_gb?.toFixed(0) }} GB</el-descriptions-item>
-                <el-descriptions-item label="剩余">{{ recommend.free_gb?.toFixed(1) }} GB</el-descriptions-item>
-                <el-descriptions-item label="主播数">{{ recommend.analysis?.streamer_count || 0 }}</el-descriptions-item>
-                <el-descriptions-item label="日产出">{{ (recommend.analysis?.daily_output_gb || 0).toFixed(1) }} GB</el-descriptions-item>
-                <el-descriptions-item label="可维持">{{ (recommend.analysis?.days_until_full || 0).toFixed(0) }} 天</el-descriptions-item>
-              </el-descriptions>
-              <el-table :data="recommendTable" stripe size="small" border>
-                <el-table-column prop="key" label="参数" width="200" />
-                <el-table-column prop="current" label="当前值" width="120" />
-                <el-table-column prop="recommended" label="推荐值" width="120" />
-              </el-table>
-              <el-button type="primary" class="mt-16" @click="applyRecommend">应用推荐值</el-button>
+          <div v-loading="recommendLoading" class="recommend-container">
+            <!-- Empty state -->
+            <div v-if="!recommend" class="recommend-empty">
+              <span class="empty-icon">📊</span>
+              <p class="empty-text">系统将根据您近 7 天的磁盘产出模型自动调校阈值</p>
+              <button class="btn-primary" @click="loadRecommend">加载智能推荐值</button>
+            </div>
+
+            <!-- Loaded state -->
+            <template v-else>
+              <!-- Risk card -->
+              <div class="risk-card" :class="'risk-' + (recommend.risk_level || 'info')">
+                <span class="risk-icon">⚠️</span>
+                <div class="risk-body">
+                  <span class="risk-level">风险等级: {{ recommend.risk_level?.toUpperCase() }}</span>
+                  <span v-if="recommend.reason" class="risk-reason">{{ recommend.reason }}</span>
+                </div>
+              </div>
+
+              <!-- Summary indicators -->
+              <div class="recommend-summary">
+                <div class="summary-item">
+                  <span class="summary-label">磁盘使用率</span>
+                  <span class="mono-val">{{ recommend.current_usage?.toFixed(1) }}%</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">总容量</span>
+                  <span class="mono-val">{{ recommend.total_gb?.toFixed(0) }} GB</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">剩余</span>
+                  <span class="mono-val">{{ recommend.free_gb?.toFixed(1) }} GB</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">主播数</span>
+                  <span class="mono-val">{{ recommend.analysis?.streamer_count || 0 }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">日产出</span>
+                  <span class="mono-val">{{ (recommend.analysis?.daily_output_gb || 0).toFixed(1) }} GB</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">可维持</span>
+                  <span class="mono-val">{{ (recommend.analysis?.days_until_full || 0).toFixed(0) }} 天</span>
+                </div>
+              </div>
+
+              <!-- Comparison table -->
+              <div class="recommend-table-wrap">
+                <div class="recommend-table-header">
+                  <span class="rt-col1">配置参数</span>
+                  <span class="rt-col2">当前值</span>
+                  <span class="rt-col3">推荐值</span>
+                </div>
+                <div v-for="(row, i) in recommendTable" :key="i" class="recommend-table-row">
+                  <span class="rt-col1">{{ row.key }}</span>
+                  <span class="rt-col2 mono-val">{{ row.current }}</span>
+                  <span class="rt-col3"><span class="recommend-tag">{{ row.recommended }}</span></span>
+                </div>
+              </div>
+
+              <div class="recommend-actions">
+                <button class="btn-primary" @click="applyRecommend">一键应用推荐值</button>
+              </div>
             </template>
-            <el-empty v-else description="点击加载推荐" />
-            <el-button v-if="!recommend" type="primary" @click="loadRecommend">加载推荐</el-button>
           </div>
         </el-tab-pane>
 
         <!-- Tab 6: Backup -->
         <el-tab-pane label="配置备份" name="backup">
-          <el-row :gutter="16">
-            <el-col :span="12">
-              <h4>导出配置</h4>
-              <el-button type="primary" @click="handleExport">导出为 JSON</el-button>
-              <el-input v-if="exportJson" type="textarea" :rows="10" v-model="exportJson" class="mt-12" readonly />
-            </el-col>
-            <el-col :span="12">
-              <h4>导入配置</h4>
-              <el-input type="textarea" :rows="10" v-model="importJson" placeholder="粘贴配置 JSON" />
-              <el-button type="warning" class="mt-12" :loading="importing" @click="handleImport">导入恢复</el-button>
-            </el-col>
-          </el-row>
+          <div class="backup-grid">
+            <!-- Export card -->
+            <div class="backup-card">
+              <div class="backup-card-header">
+                <span>📤</span><span>导出配置</span>
+              </div>
+              <p class="backup-desc">将当前系统的主播列表、存储阈值、定时任务等全部参数备份为 JSON 文件。</p>
+              <div class="backup-spacer"></div>
+              <div class="backup-card-footer">
+                <button class="btn-primary" @click="handleExport">生成并导出 JSON</button>
+              </div>
+              <textarea v-if="exportJson" class="backup-preview" readonly :value="exportJson" />
+            </div>
+
+            <!-- Import card -->
+            <div class="backup-card">
+              <div class="backup-card-header">
+                <span>📥</span><span>导入配置</span>
+              </div>
+              <p class="backup-desc">在下方粘贴合法的备份 JSON，恢复将覆盖当前所有设置。</p>
+              <textarea
+                class="backup-textarea"
+                v-model="importJson"
+                placeholder="粘贴配置 JSON 字符串于此..."
+              />
+              <div class="backup-card-footer">
+                <button class="btn-primary btn-full" @click="handleImport">导入恢复</button>
+              </div>
+            </div>
+          </div>
         </el-tab-pane>
 
       </el-tabs>
@@ -182,12 +267,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
 import { getConfig, saveConfig, getConfigRecommend, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
 import { getSchedule, saveSchedule } from "@/api/schedule";
 import { setupCheck } from "@/api/setup";
 import { getCleanEstimate } from "@/api/task";
+import { useSSE } from "@/utils/sse";
 import type { ScheduleStatus, SetupCheck, CleanEstimate, ConfigRecommend } from "@/api/types";
 
 const activeTab = ref("general");
@@ -196,9 +282,9 @@ const configLoading = ref(false);
 const scheduleLoading = ref(false);
 const diagLoading = ref(false);
 const recommendLoading = ref(false);
-const importing = ref(false);
 
-const config = reactive<Record<string, any>>({});
+// Using ref instead of reactive for the config object to allow full replacement from API response
+const config = ref<Record<string, any>>({});
 const scheduleForm = reactive({
   merge_enabled: true,
   clean_enabled: true,
@@ -214,10 +300,13 @@ const recommend = ref<ConfigRecommend>();
 const exportJson = ref("");
 const importJson = ref("");
 
+const sse = useSSE();
+const taskRunning = computed(() => sse.isRunning.value);
+
 const recommendTable = computed(() => {
   if (!recommend.value) return [];
   const r = recommend.value;
-  const cfg = config;
+  const cfg = config.value;
   return [
     { key: "触发清理阈值 (%)", current: cfg.TRIGGER_THRESHOLD, recommended: r.TRIGGER_THRESHOLD },
     { key: "目标清理阈值 (%)", current: cfg.TARGET_THRESHOLD, recommended: r.TARGET_THRESHOLD },
@@ -230,18 +319,10 @@ const recommendTable = computed(() => {
   ];
 });
 
-const riskAlertType = computed(() => {
-  const level = recommend.value?.risk_level;
-  if (level === "critical") return "error" as const;
-  if (level === "high") return "warning" as const;
-  return "info" as const;
-});
-
 async function handleSaveConfig() {
   saving.value = true;
   try {
-    const payload = { ...config };
-    // Convert whitelist string to array
+    const payload = { ...config.value };
     if (typeof payload.WHITELIST_KEYWORDS === "string") {
       payload.WHITELIST_KEYWORDS = payload.WHITELIST_KEYWORDS.split(",").map((s: string) => s.trim()).filter(Boolean);
     }
@@ -255,7 +336,7 @@ async function handleSaveConfig() {
 async function handleSaveSchedule() {
   saving.value = true;
   try {
-    const data: any = { ...scheduleForm };
+    const data: Record<string, any> = { ...scheduleForm };
     if (backupStart.value) {
       const [h, m] = backupStart.value.split(":");
       data.BACKUP_START_HOUR = parseInt(h);
@@ -285,14 +366,14 @@ async function loadRecommend() {
 function applyRecommend() {
   if (!recommend.value) return;
   const r = recommend.value;
-  config.TRIGGER_THRESHOLD = r.TRIGGER_THRESHOLD;
-  config.TARGET_THRESHOLD = r.TARGET_THRESHOLD;
-  config.MIN_KEEP_PER_STREAMER = r.MIN_KEEP_PER_STREAMER;
-  config.SAFE_AGE_MINUTES = r.SAFE_AGE_MINUTES;
-  config.SAFE_MODE = r.SAFE_MODE;
-  config.MERGE_AGE_MINUTES = r.MERGE_AGE_MINUTES;
-  config.MAX_DELETE_PER_RUN = r.MAX_DELETE_PER_RUN;
-  config.GAP_MINUTES = r.GAP_MINUTES;
+  config.value.TRIGGER_THRESHOLD = r.TRIGGER_THRESHOLD;
+  config.value.TARGET_THRESHOLD = r.TARGET_THRESHOLD;
+  config.value.MIN_KEEP_PER_STREAMER = r.MIN_KEEP_PER_STREAMER;
+  config.value.SAFE_AGE_MINUTES = r.SAFE_AGE_MINUTES;
+  config.value.SAFE_MODE = r.SAFE_MODE;
+  config.value.MERGE_AGE_MINUTES = r.MERGE_AGE_MINUTES;
+  config.value.MAX_DELETE_PER_RUN = r.MAX_DELETE_PER_RUN;
+  config.value.GAP_MINUTES = r.GAP_MINUTES;
   activeTab.value = "general";
   ElMessage.success("已填入推荐值，请手动保存");
 }
@@ -301,7 +382,6 @@ async function handleExport() {
   try {
     const data = await getConfigExport();
     exportJson.value = JSON.stringify(data, null, 2);
-    // Also download
     const blob = new Blob([exportJson.value], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -310,7 +390,9 @@ async function handleExport() {
     a.click();
     URL.revokeObjectURL(url);
     ElMessage.success("导出成功");
-  } catch {}
+  } catch {
+    // Error handled by interceptor
+  }
 }
 
 async function handleImport() {
@@ -318,21 +400,27 @@ async function handleImport() {
     ElMessage.warning("请粘贴配置内容");
     return;
   }
-  importing.value = true;
   try {
     const data = JSON.parse(importJson.value);
     await apiImportConfig(data);
     ElMessage.success("导入成功");
-    // Reload config
     const c = await getConfig();
-    Object.assign(config, c);
+    config.value = c;
+    if (Array.isArray(c.WHITELIST_KEYWORDS)) {
+      config.value.WHITELIST_KEYWORDS = c.WHITELIST_KEYWORDS.join(", ");
+    }
   } catch (e: any) {
     if (e instanceof SyntaxError) {
       ElMessage.error("JSON 格式错误");
     }
-  } finally {
-    importing.value = false;
+    // Other errors handled by HTTP interceptor
   }
+}
+
+function triggerManualTask(task: "merge" | "clean") {
+  const url = task === "merge" ? "/api/merge" : "/api/clean";
+  sse.startSSE(url);
+  ElMessage.info(`${task === "merge" ? "合并" : "清理"}任务已触发，请前往任务中心查看输出`);
 }
 
 onMounted(async () => {
@@ -343,12 +431,10 @@ onMounted(async () => {
     getCleanEstimate()
   ]);
   if (c.status === "fulfilled") {
-    Object.assign(config, c.value);
-    // Convert whitelist array to comma-separated string
+    config.value = c.value;
     if (Array.isArray(c.value.WHITELIST_KEYWORDS)) {
-      config.WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
+      config.value.WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
     }
-    // Load backup window from config
     const cv = c.value;
     if (cv.BACKUP_START_HOUR != null) {
       backupStart.value = `${String(cv.BACKUP_START_HOUR).padStart(2, "0")}:${String(cv.BACKUP_START_MINUTE || 0).padStart(2, "0")}`;
@@ -367,16 +453,202 @@ onMounted(async () => {
   if (d.status === "fulfilled") setupData.value = d.value;
   if (ce.status === "fulfilled") cleanEstimate.value = ce.value;
 });
+
+onUnmounted(() => {
+  sse.abort();
+});
 </script>
 
 <style scoped>
 .settings-tabs {
   min-height: 500px;
 }
-.mb-16 { margin-bottom: 16px; }
-.mt-12 { margin-top: 12px; }
-.mt-16 { margin-top: 16px; }
-.ml-8 { margin-left: 8px; }
-.placeholder { color: #c0c4cc; }
-h4 { margin-bottom: 12px; color: #303133; }
+.placeholder { color: var(--stone); }
+
+/* Form label styling — left-aligned, fixed width, muted color */
+.settings-form :deep(.el-form-item__label) {
+  color: var(--steel) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 32px !important;
+}
+.settings-form :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+/* Input Number — mono digits */
+.settings-form :deep(.el-input__inner) {
+  font-family: var(--font-mono);
+}
+
+/* Slider row — constrained to 520px matrix, vertically centered */
+.slider-row { max-width: 520px; width: 100%; transform: translateY(-1px); }
+.slider-flex { width: 100%; }
+
+/* Clean estimate — mono numbers, muted */
+.clean-estimate { font-size: 13px; color: var(--slate); }
+.clean-estimate .ctx-num {
+  font-family: var(--font-mono); font-weight: 500; color: var(--charcoal);
+}
+.clean-estimate .ctx-num-green {
+  font-family: var(--font-mono); font-weight: 500; color: #448361;
+}
+
+/* Section divider — replaces el-divider for cleaner Notion look */
+.section-divider {
+  font-size: 13px; font-weight: 600; color: var(--ink);
+  padding-bottom: 8px; margin-bottom: 4px;
+  border-bottom: 1px solid #f1f1ef;
+  margin-top: 12px;
+}
+.section-divider:first-child { margin-top: 0; }
+
+/* Diagnostics table — pure white, hairline rows */
+.diag-table {
+  border: 1px solid var(--hairline); border-radius: var(--r-md);
+  overflow: hidden; max-width: 640px;
+}
+.diag-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f1ef;
+}
+.diag-row-last { border-bottom: none; }
+.diag-label { font-size: 13px; color: var(--steel); width: 110px; flex-shrink: 0; white-space: nowrap; }
+.diag-val { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--charcoal); padding-right: 1px; }
+.diag-path { font-size: 11px; color: var(--stone); margin-left: 8px; font-family: var(--font-mono); }
+.mono-val { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+.status-dot-sm { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-ok { background: #448361; }
+.dot-err { background: #e03131; }
+.diag-progress { display: flex; align-items: center; gap: 12px; flex: 1; max-width: 280px; }
+.diag-pct { font-size: 12px; color: #448361; font-weight: 500; min-width: 44px; text-align: right; line-height: 1; }
+
+/* Recommend tab — empty state & loaded state */
+.recommend-container { display: flex; flex-direction: column; gap: 16px; }
+.recommend-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 80px 0; text-align: center;
+}
+.empty-icon { font-size: 28px; margin-bottom: 4px; }
+.empty-text { font-size: 13px; color: var(--steel); max-width: 320px; }
+
+/* Risk card */
+.risk-card {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 14px 16px; border-radius: var(--r-md);
+  font-size: 13px; line-height: 1.6;
+}
+.risk-high { background: #fdf1e6; border: 1px solid #f5e1ce; }
+.risk-critical { background: #fde8e8; border: 1px solid #f5c6c6; }
+.risk-info { background: #f1f1ef; border: 1px solid var(--hairline); }
+.risk-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.risk-body { display: flex; flex-wrap: wrap; gap: 4px; color: var(--charcoal); }
+.risk-level { font-weight: 600; color: var(--warning); margin-right: 8px; }
+.risk-reason { color: var(--slate); }
+.risk-body :deep(.ctx-num) { font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
+
+/* Summary indicators */
+.recommend-summary {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  border: 1px solid var(--hairline); border-radius: var(--r-sm); overflow: hidden;
+}
+.summary-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; background: var(--canvas);
+}
+.summary-label { font-size: 13px; color: var(--steel); }
+
+/* Comparison table — pure white, no gray patches */
+.recommend-table-wrap {
+  border: 1px solid var(--hairline); border-radius: var(--r-md); overflow: hidden;
+}
+.recommend-table-header {
+  display: grid; grid-template-columns: 1fr 120px 120px;
+  padding: 8px 16px; border-bottom: 1px solid var(--hairline);
+  font-size: 12px; font-weight: 500; color: var(--steel); text-transform: uppercase; letter-spacing: 0.3px;
+}
+.recommend-table-row {
+  display: grid; grid-template-columns: 1fr 120px 120px;
+  padding: 10px 16px; border-bottom: 1px solid #f1f1ef;
+  font-size: 13px;
+}
+.recommend-table-row:last-child { border-bottom: none; }
+.rt-col1 { color: var(--charcoal); min-width: 0; }
+.rt-col2 { text-align: right; font-family: var(--font-mono); color: var(--ink); }
+.rt-col3 { text-align: right; }
+.recommend-tag {
+  display: inline-block; font-family: var(--font-mono); font-weight: 600;
+  color: #2b593f; background: #f0f7f4;
+  padding: 1px 8px; border-radius: var(--r-xs); font-size: 13px;
+  min-width: 32px; text-align: right;
+}
+
+/* Button — shared with other tabs */
+.btn-primary {
+  height: 36px; padding: 0 20px;
+  background: var(--primary); border: 1px solid var(--primary);
+  border-radius: var(--r-md); font-size: 13px; font-weight: 500;
+  color: #fff; cursor: pointer; transition: all 0.15s;
+}
+.btn-primary:hover { background: var(--primary-pressed); }
+
+/* Backup tab — dual card split layout */
+.backup-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  max-width: 720px;
+}
+.backup-card {
+  background: #fafafa; border: 1px solid var(--hairline);
+  border-radius: var(--r-md); padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  min-height: 240px;
+}
+.backup-card-header {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--ink);
+}
+.backup-desc { font-size: 12px; color: var(--steel); line-height: 1.6; }
+.backup-card-footer { margin-top: auto; }
+.backup-textarea {
+  width: 100%; height: 100px; padding: 12px;
+  background: var(--canvas); border: 1px solid var(--hairline);
+  border-radius: var(--r-md); resize: none;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+  color: var(--ink); transition: border-color 0.15s;
+}
+.backup-textarea:focus { outline: none; border-color: var(--ink); }
+.backup-textarea::placeholder { color: var(--stone); }
+.backup-preview {
+  width: 100%; height: 100px; padding: 12px;
+  background: var(--canvas); border: 1px solid var(--hairline);
+  border-radius: var(--r-md); resize: none;
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.5;
+  color: var(--slate);
+}
+.backup-spacer { flex: 1; min-height: 0; }
+.btn-full { width: 100%; }
+
+.recommend-actions { margin-top: 12px; }
+
+@media (max-width: 768px) {
+  .backup-grid { grid-template-columns: 1fr; }
+}
+
+/* Time Picker icon — thinner stroke, vertical align fix */
+.settings-form :deep(.el-input__prefix .el-icon),
+.settings-form :deep(.el-input__suffix .el-icon) {
+  color: var(--steel);
+  transform: translateY(-0.5px);
+}
+.ghost-trigger {
+  color: var(--steel) !important;
+  border: 1px solid var(--hairline) !important;
+  background: transparent !important;
+  border-radius: var(--r-sm) !important;
+}
+.ghost-trigger:hover {
+  color: var(--ink) !important;
+  border-color: var(--hairline-strong) !important;
+  background: var(--highlight) !important;
+}
 </style>

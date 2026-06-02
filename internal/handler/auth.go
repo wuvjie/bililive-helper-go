@@ -1,12 +1,19 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
+	"bililive-helper/internal/config"
+	"bililive-helper/internal/utils"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -16,6 +23,8 @@ var (
 	rateLastGC   = time.Time{}
 )
 
+// isRateLimited 检查指定 IP 是否在 5 分钟内登录尝试次数超过 5 次。
+// 使用内存 map 存储尝试记录，定期 GC 清理过期条目防止内存泄漏。
 func isRateLimited(ip string) bool {
 	rateMu.Lock()
 	defer rateMu.Unlock()
@@ -23,7 +32,7 @@ func isRateLimited(ip string) bool {
 	now := time.Now()
 	cutoff := now.Add(-5 * time.Minute)
 
-	// Periodic GC: remove expired IPs to prevent memory leak
+	// 定期 GC：清理过期 IP 条目，防止内存无限增长
 	if now.Sub(rateLastGC) > time.Minute {
 		rateLastGC = now
 		for k, v := range rateAttempts {
@@ -58,23 +67,30 @@ func recordAttempt(ip string) {
 	rateAttempts[ip] = append(rateAttempts[ip], time.Now())
 }
 
-func hashPassword(password string) string {
-	h, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(h)
+func hashPassword(password string) (string, error) {
+	h, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(h), nil
 }
 
 func verifyPassword(hashed, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password)) == nil
 }
 
+// LoginPage 渲染登录页面。
 func (h *Handler) LoginPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "login.html", nil)
 }
 
+// Index 返回 Vue SPA 的主入口页面。
 func (h *Handler) Index(c *gin.Context) {
 	c.File("./templates/index.html")
 }
 
+// Login 处理用户登录请求。
+// 验证密码后设置 Session，失败时随机延迟以防止时序攻击。
 func (h *Handler) Login(c *gin.Context) {
 	ip := c.ClientIP()
 	if isRateLimited(ip) {
@@ -90,19 +106,16 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	if !verifyPassword(hashPassword(h.config.Password), req.Password) {
-		// Try the plaintext password (for backward compatibility with old configs)
-		if req.Password != h.config.Password {
-			recordAttempt(ip)
-			// Random delay to prevent timing attacks
-			time.Sleep(100*time.Millisecond + time.Duration(len(req.Password)%7)*20*time.Millisecond)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
-			return
-		}
+	if !verifyPassword(h.hashedPassword, req.Password) {
+		recordAttempt(ip)
+		// 随机延迟防止时序攻击（通过响应时间差异推断密码正确性）
+		time.Sleep(100*time.Millisecond + time.Duration(len(req.Password)%7)*20*time.Millisecond)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
+		return
 	}
 
 	session := sessions.Default(c)
-	// Clear old session data to prevent session fixation
+	// 清除旧 Session 数据防止 Session 固定攻击
 	session.Clear()
 	session.Set("authenticated", true)
 	session.Set("login_time", time.Now().Unix())
@@ -110,14 +123,162 @@ func (h *Handler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "登录成功"})
 }
 
+// Logout 处理用户登出，清除 Session 并重定向到登录页。
 func (h *Handler) Logout(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
-	session.Options(sessions.Options{MaxAge: -1}) // force cookie deletion
+	session.Options(sessions.Options{MaxAge: -1}) // MaxAge -1 强制浏览器删除 cookie
 	session.Save()
 	c.Redirect(http.StatusFound, "/login")
 }
 
+// Health 返回服务健康状态，用于 Docker 健康检查。
 func (h *Handler) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
+// ChangePassword 允许已认证用户修改密码。
+// 验证旧密码后更新配置文件、凭据文件和运行时哈希。
+func (h *Handler) ChangePassword(c *gin.Context) {
+	var req struct {
+		OldPassword string `json:"old_password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请填写旧密码和新密码"})
+		return
+	}
+
+	if len(req.NewPassword) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "新密码至少 6 个字符"})
+		return
+	}
+
+	if !verifyPassword(h.hashedPassword, req.OldPassword) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "旧密码错误"})
+		return
+	}
+
+	// Update config and persist
+	h.config.Apply(func() error {
+		h.config.Password = req.NewPassword
+		return nil
+	})
+
+	// Persist password to credential file (since Password has json:"-")
+	if err := h.config.SaveCredential(); err != nil {
+		h.logger.Warn("密码持久化失败", zap.Error(err))
+	}
+
+	// 更新运行时密码哈希
+	hashed, err := hashPassword(req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码更新失败"})
+		return
+	}
+	h.hashedPassword = hashed
+
+	c.JSON(http.StatusOK, gin.H{"message": "密码已更新"})
+}
+
+// SetupStatus 返回当前是否为首次运行（config.json 不存在）。
+// 此接口无需认证，前端据此决定是否显示初始化向导。
+func (h *Handler) SetupStatus(c *gin.Context) {
+	firstRun := !config.ConfigExists(h.config.LogDir)
+	c.JSON(http.StatusOK, gin.H{
+		"first_run": firstRun,
+		"log_dir":   h.config.LogDir,
+	})
+}
+
+// SetupInit 处理首次运行的初始化请求：校验目录、保存配置、自动登录。
+func (h *Handler) SetupInit(c *gin.Context) {
+	// 如果配置已存在则拒绝（防止重复初始化）
+	if config.ConfigExists(h.config.LogDir) {
+		c.JSON(http.StatusConflict, gin.H{"error": "系统已完成初始化"})
+		return
+	}
+
+	var req struct {
+		Password  string `json:"password" binding:"required"`
+		TargetDir string `json:"target_dir" binding:"required"`
+		LogDir    string `json:"log_dir" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请填写所有必填项"})
+		return
+	}
+
+	if len(req.Password) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "密码至少 6 个字符"})
+		return
+	}
+
+	// 验证录制目录是否存在
+	info, err := os.Stat(req.TargetDir)
+	if err != nil || !info.IsDir() {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "录制目录不存在或不是目录"})
+		return
+	}
+
+	// 验证日志目录（不存在则创建）
+	if err := os.MkdirAll(req.LogDir, 0755); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "日志目录创建失败: " + err.Error()})
+		return
+	}
+
+	// 构建默认配置 + 用户指定值
+	cfg := config.DefaultConfig()
+	cfg.Password = req.Password
+	cfg.TargetDir = req.TargetDir
+	cfg.LogDir = req.LogDir
+	cfg.ConfigFile = filepath.Join(req.LogDir, "config.json")
+	cfg.SecretKey = utils.RandomHex(16)
+
+	// 原子写入 config.json
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置生成失败"})
+		return
+	}
+	tmp := cfg.ConfigFile + ".tmp"
+	if err := os.WriteFile(tmp, data, 0644); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置写入失败: " + err.Error()})
+		return
+	}
+	if err := os.Rename(tmp, cfg.ConfigFile); err != nil {
+		os.Remove(tmp)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置保存失败"})
+		return
+	}
+
+	// 在写锁保护下更新运行时配置
+	h.config.Apply(func() error {
+		h.config.TargetDir = cfg.TargetDir
+		h.config.LogDir = cfg.LogDir
+		h.config.ConfigFile = cfg.ConfigFile
+		h.config.Password = cfg.Password
+		h.config.SecretKey = cfg.SecretKey
+		return nil
+	})
+
+	// 持久化密码到凭据文件（Password 字段 json:"-" 不会写入 config.json）
+	if err := h.config.SaveCredential(); err != nil {
+		h.logger.Warn("密码持久化失败", zap.Error(err))
+	}
+
+	// 重新哈希密码用于运行时登录验证
+	hashed, err := hashPassword(cfg.Password)
+	if err == nil {
+		h.hashedPassword = hashed
+	}
+
+	// 自动登录：设置 Session
+	session := sessions.Default(c)
+	session.Clear()
+	session.Set("authenticated", true)
+	session.Set("login_time", time.Now().Unix())
+	session.Save()
+
+	c.JSON(http.StatusOK, gin.H{"message": "初始化成功"})
 }

@@ -1,13 +1,9 @@
 <template>
   <el-config-provider :locale="zhCn">
     <router-view />
-    <ReDialog />
-    <ReDrawer />
   </el-config-provider>
 </template>
 
 <script setup lang="ts">
 import zhCn from "element-plus/es/locale/lang/zh-cn";
-import ReDialog from "@/components/ReDialog/index.vue";
-import ReDrawer from "@/components/ReDrawer/index.vue";
 </script>
