@@ -1,3 +1,5 @@
+// scheduler.go 提供定时任务调度器。
+// 按可配置间隔自动触发合并和清理任务，支持静默时段和手动触发。
 package service
 
 import (
@@ -16,6 +18,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// SchedulerService 提供定时任务调度功能。
+// 按可配置间隔自动触发合并和清理任务，支持静默时段、手动触发和每日历史清理。
 type SchedulerService struct {
 	config  *config.Config
 	logger  *zap.Logger
@@ -25,6 +29,7 @@ type SchedulerService struct {
 
 	tickCh       chan struct{}
 	stopCh       chan struct{}
+	stopOnce     sync.Once
 	wg           sync.WaitGroup
 	lastRun      map[string]time.Time
 	running      map[string]bool
@@ -35,6 +40,8 @@ type SchedulerService struct {
 	cancel       context.CancelFunc
 }
 
+// NewSchedulerService 创建调度服务实例。
+// 初始化调度配置，设置 lastRun 为当前时间（冷启动后需等待一个完整间隔才执行）。
 func NewSchedulerService(config *config.Config, logger *zap.Logger, merge *MergeService, clean *CleanService, history *HistoryService) *SchedulerService {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -52,7 +59,7 @@ func NewSchedulerService(config *config.Config, logger *zap.Logger, merge *Merge
 	}
 	s.scheduleConf = s.loadSchedule()
 
-	// Initialize lastRun to now — first task runs after full interval
+	// 初始化 lastRun 为当前时间 — 首次任务需等待一个完整间隔后才执行
 	now := time.Now()
 	s.lastRun = map[string]time.Time{
 		"merge": now,
@@ -61,14 +68,18 @@ func NewSchedulerService(config *config.Config, logger *zap.Logger, merge *Merge
 	return s
 }
 
+// Start 启动调度器主循环。
 func (s *SchedulerService) Start() {
 	go s.loop()
 	s.logger.Info("调度器启动")
 }
 
+// Stop 停止调度器，等待所有正在运行的任务完成。
 func (s *SchedulerService) Stop() {
-	s.cancel()
-	close(s.stopCh)
+	s.stopOnce.Do(func() {
+		s.cancel()
+		close(s.stopCh)
+	})
 	s.wg.Wait()
 }
 
@@ -76,7 +87,7 @@ func (s *SchedulerService) loop() {
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 
-	// Daily cleanup at midnight
+	// 每日午夜自动清理过期历史记录
 	var lastDay string
 
 	for {
@@ -98,6 +109,8 @@ func (s *SchedulerService) loop() {
 	}
 }
 
+// runDueTasks 检查到期的任务并触发执行。
+// 静默时段内跳过所有任务。
 func (s *SchedulerService) runDueTasks() {
 	schedule := s.getSchedule()
 	now := time.Now()
@@ -105,7 +118,7 @@ func (s *SchedulerService) runDueTasks() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Skip all tasks during quiet window
+	// 静默时段内跳过所有任务
 	if cfg.IsBackupWindow() {
 		return
 	}
@@ -138,6 +151,8 @@ func (s *SchedulerService) runDueTasks() {
 	}
 }
 
+// RunTask 手动触发指定任务（merge 或 clean）。
+// 如果任务正在运行中返回错误。
 func (s *SchedulerService) RunTask(task string) error {
 	if task != "merge" && task != "clean" {
 		return fmt.Errorf("无效任务: %s", task)
@@ -154,7 +169,7 @@ func (s *SchedulerService) RunTask(task string) error {
 	return nil
 }
 
-// runTask executes a scheduled task and updates status on completion.
+// runTask 执行调度任务并在完成后更新状态。
 func (s *SchedulerService) runTask(task string) {
 	defer func() {
 		s.mu.Lock()
@@ -185,10 +200,11 @@ func (s *SchedulerService) runTask(task string) {
 }
 
 func (s *SchedulerService) logToFile(task, message string) {
-	// Use the same log rotation as merge/clean
+	// Use the same log rotation as merge/clean tasks
 	logToFile(s.config.LogDir, task, message, s.logger)
 }
 
+// GetStatus 返回当前调度状态（各任务的启用状态、间隔、上次/下次执行时间、是否运行中）。
 func (s *SchedulerService) GetStatus() model.ScheduleStatus {
 	schedule := s.getSchedule()
 	s.mu.Lock()
@@ -219,16 +235,20 @@ func (s *SchedulerService) GetStatus() model.ScheduleStatus {
 	}
 }
 
+// SaveSchedule 保存调度配置到文件，并立即通知调度循环重新评估。
 func (s *SchedulerService) SaveSchedule(schedule model.ScheduleConfig) error {
 	schedule.MergeInterval = max(10, min(1440, schedule.MergeInterval))
 	schedule.CleanInterval = max(10, min(1440, schedule.CleanInterval))
 
 	file := s.config.GetScheduleFile()
-	os.MkdirAll(filepath.Dir(file), 0755)
+	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
+		return fmt.Errorf("创建调度目录失败: %w", err)
+	}
 	data, err := json.MarshalIndent(schedule, "", "  ")
 	if err != nil {
 		return fmt.Errorf("序列化调度配置失败: %w", err)
 	}
+	// Atomic write: tmp file then rename to prevent corruption on crash
 	tmp := file + ".tmp"
 	if err := os.WriteFile(tmp, data, 0644); err != nil {
 		return err
@@ -238,12 +258,12 @@ func (s *SchedulerService) SaveSchedule(schedule model.ScheduleConfig) error {
 		return err
 	}
 
-	// Update in-memory cache so next tick picks up changes immediately
+	// 更新内存缓存，下次 tick 立即生效
 	s.scheduleMu.Lock()
 	s.scheduleConf = schedule
 	s.scheduleMu.Unlock()
 
-	// Nudge the loop to re-evaluate sooner
+	// 通知调度循环立即重新评估到期任务
 	select {
 	case s.tickCh <- struct{}{}:
 	default:

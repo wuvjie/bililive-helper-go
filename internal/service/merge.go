@@ -1,3 +1,5 @@
+// merge.go 提供录制文件的合并服务。
+// 支持多文件 TS 拼接合并、FLV 转 MP4、重编码 fallback，以及主播级锁防止并发合并。
 package service
 
 import (
@@ -16,8 +18,11 @@ import (
 	"go.uber.org/zap"
 )
 
+// ProgressFunc 是进度回调函数类型，用于 SSE 流式输出。
 type ProgressFunc func(msg string)
 
+// MergeService 提供录制文件合并功能。
+// 使用 per-streamer 锁防止同一主播的并发合并，支持 FLV 转 MP4、多文件 TS 拼接和重编码 fallback。
 type MergeService struct {
 	config        *config.Config
 	logger        *zap.Logger
@@ -25,6 +30,7 @@ type MergeService struct {
 	streamerLocks sync.Map // streamer name -> *streamerLock
 }
 
+// streamerLock 用于 per-streamer 粒度的合并锁，防止同一主播并发合并。
 type streamerLock struct {
 	mu        sync.Mutex
 	createdAt time.Time
@@ -32,39 +38,44 @@ type streamerLock struct {
 
 const lockTimeout = 4 * time.Hour
 
-func (s *MergeService) tryLockStreamer(name string) bool {
+// tryLockStreamer 尝试获取指定主播的合并锁。
+// 如果锁被持有超过 lockTimeout（4 小时），尝试回收过期锁。
+func (s *MergeService) tryLockStreamer(name string) (bool, *streamerLock) {
 	now := time.Now()
 	val, _ := s.streamerLocks.LoadOrStore(name, &streamerLock{})
 	sl := val.(*streamerLock)
 
 	if sl.mu.TryLock() {
 		sl.createdAt = now
-		return true
+		return true, sl
 	}
 
-	// Safety net: if lock held longer than timeout, destroy and retry with fresh entry
+	// 安全网：锁持有超过超时时间后尝试回收。
+	// CompareAndDelete 避免销毁仍在合法持有锁的 goroutine 的锁
+	// — 如果 map 条目在 LoadOrStore 和 Delete 之间被替换，静默退让。
 	if now.Sub(sl.createdAt) > lockTimeout {
-		s.logger.Warn("发现过期主播锁，销毁旧锁", zap.String("streamer", name))
-		s.streamerLocks.Delete(name)
-		// LoadOrStore ensures each goroutine gets its own mutex entry
-		newVal, _ := s.streamerLocks.LoadOrStore(name, &streamerLock{})
-		newSl := newVal.(*streamerLock)
-		if newSl.mu.TryLock() {
-			newSl.createdAt = now
-			return true
+		if s.streamerLocks.CompareAndDelete(name, sl) {
+			s.logger.Warn("回收过期主播锁", zap.String("streamer", name))
+			newVal, _ := s.streamerLocks.LoadOrStore(name, &streamerLock{})
+			newSl := newVal.(*streamerLock)
+			if newSl.mu.TryLock() {
+				newSl.createdAt = now
+				return true, newSl
+			}
 		}
-		return false
+		return false, nil
 	}
 
-	return false
+	return false, nil
 }
 
-func (s *MergeService) unlockStreamer(name string) {
-	if val, ok := s.streamerLocks.Load(name); ok {
-		val.(*streamerLock).mu.Unlock()
+func (s *MergeService) unlockStreamer(sl *streamerLock) {
+	if sl != nil {
+		sl.mu.Unlock()
 	}
 }
 
+// NewMergeService 创建合并服务实例。
 func NewMergeService(config *config.Config, logger *zap.Logger, history *HistoryService) *MergeService {
 	return &MergeService{config: config, logger: logger, history: history}
 }
@@ -74,11 +85,14 @@ func (s *MergeService) logToFile(task, message string) {
 	logToFile(s.config.LogDir, task, message, s.logger)
 }
 
+// MergeResult 保存合并操作的结果。
 type MergeResult struct {
 	Done    int
 	TotalGB float64
 }
 
+// checkDiskSpaceForMerge 检查合并任务是否有足够的磁盘空间。
+// TS 管线峰值空间：源文件 + TS 中间文件 + 输出文件 ≈ 3 倍源文件 + 2GB 余量。
 func (s *MergeService) checkDiskSpaceForMerge(tasks []mergeTask, targetDir string) error {
 	var totalSourceBytes int64
 	for _, t := range tasks {
@@ -88,7 +102,7 @@ func (s *MergeService) checkDiskSpaceForMerge(tasks []mergeTask, targetDir strin
 	if err != nil {
 		return fmt.Errorf("获取磁盘信息失败: %w", err)
 	}
-	// TS方案峰值空间: 源文件 + TS中间文件 + 输出文件 ≈ 3倍源文件 + 2GB系统底线
+	// TS pipeline peak space: source files + TS intermediates + output ~ 3x source + 2GB headroom
 	needed := (totalSourceBytes * 3) + (2 * 1024 * 1024 * 1024)
 	if int64(disk.Free) < needed {
 		return fmt.Errorf("磁盘空间不足：需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
@@ -97,14 +111,14 @@ func (s *MergeService) checkDiskSpaceForMerge(tasks []mergeTask, targetDir strin
 	return nil
 }
 
-// classifyMergeFailure inspects the batch files and output to determine why doMerge likely failed.
+// classifyMergeFailure 检查合并失败的批次文件和输出，判断最可能的失败原因。
 func classifyMergeFailure(folder, firstFile string) string {
 	output := utils.MakeOutputName(firstFile)
 	outputPath := filepath.Join(folder, output)
 
-	// Check if output was created but deleted by probe
+	// Check if output was created but then deleted by validation probe
 	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
-		// Check if any source files have issues
+		// Check if source files have issues
 		firstPath := filepath.Join(folder, firstFile)
 		if info, err := os.Stat(firstPath); err != nil {
 			return "源文件不存在"
@@ -123,6 +137,9 @@ func classifyMergeFailure(folder, firstFile string) string {
 	return "输出校验失败"
 }
 
+// Run 执行合并任务主流程。
+// 扫描录制目录，将 FLV 转 MP4 并合并多文件片段。
+// 参数 streamer 为空表示全局合并；onProgress 用于 SSE 进度回调。
 func (s *MergeService) Run(ctx context.Context, streamer string, onProgress ProgressFunc) (*MergeResult, error) {
 	start := time.Now()
 	cfg := s.config.Snapshot()
@@ -163,7 +180,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		}
 	}
 
-	// Disk space check before processing
+	// 磁盘空间硬性检查 — 可用空间低于 10GB 时跳过所有操作
 	disk, diskErr := utils.GetDiskUsage(root)
 	if diskErr == nil && disk.Free < 10*1024*1024*1024 { // < 10GB free
 		s.logToFile("merge", fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过所有操作", float64(disk.Free)/1073741824))
@@ -203,7 +220,8 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			break
 		}
 		streamerName := filepath.Base(task.Folder)
-		if !s.tryLockStreamer(streamerName) {
+		locked, sl := s.tryLockStreamer(streamerName)
+		if !locked {
 			continue
 		}
 		fileList := strings.Join(task.Files, " + ")
@@ -221,7 +239,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			s.logToFile("merge", fmt.Sprintf("❌ %s 失败: %s", streamerName, reason))
 			onProgress(fmt.Sprintf("❌ [%s] 失败: %s", streamerName, reason))
 		}
-		s.unlockStreamer(streamerName)
+		s.unlockStreamer(sl)
 	}
 
 	// Summary
@@ -276,7 +294,8 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	return &MergeResult{Done: done, TotalGB: totalGB}, nil
 }
 
-// convertFlvToMp4 converts a single FLV file to MP4 via TS (same pipeline as multi-file merge).
+// convertFlvToMp4 将单个 FLV 文件转换为 MP4（通过 TS 中间格式）。
+// 转换成功后保留原始录制时间，删除原始 FLV 文件。
 func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path string, onProgress ProgressFunc) bool {
 	// Check source file is not locked
 	if isFileBeingWritten(flvPath, 1*time.Second) {
@@ -308,8 +327,7 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 		return false
 	}
 
-	// Preserve original recording time on the converted MP4 to prevent
-	// incorrect merge grouping caused by mtime-based gap calculations
+	// 保留原始录制时间，防止因 mtime 变化导致合并分组错误
 	if !flvMtime.IsZero() {
 		os.Chtimes(mp4Path, flvMtime, flvMtime)
 	}
@@ -319,9 +337,8 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 		s.logToFile("merge", fmt.Sprintf("⚠ 删除原始文件失败: %v", err))
 	}
 
-	info, err := os.Stat(mp4Path)
-	if err != nil {
-		s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 完成: %s", filepath.Base(mp4Path)))
+	if info, err := os.Stat(mp4Path); err != nil {
+		s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 完成: %s (大小未知)", filepath.Base(mp4Path)))
 	} else {
 		s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 完成: %s (%s)", filepath.Base(mp4Path), utils.FormatSize(info.Size())))
 	}
@@ -329,8 +346,8 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 	return true
 }
 
-// concatReencode merges files using ffmpeg concat filter with re-encoding.
-// Used as fallback when -c copy fails or produces corrupted output.
+// concatReencode 使用 ffmpeg concat filter 重编码合并文件。
+// 作为 stream-copy 失败时的 fallback（编解码器不兼容、头部损坏等情况）。
 func (s *MergeService) concatReencode(ctx context.Context, files []string, folder, outputPath string, onProgress ProgressFunc) bool {
 	// Check total input size — skip re-encode for large files on weak hardware
 	var totalSize int64
@@ -359,16 +376,15 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 		os.Chtimes(outputPath, latestSrcMtime, latestSrcMtime)
 	}
 
-	info, err := os.Stat(outputPath)
-	if err != nil {
-		s.logToFile("merge", "✅ 重编码完成")
+	if info, err := os.Stat(outputPath); err != nil {
+		s.logToFile("merge", "✅ 重编码完成 (大小未知)")
 	} else {
 		s.logToFile("merge", fmt.Sprintf("✅ 重编码完成: %s", utils.FormatSize(info.Size())))
 	}
 	return true
 }
 
-// checkFileAvailability checks if all files in the batch are accessible and not being written to
+// checkFileAvailability 检查批次中的所有文件是否可访问且未被锁定。
 func checkFileAvailability(folder string, files []string) error {
 	for _, f := range files {
 		path := filepath.Join(folder, f)
@@ -384,6 +400,8 @@ func checkFileAvailability(folder string, files []string) error {
 	return nil
 }
 
+// doMerge 执行多文件合并的完整流程：FLV→TS→拼接→MP4→校验→删除原始文件。
+// 合并失败时自动 fallback 到重编码模式。
 func (s *MergeService) doMerge(ctx context.Context, files []string, folder string, onProgress ProgressFunc) bool {
 	if len(files) < 2 {
 		return false
@@ -421,7 +439,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 
 	onProgress(fmt.Sprintf("⚙ 合并 %d 个文件…", len(files)))
 
-	// Step 1: Convert each input to TS (if not already TS)
+	// 步骤 1：将每个输入文件转换为 TS 格式（已是 TS 的跳过）
 	var tsFiles []string
 	tmpDir := filepath.Join(folder, ".merge_tmp_"+time.Now().Format("20060102150405"))
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
@@ -452,7 +470,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		tsFiles = append(tsFiles, filepath.ToSlash(tsPath))
 	}
 
-	// Step 2: Concat TS files → MP4
+	// 步骤 2：拼接 TS 文件 → MP4
 	onProgress("⚙ 拼接 TS 文件…")
 	outputIsFLV := strings.HasSuffix(output, ".flv")
 	concatOutputPath := outputPath
@@ -467,21 +485,25 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		return s.concatReencode(ctx, files, folder, outputPath, onProgress)
 	}
 
-	// Step 3: Validate output
+	// 步骤 3：校验输出文件
 	if err := ffmpeg.ValidateOutput(ctx, concatOutputPath); err != nil {
 		s.logToFile("merge", fmt.Sprintf("⚠ 输出校验失败: %v，切换重编码", err))
 		utils.SafeUnlink(concatOutputPath)
 		return s.concatReencode(ctx, files, folder, outputPath, onProgress)
 	}
 
-	// fsync
+	// fsync — 确保数据刷入持久存储后再删除原始文件
 	if fd, err := os.OpenFile(concatOutputPath, os.O_RDWR, 0); err == nil {
-		fd.Sync()
+		if syncErr := fd.Sync(); syncErr != nil {
+			fd.Close()
+			s.logToFile("merge", fmt.Sprintf("❌ fsync 失败: %v，保留原始文件", syncErr))
+			os.RemoveAll(tmpDir)
+			return false
+		}
 		fd.Close()
 	}
 
-	// FLV→MP4 conversion: only needed when concatOutputPath != outputPath
-	// (i.e. concat wrote to a different file that needs renaming/converting)
+	// FLV->MP4 转换：仅在 concat 输出到不同文件路径时需要
 	if outputIsFLV && concatOutputPath != filepath.Join(folder, utils.MakeMP4Name(output)) {
 		mp4Name := utils.MakeMP4Name(output)
 		mp4Path := filepath.Join(folder, mp4Name)
@@ -500,18 +522,18 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 			s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 → %s", mp4Name))
 		}
 	} else if outputIsFLV {
-		// ConcatTS already wrote the MP4 directly — just preserve timestamp
+		// ConcatTS 已直接输出 MP4 — 只需保留录制时间戳
 		if !latestSrcMtime.IsZero() {
 			os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime)
 		}
 	} else {
-		// Non-FLV output: preserve recording time on the merged file
+		// 非 FLV 输出：保留合并文件的录制时间
 		if !latestSrcMtime.IsZero() {
 			os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime)
 		}
 	}
 
-	// Delete originals — merge validated, originals no longer needed
+	// 合并校验通过后删除原始文件
 	for _, f := range files {
 		utils.SafeUnlink(filepath.Join(folder, f))
 	}
@@ -520,12 +542,15 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	return true
 }
 
+// ManualMerge 手动合并指定主播的指定文件列表。
+// 获取主播锁后校验文件合法性，然后调用 doMerge 执行合并。
 func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files []string, onProgress ProgressFunc) error {
 	name := streamer
-	if !s.tryLockStreamer(name) {
+	locked, sl := s.tryLockStreamer(name)
+	if !locked {
 		return fmt.Errorf("%s 合并任务正在执行中", name)
 	}
-	defer s.unlockStreamer(name)
+	defer s.unlockStreamer(sl)
 
 	cfg := s.config.Snapshot()
 	folder := filepath.Join(cfg.TargetDir, streamer)
@@ -566,6 +591,8 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	return fmt.Errorf("合并失败")
 }
 
+// CleanupTempFiles 清理录制目录中的残留临时文件。
+// 包括：concat 临时文件、.mp4.tmp/.flv.tmp 文件、孤立 TS 文件、崩溃残留的 .merge_tmp_* 目录。
 func (s *MergeService) CleanupTempFiles() int {
 	root := s.config.TargetDir
 	entries, err := os.ReadDir(root)
@@ -583,7 +610,7 @@ func (s *MergeService) CleanupTempFiles() int {
 			continue
 		}
 
-		// Collect valid MP4 base names for orphan detection
+		// 收集有效 MP4 文件名用于孤立文件检测
 		mp4Bases := make(map[string]bool)
 		for _, fe := range fileEntries {
 			if fe.IsDir() {
@@ -602,7 +629,7 @@ func (s *MergeService) CleanupTempFiles() int {
 		for _, fe := range fileEntries {
 			name := fe.Name()
 
-			// Clean up concat temp files
+			// 清理残留的 concat 临时文件
 			if strings.HasPrefix(name, ".concat_") && strings.HasSuffix(name, ".txt") {
 				path := filepath.Join(folder, name)
 				if err := os.Remove(path); err == nil {
@@ -611,7 +638,7 @@ func (s *MergeService) CleanupTempFiles() int {
 				}
 			}
 
-			// Clean up MP4/FLV temp files (.tmp suffix)
+			// 清理 MP4/FLV 的 .tmp 后缀文件（中断写入的残留）
 			if strings.HasSuffix(name, ".tmp") && (strings.HasSuffix(name, ".mp4.tmp") || strings.HasSuffix(name, ".flv.tmp")) {
 				path := filepath.Join(folder, name)
 				if err := os.Remove(path); err == nil {
@@ -620,7 +647,7 @@ func (s *MergeService) CleanupTempFiles() int {
 				}
 			}
 
-			// Clean orphaned .ts files: no corresponding valid MP4 with same base name
+			// 清理孤立 TS 文件：没有对应的有效 MP4 文件
 			if fe.IsDir() {
 				continue
 			}
@@ -639,7 +666,7 @@ func (s *MergeService) CleanupTempFiles() int {
 			}
 		}
 
-		// Clean crash-residual .merge_tmp_* directories
+		// 清理崩溃残留的 .merge_tmp_* 临时目录
 		tmpEntries, _ := os.ReadDir(folder)
 		for _, te := range tmpEntries {
 			if te.IsDir() && strings.HasPrefix(te.Name(), ".merge_tmp_") {

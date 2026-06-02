@@ -1,28 +1,19 @@
 import axios from "axios";
-import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
+import type { AxiosInstance, AxiosRequestConfig } from "axios";
 import { ElMessage } from "element-plus";
+import router from "@/router";
 
 const http: AxiosInstance = axios.create({
   baseURL: "/api",
-  timeout: 30000
+  timeout: 30000,
+  withCredentials: true // send session cookie with every request
 });
-
-http.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 http.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = "/login";
+      router.push("/login");
       return Promise.reject(error);
     }
     const msg = error.response?.data?.message || error.response?.data?.error || error.message;

@@ -1,3 +1,5 @@
+// concat.go 提供 TS 文件的拼接合并功能。
+// 使用 ffmpeg concat 协议进行直接流复制（无重编码），速度快但要求编解码器兼容。
 package ffmpeg
 
 import (
@@ -7,9 +9,9 @@ import (
 	"strings"
 )
 
-// ConcatTS merges multiple TS files into a single output using ffmpeg's concat protocol.
-// onProgress receives progress percentage updates (may be nil).
-// Returns error if concat fails (caller may fall back to Reencode).
+// ConcatTS 使用 ffmpeg concat 协议将多个 TS 文件合并为单个输出文件。
+// 直接流复制（无重编码）— 速度快但要求编解码器兼容。
+// onProgress 接收合并进度百分比更新（可为 nil）。
 func ConcatTS(ctx context.Context, tsFiles []string, output string, onProgress func(string)) error {
 	concatArg := "concat:" + strings.Join(tsFiles, "|")
 

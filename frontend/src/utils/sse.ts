@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import router from "@/router";
 
 export interface SSELine {
   time: string;
@@ -38,27 +39,28 @@ export function useSSE() {
     abortController = new AbortController();
 
     try {
-      const token = localStorage.getItem("token");
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json"
-      };
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
       const res = await fetch(url, {
         method: "POST",
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: body ? JSON.stringify(body) : undefined,
-        signal: abortController.signal
+        signal: abortController.signal,
+        credentials: "same-origin" // required for session cookie auth
       });
 
       if (!res.ok) {
+        if (res.status === 401) {
+          router.push("/login");
+          return;
+        }
         const text = await res.text();
         throw new Error(text || `HTTP ${res.status}`);
       }
 
-      const reader = res.body!.getReader();
+      if (!res.body) {
+        throw new Error("响应体为空，无法读取 SSE 流");
+      }
+
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 

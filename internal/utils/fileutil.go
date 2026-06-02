@@ -8,15 +8,19 @@ import (
 	"time"
 )
 
+// IsMergedFile 检查文件名是否表示已合并的文件（包含 "-合并版" 标记）。
 func IsMergedFile(name string) bool {
 	return strings.Contains(name, "-合并版")
 }
 
+// IsVideoFile 检查文件扩展名是否为支持的视频格式（.mp4、.flv、.ts）。
 func IsVideoFile(name string) bool {
 	ext := strings.ToLower(filepath.Ext(name))
 	return ext == ".mp4" || ext == ".flv" || ext == ".ts"
 }
 
+// ValidateFilename 校验文件名安全性，防止路径穿越攻击。
+// 拒绝空名、"."、".."、包含路径分隔符或空字节的文件名。
 func ValidateFilename(filename string) bool {
 	if filename == "" || filename == "." || filename == ".." {
 		return false
@@ -30,8 +34,8 @@ func ValidateFilename(filename string) bool {
 	return true
 }
 
-// SafeUnlink attempts to delete a file with retries to handle temporary file locks
-// (e.g. from Plex/Jellyfin media scanners). Returns nil if file doesn't exist.
+// SafeUnlink 尝试删除文件，带重试机制以处理临时文件锁定（如 Plex/Jellyfin 媒体扫描器）。
+// 文件不存在时返回 nil。最多重试 3 次，每次间隔 500ms。
 func SafeUnlink(path string) error {
 	var err error
 	for i := 0; i < 3; i++ {
@@ -44,6 +48,8 @@ func SafeUnlink(path string) error {
 	return fmt.Errorf("删除文件失败 %s: %w", path, err)
 }
 
+// MakeOutputName 根据批次中第一个文件生成合并后的输出文件名。
+// 格式：[YYYY-MM-DD HH-MM-SS][streamer][title]-合并版.ext
 func MakeOutputName(firstFile string) string {
 	ext := filepath.Ext(firstFile)
 	stem := strings.TrimSuffix(firstFile, ext)
@@ -54,6 +60,7 @@ func MakeOutputName(firstFile string) string {
 	return stem + "-合并版" + ext
 }
 
+// MakeMP4Name 将文件扩展名替换为 .mp4。
 func MakeMP4Name(flvName string) string {
 	return strings.TrimSuffix(flvName, filepath.Ext(flvName)) + ".mp4"
 }

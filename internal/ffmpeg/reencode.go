@@ -1,3 +1,5 @@
+// reencode.go 提供 ffmpeg concat filter 重编码合并功能。
+// 作为 stream-copy 失败时的 fallback，自动检测并使用硬件编码器（h264_rkmpp）。
 package ffmpeg
 
 import (
@@ -7,7 +9,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
+
+	"bililive-helper/internal/utils"
 )
 
 const (
@@ -15,15 +20,15 @@ const (
 	MaxReencodeSize = 5 * 1024 * 1024 * 1024 // 5GB
 )
 
-// Reencode merges files using ffmpeg concat filter with re-encoding.
-// Used as fallback when copy mode fails. Auto-detects h264_rkmpp hardware encoder.
-// onProgress receives status updates (may be nil).
+// Reencode 使用 ffmpeg concat filter 重编码合并文件。
+// 作为 stream-copy 合并失败时的 fallback（编解码器不兼容、头部损坏等情况）。
+// 自动检测 ARM 开发板（如 Rockchip）上的 h264_rkmpp 硬件编码器。
+// onProgress 接收状态更新（可为 nil）。
 func Reencode(ctx context.Context, files []string, folder, output string, onProgress func(string)) error {
 	if len(files) < 2 {
 		return fmt.Errorf("重编码需要至少2个文件")
 	}
 
-	// Detect hardware encoder
 	videoEncoder := detectVideoEncoder()
 
 	args := []string{"-nostdin"}
@@ -31,7 +36,7 @@ func Reencode(ctx context.Context, files []string, folder, output string, onProg
 		args = append(args, "-i", filepath.ToSlash(filepath.Join(folder, f)))
 	}
 
-	// Build filter_complex: [0:v][0:a][1:v][1:a]...concat=n=N:v=1:a=1[outv][outa]
+	// filter_complex: [0:v][0:a][1:v][1:a]...concat=n=N:v=1:a=1[outv][outa]
 	n := len(files)
 	var filterParts []string
 	for i := 0; i < n; i++ {
@@ -82,7 +87,7 @@ func Reencode(ctx context.Context, files []string, folder, output string, onProg
 		return fmt.Errorf("重编码失败: %w", err)
 	}
 
-	// Validate output
+	// 校验重编码输出：确保文件可正常播放
 	if err := ValidateOutput(ctx, output); err != nil {
 		os.Remove(output)
 		return fmt.Errorf("重编码输出校验失败: %w", err)
@@ -95,33 +100,28 @@ func Reencode(ctx context.Context, files []string, folder, output string, onProg
 	}
 
 	if onProgress != nil {
-		onProgress(fmt.Sprintf("✅ 重编码完成: %s", formatSize(info.Size())))
+		onProgress(fmt.Sprintf("✅ 重编码完成: %s", utils.FormatSize(info.Size())))
 	}
 	return nil
 }
 
-// detectVideoEncoder returns "h264_rkmpp" if available, otherwise "libx264".
-func detectVideoEncoder() string {
-	if out, err := exec.Command("ffmpeg", "-encoders").Output(); err == nil {
-		if strings.Contains(string(out), "h264_rkmpp") {
-			return "h264_rkmpp"
-		}
-	}
-	return "libx264"
-}
+// detectVideoEncoder 检测系统可用的视频编码器。
+// 优先返回 h264_rkmpp（Rockchip 硬件加速），否则返回 libx264（软件编码）。
+// 使用 sync.Once 缓存结果，线程安全。
+var (
+	cachedEncoder   string
+	encoderOnce     sync.Once
+)
 
-func formatSize(bytes int64) string {
-	const (
-		KB = 1024
-		MB = KB * 1024
-		GB = MB * 1024
-	)
-	switch {
-	case bytes >= GB:
-		return fmt.Sprintf("%.2f GB", float64(bytes)/float64(GB))
-	case bytes >= MB:
-		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(MB))
-	default:
-		return fmt.Sprintf("%.2f KB", float64(bytes)/float64(KB))
-	}
+func detectVideoEncoder() string {
+	encoderOnce.Do(func() {
+		if out, err := exec.Command("ffmpeg", "-encoders").Output(); err == nil {
+			if strings.Contains(string(out), "h264_rkmpp") {
+				cachedEncoder = "h264_rkmpp"
+				return
+			}
+		}
+		cachedEncoder = "libx264"
+	})
+	return cachedEncoder
 }

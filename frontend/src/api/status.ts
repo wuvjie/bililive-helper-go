@@ -1,9 +1,5 @@
 import { get } from "@/utils/http";
-import type { StatusResponse, DetailResponse, StatsResponse, StreamerInfo, StreamerFile } from "./types";
-
-export function getStatus() {
-  return get<StatusResponse>("/status");
-}
+import type { DetailResponse, StatsResponse, StreamerInfo, StreamerFile } from "./types";
 
 export function getStatusDetail() {
   return get<DetailResponse>("/status/detail");

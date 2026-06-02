@@ -1,221 +1,261 @@
+// Element Plus — Notion ink-on-paper overrides
 :root {
-  --el-color-primary: #0a0a0a;
-  --el-color-primary-light-3: #3a3a3a;
-  --el-color-primary-light-5: #6a6a6a;
-  --el-color-primary-light-7: #9a9a9a;
-  --el-color-primary-light-8: #b5b5b5;
-  --el-color-primary-light-9: #e5e5e5;
-  --el-color-primary-dark-2: #000000;
+  --el-color-primary: #1c1c1e;
+  --el-color-primary-light-3: #45454a;
+  --el-color-primary-light-5: #6e6e73;
+  --el-color-primary-light-7: #aeaeb2;
+  --el-color-primary-light-8: #c7c7cc;
+  --el-color-primary-light-9: #f1f1ef;
+  --el-color-primary-dark-2: #0a0a0a;
 
   --el-bg-color: #ffffff;
   --el-bg-color-overlay: #ffffff;
   --el-bg-color-page: #ffffff;
-  --el-text-color-primary: #0a0a0a;
-  --el-text-color-regular: #3a3a3c;
-  --el-text-color-secondary: #5a5a5c;
-  --el-text-color-placeholder: #a8a8aa;
-  --el-border-color: #e5e5e5;
-  --el-border-color-light: #ededed;
+  --el-text-color-primary: #37352f;
+  --el-text-color-regular: #5d5b54;
+  --el-text-color-secondary: #787671;
+  --el-text-color-placeholder: #a4a097;
+  --el-border-color: #e5e3df;
+  --el-border-color-light: #ede9e4;
   --el-fill-color-blank: #ffffff;
-  --el-fill-color-light: #f7f7f7;
-  --el-fill-color-lighter: #fafafa;
+  --el-fill-color-light: #f6f5f4;
+  --el-fill-color-lighter: #fafaf9;
 
-  --el-color-success: #00d4a4;
-  --el-color-danger: #d45656;
-  --el-color-warning: #c37d0d;
+  --el-color-success: #448361;
+  --el-color-danger: #e03131;
+  --el-color-warning: #d9730d;
 
-  --el-border-radius-base: 9999px;
-  --el-border-radius-small: 8px;
+  --el-border-radius-base: 6px;
+  --el-border-radius-small: 4px;
+
   --el-font-family: var(--font-sans);
-  --el-font-size-base: 16px;
+  --el-font-size-base: 14px;
 }
 
-/* ── Cards ── */
+// ── Cards ──
 .el-card {
   --el-card-bg-color: #ffffff;
-  --el-card-border-color: #e5e5e5;
+  --el-card-border-color: #e5e3df;
   border: 1px solid var(--hairline) !important;
   box-shadow: none !important;
-  border-radius: var(--r-lg) !important;
+  border-radius: var(--r-md) !important;
 }
 
-/* ── Dialog ── */
+// ── Dialogs ──
 .el-dialog {
   --el-dialog-bg-color: #ffffff;
   border: 1px solid var(--hairline);
-  border-radius: var(--r-lg) !important;
-  box-shadow: 0 24px 48px -8px rgba(0,0,0,0.12) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: 0 16px 48px -8px rgba(15, 15, 15, 0.12) !important;
 }
 
-/* ── Table ── */
+// ── Tables (minimal borders, warm hover) ──
 .el-table {
   --el-table-bg-color: #ffffff;
   --el-table-tr-bg-color: #ffffff;
-  --el-table-header-bg-color: #f7f7f7;
-  --el-table-row-hover-bg-color: #fafafa;
-  --el-table-border-color: #e5e5e5;
+  --el-table-header-bg-color: transparent;
+  --el-table-row-hover-bg-color: #f7f6f3;
+  --el-table-border-color: #eeeeee;
+  --el-table-header-text-color: #787671;
+  --el-table-text-color: #37352f;
+  font-size: 13px;
+}
+.el-table th.el-table__cell {
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.el-table td.el-table__cell {
+  padding: 14px 0;
 }
 
-/* ── Menu ── */
+// ── Left-side tabs (Notion sidebar-menu style) ──
+.el-tabs--left {
+  .el-tabs__header.is-left {
+    margin-right: 0;
+    .el-tabs__nav-wrap.is-left {
+      padding: 4px 0;
+    }
+  }
+  .el-tabs__item {
+    height: 34px;
+    line-height: 34px;
+    padding: 0 16px;
+    margin: 1px 8px;
+    border-radius: var(--r-sm);
+    border-left: none !important;
+    font-size: 14px;
+    color: var(--steel);
+    transition: background 0.1s, color 0.1s;
+    &.is-active {
+      background: var(--highlight);
+      color: var(--ink);
+      font-weight: 500;
+    }
+    &:hover {
+      background: var(--highlight);
+      color: var(--charcoal);
+    }
+  }
+  .el-tabs__active-bar {
+    display: none;
+  }
+}
+
+// ── Regular tabs ──
+.el-tabs__item {
+  color: var(--steel);
+  &.is-active { color: var(--ink); font-weight: 500; }
+  &:hover { color: var(--charcoal); }
+}
+.el-tabs__active-bar {
+  background-color: var(--ink);
+}
+
+// ── Menu ──
 .el-menu {
   --el-menu-bg-color: transparent;
-  --el-menu-hover-bg-color: #f7f7f7;
+  --el-menu-hover-bg-color: #f1f1ef;
   --el-menu-active-color: #0a0a0a;
-  --el-menu-text-color: #5a5a5c;
+  --el-menu-text-color: #787671;
   --el-menu-item-height: 36px;
 }
 
-/* ── Input ── */
+// ── Inputs ──
 .el-input {
   --el-input-bg-color: #ffffff;
-  --el-input-border-color: #e5e5e5;
-  --el-input-hover-border-color: #d1d5db;
-  --el-input-focus-border-color: #00d4a4;
-  --el-input-text-color: #0a0a0a;
+  --el-input-border-color: #d3d1cb;
+  --el-input-hover-border-color: #a4a097;
+  --el-input-focus-border-color: #2f80ed;
+  --el-input-text-color: #37352f;
+}
+// Kill purple/blue focus ring on all input variants
+.el-input__wrapper.is-focus,
+.el-input.is-focus .el-input__wrapper,
+.el-textarea.is-focus .el-textarea__inner,
+.el-select .el-input.is-focus .el-input__inner {
+  box-shadow: 0 0 0 1px #2f80ed inset !important;
 }
 
-/* ── Textarea ── */
-.el-textarea {
-  --el-input-bg-color: #ffffff;
-  --el-input-border-color: #e5e5e5;
-  --el-input-hover-border-color: #d1d5db;
-  --el-input-focus-border-color: #00d4a4;
-}
-.el-textarea__inner {
-  border-radius: var(--r-md) !important;
-  font-family: var(--font-mono) !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
-  border-color: var(--hairline) !important;
-  padding: 12px 16px !important;
-}
-.el-textarea__inner:focus {
-  border-color: var(--brand-green) !important;
-  box-shadow: none !important;
-}
-
-/* ── Buttons: all pill-shaped (rounded-full) ── */
+// ── Buttons ──
 .el-button {
-  border-radius: var(--r-pill) !important;
+  border-radius: var(--r-sm) !important;
   font-weight: 500;
   font-size: 14px;
-  height: 40px;
-  transition: background 0.15s, border-color 0.15s;
 }
 .el-button--primary {
   background: var(--primary) !important;
   border-color: var(--primary) !important;
-  color: var(--on-primary) !important;
+  color: #ffffff !important;
 }
 .el-button--primary:hover {
-  background: #1c1c1e !important;
-  border-color: #1c1c1e !important;
-  color: var(--on-primary) !important;
-}
-.el-button--warning {
-  background: transparent !important;
-  border: 1px solid var(--hairline) !important;
-  color: var(--ink) !important;
-}
-.el-button--warning:hover {
-  background: var(--surface) !important;
-  border-color: var(--steel) !important;
-}
-.el-button--info {
-  background: transparent !important;
-  border: 1px solid var(--hairline) !important;
-  color: var(--ink) !important;
-}
-.el-button--info:hover {
-  background: var(--surface) !important;
-  border-color: var(--steel) !important;
-}
-.el-button--success {
-  background: var(--brand-green) !important;
-  border-color: var(--brand-green) !important;
-  color: var(--primary) !important;
+  background: var(--primary-pressed) !important;
+  border-color: var(--primary-pressed) !important;
+  color: #ffffff !important;
 }
 
-/* ── Tags: badge-type style (light gray + green dot for success) ── */
-.el-tag {
-  border-radius: var(--r-xs) !important;
-  font-weight: 500;
-  font-size: 13px;
-  border: 1px solid var(--hairline-soft) !important;
-}
-.el-tag--success {
-  background: #f7f7f7 !important;
-  color: #5a5a5c !important;
-  border-color: #ededed !important;
-}
-.el-tag--success::before {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--brand-green);
-  margin-right: 6px;
-  vertical-align: middle;
-}
-.el-tag--danger {
-  background: rgba(212, 86, 86, 0.08) !important;
-  color: #d45656 !important;
-  border-color: rgba(212, 86, 86, 0.2) !important;
-}
-.el-tag--primary {
-  background: #f7f7f7 !important;
-  color: #3a3a3c !important;
-  border-color: #ededed !important;
-}
-.el-tag--info {
-  background: #f7f7f7 !important;
-  color: #5a5a5c !important;
-  border-color: #ededed !important;
-}
-.el-tag--warning {
-  background: rgba(195, 125, 13, 0.08) !important;
-  color: #c37d0d !important;
-  border-color: rgba(195, 125, 13, 0.2) !important;
-}
-
-/* ── Progress: mint green track ── */
+// ── Progress (desaturated green, warm track) ──
 .el-progress {
-  --el-progress-border-radius: var(--r-sm);
-}
-.el-progress-bar__outer {
-  background-color: #f7f7f7 !important;
-}
-
-/* ── Slider: mint green active track ── */
-.el-slider__runway {
-  background-color: #e5e5e5 !important;
-  height: 4px !important;
-}
-.el-slider__bar {
-  background-color: var(--brand-green) !important;
-}
-.el-slider__button {
-  background-color: #ffffff !important;
-  border: 2px solid var(--brand-green) !important;
-  width: 16px !important;
-  height: 16px !important;
+  --el-progress-border-radius: var(--r-xs);
+  .el-progress-bar__outer {
+    background-color: #f1f1ef;
+  }
 }
 
-/* ── Descriptions ── */
+// ── Slider (thin track, ink thumb) ──
+.el-slider {
+  --el-slider-runway-bg-color: #e5e5ea;
+  --el-slider-main-bg-color: #1c1c1e;
+  --el-slider-height: 4px;
+  .el-slider__runway {
+    height: 4px;
+    border-radius: 2px;
+  }
+  .el-slider__bar {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #1c1c1e;
+  }
+  .el-slider__button-wrapper {
+    top: -16px;
+  }
+  .el-slider__button {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #1c1c1e;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.15s;
+    &:hover {
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+    }
+  }
+}
+
+// ── Descriptions ──
 .el-descriptions {
-  --el-descriptions-item-bordered-label-background: #f7f7f7;
+  --el-descriptions-item-bordered-label-background: #f7f6f3;
 }
 
-/* ── Breadcrumb ── */
+// ── Breadcrumb ──
 .el-breadcrumb {
-  --el-breadcrumb-text-color: #a8a8aa;
-  --el-breadcrumb-last-text-color: #0a0a0a;
+  --el-breadcrumb-text-color: #a4a097;
+  --el-breadcrumb-last-text-color: #37352f;
+  .el-breadcrumb__separator {
+    margin: 0 8px;
+    color: #c7c7cc;
+  }
 }
 
-/* ── Pagination ── */
+// ── Pagination ──
 .el-pagination {
   --el-pagination-bg-color: transparent;
   --el-pagination-button-bg-color: #ffffff;
-  --el-pagination-hover-color: #0a0a0a;
+  --el-pagination-hover-color: #1c1c1e;
+}
+
+// ── Input Number (rounded buttons, warm gray) ──
+.el-input-number {
+  .el-input-number__decrease,
+  .el-input-number__increase {
+    border-radius: var(--r-xs) !important;
+    background-color: #f7f6f3 !important;
+    border-color: var(--hairline) !important;
+    color: var(--slate) !important;
+    &:hover {
+      color: var(--ink) !important;
+      background-color: var(--highlight) !important;
+    }
+  }
+  .el-input__wrapper {
+    border-radius: var(--r-sm) !important;
+  }
+}
+
+// ── Switch (inactive = subtle gray, active = ink black) ──
+.el-switch {
+  --el-switch-off-color: #d3d1cb;
+  --el-switch-on-color: #1c1c1e;
+  .el-switch__core {
+    border-radius: 12px;
+  }
+}
+
+// ── Select (consistent font) ──
+.el-select {
+  .el-input__inner {
+    font-size: 14px;
+    color: var(--charcoal);
+  }
+  .el-input__inner::placeholder {
+    color: var(--stone);
+    font-size: 14px;
+  }
+}
+
+// ── Time Picker icon (thinner stroke) ──
+.el-input__prefix .el-icon,
+.el-input__suffix .el-icon {
+  color: var(--steel);
 }

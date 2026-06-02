@@ -1,3 +1,5 @@
+// Package utils 提供通用工具函数。
+// 包含磁盘查询、文件操作、视频解析、日志管理、字符串处理和 Webhook 通知等功能。
 package utils
 
 import (
@@ -11,6 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// FormatSize 将字节数格式化为人类可读的大小字符串（KB/MB/GB）。
 func FormatSize(bytes int64) string {
 	const (
 		KB = 1024
@@ -27,7 +30,7 @@ func FormatSize(bytes int64) string {
 	}
 }
 
-// RotateLogAndPrune rotates a daily log file and prunes old archives.
+// RotateLogAndPrune 将当前日志文件重命名为前一天的日期归档，并清理超过 keepDays 天的归档文件。
 func RotateLogAndPrune(logFile, prefix string, keepDays int) {
 	info, err := os.Stat(logFile)
 	if err != nil {
@@ -58,7 +61,7 @@ func RotateLogAndPrune(logFile, prefix string, keepDays int) {
 	}
 }
 
-// LogStartup prints a startup summary
+// LogStartup 打印系统配置和 FFmpeg 可用性的启动摘要日志。
 func LogStartup(logger *zap.Logger, cfgTargetDir string, triggerThreshold, targetThreshold float64, gapMinutes, mergeAgeMinutes, backupStartH, backupStartM, backupEndH, backupEndM int, safeMode string, safeDays, port int) {
 	logger.Info("═══ Bililive Helper 启动 ═══")
 

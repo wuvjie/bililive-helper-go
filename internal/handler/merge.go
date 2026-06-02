@@ -19,6 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// RunMerge 执行全局或指定主播的合并任务，通过 SSE 流式返回进度。
 func (h *Handler) RunMerge(c *gin.Context) {
 	var req struct {
 		Streamer string `json:"streamer"`
@@ -43,6 +44,7 @@ func (h *Handler) RunMerge(c *gin.Context) {
 	})
 }
 
+// ManualMerge 手动合并指定主播的指定文件列表（至少 2 个文件）。
 func (h *Handler) ManualMerge(c *gin.Context) {
 	var req struct {
 		Streamer string   `json:"streamer" binding:"required"`
@@ -59,6 +61,7 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 	h.runManualMergeSSE(c, req.Streamer, req.Files, "手动合并")
 }
 
+// MergeRetry 重试之前失败的合并操作。
 func (h *Handler) MergeRetry(c *gin.Context) {
 	var req struct {
 		Streamer string   `json:"streamer" binding:"required"`
@@ -81,6 +84,7 @@ func (h *Handler) runManualMergeSSE(c *gin.Context, streamer string, files []str
 	})
 }
 
+// RunClean 执行全局或指定主播的清理任务，通过 SSE 流式返回进度。
 func (h *Handler) RunClean(c *gin.Context) {
 	var req struct {
 		Streamer string `json:"streamer"`
@@ -102,6 +106,7 @@ func (h *Handler) RunClean(c *gin.Context) {
 	})
 }
 
+// RunTaskSSE 通过 GET 请求以 SSE 方式执行合并或清理任务。
 func (h *Handler) RunTaskSSE(c *gin.Context) {
 	task := c.Param("task")
 	streamer := c.Query("streamer")
@@ -135,7 +140,8 @@ func (h *Handler) RunTaskSSE(c *gin.Context) {
 	})
 }
 
-// runSSE executes fn synchronously and streams progress messages as SSE events.
+// runSSE 同步执行 fn 并通过 Server-Sent Events 流式传输进度消息。
+// 进度更新会合并 — 每次 tick/notify 只发送最新消息，避免消息积压。
 func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Context, onProgress func(string)) string) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
@@ -191,6 +197,7 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 	}
 }
 
+// RunTask 通过调度器手动触发指定任务（merge 或 clean）。
 func (h *Handler) RunTask(c *gin.Context) {
 	task := c.Param("task")
 	if err := h.scheduler.RunTask(task); err != nil {
@@ -200,10 +207,13 @@ func (h *Handler) RunTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": fmt.Sprintf("%s 已触发", task)})
 }
 
+// GetSchedule 返回当前调度状态（间隔、启用状态、上次/下次执行时间）。
 func (h *Handler) GetSchedule(c *gin.Context) {
 	c.JSON(http.StatusOK, h.scheduler.GetStatus())
 }
 
+// SaveSchedule 保存调度配置（合并/清理间隔、启用状态、静默时段）。
+// 记录变更日志并异步写入历史。
 func (h *Handler) SaveSchedule(c *gin.Context) {
 	var req struct {
 		MergeInterval    int    `json:"merge_interval"`
@@ -220,7 +230,7 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 		return
 	}
 
-	// Capture old state before saving
+	// 保存前记录旧状态用于变更日志
 	oldStatus := h.scheduler.GetStatus()
 	oldCfg := h.config.Snapshot()
 
@@ -236,10 +246,10 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 		return
 	}
 
-	// Apply backup window fields to config if provided
+	// 如果请求中包含静默时段字段，同步更新到配置
 	backupChanged := false
 	if req.BackupStartHour != nil || req.BackupStartMin != nil || req.BackupEndHour != nil || req.BackupEndMin != nil {
-		h.config.Apply(func() error {
+		if err := h.config.Apply(func() error {
 			if req.BackupStartHour != nil {
 				h.config.BackupStartHour = *req.BackupStartHour
 			}
@@ -254,7 +264,10 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 			}
 			backupChanged = true
 			return h.config.Validate()
-		})
+		}); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	go func() {
@@ -292,6 +305,7 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "schedule": h.scheduler.GetStatus()})
 }
 
+// CleanEstimate 预估可清理的文件数量和大小（不含白名单和已合并文件）。
 func (h *Handler) CleanEstimate(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	root := cfg.TargetDir
@@ -348,6 +362,7 @@ func (h *Handler) CleanEstimate(c *gin.Context) {
 	})
 }
 
+// EmergencyClean 紧急清理，可临时覆盖目标阈值，通过 SSE 流式返回进度。
 func (h *Handler) EmergencyClean(c *gin.Context) {
 	var req struct {
 		TargetPct float64 `json:"target_pct"`
@@ -359,6 +374,18 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 	}
 
 	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
+		// 临时覆盖目标阈值（紧急清理结束后自动恢复原值）
+		if req.TargetPct > 0 && req.TargetPct < 100 {
+			originalTarget := h.config.Snapshot().TargetThreshold
+			h.config.Apply(func() error {
+				h.config.TargetThreshold = req.TargetPct
+				return nil
+			})
+			defer h.config.Apply(func() error {
+				h.config.TargetThreshold = originalTarget
+				return nil
+			})
+		}
 		result, err := h.clean.Run("", onProgress)
 		if err != nil {
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
@@ -371,6 +398,7 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 }
 
 
+// SetupCheck 执行系统诊断检查：FFmpeg 可用性、目录权限、磁盘空间、文件统计。
 func (h *Handler) SetupCheck(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	td := cfg.TargetDir

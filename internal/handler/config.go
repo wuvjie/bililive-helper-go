@@ -16,10 +16,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// GetConfig 返回当前配置（不含敏感字段）。
 func (h *Handler) GetConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, h.config.ToDTO())
 }
 
+// SaveConfig 保存配置更新（部分更新，只修改请求中包含的字段）。
+// 记录变更日志并异步写入历史记录。
 func (h *Handler) SaveConfig(c *gin.Context) {
 	var req map[string]interface{}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -50,6 +53,8 @@ func (h *Handler) SaveConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
+// RecommendConfig 基于磁盘大小、内容分析和风险评估，返回智能推荐配置。
+// 分析维度包括：主播数量、日产出量、磁盘满载天数、中位文件间隔等。
 func (h *Handler) RecommendConfig(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	disk, err := utils.GetDiskUsage(cfg.TargetDir)
@@ -62,7 +67,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 	freeGB := float64(disk.Free) / 1073741824
 	usedPct := disk.UsedPct
 
-	// Content analysis (uses whitelist to exclude protected files)
+	// 内容分析 — 排除白名单文件的统计
 	analysis := analyzeContent(cfg.TargetDir, cfg.WhitelistKeywords)
 
 	dailyGB := analysis.DailyOutputGB
@@ -71,7 +76,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		daysUntilFull = freeGB / dailyGB
 	}
 
-	// Risk level
+	// 风险评估：根据磁盘满载天数判断风险等级
 	riskLevel := "low"
 	if daysUntilFull > 0 && daysUntilFull < 7 {
 		riskLevel = "critical"
@@ -83,7 +88,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		riskLevel = "normal"
 	}
 
-	// Dynamic recommendation based on analysis
+	// 动态推荐：基于磁盘容量的基础策略，再根据风险等级调整
 	var trigger, target float64
 	var minKeep, safeAge, mergeAge, maxDelete int
 	safeMode := "hours"
@@ -100,7 +105,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		minKeep, safeAge, mergeAge, maxDelete = 3, 120, 30, 15
 	}
 
-	// Adjust based on risk level
+	// Adjust strategy based on risk level
 	switch riskLevel {
 	case "critical":
 		trigger = usedPct - 3
@@ -118,8 +123,8 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		maxDelete = max(maxDelete, 20)
 	}
 
-	// Fix #1: ensure trigger is always above current usage with a safe margin
-	// to prevent immediate cleanup on config apply
+	// 确保触发阈值始终高于当前使用率并保留安全余量
+	// 防止应用配置后立即触发清理
 	minTrigger := usedPct + 3
 	if minTrigger > 95 {
 		minTrigger = 95
@@ -134,7 +139,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		target = 30
 	}
 
-	// Fix #6: streamer count adjustment — only when disk is under real pressure
+	// 主播数量调整 — 仅在磁盘压力较大时生效
 	if analysis.StreamerCount > 15 && usedPct > 65 {
 		maxDelete = maxDelete * 2
 		if minKeep > 2 && riskLevel != "low" {
@@ -142,7 +147,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		}
 	}
 
-	// Fix #7: GAP_MINUTES — use median gap from actual data, clamped to [10, 60]
+	// GAP_MINUTES — 使用实际文件间隔的中位数，限制在 [10, 60] 范围
 	gapMinutes := 20
 	if analysis.MedianGapMinutes > 0 {
 		gapMinutes = int(analysis.MedianGapMinutes)
@@ -176,7 +181,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		needToFreeGB = (float64(disk.Used) - targetSize) / 1073741824
 	}
 
-	// Fix #8: validate recommended config before returning
+	// 验证推荐配置的内部一致性
 	rec := config.Config{
 		TriggerThreshold:   trigger,
 		TargetThreshold:    target,
@@ -224,7 +229,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 	})
 }
 
-// contentAnalysis holds scan results about the video library.
+// contentAnalysis 保存视频库扫描分析结果。
 type contentAnalysis struct {
 	StreamerCount    int
 	TotalVideos      int
@@ -233,7 +238,7 @@ type contentAnalysis struct {
 	MedianGapMinutes float64
 }
 
-// analyzeContent scans the target directory to understand the video library.
+// analyzeContent 扫描目标目录，分析视频库内容（主播数、文件数、日产出、间隔等）。
 func analyzeContent(root string, whitelist []string) contentAnalysis {
 	var result contentAnalysis
 	entries, err := os.ReadDir(root)
@@ -262,8 +267,8 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 			if !utils.IsVideoFile(name) {
 				continue
 			}
-			// Skip whitelisted files — they won't be cleaned
-			if containsAny(name, whitelist) || containsAny(entry.Name(), whitelist) {
+			// 跳过白名单文件 — 它们不会被清理，排除在分析之外
+			if utils.ContainsAny(name, whitelist) || utils.ContainsAny(entry.Name(), whitelist) {
 				continue
 			}
 			result.TotalVideos++
@@ -277,7 +282,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 			mtime := info.ModTime()
 			streamerModTimes = append(streamerModTimes, mtime)
 
-			// Count recent files (last 7 days) for daily output estimate
+			// 统计近 7 天的文件大小用于估算日产出
 			if now.Sub(mtime) < 7*24*time.Hour {
 				streamerRecentSize += info.Size()
 			}
@@ -288,7 +293,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 			result.DailyOutputGB += float64(streamerRecentSize) / 1073741824 / 7
 		}
 
-		// Compute per-streamer gaps between consecutive files
+		// 计算每个主播的文件间隔，用于估算中位间隔
 		if len(streamerModTimes) >= 2 {
 			sort.Slice(streamerModTimes, func(i, j int) bool {
 				return streamerModTimes[i].Before(streamerModTimes[j])
@@ -302,7 +307,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 		}
 	}
 
-	// Median gap across all streamers
+	// 计算全局中位间隔 — 用于 GAP_MINUTES 推荐
 	if len(allGaps) > 0 {
 		sort.Float64s(allGaps)
 		mid := len(allGaps) / 2
@@ -313,7 +318,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 		}
 	}
 
-	// Fallback: no recent data, estimate from streamer count
+	// 无近期数据时的兜底估算：基于主播数量
 	if result.DailyOutputGB < 1 {
 		est := float64(result.StreamerCount) * 5
 		if est < 5 {
@@ -325,16 +330,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 	return result
 }
 
-func containsAny(s string, keywords []string) bool {
-	s = strings.ToLower(s)
-	for _, kw := range keywords {
-		if strings.Contains(s, strings.ToLower(kw)) {
-			return true
-		}
-	}
-	return false
-}
-
+// DefaultConfig 返回默认配置值。
 func (h *Handler) DefaultConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"TRIGGER_THRESHOLD":     80,
@@ -351,6 +347,7 @@ func (h *Handler) DefaultConfig(c *gin.Context) {
 	})
 }
 
+// ExportConfig 导出完整配置数据（含调度配置和最近 100 条历史记录）。
 func (h *Handler) ExportConfig(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	schedule := h.scheduler.GetStatus()
@@ -368,6 +365,7 @@ func (h *Handler) ExportConfig(c *gin.Context) {
 	})
 }
 
+// ImportConfig 从导入数据中恢复配置。
 func (h *Handler) ImportConfig(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {

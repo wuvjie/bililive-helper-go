@@ -1,3 +1,5 @@
+// convert.go 提供 FLV 到 MP4 的格式转换功能。
+// 通过 TS 中间格式实现无损转换（全程 stream-copy，零重编码）。
 package ffmpeg
 
 import (
@@ -6,9 +8,9 @@ import (
 	"os"
 )
 
-// ConvertViaTS converts an input file to output via the TS intermediate format.
-// Pipeline: input -> TS (copy) -> output (copy).
-// The TS intermediate file is automatically cleaned up.
+// ConvertViaTS 通过 TS 中间容器将输入文件转换为输出文件。
+// 管线：input → TS（stream-copy + h264_mp4toannexb 比特流过滤器）→ output（stream-copy）。
+// TS 中间文件在转换完成后自动清理。
 func ConvertViaTS(ctx context.Context, input, output string) error {
 	tsPath := output + ".tmp.ts"
 	defer os.Remove(tsPath)

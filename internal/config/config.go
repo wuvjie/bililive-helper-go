@@ -1,8 +1,8 @@
+// Package config 提供应用程序配置管理功能。
+// 支持从配置文件加载、环境变量覆盖、原子写入、事务回滚、并发安全的配置读写。
 package config
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,8 +10,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"bililive-helper/internal/utils"
 )
 
+// Config 是应用程序的核心配置结构体。
+// 字段通过 JSON 序列化持久化到 config.json，Password 和 SecretKey 使用 json:"-" 排除。
 type Config struct {
 	TargetDir          string   `json:"TARGET_DIR"`
 	TriggerThreshold   float64  `json:"TRIGGER_THRESHOLD"`
@@ -29,8 +33,8 @@ type Config struct {
 	BackupEndHour      int      `json:"BACKUP_END_HOUR"`
 	BackupEndMinute    int      `json:"BACKUP_END_MINUTE"`
 	Port               int      `json:"PORT"`
-	Password           string   `json:"PASSWORD"`
-	SecretKey          string   `json:"SECRET_KEY"`
+	Password           string   `json:"-"`
+	SecretKey          string   `json:"-"`
 	LogDir             string   `json:"LOG_DIR"`
 	ConfigFile         string   `json:"-"`
 }
@@ -53,22 +57,46 @@ var (
 		BackupEndHour:      12,
 		BackupEndMinute:    0,
 		Port:               5000,
-		Password:           "",  // generated on first run
-		SecretKey:          "",  // generated on first run
+		Password:           "",  // auto-generated on first run if not set
+		SecretKey:          "",  // auto-generated on first run if not set
 		LogDir:             "/vol1/1000/docker/bililive-helper-go",
 	}
 	mu sync.RWMutex
 )
 
-func randomHex(n int) string {
-	b := make([]byte, n)
-	rand.Read(b)
-	return hex.EncodeToString(b)
+// ConfigExists returns true if config.json exists in the given log directory.
+func ConfigExists(logDir string) bool {
+	_, err := os.Stat(filepath.Join(logDir, "config.json"))
+	return err == nil
 }
 
+// DefaultConfig returns a copy of the default configuration (without credentials).
+func DefaultConfig() Config {
+	cfg := defaultConfig
+	cfg.WhitelistKeywords = append([]string(nil), defaultConfig.WhitelistKeywords...)
+	return cfg
+}
+
+// Load 从配置文件和环境变量加载配置。
+// 加载顺序：默认值 -> config.json 文件 -> 环境变量覆盖。
+// 首次运行时自动生成密码和密钥并持久化到凭据文件。
 func Load() *Config {
 	cfg := defaultConfig
-	// Apply env overrides first so ConfigFile points to the correct path
+
+	// 优先从文件加载，然后用环境变量覆盖（环境变量始终优先）
+	// LOG_DIR 需要先确定，因为它决定了配置文件的位置
+	cfgFileDir := cfg.LogDir
+	if v := os.Getenv("LOG_DIR"); v != "" {
+		cfgFileDir = v
+	}
+	cfg.ConfigFile = filepath.Join(cfgFileDir, "config.json")
+	if data, err := os.ReadFile(cfg.ConfigFile); err == nil {
+		if err := json.Unmarshal(data, &cfg); err != nil {
+			fmt.Printf("[WARN] 配置文件解析失败，使用默认配置: %v\n", err)
+		}
+	}
+
+	// 环境变量覆盖文件值
 	if v := os.Getenv("TARGET_DIR"); v != "" {
 		cfg.TargetDir = v
 	}
@@ -81,20 +109,20 @@ func Load() *Config {
 	if v := os.Getenv("SECRET_KEY"); v != "" {
 		cfg.SecretKey = v
 	}
+	// Update ConfigFile path in case LOG_DIR changed via env
 	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")
-	if data, err := os.ReadFile(cfg.ConfigFile); err == nil {
-		if err := json.Unmarshal(data, &cfg); err != nil {
-			fmt.Printf("[WARN] 配置文件解析失败，使用默认配置: %v\n", err)
-		}
-	}
-	// Generate random credentials on first run (no config file, no env var)
+
+	// 首次运行自动生成随机凭据（无配置文件且无环境变量时）
 	firstRun := false
 	if cfg.Password == "" {
-		cfg.Password = randomHex(12) // 24-char hex, 96-bit entropy
+		cfg.Password = cfg.LoadCredential()
+	}
+	if cfg.Password == "" {
+		cfg.Password = utils.RandomHex(12) // 24-char hex string (~96 bits of entropy)
 		firstRun = true
 	}
 	if cfg.SecretKey == "" {
-		cfg.SecretKey = randomHex(16) // 32-char hex
+		cfg.SecretKey = utils.RandomHex(16) // 32-char hex string (~128 bits of entropy)
 		firstRun = true
 	}
 	if firstRun {
@@ -102,10 +130,16 @@ func Load() *Config {
 		fmt.Printf("登录密码: %s\n", cfg.Password)
 		fmt.Printf("请登录后及时修改密码\n")
 		fmt.Printf("═══════════════\n")
+		// Persist auto-generated password so it survives restarts
+		if err := cfg.SaveCredential(); err != nil {
+			fmt.Printf("[WARN] 密码持久化失败: %v\n", err)
+		}
 	}
 	return &cfg
 }
 
+// Validate 校验配置字段的合法性。
+// 检查阈值范围、保底数量、安全期、端口号等，返回第一个不合法字段的错误信息。
 func (c *Config) Validate() error {
 	if c.TriggerThreshold < 0 || c.TriggerThreshold > 100 {
 		return fmt.Errorf("TRIGGER_THRESHOLD 必须在 0-100 之间")
@@ -155,7 +189,8 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// IsBackupWindow returns true if the current time falls within the quiet window.
+// IsBackupWindow returns true if the current time falls within the configured quiet window.
+// Supports windows that wrap around midnight (e.g. 22:30 - 06:15).
 func (c *Config) IsBackupWindow() bool {
 	now := time.Now()
 	cur := now.Hour()*60 + now.Minute()
@@ -164,16 +199,16 @@ func (c *Config) IsBackupWindow() bool {
 	if start <= end {
 		return cur >= start && cur < end
 	}
-	// Wraps midnight, e.g. 22:30-6:15
+	// Wraps midnight (e.g. 22:30 - 06:15)
 	return cur >= start || cur < end
 }
 
-// Apply runs fn under the config write lock then persists to disk atomically.
-// If fn returns an error, the changes are rolled back and not persisted.
+// Apply 在写锁保护下执行配置修改函数 fn，成功后原子写入磁盘。
+// 如果 fn 返回错误或写入失败，所有修改将回滚到调用前的状态。
 func (c *Config) Apply(fn func() error) error {
 	mu.Lock()
 	defer mu.Unlock()
-	// Snapshot for rollback on error (deep copy slice)
+	// Snapshot for rollback (deep copy slice to avoid aliasing)
 	old := *c
 	old.WhitelistKeywords = append([]string(nil), c.WhitelistKeywords...)
 	if err := fn(); err != nil {
@@ -185,7 +220,7 @@ func (c *Config) Apply(fn func() error) error {
 		*c = old
 		return err
 	}
-	// Atomic write: write to tmp file then rename (crash-safe)
+	// Atomic write: write to tmp file then rename to prevent corruption on crash
 	tmp := c.ConfigFile + ".tmp"
 	if err := os.WriteFile(tmp, data, 0644); err != nil {
 		*c = old
@@ -199,15 +234,60 @@ func (c *Config) Apply(fn func() error) error {
 	return nil
 }
 
+// GetScheduleFile 返回定时调度配置文件路径。
 func (c *Config) GetScheduleFile() string {
 	return filepath.Join(c.LogDir, "schedule.json")
 }
 
+// GetHistoryFile 返回历史记录文件路径。
 func (c *Config) GetHistoryFile() string {
 	return filepath.Join(c.LogDir, "history.json")
 }
 
-// ConfigDTO is a safe representation of Config without sensitive fields.
+// GetCredentialFile returns the path to the credentials file that stores
+// the password outside config.json (since Password has json:"-").
+func (c *Config) GetCredentialFile() string {
+	return filepath.Join(c.LogDir, ".credentials.json")
+}
+
+// LoadCredential reads the persisted password from the credential file.
+// Returns empty string if no credential file exists.
+func (c *Config) LoadCredential() string {
+	file := c.GetCredentialFile()
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return ""
+	}
+	var cred struct {
+		Password string `json:"password"`
+	}
+	if err := json.Unmarshal(data, &cred); err != nil {
+		return ""
+	}
+	return cred.Password
+}
+
+// SaveCredential persists the current password to a credential file.
+func (c *Config) SaveCredential() error {
+	file := c.GetCredentialFile()
+	data, err := json.Marshal(struct {
+		Password string `json:"password"`
+	}{Password: c.Password})
+	if err != nil {
+		return err
+	}
+	tmp := file + ".tmp"
+	if err := os.WriteFile(tmp, data, 0600); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, file); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return nil
+}
+
+// ConfigDTO 是 Config 的安全数据传输对象，不包含密码和密钥等敏感字段。
 type ConfigDTO struct {
 	TargetDir          string   `json:"TARGET_DIR"`
 	TriggerThreshold   float64  `json:"TRIGGER_THRESHOLD"`
@@ -228,13 +308,14 @@ type ConfigDTO struct {
 	LogDir             string   `json:"LOG_DIR"`
 }
 
+// ToDTO 返回不含敏感字段的配置副本（线程安全）。
 func (c *Config) ToDTO() ConfigDTO {
 	mu.RLock()
 	defer mu.RUnlock()
 	return c.ToDTOSnapshot()
 }
 
-// Snapshot returns a copy of the Config safe for concurrent reads.
+// Snapshot 返回配置的深拷贝副本，用于并发读取场景（线程安全）。
 func (c *Config) Snapshot() Config {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -243,12 +324,12 @@ func (c *Config) Snapshot() Config {
 	return snap
 }
 
-// ApplyFromMap applies partial config updates from a map (JSON request body).
-// Only present keys are updated. Validates TARGET_DIR exists as a directory.
+// ApplyFromMap 从 JSON 请求体的 map 中应用部分配置更新。
+// 只更新 map 中存在的字段，TARGET_DIR 会额外验证目录是否存在。
 func (c *Config) ApplyFromMap(m map[string]interface{}) {
 	if v, ok := m["TARGET_DIR"].(string); ok {
 		if info, err := os.Stat(v); err != nil || !info.IsDir() {
-			// Reject invalid directory — keep the old value
+			// Reject invalid directory paths silently
 		} else {
 			c.TargetDir = v
 		}
@@ -306,8 +387,8 @@ func (c *Config) ApplyFromMap(m map[string]interface{}) {
 	}
 }
 
-// DiffDTO compares two ConfigDTO snapshots and returns a human-readable change summary.
-// Returns empty string if no changes.
+// DiffDTO 比较两个 ConfigDTO 快照，返回人类可读的变更摘要。
+// 如果配置完全相同返回空字符串。
 func DiffDTO(old, new ConfigDTO) string {
 	var changes []string
 	if old.TargetDir != new.TargetDir {
@@ -364,7 +445,7 @@ func equalSlice(a, b []string) bool {
 	return true
 }
 
-// ToDTOSnapshot returns a DTO snapshot without locking (caller must hold lock).
+// ToDTOSnapshot 返回不含敏感字段的 DTO 快照。调用者必须持有读锁或写锁。
 func (c *Config) ToDTOSnapshot() ConfigDTO {
 	return ConfigDTO{
 		TargetDir:          c.TargetDir,

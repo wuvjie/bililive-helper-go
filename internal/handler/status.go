@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Status 返回简要系统状态：磁盘使用率、主播数量、总容量。
 func (h *Handler) Status(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	disk, err := utils.GetDiskUsage(cfg.TargetDir)
@@ -28,6 +29,7 @@ func (h *Handler) Status(c *gin.Context) {
 	})
 }
 
+// StatusDetail 返回详细系统状态：磁盘用量、待合并文件、主播列表、调度状态。
 func (h *Handler) StatusDetail(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	disk, err := utils.GetDiskUsage(cfg.TargetDir)
@@ -53,6 +55,7 @@ func (h *Handler) StatusDetail(c *gin.Context) {
 	})
 }
 
+// Stats 返回统计数据：今日/本月的合并清理次数和数据量，以及近 7 天每日趋势。
 func (h *Handler) Stats(c *gin.Context) {
 	records := h.history.GetAllRecords()
 	now := time.Now()
@@ -91,7 +94,7 @@ func (h *Handler) Stats(c *gin.Context) {
 		}
 	}
 
-	// Build 7-day daily stats
+	// 构建近 7 天每日统计
 	type dayStat struct {
 		Date       string `json:"date"`
 		MergeCount int    `json:"merge_count"`
@@ -140,14 +143,14 @@ func (h *Handler) Stats(c *gin.Context) {
 	})
 }
 
+// GetStreamers 返回所有主播列表（文件数、磁盘占用），按大小降序排列。
 func (h *Handler) GetStreamers(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	streamers, _, _ := h.scanAllStreamers(cfg.TargetDir)
 	c.JSON(http.StatusOK, streamers)
 }
 
-// scanAllStreamers performs a single scan of all streamer directories,
-// returning the streamer list, pending file count, and pending total size.
+// scanAllStreamers 一次性扫描所有主播目录，返回主播列表、待合并文件数和总大小。
 func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 	type streamerInfo struct {
 		name        string
@@ -217,6 +220,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 	return streamers, totalPendingCount, totalPendingSize
 }
 
+// GetStreamerFiles 返回指定主播的所有视频文件信息。
 func (h *Handler) GetStreamerFiles(c *gin.Context) {
 	streamer := c.Param("name")
 	if !utils.ValidateFilename(streamer) {
