@@ -49,3 +49,21 @@ func GetVideoDuration(path string) (float64, error) {
 	}
 	return dur, nil
 }
+
+// IsVideoHealthy 通过 ffprobe 检查视频文件是否有有效的编码流。
+// 用于在合并前剔除结构损坏的文件（如缺少 moov atom 的 MP4）。
+// 返回 true 表示文件结构完整，false 表示文件损坏应跳过。
+func IsVideoHealthy(path string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error",
+		"-select_streams", "v:0",
+		"-show_entries", "stream=codec_name",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		path)
+	out, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	return len(strings.TrimSpace(string(out))) > 0
+}

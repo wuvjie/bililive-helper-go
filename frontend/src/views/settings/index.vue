@@ -267,13 +267,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { getConfig, saveConfig, getConfigRecommend, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
-import { getSchedule, saveSchedule } from "@/api/schedule";
+import { getSchedule, saveSchedule, runTask } from "@/api/schedule";
 import { setupCheck } from "@/api/setup";
 import { getCleanEstimate } from "@/api/task";
-import { useSSE } from "@/utils/sse";
 import type { ScheduleStatus, SetupCheck, CleanEstimate, ConfigRecommend } from "@/api/types";
 
 const activeTab = ref("general");
@@ -300,8 +299,7 @@ const recommend = ref<ConfigRecommend>();
 const exportJson = ref("");
 const importJson = ref("");
 
-const sse = useSSE();
-const taskRunning = computed(() => sse.isRunning.value);
+const taskRunning = ref(false);
 
 const recommendTable = computed(() => {
   if (!recommend.value) return [];
@@ -417,10 +415,16 @@ async function handleImport() {
   }
 }
 
-function triggerManualTask(task: "merge" | "clean") {
-  const url = task === "merge" ? "/api/merge" : "/api/clean";
-  sse.startSSE(url, {});
-  ElMessage.info(`${task === "merge" ? "合并" : "清理"}任务已触发，请前往任务中心查看输出`);
+async function triggerManualTask(task: "merge" | "clean") {
+  taskRunning.value = true;
+  try {
+    await runTask(task);
+    ElMessage.success(`${task === "merge" ? "合并" : "清理"}任务已触发`);
+  } catch {
+    // Error handled by interceptor
+  } finally {
+    taskRunning.value = false;
+  }
 }
 
 onMounted(async () => {
@@ -452,10 +456,6 @@ onMounted(async () => {
   }
   if (d.status === "fulfilled") setupData.value = d.value;
   if (ce.status === "fulfilled") cleanEstimate.value = ce.value;
-});
-
-onUnmounted(() => {
-  sse.abort();
 });
 </script>
 

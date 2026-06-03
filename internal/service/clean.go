@@ -202,7 +202,7 @@ func (s *CleanService) collectCandidates(root, streamer string, cfg config.Confi
 		perStreamer[entry.Name()] = streamerStats{
 			total:     total,
 			candidate: after - before,
-			skipped:   total - (after - before) - min(total, cfg.MinKeepPerStreamer),
+			skipped:   max(0, total-(after-before)-min(total, cfg.MinKeepPerStreamer)),
 		}
 	}
 	return candidates, perStreamer

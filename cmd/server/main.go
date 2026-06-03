@@ -124,7 +124,6 @@ func main() {
 			auth.POST("/schedule/run/:task", h.RunTask)
 			auth.GET("/streamers", h.GetStreamers)
 			auth.GET("/streamers/:name/files", h.GetStreamerFiles)
-			auth.GET("/files/:name", h.GetStreamerFiles)
 			auth.POST("/merge", h.RunMerge)
 			auth.POST("/merge/manual", h.ManualMerge)
 			auth.POST("/merge/retry", h.MergeRetry)

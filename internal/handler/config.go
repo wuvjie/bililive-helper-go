@@ -332,18 +332,19 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 
 // DefaultConfig 返回默认配置值。
 func (h *Handler) DefaultConfig(c *gin.Context) {
+	d := config.DefaultConfig()
 	c.JSON(http.StatusOK, gin.H{
-		"TRIGGER_THRESHOLD":     80,
-		"TARGET_THRESHOLD":      60,
-		"MIN_KEEP_PER_STREAMER": 3,
-		"SAFE_AGE_MINUTES":     120,
-		"GAP_MINUTES":           30,
-		"MERGE_AGE_MINUTES":    30,
-		"MAX_DELETE_PER_RUN":    10,
-		"BACKUP_START_HOUR":    4,
-		"BACKUP_START_MINUTE":  0,
-		"BACKUP_END_HOUR":      12,
-		"BACKUP_END_MINUTE":    0,
+		"TRIGGER_THRESHOLD":     d.TriggerThreshold,
+		"TARGET_THRESHOLD":      d.TargetThreshold,
+		"MIN_KEEP_PER_STREAMER": d.MinKeepPerStreamer,
+		"SAFE_AGE_MINUTES":      d.SafeAgeMinutes,
+		"GAP_MINUTES":           d.GapMinutes,
+		"MERGE_AGE_MINUTES":     d.MergeAgeMinutes,
+		"MAX_DELETE_PER_RUN":    d.MaxDeletePerRun,
+		"BACKUP_START_HOUR":    d.BackupStartHour,
+		"BACKUP_START_MINUTE":  d.BackupStartMinute,
+		"BACKUP_END_HOUR":      d.BackupEndHour,
+		"BACKUP_END_MINUTE":    d.BackupEndMinute,
 	})
 }
 

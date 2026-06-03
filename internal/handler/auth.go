@@ -166,10 +166,14 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	}
 
 	// Update config and persist
-	h.config.Apply(func() error {
+	if err := h.config.Apply(func() error {
 		h.config.Password = req.NewPassword
 		return nil
-	})
+	}); err != nil {
+		h.logger.Error("密码配置写入失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码更新失败"})
+		return
+	}
 
 	// Persist password to credential file (since Password has json:"-")
 	if err := h.config.SaveCredential(); err != nil {
@@ -203,6 +207,10 @@ func (h *Handler) SetupStatus(c *gin.Context) {
 
 // SetupInit 处理首次运行的初始化请求：校验目录、保存配置、自动登录。
 func (h *Handler) SetupInit(c *gin.Context) {
+	// 互斥锁防止并发初始化竞态
+	h.setupMu.Lock()
+	defer h.setupMu.Unlock()
+
 	// 如果配置已存在则拒绝（防止重复初始化）
 	if config.ConfigExists(h.config.LogDir) {
 		c.JSON(http.StatusConflict, gin.H{"error": "系统已完成初始化"})
