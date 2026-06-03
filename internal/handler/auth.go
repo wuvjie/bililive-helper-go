@@ -106,7 +106,10 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	if !verifyPassword(h.hashedPassword, req.Password) {
+	h.passwordMu.RLock()
+	passwordOK := verifyPassword(h.hashedPassword, req.Password)
+	h.passwordMu.RUnlock()
+	if !passwordOK {
 		recordAttempt(ip)
 		// 随机延迟防止时序攻击（通过响应时间差异推断密码正确性）
 		time.Sleep(100*time.Millisecond + time.Duration(len(req.Password)%7)*20*time.Millisecond)
@@ -154,7 +157,10 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if !verifyPassword(h.hashedPassword, req.OldPassword) {
+	h.passwordMu.RLock()
+	oldHashed := h.hashedPassword
+	h.passwordMu.RUnlock()
+	if !verifyPassword(oldHashed, req.OldPassword) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "旧密码错误"})
 		return
 	}
@@ -176,7 +182,9 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码更新失败"})
 		return
 	}
+	h.passwordMu.Lock()
 	h.hashedPassword = hashed
+	h.passwordMu.Unlock()
 
 	c.JSON(http.StatusOK, gin.H{"message": "密码已更新"})
 }
@@ -270,7 +278,9 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	// 重新哈希密码用于运行时登录验证
 	hashed, err := hashPassword(cfg.Password)
 	if err == nil {
+		h.passwordMu.Lock()
 		h.hashedPassword = hashed
+		h.passwordMu.Unlock()
 	}
 
 	// 自动登录：设置 Session

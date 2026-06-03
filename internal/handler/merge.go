@@ -89,7 +89,10 @@ func (h *Handler) RunClean(c *gin.Context) {
 	var req struct {
 		Streamer string `json:"streamer"`
 	}
-	c.ShouldBindJSON(&req)
+	if err := c.ShouldBindJSON(&req); err != nil && c.Request.ContentLength > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "参数格式错误"})
+		return
+	}
 
 	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
 		result, err := h.clean.Run(req.Streamer, onProgress)

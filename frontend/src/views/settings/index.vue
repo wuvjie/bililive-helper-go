@@ -540,6 +540,8 @@ onUnmounted(() => {
 }
 .risk-high { background: #fdf1e6; border: 1px solid #f5e1ce; }
 .risk-critical { background: #fde8e8; border: 1px solid #f5c6c6; }
+.risk-low { background: #f0f7f4; border: 1px solid #d4e8dc; }
+.risk-normal { background: #fdf1e6; border: 1px solid #f5e1ce; }
 .risk-info { background: #f1f1ef; border: 1px solid var(--hairline); }
 .risk-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
 .risk-body { display: flex; flex-wrap: wrap; gap: 4px; color: var(--charcoal); }

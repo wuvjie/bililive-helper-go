@@ -116,7 +116,7 @@
               <span class="mono-val-sm">{{ formatTime(row.mtime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="100" align="center">
+          <el-table-column label="状态" width="100" align="right" header-align="right">
             <template #default="{ row }">
               <span class="status-dot-text" :class="row.is_merged ? 'dot-merged' : 'dot-pending'">
                 {{ row.is_merged ? '已合并' : '未合并' }}

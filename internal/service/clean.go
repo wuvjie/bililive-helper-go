@@ -242,7 +242,7 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 		if !utils.IsVideoFile(name) {
 			continue
 		}
-		// Python: get_videos(folder, exclude_merged=False) — include merged files
+		// 包含已合并文件（它们也会被清理）
 		info, err := entry.Info()
 		if err != nil {
 			continue

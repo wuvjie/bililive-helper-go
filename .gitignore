@@ -45,6 +45,7 @@ clean_log/
 merge_log/
 
 # Build output
+templates/index.html
 templates/assets/
 frontend/dist/
 
@@ -52,8 +53,8 @@ frontend/dist/
 frontend/src/auto-imports.d.ts
 frontend/src/components.d.ts
 
-# Claude Code local settings (contains local paths)
-.claude/settings.local.json
+# Claude Code
+.claude/
 
 # Design docs
 awesome-design-md/
