@@ -254,14 +254,18 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	}
 
 	// 在写锁保护下更新运行时配置
-	h.config.Apply(func() error {
+	if err := h.config.Apply(func() error {
 		h.config.TargetDir = cfg.TargetDir
 		h.config.LogDir = cfg.LogDir
 		h.config.ConfigFile = cfg.ConfigFile
 		h.config.Password = cfg.Password
 		h.config.SecretKey = cfg.SecretKey
 		return nil
-	})
+	}); err != nil {
+		h.logger.Error("初始化运行时配置更新失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "运行时配置更新失败"})
+		return
+	}
 
 	// 持久化密码到凭据文件（Password 字段 json:"-" 不会写入 config.json）
 	if err := h.config.SaveCredential(); err != nil {

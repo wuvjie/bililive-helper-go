@@ -10,7 +10,7 @@
             <el-form-item label="录制目录">
               <el-input v-model="config.TARGET_DIR" placeholder="/path/to/recordings" style="max-width: 520px" />
             </el-form-item>
-            <el-form-item label="合并时间阈值(分钟)">
+            <el-form-item label="合并保护期(分钟)">
               <el-input-number v-model="config.MERGE_AGE_MINUTES" :min="5" :max="1440" />
             </el-form-item>
             <el-form-item label="片段间隔(分钟)">
@@ -22,10 +22,10 @@
                 <el-option label="按天" value="days" />
               </el-select>
             </el-form-item>
-            <el-form-item v-if="config.SAFE_MODE === 'hours'" label="安全期(分钟)">
+            <el-form-item v-if="config.SAFE_MODE === 'hours'" label="清理保护期(分钟)">
               <el-input-number v-model="config.SAFE_AGE_MINUTES" :min="10" :max="1440" />
             </el-form-item>
-            <el-form-item v-if="config.SAFE_MODE === 'days'" label="安全期(天)">
+            <el-form-item v-if="config.SAFE_MODE === 'days'" label="清理保护期(天)">
               <el-input-number v-model="config.SAFE_DAYS" :min="1" :max="365" />
             </el-form-item>
             <el-form-item label="单次最大删除数">
@@ -309,9 +309,9 @@ const recommendTable = computed(() => {
     { key: "触发清理阈值 (%)", current: cfg.TRIGGER_THRESHOLD, recommended: r.TRIGGER_THRESHOLD },
     { key: "目标清理阈值 (%)", current: cfg.TARGET_THRESHOLD, recommended: r.TARGET_THRESHOLD },
     { key: "每主播最少保留", current: cfg.MIN_KEEP_PER_STREAMER, recommended: r.MIN_KEEP_PER_STREAMER },
-    { key: "安全期 (分钟)", current: cfg.SAFE_AGE_MINUTES, recommended: r.SAFE_AGE_MINUTES },
+    { key: "清理保护期 (分钟)", current: cfg.SAFE_AGE_MINUTES, recommended: r.SAFE_AGE_MINUTES },
     { key: "安全模式", current: cfg.SAFE_MODE, recommended: r.SAFE_MODE },
-    { key: "合并时间阈值 (分钟)", current: cfg.MERGE_AGE_MINUTES, recommended: r.MERGE_AGE_MINUTES },
+    { key: "合并保护期 (分钟)", current: cfg.MERGE_AGE_MINUTES, recommended: r.MERGE_AGE_MINUTES },
     { key: "单次最大删除数", current: cfg.MAX_DELETE_PER_RUN, recommended: r.MAX_DELETE_PER_RUN },
     { key: "片段间隔 (分钟)", current: cfg.GAP_MINUTES, recommended: r.GAP_MINUTES }
   ];

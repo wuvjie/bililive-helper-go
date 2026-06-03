@@ -125,7 +125,7 @@ func (s *CleanService) Run(streamer string, onProgress ProgressFunc) (*CleanResu
 	onProgress(fmt.Sprintf("🔍 发现 %d 个候选文件", len(candidates)))
 
 	sort.Slice(candidates, func(i, j int) bool {
-	// 排序策略：已合并文件优先删除（安全），其次按文件年龄从老到新
+		// 排序策略：已合并文件优先删除（安全），其次按文件年龄从老到新
 		iMerged := utils.IsMergedFile(candidates[i].Name)
 		jMerged := utils.IsMergedFile(candidates[j].Name)
 		if iMerged != jMerged {
