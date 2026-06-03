@@ -338,6 +338,8 @@ func (h *Handler) DefaultConfig(c *gin.Context) {
 		"TARGET_THRESHOLD":      d.TargetThreshold,
 		"MIN_KEEP_PER_STREAMER": d.MinKeepPerStreamer,
 		"SAFE_AGE_MINUTES":      d.SafeAgeMinutes,
+		"SAFE_MODE":             d.SafeMode,
+		"SAFE_DAYS":             d.SafeDays,
 		"GAP_MINUTES":           d.GapMinutes,
 		"MERGE_AGE_MINUTES":     d.MergeAgeMinutes,
 		"MAX_DELETE_PER_RUN":    d.MaxDeletePerRun,

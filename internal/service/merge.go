@@ -227,7 +227,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		fileList := strings.Join(task.Files, " + ")
 		onProgress(fmt.Sprintf("⚙ [%d/%d] %s ⚙ %s (%.1f GB)", i+1, len(tasks), streamerName, fileList, task.SizeGB))
 		s.logToFile("merge", fmt.Sprintf("⚙ %s 合并 %d 个文件: %s", streamerName, len(task.Files), fileList))
-		if s.doMerge(ctx, task.Files, task.Folder, onProgress) {
+		if s.doMerge(ctx, task.Files, task.Folder, "", onProgress) {
 			done++
 			mergeDone++
 			totalGB += task.SizeGB
@@ -402,7 +402,7 @@ func checkFileAvailability(folder string, files []string) error {
 
 // doMerge 执行多文件合并的完整流程：FLV→TS→拼接→MP4→校验→删除原始文件。
 // 合并失败时自动 fallback 到重编码模式。
-func (s *MergeService) doMerge(ctx context.Context, files []string, folder string, onProgress ProgressFunc) bool {
+func (s *MergeService) doMerge(ctx context.Context, files []string, folder string, customOutputName string, onProgress ProgressFunc) bool {
 	if len(files) < 2 {
 		return false
 	}
@@ -417,8 +417,29 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		return false
 	}
 
-	output := utils.MakeOutputName(files[0])
+	// 输出文件名：优先使用用户自定义名称，否则自动生成
+	var output string
+	if customOutputName != "" {
+		output = customOutputName
+	} else {
+		output = utils.MakeOutputName(files[0])
+	}
 	outputPath := filepath.Join(folder, output)
+
+	// 手动合并时：如果输出文件已存在，自动加序号避免覆盖
+	if _, err := os.Stat(outputPath); err == nil {
+		ext := filepath.Ext(output)
+		stem := strings.TrimSuffix(output, ext)
+		for i := 2; ; i++ {
+			candidate := fmt.Sprintf("%s-%d%s", stem, i, ext)
+			if _, err := os.Stat(filepath.Join(folder, candidate)); os.IsNotExist(err) {
+				output = candidate
+				outputPath = filepath.Join(folder, output)
+				break
+			}
+		}
+		s.logToFile("merge", fmt.Sprintf("⚠ 输出文件已存在，自动重命名为: %s", output))
+	}
 
 	// Check disk space
 	disk, diskErr := utils.GetDiskUsage(folder)
@@ -545,7 +566,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 
 // ManualMerge 手动合并指定主播的指定文件列表。
 // 获取主播锁后校验文件合法性，然后调用 doMerge 执行合并。
-func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files []string, onProgress ProgressFunc) error {
+func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files []string, outputName string, onProgress ProgressFunc) error {
 	name := streamer
 	locked, sl := s.tryLockStreamer(name)
 	if !locked {
@@ -581,9 +602,33 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 		return fmt.Errorf("有效文件不足2个")
 	}
 
-	onProgress(fmt.Sprintf("⏳ 手动合并 %d 个文件", len(validFiles)))
+	// 非合并版文件排前面（确保输出文件名不与输入重名）
+	var reordered []string
+	for _, f := range validFiles {
+		if !utils.IsMergedFile(f) {
+			reordered = append(reordered, f)
+		}
+	}
+	for _, f := range validFiles {
+		if utils.IsMergedFile(f) {
+			reordered = append(reordered, f)
+		}
+	}
+	validFiles = reordered
 
-	if s.doMerge(ctx, validFiles, folder, onProgress) {
+	onProgress(fmt.Sprintf("⏳ 手动合并 %d 个文件", len(validFiles)))
+	hasOriginal := false
+	for _, f := range validFiles {
+		if !utils.IsMergedFile(f) {
+			hasOriginal = true
+			break
+		}
+	}
+	if !hasOriginal {
+		return fmt.Errorf("所选文件全部是合并版，请至少选择一个原始文件")
+	}
+
+	if s.doMerge(ctx, validFiles, folder, outputName, onProgress) {
 		s.history.Add("merge", streamer, "success", fmt.Sprintf("手动合并 %d 个文件", len(validFiles)))
 		onProgress(fmt.Sprintf("✅ 手动合并 %d 个文件完成", len(validFiles)))
 		return nil

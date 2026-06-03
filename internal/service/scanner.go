@@ -137,17 +137,16 @@ func (s *MergeService) getVideoFiles(folder string) []videoFile {
 	return videos
 }
 
-// isStreamActive 检查指定 key 的最新文件是否正在被录制写入。
-// 只探测最新文件，避免因新批次存在而导致旧批次被错误跳过。
+// isStreamActive 检查指定 key 的最新文件是否正在被录制。
+// 判断依据：最新文件的修改时间在最近 5 分钟内 → 认为还在录制。
+// 比 isFileBeingWritten 更可靠——不受短暂缓冲/网络波动影响。
 func isStreamActive(folder string, batchKey string) bool {
 	entries, err := os.ReadDir(folder)
 	if err != nil {
 		return false
 	}
 
-	var newestPath string
-	var maxMtime time.Time
-
+	var newestMtime time.Time
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -163,16 +162,16 @@ func isStreamActive(folder string, batchKey string) bool {
 		if err != nil {
 			continue
 		}
-		if info.ModTime().After(maxMtime) {
-			maxMtime = info.ModTime()
-			newestPath = filepath.Join(folder, name)
+		if info.ModTime().After(newestMtime) {
+			newestMtime = info.ModTime()
 		}
 	}
 
-	if newestPath == "" {
+	if newestMtime.IsZero() {
 		return false
 	}
-	return isFileBeingWritten(newestPath, 1*time.Second)
+	// 最新文件在最近 5 分钟内被修改 → 认为还在录制
+	return time.Since(newestMtime) < 5*time.Minute
 }
 
 // scanTasks 扫描录制目录，将文件按主播分组、按时间排序、按间隔分场次。
@@ -318,7 +317,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 							mergeAgeMin = 30
 						}
 						if ageMin < mergeAgeMin {
-							s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %s → 落盘等待（%.0f分钟前，需%.0f分钟）", entry.Name(), singleName, ageMin, mergeAgeMin))
+							s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %s → 等待安全期（%.0f分钟前，需%.0f分钟）", entry.Name(), singleName, ageMin, mergeAgeMin))
 							continue
 						}
 
@@ -343,9 +342,15 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 				}
 
 				// 多文件合并（过滤后 >=2 个文件）
+				// 主播正在录制时，跳过所有批次（避免合并未完成的场次）
+				if isStreamActive(folder, key) {
+					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %d个文件 → 主播正在录制，跳过", entry.Name(), len(names)))
+					continue
+				}
+
 				lastFile := filepath.Join(folder, names[len(names)-1])
 				if isFileBeingWritten(lastFile, 2*time.Second) {
-					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %d个文件 → 录制中，跳过", entry.Name(), len(names)))
+					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %d个文件 → 文件写入中，跳过", entry.Name(), len(names)))
 					continue
 				}
 
@@ -359,9 +364,8 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 					mergeAgeMinutes = 30
 				}
 
-				streamActive := isStreamActive(folder, key)
-				if streamActive || ageMinutes < mergeAgeMinutes {
-					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %d个文件 → 落盘等待（%.0f分钟前，需%.0f分钟）", entry.Name(), len(names), ageMinutes, mergeAgeMinutes))
+				if ageMinutes < mergeAgeMinutes {
+					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %d个文件 → 等待安全期（%.0f分钟前，需%.0f分钟）", entry.Name(), len(names), ageMinutes, mergeAgeMinutes))
 					continue
 				}
 

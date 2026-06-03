@@ -16,7 +16,8 @@ import (
 
 // RateLimiter 提供基于 IP 的令牌桶限流中间件，仅对 POST 请求生效。
 // 适用于局域网部署场景，不适合公网暴露。
-func RateLimiter(maxPerMinute int) gin.HandlerFunc {
+// 返回中间件处理函数和一个 stop 函数，用于在应用关闭时停止 GC 协程。
+func RateLimiter(maxPerMinute int) (gin.HandlerFunc, func()) {
 	type bucket struct {
 		tokens   int
 		lastFill time.Time
@@ -26,22 +27,29 @@ func RateLimiter(maxPerMinute int) gin.HandlerFunc {
 		buckets = make(map[string]*bucket)
 	)
 	// 定期 GC：清理超过 2 分钟未活动的 IP 条目，防止内存无限增长
+	stopCh := make(chan struct{})
+	stopOnce := sync.Once{}
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)
 		defer ticker.Stop()
-		for range ticker.C {
-			mu.Lock()
-			cutoff := time.Now().Add(-2 * time.Minute)
-			for ip, b := range buckets {
-				if b.lastFill.Before(cutoff) {
-					delete(buckets, ip)
+		for {
+			select {
+			case <-stopCh:
+				return
+			case <-ticker.C:
+				mu.Lock()
+				cutoff := time.Now().Add(-2 * time.Minute)
+				for ip, b := range buckets {
+					if b.lastFill.Before(cutoff) {
+						delete(buckets, ip)
+					}
 				}
+				mu.Unlock()
 			}
-			mu.Unlock()
 		}
 	}()
 
-	return func(c *gin.Context) {
+	handler := func(c *gin.Context) {
 		if c.Request.Method != http.MethodPost {
 			c.Next()
 			return
@@ -73,6 +81,7 @@ func RateLimiter(maxPerMinute int) gin.HandlerFunc {
 		mu.Unlock()
 		c.Next()
 	}
+	return handler, func() { stopOnce.Do(func() { close(stopCh) }) }
 }
 
 // AuthRequired 认证中间件，支持两种认证方式：

@@ -211,7 +211,6 @@ bililive-helper-go/
 |------|------|------|
 | GET | `/api/streamers` | 获取主播列表（文件数、磁盘占用） |
 | GET | `/api/streamers/:name/files` | 获取指定主播的文件列表 |
-| GET | `/api/files/:name` | 获取指定主播的文件列表（别名） |
 
 ### 任务执行（SSE 流式输出）
 

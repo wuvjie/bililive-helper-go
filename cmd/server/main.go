@@ -106,7 +106,9 @@ func main() {
 		// 需要认证的接口
 		auth := api.Group("")
 		auth.Use(middleware.AuthRequired())
-		auth.Use(middleware.RateLimiter(60)) // 已认证接口：60 次 POST/分钟/IP
+		rateLimiter, stopRateLimiter := middleware.RateLimiter(60) // 已认证接口：60 次 POST/分钟/IP
+		auth.Use(rateLimiter)
+		defer stopRateLimiter()
 		{
 			auth.GET("/auth/check", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })
 			auth.POST("/auth/change-password", h.ChangePassword)

@@ -47,8 +47,9 @@ func (h *Handler) RunMerge(c *gin.Context) {
 // ManualMerge 手动合并指定主播的指定文件列表（至少 2 个文件）。
 func (h *Handler) ManualMerge(c *gin.Context) {
 	var req struct {
-		Streamer string   `json:"streamer" binding:"required"`
-		Files    []string `json:"files" binding:"required"`
+		Streamer   string   `json:"streamer" binding:"required"`
+		Files      []string `json:"files" binding:"required"`
+		OutputName string   `json:"output_name"` // 可选：自定义输出文件名
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
@@ -58,7 +59,7 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "至少选择2个文件"})
 		return
 	}
-	h.runManualMergeSSE(c, req.Streamer, req.Files, "手动合并")
+	h.runManualMergeSSEWithName(c, req.Streamer, req.Files, req.OutputName, "手动合并")
 }
 
 // MergeRetry 重试之前失败的合并操作。
@@ -75,8 +76,12 @@ func (h *Handler) MergeRetry(c *gin.Context) {
 }
 
 func (h *Handler) runManualMergeSSE(c *gin.Context, streamer string, files []string, label string) {
+	h.runManualMergeSSEWithName(c, streamer, files, "", label)
+}
+
+func (h *Handler) runManualMergeSSEWithName(c *gin.Context, streamer string, files []string, outputName string, label string) {
 	h.runSSE(c, "merge", func(ctx context.Context, onProgress func(string)) string {
-		if err := h.merge.ManualMerge(ctx, streamer, files, onProgress); err != nil {
+		if err := h.merge.ManualMerge(ctx, streamer, files, outputName, onProgress); err != nil {
 			h.logger.Error(label+"失败", zap.Error(err))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}

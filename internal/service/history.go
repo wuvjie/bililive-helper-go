@@ -167,16 +167,18 @@ func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 		return
 	}
 	tmp := file + ".tmp"
-	if err := os.WriteFile(tmp, data, 0644); err == nil {
-		if err := os.Rename(tmp, file); err == nil {
-			// 原子 rename 成功后才更新内存缓存
-			s.cache = records
-			return
-		}
+	if err := os.WriteFile(tmp, data, 0644); err != nil {
+		s.logger.Warn("写入历史记录临时文件失败", zap.Error(err))
 		os.Remove(tmp)
-	} else {
-		os.Remove(tmp)
+		return
 	}
+	if err := os.Rename(tmp, file); err != nil {
+		s.logger.Warn("原子替换历史记录文件失败", zap.Error(err))
+		os.Remove(tmp)
+		return
+	}
+	// 原子 rename 成功后才更新内存缓存
+	s.cache = records
 }
 
 // cleanupRecords 清理超过 90 天的记录，并限制最大记录数为 1000。
