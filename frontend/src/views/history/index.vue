@@ -43,7 +43,7 @@
             <span class="detail-text">{{ row.detail || formatDetail(row) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100" align="left" header-align="left">
+        <el-table-column prop="status" label="状态" width="100" align="right" header-align="right">
           <template #default="{ row }">
             <span class="status-dot-text" :class="row.status === 'success' ? 'dot-success' : 'dot-fail'">
               {{ row.status === 'success' ? '成功' : '失败' }}

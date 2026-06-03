@@ -5,6 +5,7 @@ package handler
 import (
 	"bililive-helper/internal/config"
 	"bililive-helper/internal/service"
+	"sync"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +20,7 @@ type Handler struct {
 	clean          *service.CleanService
 	history        *service.HistoryService
 	scheduler      *service.SchedulerService
+	passwordMu     sync.RWMutex
 	hashedPassword string
 }
 

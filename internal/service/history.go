@@ -20,13 +20,11 @@ import (
 // HistoryService 提供历史记录的持久化存储。
 // 使用内存缓存 + 磁盘文件的模式，首次访问时从磁盘加载，所有变更原子写入。
 type HistoryService struct {
-	config  *config.Config
-	logger  *zap.Logger
-	mu      sync.RWMutex
-	cache   []model.HistoryRecord
-	loaded  bool
-	loadErr error
-	once    sync.Once
+	config *config.Config
+	logger *zap.Logger
+	mu     sync.RWMutex
+	cache  []model.HistoryRecord
+	loaded bool
 }
 
 // NewHistoryService 创建历史记录服务实例。

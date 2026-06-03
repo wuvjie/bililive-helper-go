@@ -63,9 +63,9 @@ html, body, #app {
 
 a { color: var(--link); text-decoration: none; }
 
-// Emoji baseline alignment fix
+// Emoji baseline alignment fix (for browsers that render emoji as <img> elements)
 .card-title {
-  emoji, img { vertical-align: -0.1em; }
+  img { vertical-align: -0.1em; }
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
