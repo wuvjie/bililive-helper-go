@@ -32,11 +32,5 @@ COPY --from=frontend-builder /app/templates ./templates
 # login.html is a server-side template not built by Vite — copy from source
 COPY --from=builder /app/templates/login.html ./templates/login.html
 
-RUN mkdir -p /data
-
-# Run as non-root user for security
-RUN adduser -D -u 1000 appuser
-USER appuser
-
 EXPOSE 5000
 CMD ["./bililive-helper"]

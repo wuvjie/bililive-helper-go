@@ -147,15 +147,15 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		}
 	}
 
-	// GAP_MINUTES — 使用实际文件间隔的中位数，限制在 [10, 60] 范围
+	// GAP_MINUTES — 使用实际文件间隔的中位数，限制在 [10, 30] 范围
 	gapMinutes := 20
 	if analysis.MedianGapMinutes > 0 {
 		gapMinutes = int(analysis.MedianGapMinutes)
 		if gapMinutes < 10 {
 			gapMinutes = 10
 		}
-		if gapMinutes > 60 {
-			gapMinutes = 60
+		if gapMinutes > 30 {
+			gapMinutes = 30
 		}
 	}
 
@@ -337,7 +337,7 @@ func (h *Handler) DefaultConfig(c *gin.Context) {
 		"TARGET_THRESHOLD":      60,
 		"MIN_KEEP_PER_STREAMER": 3,
 		"SAFE_AGE_MINUTES":     120,
-		"GAP_MINUTES":           60,
+		"GAP_MINUTES":           30,
 		"MERGE_AGE_MINUTES":    30,
 		"MAX_DELETE_PER_RUN":    10,
 		"BACKUP_START_HOUR":    4,

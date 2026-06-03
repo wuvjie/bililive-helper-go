@@ -496,7 +496,8 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	if fd, err := os.OpenFile(concatOutputPath, os.O_RDWR, 0); err == nil {
 		if syncErr := fd.Sync(); syncErr != nil {
 			fd.Close()
-			s.logToFile("merge", fmt.Sprintf("❌ fsync 失败: %v，保留原始文件", syncErr))
+			s.logToFile("merge", fmt.Sprintf("❌ fsync 失败: %v，删除不可靠输出，保留原始文件", syncErr))
+			utils.SafeUnlink(concatOutputPath) // 删除不可靠输出，防止下次被误判为已合并
 			os.RemoveAll(tmpDir)
 			return false
 		}

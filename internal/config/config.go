@@ -46,7 +46,7 @@ var (
 		TargetThreshold:    60,
 		MinKeepPerStreamer: 3,
 		SafeAgeMinutes:     120,
-		GapMinutes:         60,
+		GapMinutes:         30,
 		MergeAgeMinutes:    30,
 		WhitelistKeywords:  []string{"留存", "纪念", "高能", "生日", "勿删"},
 		SafeMode:           "hours",

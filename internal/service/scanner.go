@@ -23,6 +23,7 @@ type videoFile struct {
 	Name     string
 	Key      string
 	Datetime time.Time
+	EndTime  time.Time // 实际结束时间 = Datetime + ffprobe 时长；ffprobe 失败时回退为 Datetime
 }
 
 // mergeTask 表示一个待合并的任务（多个文件合并为一个输出）。
@@ -42,6 +43,7 @@ type convertTask struct {
 
 // isFileBeingWritten 通过比较两次文件大小来检测文件是否正在被写入。
 // 文件缺失、不可访问或大小变化时返回 true。
+
 func isFileBeingWritten(path string, interval time.Duration) bool {
 	info1, err := os.Stat(path)
 	if err != nil {
@@ -208,40 +210,59 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 			groups[v.Key] = append(groups[v.Key], v)
 		}
 
-		// 每组按文件名中的时间排序，按时间间隔分批次
-		// 仅使用 Datetime — mtime 不可靠（复制/扫描会改变 mtime）
+		// 每组按文件名时间排序，用 ffprobe 探测实际时长，按结束时间间隔分批次
 		for key, items := range groups {
 			sort.Slice(items, func(i, j int) bool {
 				return items[i].Datetime.Before(items[j].Datetime)
 			})
 
+			// 对每个文件用 ffprobe 探测实际时长，计算结束时间
+			for i := range items {
+				path := filepath.Join(folder, items[i].Name)
+				dur, err := utils.GetVideoDuration(path)
+				if err == nil && dur > 0 {
+					items[i].EndTime = items[i].Datetime.Add(time.Duration(dur * float64(time.Second)))
+				} else {
+					items[i].EndTime = items[i].Datetime
+				}
+			}
+
+			// 用前一个文件的结束时间 vs 下一个文件的开始时间 计算 gap
 			batches := [][]videoFile{{items[0]}}
 			for i := 0; i < len(items)-1; i++ {
-				curr := items[i]
-				next := items[i+1]
-				gapMin := next.Datetime.Sub(curr.Datetime).Minutes()
+				gapMin := items[i+1].Datetime.Sub(items[i].EndTime).Minutes()
 				if gapMin < 0 {
 					gapMin = 0
 				}
 				if gapMin > float64(gapMinutes) {
-					batches = append(batches, []videoFile{next})
+					batches = append(batches, []videoFile{items[i+1]})
 				} else {
-					batches[len(batches)-1] = append(batches[len(batches)-1], next)
+					batches[len(batches)-1] = append(batches[len(batches)-1], items[i+1])
 				}
 			}
 
 			for _, batch := range batches {
 				outputName := utils.MakeOutputName(batch[0].Name)
 				outputPath := filepath.Join(folder, outputName)
-				if info, err := os.Stat(outputPath); err == nil && info.Size() >= 10240 {
-					if ffmpeg.QuickProbe(context.Background(), outputPath) == nil {
+
+				// FLV 输入合并后输出为 MP4，需要检查 MP4 版本
+				actualOutputPath := outputPath
+				if strings.HasSuffix(outputName, ".flv") {
+					mp4Path := strings.TrimSuffix(outputPath, ".flv") + ".mp4"
+					if info, err := os.Stat(mp4Path); err == nil && info.Size() >= 10240 {
+						actualOutputPath = mp4Path
+					}
+				}
+
+				if info, err := os.Stat(actualOutputPath); err == nil && info.Size() >= 10240 {
+					if ffmpeg.QuickProbe(context.Background(), actualOutputPath) == nil {
 						for _, v := range batch {
 							utils.SafeUnlink(filepath.Join(folder, v.Name))
 						}
-						s.logToFile("merge", fmt.Sprintf("[%s] ✅ %s → 已合并，清理原片", entry.Name(), outputName))
+						s.logToFile("merge", fmt.Sprintf("[%s] ✅ %s → 已合并，清理原片", entry.Name(), filepath.Base(actualOutputPath)))
 					} else {
-						utils.SafeUnlink(outputPath)
-						s.logToFile("merge", fmt.Sprintf("[%s] ⚠ %s → 输出损坏，将重新合并", entry.Name(), outputName))
+						utils.SafeUnlink(actualOutputPath)
+						s.logToFile("merge", fmt.Sprintf("[%s] ⚠ %s → 输出损坏，将重新合并", entry.Name(), filepath.Base(actualOutputPath)))
 					}
 					continue
 				}
