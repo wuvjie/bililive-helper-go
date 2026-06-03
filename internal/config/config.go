@@ -430,6 +430,12 @@ func DiffDTO(old, new ConfigDTO) string {
 		changes = append(changes, fmt.Sprintf("白名单: [%s]→[%s]",
 			strings.Join(old.WhitelistKeywords, ","), strings.Join(new.WhitelistKeywords, ",")))
 	}
+	if old.Port != new.Port {
+		changes = append(changes, fmt.Sprintf("端口: %d→%d", old.Port, new.Port))
+	}
+	if old.LogDir != new.LogDir {
+		changes = append(changes, fmt.Sprintf("日志目录: %s→%s", filepath.Base(old.LogDir), filepath.Base(new.LogDir)))
+	}
 	if len(changes) == 0 {
 		return ""
 	}

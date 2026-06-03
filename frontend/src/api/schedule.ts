@@ -8,3 +8,7 @@ export function getSchedule() {
 export function saveSchedule(data: ScheduleConfig) {
   return post("/schedule", data);
 }
+
+export function runTask(task: string) {
+  return post(`/schedule/run/${task}`);
+}

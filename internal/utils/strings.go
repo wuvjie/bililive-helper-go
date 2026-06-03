@@ -22,6 +22,8 @@ func ContainsAny(s string, keywords []string) bool {
 // 参数 n 为字节数，返回 2n 个十六进制字符。
 func RandomHex(n int) string {
 	b := make([]byte, n)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic("crypto/rand.Read failed: " + err.Error())
+	}
 	return hex.EncodeToString(b)
 }

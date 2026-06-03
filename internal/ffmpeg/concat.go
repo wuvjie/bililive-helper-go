@@ -40,6 +40,7 @@ func ConcatTS(ctx context.Context, tsFiles []string, output string, onProgress f
 	return Run(ctx, Options{
 		Args: []string{
 			"-nostdin",
+			"-fflags", "+genpts+igndts",
 			"-i", concatArg,
 			"-c", "copy", "-y",
 			"-progress", "pipe:1", "-loglevel", "error",

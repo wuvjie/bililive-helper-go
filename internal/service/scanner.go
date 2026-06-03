@@ -210,9 +210,12 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 			groups[v.Key] = append(groups[v.Key], v)
 		}
 
-		// 每组按文件名时间排序，用 ffprobe 探测实际时长，按结束时间间隔分批次
+		// 每组按文件名时间排序，同时间戳按文件名排序（001 < 002 < 003）
 		for key, items := range groups {
-			sort.Slice(items, func(i, j int) bool {
+			sort.SliceStable(items, func(i, j int) bool {
+				if items[i].Datetime.Equal(items[j].Datetime) {
+					return items[i].Name < items[j].Name
+				}
 				return items[i].Datetime.Before(items[j].Datetime)
 			})
 
@@ -228,6 +231,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 			}
 
 			// 用前一个文件的结束时间 vs 下一个文件的开始时间 计算 gap
+			// gap < GapMinutes → 同场次，合并；gap > GapMinutes → 不同场次，分批
 			batches := [][]videoFile{{items[0]}}
 			for i := 0; i < len(items)-1; i++ {
 				gapMin := items[i+1].Datetime.Sub(items[i].EndTime).Minutes()
@@ -267,26 +271,22 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 					continue
 				}
 
-				// 过滤：移除损坏文件（<1MB 或时长<5s）后再路由
+				// 文件健康检查：跳过空文件和结构损坏的文件（如缺少 moov atom）
+				// 保留小文件（可能是分段之间的过渡内容）
 				var names []string
 				var size int64
 				for _, v := range batch {
 					path := filepath.Join(folder, v.Name)
 					info, _ := os.Stat(path)
-					if info == nil {
+					if info == nil || info.Size() == 0 {
 						continue
 					}
-					sz := info.Size()
-					if sz < 1048576 {
-						s.logToFile("merge", fmt.Sprintf("⏭ [%s] 跳过过小文件: %s (%s)", entry.Name(), v.Name, utils.FormatSize(sz)))
-						continue
-					}
-					if dur, err := utils.GetVideoDuration(path); err != nil || dur < 5 {
-						s.logToFile("merge", fmt.Sprintf("⏭ [%s] 跳过无效文件: %s (时长%.0fs)", entry.Name(), v.Name, dur))
+					if !utils.IsVideoHealthy(path) {
+						s.logToFile("merge", fmt.Sprintf("⏭ [%s] 跳过损坏文件: %s", entry.Name(), v.Name))
 						continue
 					}
 					names = append(names, v.Name)
-					size += sz
+					size += info.Size()
 				}
 
 				if len(names) == 0 {

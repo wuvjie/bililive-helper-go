@@ -22,12 +22,19 @@ type Handler struct {
 	scheduler      *service.SchedulerService
 	passwordMu     sync.RWMutex
 	hashedPassword string
+	setupMu        sync.Mutex // protects SetupInit against concurrent initialization
 }
 
 // NewHandler 创建一个新的 Handler 实例。
 // 启动时将明文密码 bcrypt 哈希，后续登录比较哈希值而非明文。
 func NewHandler(config *config.Config, logger *zap.Logger, merge *service.MergeService, clean *service.CleanService, history *service.HistoryService, scheduler *service.SchedulerService) *Handler {
-	hashed, _ := bcrypt.GenerateFromPassword([]byte(config.Password), bcrypt.DefaultCost)
+	hashed, err := bcrypt.GenerateFromPassword([]byte(config.Password), bcrypt.DefaultCost)
+	if err != nil {
+		// bcrypt failure is unrecoverable at runtime — log and fall back to
+		// a value that will never match any input so logins fail safely.
+		logger.Error("bcrypt 哈希密码失败，登录将不可用", zap.Error(err))
+		hashed = []byte("!invalid-hash!")
+	}
 	return &Handler{
 		config:         config,
 		logger:         logger,
