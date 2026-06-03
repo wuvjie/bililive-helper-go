@@ -78,17 +78,14 @@ docker compose up -d
 open http://localhost:5689
 ```
 
-首次启动后，访问 Web 控制台会自动进入初始化向导，引导设置密码、录制目录和日志目录。完成初始化后自动登录。
+首次启动后，访问 Web 控制台会自动进入初始化向导，引导设置登录密码。录制目录和日志目录通过 docker-compose.yml 的环境变量配置。完成初始化后自动登录。
 
 ### 首次配置向导
 
 启动后访问 Web 控制台，首次运行会自动进入初始化向导：
 
-1. 设置登录密码
-2. 配置录制视频目录路径（挂载到容器内的目录）
-3. 配置日志和配置存储目录
-4. 系统自动检测目录权限、FFmpeg 可用性、磁盘空间
-5. 完成初始化后自动登录
+1. 设置登录密码（至少 6 位）
+2. 完成初始化后自动登录
 
 ---
 
@@ -171,7 +168,7 @@ bililive-helper-go/
 | POST | `/api/login` | 用户登录（JSON: `{password}`） |
 | GET | `/api/health` | 健康检查 |
 | GET | `/api/setup/status` | 查询是否为首次运行 |
-| POST | `/api/setup/init` | 首次初始化（设置密码、目录） |
+| POST | `/api/setup/init` | 首次初始化（设置密码） |
 
 ### 认证接口
 
@@ -246,7 +243,7 @@ bililive-helper-go/
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
 | `PASSWORD` | 登录密码（可选，优先通过初始化向导设置；适用于自动化部署） | 首次启动自动生成 |
-| `SECRET_KEY` | Session 签名密钥（可选，优先通过初始化向导设置） | 首次启动自动生成 |
+| `SECRET_KEY` | Session 签名密钥（可选，通常无需设置） | 首次启动自动生成 |
 | `TARGET_DIR` | 录制视频目录 | `/vol2/1000/video/bililive-go/抖音` |
 | `LOG_DIR` | 日志和配置存储目录 | `/vol1/1000/docker/bililive-helper-go` |
 | `TZ` | 时区 | `Asia/Shanghai` |

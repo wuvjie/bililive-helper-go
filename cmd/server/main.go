@@ -56,7 +56,6 @@ func main() {
 	}
 
 	schedulerService.Start()
-	defer schedulerService.Stop()
 
 	h := handler.NewHandler(cfg, logger, mergeService, cleanService, historyService, schedulerService)
 
