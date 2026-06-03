@@ -7,8 +7,7 @@ services:
       - "5689:5000"
     volumes:
       - /vol2:/vol2                                              # video storage mount
-      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go  # config + logs persistence
-      - /vol1/1000/docker/bililive-helper-go/templates:/app/templates              # frontend SPA assets
+      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go  # config + logs persistence (excludes templates/ which is built inside container)
     environment:
       - TARGET_DIR=/vol2/1000/video/bililive-go/抖音
       - LOG_DIR=/vol1/1000/docker/bililive-helper-go

@@ -419,7 +419,7 @@ async function handleImport() {
 
 function triggerManualTask(task: "merge" | "clean") {
   const url = task === "merge" ? "/api/merge" : "/api/clean";
-  sse.startSSE(url);
+  sse.startSSE(url, {});
   ElMessage.info(`${task === "merge" ? "合并" : "清理"}任务已触发，请前往任务中心查看输出`);
 }
 
