@@ -208,12 +208,10 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	}
 
 	var req struct {
-		Password  string `json:"password" binding:"required"`
-		TargetDir string `json:"target_dir" binding:"required"`
-		LogDir    string `json:"log_dir" binding:"required"`
+		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请填写所有必填项"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请设置密码"})
 		return
 	}
 
@@ -222,26 +220,11 @@ func (h *Handler) SetupInit(c *gin.Context) {
 		return
 	}
 
-	// 验证录制目录是否存在
-	info, err := os.Stat(req.TargetDir)
-	if err != nil || !info.IsDir() {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "录制目录不存在或不是目录"})
-		return
-	}
-
-	// 验证日志目录（不存在则创建）
-	if err := os.MkdirAll(req.LogDir, 0755); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "日志目录创建失败: " + err.Error()})
-		return
-	}
-
-	// 构建默认配置 + 用户指定值
+	// 目录来自环境变量（docker-compose），首次启动时使用默认值
 	cfg := config.DefaultConfig()
 	cfg.Password = req.Password
-	cfg.TargetDir = req.TargetDir
-	cfg.LogDir = req.LogDir
-	cfg.ConfigFile = filepath.Join(req.LogDir, "config.json")
 	cfg.SecretKey = utils.RandomHex(16)
+	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")
 
 	// 原子写入 config.json
 	data, err := json.MarshalIndent(cfg, "", "  ")
