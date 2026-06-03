@@ -415,6 +415,9 @@ func DiffDTO(old, new ConfigDTO) string {
 	if old.SafeMode != new.SafeMode {
 		changes = append(changes, fmt.Sprintf("安全模式: %s→%s", old.SafeMode, new.SafeMode))
 	}
+	if old.SafeDays != new.SafeDays {
+		changes = append(changes, fmt.Sprintf("安全期天数: %d→%d", old.SafeDays, new.SafeDays))
+	}
 	if old.MaxDeletePerRun != new.MaxDeletePerRun {
 		changes = append(changes, fmt.Sprintf("单次删除上限: %d→%d", old.MaxDeletePerRun, new.MaxDeletePerRun))
 	}

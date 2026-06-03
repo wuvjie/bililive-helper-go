@@ -9,6 +9,6 @@ export function setupStatus() {
   return get<{ first_run: boolean; log_dir: string }>("/setup/status");
 }
 
-export function setupInit(data: { password: string; target_dir: string; log_dir: string }) {
+export function setupInit(data: { password: string }) {
   return post<{ message: string }>("/setup/init", data);
 }
