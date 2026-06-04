@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted, onActivated } from "vue";
+import { computed, ref, reactive, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useAppStore } from "@/store/modules/app";
@@ -203,7 +203,7 @@ async function fetchDiskStatus() {
 }
 
 onMounted(() => fetchDiskStatus());
-onActivated(() => fetchDiskStatus());
+router.afterEach(() => fetchDiskStatus());
 </script>
 
 <style lang="scss" scoped>

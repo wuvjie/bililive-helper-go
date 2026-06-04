@@ -137,14 +137,14 @@
             class="recent-row"
           >
             <div class="recent-left">
-              <span class="recent-icon" :class="row.status === 'failed' ? 'icon-error' : ''">
+              <span class="recent-icon" :class="row.status === 'fail' ? 'icon-error' : ''">
                 {{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}
               </span>
               <span class="recent-who">{{ row.streamer || '全局' }}</span>
               <span class="recent-action">{{ row.detail || formatDetail(row) }}</span>
             </div>
             <div class="recent-right">
-              <span v-if="row.status === 'failed'" class="recent-fail">失败</span>
+              <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
               <span class="recent-time">{{ formatShortTime(row.time) }}</span>
             </div>
           </div>
