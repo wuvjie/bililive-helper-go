@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -43,9 +44,10 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	now := time.Now()
 	record := model.HistoryRecord{
-		ID:          fmt.Sprintf("%s_%s_%d", time.Now().Format("20060102_150405"), task, time.Now().UnixNano()),
-		Time:        time.Now().Format("2006-01-02 15:04:05"),
+		ID:          fmt.Sprintf("%s_%s_%d", now.Format("20060102_150405"), task, now.UnixNano()),
+		Time:        now.Format("2006-01-02 15:04:05"),
 		Task:        task,
 		Streamer:    streamer,
 		Status:      status,
@@ -65,8 +67,8 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 	s.saveRecords(records)
 }
 
-// GetRecords 分页查询历史记录，支持按任务类型过滤，按时间倒序排列。
-func (s *HistoryService) GetRecords(task string, page, perPage int) ([]model.HistoryRecord, int) {
+// GetRecords 分页查询历史记录，支持按任务类型和主播名过滤，按时间倒序排列。
+func (s *HistoryService) GetRecords(task, streamer string, page, perPage int) ([]model.HistoryRecord, int) {
 	s.ensureLoadedSafe()
 	s.mu.RLock()
 	records := append([]model.HistoryRecord{}, s.cache...) // copy under lock
@@ -80,6 +82,17 @@ func (s *HistoryService) GetRecords(task string, page, perPage int) ([]model.His
 		var filtered []model.HistoryRecord
 		for _, r := range records {
 			if r.Task == task {
+				filtered = append(filtered, r)
+			}
+		}
+		records = filtered
+	}
+
+	if streamer != "" {
+		lower := strings.ToLower(streamer)
+		var filtered []model.HistoryRecord
+		for _, r := range records {
+			if strings.Contains(strings.ToLower(r.Streamer), lower) {
 				filtered = append(filtered, r)
 			}
 		}

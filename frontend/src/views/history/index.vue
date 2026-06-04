@@ -11,6 +11,15 @@
               <el-option label="配置" value="config" />
               <el-option label="调度" value="schedule" />
             </el-select>
+            <el-input
+              v-model="filterStreamer"
+              placeholder="搜索主播名"
+              clearable
+              size="small"
+              style="width: 140px"
+              @input="onStreamerSearch"
+              @clear="loadHistory(1)"
+            />
             <span class="action-divider"></span>
             <button class="text-action" @click="loadHistory(currentPage)">
               <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
@@ -60,6 +69,13 @@
             >
               查看
             </button>
+            <button
+              v-if="row.task === 'merge' && row.status === 'fail' && row.streamer"
+              class="retry-btn"
+              @click="retryMerge(row)"
+            >
+              重试
+            </button>
           </template>
         </el-table-column>
       </el-table>
@@ -92,6 +108,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onActivated } from "vue";
+import router from "@/router";
 import { ElMessage } from "element-plus";
 import { getHistory, exportHistory, getLogList, getLogContent } from "@/api/history";
 import { formatBytes } from "@/utils/format";
@@ -103,6 +120,7 @@ const currentPage = ref(1);
 const totalItems = ref(0);
 const totalPages = ref(0);
 const filterTask = ref("");
+const filterStreamer = ref("");
 
 const logDialogVisible = ref(false);
 const logFiles = ref<LogFile[]>([]);
@@ -111,6 +129,12 @@ const logContent = ref("");
 const logLoading = ref(false);
 
 let loadSeq = 0;
+let streamerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+function onStreamerSearch() {
+  if (streamerDebounceTimer) clearTimeout(streamerDebounceTimer);
+  streamerDebounceTimer = setTimeout(() => loadHistory(1), 300);
+}
 
 async function loadHistory(page: number) {
   const seq = ++loadSeq;
@@ -118,6 +142,7 @@ async function loadHistory(page: number) {
   try {
     const params: Record<string, any> = { page, per_page: 20 };
     if (filterTask.value) params.task = filterTask.value;
+    if (filterStreamer.value) params.streamer = filterStreamer.value;
     const res = await getHistory(params);
     if (seq !== loadSeq) return;
     history.value = res.items || [];
@@ -184,6 +209,11 @@ async function handleExport() {
   } catch {
     // Error handled by interceptor
   }
+}
+
+function retryMerge(row: HistoryRecord) {
+  if (!row.streamer) return;
+  router.push({ path: "/tasks", query: { streamer: row.streamer } });
 }
 
 onMounted(() => loadHistory(1));
@@ -257,6 +287,19 @@ onActivated(() => loadHistory(currentPage.value));
   color: var(--ink);
 }
 .log-view-btn:hover {
+  text-decoration: underline;
+}
+
+/* Retry button — visible on failed merge rows */
+.retry-btn {
+  background: transparent; border: none; padding: 2px 6px;
+  font-size: 13px; color: transparent; cursor: pointer;
+  border-radius: var(--r-xs); transition: all 0.15s;
+}
+.history-table :deep(.el-table__row:hover) .retry-btn {
+  color: #d9730d;
+}
+.retry-btn:hover {
   text-decoration: underline;
 }
 

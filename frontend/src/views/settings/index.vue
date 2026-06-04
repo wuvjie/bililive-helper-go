@@ -17,7 +17,7 @@
               <el-input-number v-model="config.GAP_MINUTES" :min="1" :max="120" />
             </el-form-item>
             <el-form-item label="安全模式">
-              <el-select v-model="config.SAFE_MODE" style="width: 200px">
+              <el-select v-model="config.SAFE_MODE" style="width: 200px" @change="onSafeModeChange">
                 <el-option label="按小时" value="hours" />
                 <el-option label="按天" value="days" />
               </el-select>
@@ -46,11 +46,13 @@
             <el-form-item label="触发清理阈值">
               <div class="slider-row">
                 <el-slider v-model="config.TRIGGER_THRESHOLD" :min="50" :max="99" :format-tooltip="(v: number) => v + '%'" class="slider-flex" @change="onTriggerChange" />
+                <span class="slider-value">{{ config.TRIGGER_THRESHOLD }}%</span>
               </div>
             </el-form-item>
             <el-form-item label="目标清理阈值">
               <div class="slider-row">
                 <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="(v: number) => v + '%'" class="slider-flex" @change="onTargetChange" />
+                <span class="slider-value">{{ config.TARGET_THRESHOLD }}%</span>
               </div>
             </el-form-item>
             <el-form-item label="每主播最少保留">
@@ -65,6 +67,12 @@
                 预计清理 <span class="ctx-num">{{ cleanEstimate.file_count }}</span> 个文件，共释放 <span class="ctx-num-green">{{ cleanEstimate.total_size_gb?.toFixed(2) }} GB</span>
               </span>
               <span v-else class="placeholder">加载中...</span>
+            </el-form-item>
+            <el-form-item>
+              <button class="ops-action ops-emergency" @click="emergencyDialogVisible = true">
+                <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                紧急清理
+              </button>
             </el-form-item>
           </el-form>
         </el-tab-pane>
@@ -263,16 +271,63 @@
 
       </el-tabs>
     </el-card>
+
+    <!-- Emergency Clean Dialog -->
+    <el-dialog
+      v-model="emergencyDialogVisible"
+      title="紧急清理"
+      width="560px"
+      :close-on-click-modal="!emergencySSE.isRunning.value"
+      destroy-on-close
+      @close="closeEmergencyDialog"
+    >
+      <div v-if="!emergencySSE.lines.value.length" class="emergency-form">
+        <p class="emergency-desc">将临时降低磁盘使用率目标阈值，强制清理到指定百分比以下。清理结束后阈值自动恢复。</p>
+        <div class="emergency-input-row">
+          <span class="emergency-label">目标磁盘百分比</span>
+          <el-input-number v-model="emergencyTargetPct" :min="10" :max="99" :step="5" />
+          <span class="emergency-unit">%</span>
+        </div>
+      </div>
+      <pre v-else class="emergency-terminal" v-loading="emergencyLoading">{{ emergencySSE.lines.value.map(l => l.text).join('\n') }}</pre>
+      <template #footer>
+        <button
+          v-if="!emergencySSE.lines.value.length"
+          class="btn-primary"
+          :disabled="emergencyLoading"
+          @click="handleEmergencyClean"
+        >
+          确认紧急清理
+        </button>
+        <button
+          v-else-if="emergencySSE.isRunning.value"
+          class="btn-primary"
+          style="background: #e03131; border-color: #e03131;"
+          @click="emergencySSE.abort()"
+        >
+          中止
+        </button>
+        <button
+          v-else
+          class="btn-primary"
+          @click="closeEmergencyDialog"
+        >
+          关闭
+        </button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onActivated } from "vue";
-import { ElMessage } from "element-plus";
+import { ref, reactive, computed, watch, onMounted, onActivated } from "vue";
+import { onBeforeRouteLeave } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigRecommend, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
 import { getSchedule, saveSchedule, runTask } from "@/api/schedule";
 import { setupCheck } from "@/api/setup";
 import { getCleanEstimate } from "@/api/task";
+import { useSSE } from "@/utils/sse";
 import type { ScheduleStatus, SetupCheck, CleanEstimate, ConfigRecommend, ConfigDTO } from "@/api/types";
 
 const activeTab = ref("general");
@@ -300,6 +355,33 @@ const exportJson = ref("");
 const importJson = ref("");
 
 const taskRunning = ref(false);
+
+// Emergency clean
+const emergencyDialogVisible = ref(false);
+const emergencyTargetPct = ref(70);
+const emergencyLoading = ref(false);
+const emergencySSE = useSSE();
+
+// --- Fix 1: Unsaved changes guard ---
+const isDirty = ref(false);
+let suppressDirty = false; // suppress watcher during initial load / save reset
+
+watch(config, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true });
+watch(scheduleForm, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true });
+
+onBeforeRouteLeave(async (_to, _from, next) => {
+  if (!isDirty.value) { next(); return; }
+  try {
+    await ElMessageBox.confirm("您有未保存的配置变更，确定要离开吗？", "未保存的变更", {
+      confirmButtonText: "离开",
+      cancelButtonText: "取消",
+      type: "warning"
+    });
+    next();
+  } catch {
+    next(false);
+  }
+});
 
 const recommendTable = computed(() => {
   if (!recommend.value) return [];
@@ -329,6 +411,19 @@ function onTargetChange(val: number) {
   }
 }
 
+// --- Fix 2: Auto-convert protection period when switching safe mode ---
+function onSafeModeChange(mode: string) {
+  if (mode === "days") {
+    // Convert minutes -> days (round to nearest integer, min=1)
+    const minutes = config.value.SAFE_AGE_MINUTES || 60;
+    config.value.SAFE_DAYS = Math.max(1, Math.round(minutes / 1440));
+  } else {
+    // Convert days -> minutes
+    const days = config.value.SAFE_DAYS || 1;
+    config.value.SAFE_AGE_MINUTES = Math.round(days * 1440);
+  }
+}
+
 async function handleSaveConfig() {
   // Safety-net: re-validate before submit
   if (config.value.TRIGGER_THRESHOLD <= config.value.TARGET_THRESHOLD) {
@@ -342,6 +437,7 @@ async function handleSaveConfig() {
       payload.WHITELIST_KEYWORDS = payload.WHITELIST_KEYWORDS.split(",").map((s: string) => s.trim()).filter(Boolean);
     }
     await saveConfig(payload);
+    isDirty.value = false;
     ElMessage.success("配置已保存");
   } finally {
     saving.value = false;
@@ -363,6 +459,7 @@ async function handleSaveSchedule() {
       data.BACKUP_END_MINUTE = parseInt(m);
     }
     await saveSchedule(data);
+    isDirty.value = false;
     ElMessage.success("计划已保存");
   } finally {
     saving.value = false;
@@ -419,12 +516,16 @@ async function handleImport() {
     const data = JSON.parse(importJson.value);
     await apiImportConfig(data);
     ElMessage.success("导入成功");
+    suppressDirty = true;
     const c = await getConfig();
     config.value = c;
     if (Array.isArray(c.WHITELIST_KEYWORDS)) {
       (config.value as Record<string, unknown>).WHITELIST_KEYWORDS = c.WHITELIST_KEYWORDS.join(", ");
     }
+    suppressDirty = false;
+    isDirty.value = false;
   } catch (e: any) {
+    suppressDirty = false;
     if (e instanceof SyntaxError) {
       ElMessage.error("JSON 格式错误");
     }
@@ -444,7 +545,32 @@ async function triggerManualTask(task: "merge" | "clean") {
   }
 }
 
+async function handleEmergencyClean() {
+  emergencySSE.clear();
+  emergencyLoading.value = true;
+  try {
+    await emergencySSE.startSSE("/api/clean/emergency", {
+      target_pct: emergencyTargetPct.value,
+      confirm: true
+    });
+    const lastLine = emergencySSE.lines.value.at(-1);
+    if (lastLine && /✅/.test(lastLine.text)) {
+      ElMessage.success("紧急清理完成");
+    }
+  } catch {
+    // Error handled by SSE
+  } finally {
+    emergencyLoading.value = false;
+  }
+}
+
+function closeEmergencyDialog() {
+  emergencySSE.abort();
+  emergencyDialogVisible.value = false;
+}
+
 onMounted(async () => {
+  suppressDirty = true;
   const [c, s, d, ce] = await Promise.allSettled([
     getConfig(),
     getSchedule(),
@@ -473,10 +599,13 @@ onMounted(async () => {
   }
   if (d.status === "fulfilled") setupData.value = d.value;
   if (ce.status === "fulfilled") cleanEstimate.value = ce.value;
+  suppressDirty = false;
+  isDirty.value = false;
 });
 
 // Refresh data when component is re-activated by keep-alive router-view
 onActivated(async () => {
+  suppressDirty = true;
   const [c, s, d, ce] = await Promise.allSettled([
     getConfig(),
     getSchedule(),
@@ -498,6 +627,8 @@ onActivated(async () => {
   }
   if (d.status === "fulfilled") setupData.value = d.value;
   if (ce.status === "fulfilled") cleanEstimate.value = ce.value;
+  suppressDirty = false;
+  isDirty.value = false;
 });
 </script>
 
@@ -523,8 +654,9 @@ onActivated(async () => {
 }
 
 /* Slider row — constrained to 520px matrix, vertically centered */
-.slider-row { max-width: 520px; width: 100%; transform: translateY(-1px); }
-.slider-flex { width: 100%; }
+.slider-row { max-width: 520px; width: 100%; display: flex; align-items: center; gap: 12px; transform: translateY(-1px); }
+.slider-flex { flex: 1; }
+.slider-value { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--ink); min-width: 40px; text-align: right; }
 
 /* Clean estimate — mono numbers, muted */
 .clean-estimate { font-size: 13px; color: var(--slate); }
@@ -694,5 +826,54 @@ onActivated(async () => {
   color: var(--ink) !important;
   border-color: var(--hairline-strong) !important;
   background: var(--highlight) !important;
+}
+
+/* Emergency clean — ghost action button */
+.ops-action {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: transparent; border: none; padding: 0;
+  font-size: 13px; font-weight: 500; color: var(--steel);
+  cursor: pointer; transition: color 0.15s;
+}
+.ops-action:hover:not(:disabled) { color: var(--ink); }
+.ops-action:disabled { color: #c7c7cc; cursor: not-allowed; }
+.ops-icon { width: 14px; height: 14px; flex-shrink: 0; }
+.ops-emergency:hover:not(:disabled) { color: #c4554d !important; }
+
+/* Emergency clean dialog */
+.emergency-form { display: flex; flex-direction: column; gap: 16px; }
+.emergency-desc { font-size: 13px; color: var(--slate); line-height: 1.6; }
+.emergency-input-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.emergency-label { font-size: 13px; color: var(--charcoal); white-space: nowrap; }
+.emergency-unit { font-size: 13px; color: var(--steel); }
+.emergency-terminal {
+  background: #191919;
+  color: #b0b0b0;
+  padding: 16px;
+  border: 1px solid #2e2e2e;
+  border-radius: var(--r-sm);
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 120px;
+}
+.settings :deep(.el-dialog) {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+.settings :deep(.el-dialog__header) {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f1ef;
+  margin-right: 0;
+}
+.settings :deep(.el-dialog__footer) {
+  padding: 12px 24px;
+  border-top: 1px solid #f1f1ef;
 }
 </style>

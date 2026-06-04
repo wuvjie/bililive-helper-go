@@ -176,7 +176,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	onProgress(fmt.Sprintf("▶ 开始 %s 合并", tag))
 	onProgress(fmt.Sprintf("📂 扫描 %s ...", root))
 
-	tasks, convertTasks := s.scanTasks(root, streamer, cfg)
+	tasks, convertTasks := s.scanTasks(ctx, root, streamer, cfg)
 	if len(tasks) == 0 && len(convertTasks) == 0 {
 		s.logToFile("merge", "ℹ 无待合并文件")
 		s.history.Add("merge", streamer, "success", "扫描完成，无待合并文件")
