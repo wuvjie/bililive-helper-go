@@ -595,13 +595,15 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	}
 
 	var validFiles []string
+	var totalInputBytes int64
 	for _, f := range files {
 		if !utils.ValidateFilename(f) {
 			return fmt.Errorf("非法文件名: %s", f)
 		}
 		path := filepath.Join(folder, f)
-		if _, err := os.Stat(path); err == nil {
+		if info, err := os.Stat(path); err == nil {
 			validFiles = append(validFiles, f)
+			totalInputBytes += info.Size()
 		}
 	}
 
@@ -624,8 +626,10 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 		return fmt.Errorf("所选文件全部是合并版，请至少选择一个原始文件")
 	}
 
+	start := time.Now()
 	if s.doMerge(ctx, validFiles, folder, onProgress) {
-		s.history.Add("merge", streamer, "success", fmt.Sprintf("手动合并 %d 个文件", len(validFiles)))
+		duration := time.Since(start).Seconds()
+		s.history.AddWithStats("merge", streamer, "success", len(validFiles), 0, totalInputBytes, duration, fmt.Sprintf("手动合并 %d 个文件", len(validFiles)))
 		onProgress(fmt.Sprintf("✅ 手动合并 %d 个文件完成", len(validFiles)))
 		return nil
 	}
