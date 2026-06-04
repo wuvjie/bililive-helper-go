@@ -21,7 +21,7 @@
       </template>
 
       <el-table :data="filteredStreamers" v-loading="loading" empty-text="暂无主播数据" class="helper-clean-table">
-        <el-table-column type="index" label="#" width="72" align="right" header-align="right">
+        <el-table-column type="index" label="#" width="64" align="right" header-align="right">
           <template #default="{ $index }">
             <span class="idx-num">{{ $index + 1 }}</span>
           </template>
@@ -89,6 +89,7 @@ function goToTasks(name: string) {
 
 function formatRelativeTime(ts: number): string {
   const diff = Date.now() / 1000 - ts;
+  if (diff < 0) return "刚刚";
   if (diff < 60) return "刚刚";
   if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
