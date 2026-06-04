@@ -210,6 +210,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		"MIN_KEEP_PER_STREAMER": minKeep,
 		"SAFE_AGE_MINUTES":     safeAge,
 		"SAFE_MODE":             safeMode,
+		"SAFE_DAYS":             rec.SafeDays,
 		"MERGE_AGE_MINUTES":    mergeAge,
 		"MAX_DELETE_PER_RUN":    maxDelete,
 		"GAP_MINUTES":           gapMinutes,

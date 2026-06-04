@@ -15,6 +15,15 @@
             size="large"
           />
         </el-form-item>
+        <el-form-item prop="confirmPassword">
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            placeholder="确认密码"
+            show-password
+            size="large"
+          />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="loading" class="setup-btn" @click="handleSubmit">
             开始使用
@@ -35,10 +44,25 @@ import { markAuthenticated } from "@/router";
 const router = useRouter();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
-const form = reactive({ password: "" });
+const form = reactive({ password: "", confirmPassword: "" });
+
+const validateConfirm = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (value !== form.password) {
+    callback(new Error("两次输入的密码不一致"));
+  } else {
+    callback();
+  }
+};
 
 const rules = {
-  password: [{ required: true, message: "请设置密码", trigger: "blur" }]
+  password: [
+    { required: true, message: "请设置密码", trigger: "blur" },
+    { min: 6, message: "密码至少 6 个字符", trigger: "blur" }
+  ],
+  confirmPassword: [
+    { required: true, message: "请再次输入密码", trigger: "blur" },
+    { validator: validateConfirm, trigger: "blur" }
+  ]
 };
 
 onMounted(async () => {
