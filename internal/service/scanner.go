@@ -182,7 +182,7 @@ func isStreamActive(folder string, batchKey string) bool {
 
 // scanTasks 扫描录制目录，将文件按主播分组、按时间排序、按间隔分场次。
 // 返回待合并任务列表和待转换任务列表（FLV→MP4）。
-func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]mergeTask, []convertTask) {
+func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg config.Config) ([]mergeTask, []convertTask) {
 	var tasks []mergeTask
 	var convertTasks []convertTask
 	entries, err := os.ReadDir(root)
@@ -264,7 +264,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 				}
 
 				if info, err := os.Stat(actualOutputPath); err == nil && info.Size() >= minValidFileSize {
-					if ffmpeg.QuickProbe(context.Background(), actualOutputPath) == nil {
+					if ffmpeg.QuickProbe(ctx, actualOutputPath) == nil {
 						for _, v := range batch {
 							utils.SafeUnlink(filepath.Join(folder, v.Name))
 						}
@@ -330,7 +330,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 						mp4Name := utils.MakeMP4Name(singleName)
 						mp4Path := filepath.Join(folder, mp4Name)
 						if mp4Info, err := os.Stat(mp4Path); err == nil && mp4Info.Size() >= minValidFileSize {
-							if ffmpeg.QuickProbe(context.Background(), mp4Path) == nil {
+							if ffmpeg.QuickProbe(ctx, mp4Path) == nil {
 								utils.SafeUnlink(flvPath)
 								s.logToFile("merge", fmt.Sprintf("[%s] ✅ %s → 已有MP4，清理FLV", entry.Name(), singleName))
 								continue

@@ -120,40 +120,6 @@ func (h *Handler) RunClean(c *gin.Context) {
 	})
 }
 
-// RunTaskSSE 通过 GET 请求以 SSE 方式执行合并或清理任务。
-func (h *Handler) RunTaskSSE(c *gin.Context) {
-	task := c.Param("task")
-	streamer := c.Query("streamer")
-
-	if task != "merge" && task != "clean" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效任务"})
-		return
-	}
-
-	h.runSSE(c, task, func(ctx context.Context, onProgress func(string)) string {
-		if task == "merge" {
-			result, err := h.merge.Run(ctx, streamer, onProgress)
-			if err != nil {
-				return fmt.Sprintf("❌ 错误: %s", err.Error())
-			}
-			if result.Done > 0 {
-				utils.NotifyWebhook(fmt.Sprintf("合并完成：%d 场次 (%.1f GB)", result.Done, result.TotalGB))
-				return fmt.Sprintf("✅ 完成: 合并 %d 场次 (%.1f GB)", result.Done, result.TotalGB)
-			}
-			return "✅ 完成"
-		}
-		result, err := h.clean.Run(ctx, streamer, onProgress)
-		if err != nil {
-			return fmt.Sprintf("❌ 错误: %s", err.Error())
-		}
-		if result.Deleted > 0 {
-			utils.NotifyWebhook(fmt.Sprintf("清理完成：%d 文件，释放 %s", result.Deleted, utils.FormatSize(result.Freed)))
-			return fmt.Sprintf("✅ 完成: 删除 %d 文件，释放 %s", result.Deleted, utils.FormatSize(result.Freed))
-		}
-		return "✅ 完成"
-	})
-}
-
 // runSSE 同步执行 fn 并通过 Server-Sent Events 流式传输进度消息。
 // 进度更新会合并 — 每次 tick/notify 只发送最新消息，避免消息积压。
 func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Context, onProgress func(string)) string) {

@@ -14,9 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetHistory 分页查询历史记录，支持按任务类型过滤。
+// GetHistory 分页查询历史记录，支持按任务类型和主播名过滤。
 func (h *Handler) GetHistory(c *gin.Context) {
 	task := c.Query("task")
+	streamer := c.Query("streamer")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	perPage, _ := strconv.Atoi(c.DefaultQuery("per_page", "20"))
 
@@ -27,7 +28,7 @@ func (h *Handler) GetHistory(c *gin.Context) {
 		perPage = 20
 	}
 
-	records, total := h.history.GetRecords(task, page, perPage)
+	records, total := h.history.GetRecords(task, streamer, page, perPage)
 	pages := (total + perPage - 1) / perPage
 
 	c.JSON(http.StatusOK, gin.H{
