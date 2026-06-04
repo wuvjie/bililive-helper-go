@@ -246,7 +246,7 @@
               <p class="backup-desc">将当前系统的主播列表、存储阈值、定时任务等全部参数备份为 JSON 文件。</p>
               <div class="backup-spacer"></div>
               <div class="backup-card-footer">
-                <button class="btn-primary" @click="handleExport">生成并导出 JSON</button>
+                <button class="btn-primary btn-full" @click="handleExport">生成并导出 JSON</button>
               </div>
               <textarea v-if="exportJson" class="backup-preview" readonly :value="exportJson" />
             </div>
