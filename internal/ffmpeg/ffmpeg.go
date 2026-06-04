@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"syscall"
 	"time"
 )
 
@@ -30,7 +29,7 @@ func Run(ctx context.Context, opts Options) error {
 	}
 
 	cmd := exec.Command("ffmpeg", opts.Args...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	setProcessGroup(cmd)
 
 	if opts.OnStdout != nil {
 		stdout, err := cmd.StdoutPipe()
@@ -63,12 +62,5 @@ func Run(ctx context.Context, opts Options) error {
 		killProcessGroup(cmd)
 		<-done
 		return fmt.Errorf("ffmpeg 超时（%v）", timeout)
-	}
-}
-
-// killProcessGroup 向整个进程组发送 SIGKILL（负 PID）。
-func killProcessGroup(cmd *exec.Cmd) {
-	if cmd.Process != nil {
-		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	}
 }

@@ -186,7 +186,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 
 	gapMinutes := cfg.GapMinutes
 	if gapMinutes <= 0 {
-		gapMinutes = 20
+		gapMinutes = 30
 	}
 
 	for _, entry := range entries {

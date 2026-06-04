@@ -31,6 +31,9 @@ func ValidateFilename(filename string) bool {
 	if strings.Contains(filename, "\x00") {
 		return false
 	}
+	if strings.Contains(filename, "|") {
+		return false
+	}
 	return true
 }
 
@@ -49,10 +52,13 @@ func SafeUnlink(path string) error {
 }
 
 // MakeOutputName 根据批次中第一个文件生成合并后的输出文件名。
-// 格式：[YYYY-MM-DD HH-MM-SS][streamer][title]-合并版.ext
+// 标准格式：[YYYY-MM-DD HH-MM-SS][streamer][title]-合并版.ext
+// 若文件名不含 "]" 则回退为 stem + "-合并版" + ext。
 func MakeOutputName(firstFile string) string {
 	ext := filepath.Ext(firstFile)
 	stem := strings.TrimSuffix(firstFile, ext)
+	// 去掉已有的 "-合并版" 后缀，避免双后缀
+	stem = strings.TrimSuffix(stem, "-合并版")
 	idx := strings.LastIndex(stem, "]")
 	if idx > 0 {
 		return stem[:idx+1] + "-合并版" + ext

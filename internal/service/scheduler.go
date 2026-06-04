@@ -30,6 +30,7 @@ type SchedulerService struct {
 	tickCh       chan struct{}
 	stopCh       chan struct{}
 	stopOnce     sync.Once
+	startOnce    sync.Once
 	wg           sync.WaitGroup
 	lastRun      map[string]time.Time
 	running      map[string]bool
@@ -70,8 +71,10 @@ func NewSchedulerService(config *config.Config, logger *zap.Logger, merge *Merge
 
 // Start 启动调度器主循环。
 func (s *SchedulerService) Start() {
-	go s.loop()
-	s.logger.Info("调度器启动")
+	s.startOnce.Do(func() {
+		go s.loop()
+		s.logger.Info("调度器启动")
+	})
 }
 
 // Stop 停止调度器，等待所有正在运行的任务完成。
@@ -292,6 +295,7 @@ func (s *SchedulerService) loadSchedule() model.ScheduleConfig {
 	}
 	var schedule model.ScheduleConfig
 	if err := json.Unmarshal(data, &schedule); err != nil {
+		s.logger.Warn("调度配置解析失败，使用默认值", zap.Error(err), zap.String("file", file))
 		return defaultSchedule
 	}
 	return schedule
