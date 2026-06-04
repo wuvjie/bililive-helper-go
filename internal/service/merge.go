@@ -23,6 +23,16 @@ import (
 // ProgressFunc 是进度回调函数类型，用于 SSE 流式输出。
 type ProgressFunc func(msg string)
 
+const (
+	minDiskFreeBytes     = 10 * 1024 * 1024 * 1024 // 10GB: 磁盘空间硬限，低于此值跳过所有操作
+	minConvertFreeBytes  = 512 * 1024 * 1024        // 512MB: FLV 转换所需最小磁盘空间
+	minMergeFreeBytes    = 1024 * 1024 * 1024       // 1GB: 合并操作所需最小磁盘空间
+	tsMergeHeadroomBytes = 2 * 1024 * 1024 * 1024   // 2GB: TS 管线峰值空间余量
+	maxDedupAttempts     = 1000                      // 文件名去重最大尝试次数
+	oneGB                = 1073741824                // 1GB 字节数，用于大小格式化换算
+	minValidFileSize     = 10240                     // 10KB: 视频文件最小有效大小
+)
+
 // MergeService 提供录制文件合并功能。
 // 使用 per-streamer 锁防止同一主播的并发合并，支持 FLV 转 MP4、多文件 TS 拼接和重编码 fallback。
 type MergeService struct {
@@ -98,17 +108,17 @@ type MergeResult struct {
 func (s *MergeService) checkDiskSpaceForMerge(tasks []mergeTask, targetDir string) error {
 	var totalSourceBytes int64
 	for _, t := range tasks {
-		totalSourceBytes += int64(t.SizeGB * 1073741824)
+		totalSourceBytes += int64(t.SizeGB * oneGB)
 	}
 	disk, err := utils.GetDiskUsage(targetDir)
 	if err != nil {
 		return fmt.Errorf("获取磁盘信息失败: %w", err)
 	}
 	// TS pipeline peak space: source files + TS intermediates + output ~ 3x source + 2GB headroom
-	needed := (totalSourceBytes * 3) + (2 * 1024 * 1024 * 1024)
+	needed := (totalSourceBytes * 3) + tsMergeHeadroomBytes
 	if int64(disk.Free) < needed {
 		return fmt.Errorf("磁盘空间不足：需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
-			float64(needed)/1073741824, float64(disk.Free)/1073741824)
+			float64(needed)/oneGB, float64(disk.Free)/oneGB)
 	}
 	return nil
 }
@@ -124,7 +134,7 @@ func classifyMergeFailure(folder, firstFile string) string {
 		firstPath := filepath.Join(folder, firstFile)
 		if info, err := os.Stat(firstPath); err != nil {
 			return "源文件不存在"
-		} else if info.Size() < 10240 {
+		} else if info.Size() < minValidFileSize {
 			return fmt.Sprintf("源文件过小(%s)", utils.FormatSize(info.Size()))
 		}
 		return "ffmpeg输出校验失败"
@@ -132,7 +142,7 @@ func classifyMergeFailure(folder, firstFile string) string {
 
 	// Output exists but too small
 	if info, err := os.Stat(outputPath); err == nil {
-		if info.Size() < 10240 {
+		if info.Size() < minValidFileSize {
 			return fmt.Sprintf("输出过小(%s)", utils.FormatSize(info.Size()))
 		}
 	}
@@ -184,10 +194,10 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	// 磁盘空间硬性检查 — 可用空间低于 10GB 时跳过所有操作
 	disk, diskErr := utils.GetDiskUsage(root)
-	if diskErr == nil && disk.Free < 10*1024*1024*1024 { // < 10GB free
-		s.logToFile("merge", fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过所有操作", float64(disk.Free)/1073741824))
-		onProgress(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过", float64(disk.Free)/1073741824))
-		s.history.Add("merge", streamer, "fail", fmt.Sprintf("磁盘空间不足: %.1f GB（使用率 %.1f%%）", float64(disk.Free)/1073741824, disk.UsedPct))
+	if diskErr == nil && disk.Free < minDiskFreeBytes { // < 10GB free
+		s.logToFile("merge", fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过所有操作", float64(disk.Free)/oneGB))
+		onProgress(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过", float64(disk.Free)/oneGB))
+		s.history.Add("merge", streamer, "fail", fmt.Sprintf("磁盘空间不足: %.1f GB（使用率 %.1f%%）", float64(disk.Free)/oneGB, disk.UsedPct))
 		return &MergeResult{}, nil
 	}
 
@@ -209,7 +219,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		if s.convertFlvToMp4(ctx, ct.FlvPath, ct.Mp4Path, onProgress) {
 			done++
 			convertDone++
-			totalGB += float64(flvSize) / 1073741824
+			totalGB += float64(flvSize) / oneGB
 			onProgress(fmt.Sprintf("✅ [%s] 完成", ct.Name))
 		} else {
 			onProgress(fmt.Sprintf("❌ [%s] 转换失败", ct.Name))
@@ -273,7 +283,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		}
 		msg := fmt.Sprintf("✅ 完成: 扫描 %d 个主播, %s", totalScanned, detail)
 		s.logToFile("merge", msg)
-		s.history.AddWithStats("merge", streamer, "success", done, 0, int64(totalGB*1073741824), duration, detail)
+		s.history.AddWithStats("merge", streamer, "success", done, 0, int64(totalGB*oneGB), duration, detail)
 		onProgress(msg)
 	} else if mergeFailed > 0 {
 		var parts []string
@@ -307,7 +317,7 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 
 	// Check disk space
 	disk, diskErr := utils.GetDiskUsage(filepath.Dir(flvPath))
-	if diskErr == nil && disk.Free < 512*1024*1024 {
+	if diskErr == nil && disk.Free < minConvertFreeBytes {
 		onProgress("⚠ 磁盘空间不足，跳过转换")
 		return false
 	}
@@ -331,7 +341,9 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 
 	// 保留原始录制时间，防止因 mtime 变化导致合并分组错误
 	if !flvMtime.IsZero() {
-		os.Chtimes(mp4Path, flvMtime, flvMtime)
+		if err := os.Chtimes(mp4Path, flvMtime, flvMtime); err != nil {
+			s.logToFile("merge", fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(mp4Path), err))
+		}
 	}
 
 	// Delete original with retry
@@ -375,7 +387,9 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 
 	// Preserve original recording time
 	if !latestSrcMtime.IsZero() {
-		os.Chtimes(outputPath, latestSrcMtime, latestSrcMtime)
+		if err := os.Chtimes(outputPath, latestSrcMtime, latestSrcMtime); err != nil {
+			s.logToFile("merge", fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(outputPath), err))
+		}
 	}
 
 	if info, err := os.Stat(outputPath); err != nil {
@@ -429,7 +443,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		ext := filepath.Ext(output)
 		stem := strings.TrimSuffix(output, ext)
 		found := false
-		for i := 2; i <= 1000; i++ {
+		for i := 2; i <= maxDedupAttempts; i++ {
 			candidate := fmt.Sprintf("%s-%d%s", stem, i, ext)
 			if _, err := os.Stat(filepath.Join(folder, candidate)); os.IsNotExist(err) {
 				output = candidate
@@ -439,7 +453,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 			}
 		}
 		if !found {
-			s.logToFile("merge", "❌ 无法找到可用的输出文件名（已尝试 1000 个后缀）")
+			s.logToFile("merge", fmt.Sprintf("❌ 无法找到可用的输出文件名（已尝试 %d 个后缀）", maxDedupAttempts))
 			return false
 		}
 		s.logToFile("merge", fmt.Sprintf("⚠ 输出文件已存在，自动重命名为: %s", output))
@@ -447,8 +461,8 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 
 	// Check disk space
 	disk, diskErr := utils.GetDiskUsage(folder)
-	if diskErr == nil && disk.Free < 1024*1024*1024 {
-		s.logToFile("merge", fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过", float64(disk.Free)/1073741824))
+	if diskErr == nil && disk.Free < minMergeFreeBytes {
+		s.logToFile("merge", fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过", float64(disk.Free)/oneGB))
 		return false
 	}
 
@@ -545,7 +559,9 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 			return false
 		} else {
 			if !latestSrcMtime.IsZero() {
-				os.Chtimes(mp4Path, latestSrcMtime, latestSrcMtime)
+				if err := os.Chtimes(mp4Path, latestSrcMtime, latestSrcMtime); err != nil {
+					s.logToFile("merge", fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(mp4Path), err))
+				}
 			}
 			utils.SafeUnlink(concatOutputPath)
 			s.logToFile("merge", fmt.Sprintf("✅ FLV→MP4 → %s", mp4Name))
@@ -553,12 +569,16 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	} else if outputIsFLV {
 		// ConcatTS 已直接输出 MP4 — 只需保留录制时间戳
 		if !latestSrcMtime.IsZero() {
-			os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime)
+			if err := os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime); err != nil {
+				s.logToFile("merge", fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(concatOutputPath), err))
+			}
 		}
 	} else {
 		// 非 FLV 输出：保留合并文件的录制时间
 		if !latestSrcMtime.IsZero() {
-			os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime)
+			if err := os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime); err != nil {
+				s.logToFile("merge", fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(concatOutputPath), err))
+			}
 		}
 	}
 
@@ -694,7 +714,7 @@ func (s *MergeService) CleanupTempFiles() int {
 			name := fe.Name()
 			ext := strings.ToLower(filepath.Ext(name))
 			if ext == ".mp4" {
-				if info, err := fe.Info(); err == nil && info.Size() >= 10240 {
+				if info, err := fe.Info(); err == nil && info.Size() >= minValidFileSize {
 					base := strings.TrimSuffix(name, ext)
 					mp4Bases[base] = true
 				}
@@ -741,7 +761,7 @@ func (s *MergeService) CleanupTempFiles() int {
 				base := strings.TrimSuffix(name, ext)
 				if !mp4Bases[base] {
 					path := filepath.Join(folder, name)
-					if info, err := fe.Info(); err == nil && info.Size() >= 10240 {
+					if info, err := fe.Info(); err == nil && info.Size() >= minValidFileSize {
 						if err := utils.SafeUnlink(path); err == nil {
 							cleaned++
 							s.logToFile("merge", fmt.Sprintf("🗑 清理孤立TS: %s", name))

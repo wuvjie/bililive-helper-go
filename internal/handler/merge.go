@@ -106,7 +106,7 @@ func (h *Handler) RunClean(c *gin.Context) {
 	}
 
 	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
-		result, err := h.clean.Run(req.Streamer, onProgress)
+		result, err := h.clean.Run(ctx, req.Streamer, onProgress)
 		if err != nil {
 			h.logger.Error("清理失败", zap.Error(err))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
@@ -142,7 +142,7 @@ func (h *Handler) RunTaskSSE(c *gin.Context) {
 			}
 			return "✅ 完成"
 		}
-		result, err := h.clean.Run(streamer, onProgress)
+		result, err := h.clean.Run(ctx, streamer, onProgress)
 		if err != nil {
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}
@@ -400,7 +400,7 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 				return nil
 			})
 		}
-		result, err := h.clean.Run("", onProgress)
+		result, err := h.clean.Run(ctx, "", onProgress)
 		if err != nil {
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}

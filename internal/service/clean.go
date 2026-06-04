@@ -3,6 +3,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -43,7 +44,7 @@ type CleanResult struct {
 // 全局模式：检查磁盘阈值，未达阈值则跳过；已合并文件优先删除。
 // 单主播模式：仅清理指定主播的文件。
 // 参数 streamer 为空表示全局清理；onProgress 用于 SSE 进度回调。
-func (s *CleanService) Run(streamer string, onProgress ProgressFunc) (*CleanResult, error) {
+func (s *CleanService) Run(ctx context.Context, streamer string, onProgress ProgressFunc) (*CleanResult, error) {
 	start := time.Now()
 	cfg := s.config.Snapshot()
 	root := cfg.TargetDir
@@ -134,7 +135,7 @@ func (s *CleanService) Run(streamer string, onProgress ProgressFunc) (*CleanResu
 		return candidates[i].Mtime < candidates[j].Mtime
 	})
 
-	deleted, freed := s.deleteFiles(candidates, needToFree, cfg, onProgress)
+	deleted, freed := s.deleteFiles(ctx, candidates, needToFree, cfg, onProgress)
 
 	onProgress("───────────────────────────")
 
@@ -285,7 +286,7 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 
 // deleteFiles 执行文件删除，使用双快照检测跳过正在写入的文件。
 // 受单次删除上限和目标释放量双重约束。
-func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64, cfg config.Config, onProgress ProgressFunc) (int, int64) {
+func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFile, needToFree int64, cfg config.Config, onProgress ProgressFunc) (int, int64) {
 	deleted := 0
 	freed := int64(0)
 
@@ -310,6 +311,10 @@ func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64,
 
 	// 4. 执行删除 — 跳过两次快照间大小变化的文件（正在写入）
 	for _, f := range candidates {
+		if ctx.Err() != nil {
+			s.logToFile("clean", "⏹ 上下文取消，终止清理")
+			break
+		}
 		if deleted >= cfg.MaxDeletePerRun {
 			s.logToFile("clean", fmt.Sprintf("ℹ 已达单次删除上限 %d 个文件", cfg.MaxDeletePerRun))
 			break
