@@ -33,7 +33,7 @@
         <el-table-column prop="task" label="类型" width="90" align="center" sortable>
           <template #default="{ row }">
             <span class="type-label">
-              <span class="type-icon" :class="{ 'type-icon-gear': row.task === 'config' }">{{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : '⚙️' }}</span>
+              <span class="type-icon">{{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}</span>
               {{ taskLabel(row.task) }}
             </span>
           </template>
@@ -230,8 +230,6 @@ onActivated(() => loadHistory(currentPage.value));
   font-size: 12px; color: var(--slate); font-weight: 500;
 }
 .type-icon { font-size: 12px; transform: translateY(0.5px); }
-/* Reduce visual weight of gear icon (config type) */
-.type-icon-gear { opacity: 0.7; }
 
 /* Detail text — mono for technical params */
 .detail-text { font-size: 13px; color: var(--charcoal); font-family: var(--font-mono); letter-spacing: -0.2px; }
