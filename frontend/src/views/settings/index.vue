@@ -505,7 +505,6 @@ async function applyRecommend() {
   suppressDirty = false;
   try {
     await handleSaveConfig();
-    ElMessage.success("推荐值已保存");
   } catch {
     // handleSaveConfig already showed the error (e.g. threshold validation);
     // leave isDirty true so the user can manually adjust and save
