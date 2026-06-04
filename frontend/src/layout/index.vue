@@ -20,6 +20,8 @@
       </el-scrollbar>
     </aside>
 
+    <div class="sidebar-overlay" v-if="isMobile && appStore.sidebar.opened" @click="toggleSidebar"></div>
+
     <div class="layout-main">
       <header class="layout-navbar">
         <div class="navbar-left">
@@ -125,6 +127,12 @@ const menuItems = [
 
 const activeMenu = computed(() => route.path);
 const currentRoute = computed(() => route);
+
+// Mobile sidebar control
+const isMobile = computed(() => window.innerWidth < 768);
+function toggleSidebar() {
+  appStore.toggleSidebar();
+}
 
 // Password change dialog
 const pwDialogVisible = ref(false);
@@ -292,6 +300,13 @@ onActivated(() => fetchDiskStatus());
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 99;
+}
 
 @media (max-width: 768px) {
   .layout-sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }

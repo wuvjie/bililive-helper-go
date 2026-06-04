@@ -329,7 +329,7 @@ func (c *Config) Snapshot() Config {
 func (c *Config) ApplyFromMap(m map[string]interface{}) {
 	if v, ok := m["TARGET_DIR"].(string); ok {
 		if info, err := os.Stat(v); err != nil || !info.IsDir() {
-			// Reject invalid directory paths silently
+			fmt.Printf("[WARN] TARGET_DIR 无效，已忽略: %s (err=%v)\n", v, err)
 		} else {
 			c.TargetDir = v
 		}

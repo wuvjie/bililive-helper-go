@@ -132,8 +132,8 @@
         <div class="card-body recent-body">
           <div v-if="recentHistory.length === 0" class="recent-empty">暂无操作记录</div>
           <div
-            v-for="(row, i) in recentHistory"
-            :key="i"
+            v-for="row in recentHistory"
+            :key="row.id"
             class="recent-row"
           >
             <div class="recent-left">

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"bililive-helper/internal/config"
@@ -224,16 +225,26 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				return items[i].Datetime.Before(items[j].Datetime)
 			})
 
-			// 对每个文件用 ffprobe 探测实际时长，计算结束时间
+			// 对每个文件并发用 ffprobe 探测实际时长，计算结束时间
+			// 使用带缓冲 channel 作为 semaphore 限制并发数为 4
+			var wg sync.WaitGroup
+			sem := make(chan struct{}, 4)
 			for i := range items {
-				path := filepath.Join(folder, items[i].Name)
-				dur, err := utils.GetVideoDuration(path)
-				if err == nil && dur > 0 {
-					items[i].EndTime = items[i].Datetime.Add(time.Duration(dur * float64(time.Second)))
-				} else {
-					items[i].EndTime = items[i].Datetime
-				}
+				wg.Add(1)
+				sem <- struct{}{} // 获取信号量槽位
+				go func(idx int) {
+					defer wg.Done()
+					defer func() { <-sem }() // 释放信号量槽位
+					path := filepath.Join(folder, items[idx].Name)
+					dur, err := utils.GetVideoDuration(path)
+					if err == nil && dur > 0 {
+						items[idx].EndTime = items[idx].Datetime.Add(time.Duration(dur * float64(time.Second)))
+					} else {
+						items[idx].EndTime = items[idx].Datetime
+					}
+				}(i)
 			}
+			wg.Wait()
 
 			// 用前一个文件的结束时间 vs 下一个文件的开始时间 计算 gap
 			// gap < GapMinutes → 同场次，合并；gap > GapMinutes → 不同场次，分批

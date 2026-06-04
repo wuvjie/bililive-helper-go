@@ -192,11 +192,16 @@ function selectAllUnmerged() {
   if (!tableRef.value) return;
   tableRef.value.clearSelection();
   nextTick(() => {
+    let count = 0;
     files.value.forEach(row => {
       if (!row.is_merged) {
         tableRef.value!.toggleRowSelection(row, true);
+        count++;
       }
     });
+    if (count === 0) {
+      ElMessage.info("没有未合并的文件");
+    }
   });
 }
 
@@ -222,12 +227,20 @@ async function handleMerge() {
 
 async function handleClean() {
   try {
-    const estimate = await getCleanEstimate();
-    await ElMessageBox.confirm(
-      `预计将清理 ${estimate.file_count} 个文件，释放 ${estimate.total_size_gb?.toFixed(2)} GB 空间。确认执行？`,
-      "清理确认",
-      { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
-    );
+    if (selectedStreamer.value) {
+      await ElMessageBox.confirm(
+        `即将清理主播「${selectedStreamer.value}」的已合并文件，确认执行？`,
+        "清理确认",
+        { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
+      );
+    } else {
+      const estimate = await getCleanEstimate();
+      await ElMessageBox.confirm(
+        `预计将清理 ${estimate.file_count} 个文件，释放 ${estimate.total_size_gb?.toFixed(2)} GB 空间。确认执行？`,
+        "清理确认",
+        { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
+      );
+    }
     sse.startSSE("/api/clean", { streamer: selectedStreamer.value });
   } catch {
     // User cancelled

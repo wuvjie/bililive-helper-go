@@ -25,7 +25,8 @@ const routes: RouteRecordRaw[] = [
       { path: "history", name: "History", component: () => import("@/views/history/index.vue"), meta: { title: "操作日志", icon: "Document" } },
       { path: "settings", name: "Settings", component: () => import("@/views/settings/index.vue"), meta: { title: "全局设置", icon: "Setting" } }
     ]
-  }
+  },
+  { path: "/:pathMatch(.*)*", redirect: "/" }
 ];
 
 const router = createRouter({ history: createWebHashHistory(), routes });

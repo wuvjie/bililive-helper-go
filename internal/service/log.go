@@ -26,10 +26,11 @@ func logToFile(logDir, task, message string, logger *zap.Logger) {
 		return
 	}
 	logFile := filepath.Join(dir, task+"_videos.log")
-	utils.RotateLogAndPrune(logFile, task+"_videos.log", 30)
 
 	logMu.Lock()
 	defer logMu.Unlock()
+
+	utils.RotateLogAndPrune(logFile, task+"_videos.log", 30)
 
 	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

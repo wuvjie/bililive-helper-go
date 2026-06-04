@@ -122,7 +122,9 @@ func (h *Handler) Login(c *gin.Context) {
 	session.Clear()
 	session.Set("authenticated", true)
 	session.Set("login_time", time.Now().Unix())
-	session.Save()
+	if err := session.Save(); err != nil {
+		h.logger.Warn("session 保存失败", zap.Error(err))
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "登录成功"})
 }
 
@@ -131,7 +133,9 @@ func (h *Handler) Logout(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
 	session.Options(sessions.Options{MaxAge: -1}) // MaxAge -1 强制浏览器删除 cookie
-	session.Save()
+	if err := session.Save(); err != nil {
+		h.logger.Warn("session 保存失败", zap.Error(err))
+	}
 	c.Redirect(http.StatusFound, "/login")
 }
 
@@ -295,7 +299,9 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	session.Clear()
 	session.Set("authenticated", true)
 	session.Set("login_time", time.Now().Unix())
-	session.Save()
+	if err := session.Save(); err != nil {
+		h.logger.Warn("session 保存失败", zap.Error(err))
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "初始化成功"})
 }

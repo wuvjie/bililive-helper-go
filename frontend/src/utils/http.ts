@@ -5,7 +5,7 @@ import router from "@/router";
 
 const http: AxiosInstance = axios.create({
   baseURL: "/api",
-  timeout: 30000,
+  timeout: 15000,
   withCredentials: true // send session cookie with every request
 });
 

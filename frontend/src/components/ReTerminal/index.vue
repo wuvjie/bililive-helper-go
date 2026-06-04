@@ -2,7 +2,16 @@
   <div class="re-terminal" :style="{ height: height || '400px' }">
     <div class="terminal-header">
       <span class="terminal-title">📺 任务输出</span>
-      <button class="terminal-clear" @click="$emit('clear')">清除</button>
+      <div class="terminal-header-actions">
+        <button
+          class="terminal-scroll-toggle"
+          :class="{ paused: !autoScroll }"
+          @click="autoScroll = !autoScroll"
+        >
+          {{ autoScroll ? "⬇ 自动滚动" : "⏸ 已暂停滚动" }}
+        </button>
+        <button class="terminal-clear" @click="$emit('clear')">清除</button>
+      </div>
     </div>
     <div class="terminal-body" ref="bodyRef">
       <div v-if="lines.length === 0" class="terminal-empty">等待任务输出 ...</div>
@@ -20,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from "vue";
+import { ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import type { SSELine } from "@/utils/sse";
 
 const props = defineProps<{
@@ -33,10 +42,22 @@ defineEmits<{
 }>();
 
 const bodyRef = ref<HTMLElement>();
+const autoScroll = ref(true);
+
+function isAtBottom(): boolean {
+  if (!bodyRef.value) return true;
+  const el = bodyRef.value;
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 30;
+}
+
+function onScroll() {
+  autoScroll.value = isAtBottom();
+}
 
 watch(
   () => props.lines.length,
   () => {
+    if (!autoScroll.value) return;
     nextTick(() => {
       if (bodyRef.value) {
         bodyRef.value.scrollTop = bodyRef.value.scrollHeight;
@@ -44,6 +65,14 @@ watch(
     });
   }
 );
+
+onMounted(() => {
+  bodyRef.value?.addEventListener("scroll", onScroll);
+});
+
+onUnmounted(() => {
+  bodyRef.value?.removeEventListener("scroll", onScroll);
+});
 </script>
 
 <style scoped>
@@ -86,6 +115,31 @@ watch(
 }
 .terminal-clear:hover {
   color: #aaa;
+}
+
+.terminal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.terminal-scroll-toggle {
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  color: #6a9955;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  transition: color 0.15s, border-color 0.15s;
+}
+.terminal-scroll-toggle:hover {
+  border-color: #555;
+  color: #9cdcfe;
+}
+.terminal-scroll-toggle.paused {
+  color: #d7ba7d;
 }
 
 .terminal-body {
