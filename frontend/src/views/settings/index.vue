@@ -6,33 +6,33 @@
 
         <!-- Tab 1: General Config -->
         <el-tab-pane label="基本配置" name="general">
-          <el-form label-width="144px" label-position="left" v-loading="configLoading" class="settings-form">
+          <el-form label-width="144px" label-position="right" v-loading="configLoading" class="settings-form">
             <el-form-item label="录制目录">
-              <el-input v-model="config.TARGET_DIR" placeholder="/path/to/recordings" style="max-width: 520px" />
+              <el-input v-model="config.TARGET_DIR" placeholder="/path/to/recordings" class="mono-input" style="max-width: 520px" />
             </el-form-item>
             <el-form-item label="合并保护期(分钟)" :class="{ 'field-highlight': highlightFields.includes('MERGE_AGE_MINUTES') }">
-              <el-input-number v-model="config.MERGE_AGE_MINUTES" :min="5" :max="1440" />
+              <el-input-number v-model="config.MERGE_AGE_MINUTES" :min="5" :max="1440" class="compact-counter" />
             </el-form-item>
             <el-form-item label="片段间隔(分钟)" :class="{ 'field-highlight': highlightFields.includes('GAP_MINUTES') }">
-              <el-input-number v-model="config.GAP_MINUTES" :min="1" :max="120" />
+              <el-input-number v-model="config.GAP_MINUTES" :min="1" :max="120" class="compact-counter" />
             </el-form-item>
             <el-form-item label="安全模式" :class="{ 'field-highlight': highlightFields.includes('SAFE_MODE') }">
-              <el-select v-model="config.SAFE_MODE" style="width: 200px" @change="onSafeModeChange">
+              <el-select v-model="config.SAFE_MODE" class="compact-select" @change="onSafeModeChange">
                 <el-option label="按小时" value="hours" />
                 <el-option label="按天" value="days" />
               </el-select>
             </el-form-item>
             <el-form-item v-if="config.SAFE_MODE === 'hours'" label="清理保护期(分钟)" :class="{ 'field-highlight': highlightFields.includes('SAFE_AGE_MINUTES') }">
-              <el-input-number v-model="config.SAFE_AGE_MINUTES" :min="10" :max="1440" />
+              <el-input-number v-model="config.SAFE_AGE_MINUTES" :min="10" :max="1440" class="compact-counter" />
             </el-form-item>
             <el-form-item v-if="config.SAFE_MODE === 'days'" label="清理保护期(天)">
-              <el-input-number v-model="config.SAFE_DAYS" :min="1" :max="365" />
+              <el-input-number v-model="config.SAFE_DAYS" :min="1" :max="365" class="compact-counter" />
             </el-form-item>
             <el-form-item label="单次最大删除数" :class="{ 'field-highlight': highlightFields.includes('MAX_DELETE_PER_RUN') }">
-              <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" />
+              <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" class="compact-counter" />
             </el-form-item>
             <el-form-item label="白名单关键词">
-              <el-input v-model="config.WHITELIST_KEYWORDS" placeholder="关键词用英文逗号分隔" style="max-width: 520px" />
+              <el-input v-model="config.WHITELIST_KEYWORDS" placeholder="关键词用英文逗号分隔" class="mono-input" style="max-width: 520px" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" :loading="savingConfig" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
@@ -962,6 +962,15 @@ onActivated(async () => {
   white-space: pre-wrap;
   word-break: break-word;
   min-height: 120px;
+}
+
+/* Basic config — compact counters & mono inputs */
+.compact-counter,
+.compact-select {
+  width: 120px !important;
+}
+.mono-input :deep(.el-input__inner) {
+  font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
 }
 
 /* Emergency clean dialog — compact geek overrides */
