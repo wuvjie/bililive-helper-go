@@ -58,10 +58,6 @@
             <el-form-item label="每主播最少保留">
               <el-input-number v-model="config.MIN_KEEP_PER_STREAMER" :min="1" :max="50" />
             </el-form-item>
-            <el-form-item>
-              <el-button type="primary" :loading="savingConfig" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
-            </el-form-item>
-            <el-divider />
             <el-form-item label="清理预估">
               <span v-if="cleanEstimate" class="clean-estimate">
                 预计清理 <span class="ctx-num">{{ cleanEstimate.file_count }}</span> 个文件，共释放 <span class="ctx-num-green">{{ cleanEstimate.total_size_gb?.toFixed(2) }} GB</span>
@@ -69,10 +65,13 @@
               <span v-else class="placeholder">加载中...</span>
             </el-form-item>
             <el-form-item>
-              <button class="ops-action ops-emergency" @click="emergencyDialogVisible = true">
-                <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                紧急清理
-              </button>
+              <div class="storage-actions">
+                <el-button type="primary" :loading="savingConfig" @click="handleSaveConfig">保存配置</el-button>
+                <button class="emergency-trigger" @click="emergencyDialogVisible = true">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>紧急清理...</span>
+                </button>
+              </div>
             </el-form-item>
           </el-form>
         </el-tab-pane>
@@ -257,11 +256,19 @@
               <div class="backup-card-header">
                 <span>📥</span><span>导入配置</span>
               </div>
-              <p class="backup-desc">在下方粘贴合法的备份 JSON，恢复将覆盖当前所有设置。</p>
+              <p class="backup-desc">在下方粘贴合法的备份 JSON，或选择一个 JSON 文件导入，恢复将覆盖当前所有设置。</p>
+              <input
+                ref="importFileRef"
+                type="file"
+                accept=".json"
+                style="display: none"
+                @change="handleFileSelect"
+              />
+              <button class="btn-ghost-file" @click="importFileRef?.click()">📂 选择 JSON 文件</button>
               <textarea
                 class="backup-textarea"
                 v-model="importJson"
-                placeholder="粘贴配置 JSON 字符串于此..."
+                placeholder="或在此粘贴配置 JSON 字符串..."
               />
               <div class="backup-card-footer">
                 <button class="btn-primary btn-full" @click="handleImport">导入恢复</button>
@@ -277,12 +284,17 @@
     <el-dialog
       v-model="emergencyDialogVisible"
       title="紧急清理"
-      width="560px"
+      width="440px"
+      class="emergency-dialog"
       :close-on-click-modal="!emergencySSE.isRunning.value"
       destroy-on-close
       @close="closeEmergencyDialog"
     >
       <div v-if="!emergencySSE.lines.value.length" class="emergency-form">
+        <div class="emergency-title-row">
+          <span class="emergency-dot"></span>
+          <span class="emergency-title">紧急磁盘清理</span>
+        </div>
         <p class="emergency-desc">将临时降低磁盘使用率目标阈值，强制清理到指定百分比以下。清理结束后阈值自动恢复。</p>
         <div class="emergency-input-row">
           <span class="emergency-label">目标磁盘百分比</span>
@@ -294,7 +306,7 @@
       <template #footer>
         <button
           v-if="!emergencySSE.lines.value.length"
-          class="btn-primary"
+          class="emergency-confirm"
           :disabled="emergencyLoading"
           @click="handleEmergencyClean"
         >
@@ -302,8 +314,7 @@
         </button>
         <button
           v-else-if="emergencySSE.isRunning.value"
-          class="btn-primary"
-          style="background: #e03131; border-color: #e03131;"
+          class="emergency-confirm"
           @click="emergencySSE.abort()"
         >
           中止
@@ -321,7 +332,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, nextTick, onMounted, onActivated } from "vue";
+import { ref, reactive, computed, watch, onMounted, onActivated } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigRecommend, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
@@ -356,6 +367,7 @@ const cleanEstimate = ref<CleanEstimate>();
 const recommend = ref<ConfigRecommend>();
 const exportJson = ref("");
 const importJson = ref("");
+const importFileRef = ref<HTMLInputElement | null>(null);
 
 const taskRunning = ref(false);
 
@@ -478,18 +490,10 @@ async function loadRecommend() {
   }
 }
 
-function applyRecommend() {
+async function applyRecommend() {
   if (!recommend.value) return;
   const r = recommend.value;
-  const fieldsToHighlight: string[] = [];
-  if (config.value.TRIGGER_THRESHOLD !== r.TRIGGER_THRESHOLD) fieldsToHighlight.push("TRIGGER_THRESHOLD");
-  if (config.value.TARGET_THRESHOLD !== r.TARGET_THRESHOLD) fieldsToHighlight.push("TARGET_THRESHOLD");
-  if (config.value.MIN_KEEP_PER_STREAMER !== r.MIN_KEEP_PER_STREAMER) fieldsToHighlight.push("MIN_KEEP_PER_STREAMER");
-  if (config.value.SAFE_AGE_MINUTES !== r.SAFE_AGE_MINUTES) fieldsToHighlight.push("SAFE_AGE_MINUTES");
-  if (config.value.SAFE_MODE !== r.SAFE_MODE) fieldsToHighlight.push("SAFE_MODE");
-  if (config.value.MERGE_AGE_MINUTES !== r.MERGE_AGE_MINUTES) fieldsToHighlight.push("MERGE_AGE_MINUTES");
-  if (config.value.MAX_DELETE_PER_RUN !== r.MAX_DELETE_PER_RUN) fieldsToHighlight.push("MAX_DELETE_PER_RUN");
-  if (config.value.GAP_MINUTES !== r.GAP_MINUTES) fieldsToHighlight.push("GAP_MINUTES");
+  suppressDirty = true;
   config.value.TRIGGER_THRESHOLD = r.TRIGGER_THRESHOLD;
   config.value.TARGET_THRESHOLD = r.TARGET_THRESHOLD;
   config.value.MIN_KEEP_PER_STREAMER = r.MIN_KEEP_PER_STREAMER;
@@ -498,12 +502,14 @@ function applyRecommend() {
   config.value.MERGE_AGE_MINUTES = r.MERGE_AGE_MINUTES;
   config.value.MAX_DELETE_PER_RUN = r.MAX_DELETE_PER_RUN;
   config.value.GAP_MINUTES = r.GAP_MINUTES;
-  activeTab.value = "general";
-  nextTick(() => {
-    highlightFields.value = fieldsToHighlight;
-    setTimeout(() => { highlightFields.value = []; }, 3000);
-  });
-  ElMessage.success("已填入推荐值，请手动保存");
+  suppressDirty = false;
+  try {
+    await handleSaveConfig();
+    ElMessage.success("推荐值已保存");
+  } catch {
+    // handleSaveConfig already showed the error (e.g. threshold validation);
+    // leave isDirty true so the user can manually adjust and save
+  }
 }
 
 async function handleExport() {
@@ -521,6 +527,26 @@ async function handleExport() {
   } catch {
     // Error handled by interceptor
   }
+}
+
+function handleFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target?.result;
+    if (typeof text === "string") {
+      importJson.value = text;
+      ElMessage.success(`已加载文件: ${file.name}`);
+    }
+  };
+  reader.onerror = () => {
+    ElMessage.error("文件读取失败");
+  };
+  reader.readAsText(file);
+  // Reset input so the same file can be selected again
+  input.value = "";
 }
 
 async function handleImport() {
@@ -711,6 +737,18 @@ onActivated(async () => {
   font-family: var(--font-mono); font-weight: 500; color: #448361;
 }
 
+/* Storage actions row — save + emergency side by side */
+.storage-actions { display: flex; align-items: center; gap: 12px; }
+.emergency-trigger {
+  background: transparent; border: none; padding: 0; cursor: pointer;
+  font-size: 12px; font-weight: 500; color: #888;
+  display: flex; align-items: center; gap: 4px;
+  transition: color 0.15s;
+}
+.emergency-trigger:hover { color: #e0564c; }
+.emergency-trigger svg { width: 14px; height: 14px; color: #aeaeb2; transition: color 0.15s; }
+.emergency-trigger:hover svg { color: #e0564c; }
+
 /* Section divider — replaces el-divider for cleaner Notion look */
 .section-divider {
   font-size: 13px; font-weight: 600; color: var(--ink);
@@ -812,6 +850,16 @@ onActivated(async () => {
 }
 .btn-primary:hover { background: var(--primary-pressed); }
 
+/* Emergency confirm button — red destructive action */
+.emergency-confirm {
+  height: 36px; padding: 0 20px;
+  background: #e0564c; border: 1px solid #e0564c;
+  border-radius: var(--r-md); font-size: 13px; font-weight: 500;
+  color: #fff; cursor: pointer; transition: all 0.15s;
+}
+.emergency-confirm:hover { background: #c7463d; border-color: #c7463d; }
+.emergency-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* Backup tab — dual card split layout */
 .backup-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
@@ -848,6 +896,15 @@ onActivated(async () => {
 .backup-spacer { flex: 1; min-height: 0; }
 .backup-hint { font-size: 12px; color: var(--stone); margin: -8px 0 8px 144px; }
 .btn-full { width: 100%; }
+.btn-ghost-file {
+  width: 100%; height: 36px;
+  background: var(--canvas); border: 1px dashed var(--hairline);
+  border-radius: var(--r-md); font-size: 13px; font-weight: 500;
+  color: var(--steel); cursor: pointer; transition: all 0.15s;
+}
+.btn-ghost-file:hover {
+  color: var(--ink); border-color: var(--ink); background: var(--highlight);
+}
 
 .recommend-actions { margin-top: 12px; }
 
@@ -873,21 +930,20 @@ onActivated(async () => {
   background: var(--highlight) !important;
 }
 
-/* Emergency clean — ghost action button */
-.ops-action {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: transparent; border: none; padding: 0;
-  font-size: 13px; font-weight: 500; color: var(--steel);
-  cursor: pointer; transition: color 0.15s;
+/* Emergency dialog internal layout */
+.emergency-title-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
 }
-.ops-action:hover:not(:disabled) { color: var(--ink); }
-.ops-action:disabled { color: #c7c7cc; cursor: not-allowed; }
-.ops-icon { width: 14px; height: 14px; flex-shrink: 0; }
-.ops-emergency:hover:not(:disabled) { color: #c4554d !important; }
-
-/* Emergency clean dialog */
-.emergency-form { display: flex; flex-direction: column; gap: 16px; }
-.emergency-desc { font-size: 13px; color: var(--slate); line-height: 1.6; }
+.emergency-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #e0564c; flex-shrink: 0;
+}
+.emergency-title {
+  font-size: 14px; font-weight: 600; color: var(--ink);
+}
+.emergency-form { display: flex; flex-direction: column; gap: 12px; }
+.emergency-desc { font-size: 13px; color: var(--slate); line-height: 1.6; margin: 0; }
 .emergency-input-row {
   display: flex; align-items: center; gap: 12px;
 }
@@ -908,17 +964,23 @@ onActivated(async () => {
   word-break: break-word;
   min-height: 120px;
 }
-.settings :deep(.el-dialog) {
-  border-radius: 12px !important;
+
+/* Emergency clean dialog — compact geek overrides */
+:deep(.emergency-dialog .el-dialog) {
+  max-width: 440px;
+  border-radius: 6px;
   overflow: hidden;
 }
-.settings :deep(.el-dialog__header) {
-  padding: 16px 24px;
-  border-bottom: 1px solid #f1f1ef;
-  margin-right: 0;
+:deep(.emergency-dialog .el-dialog__header) {
+  padding: 16px 20px 8px;
+  border-bottom: none;
 }
-.settings :deep(.el-dialog__footer) {
-  padding: 12px 24px;
+:deep(.emergency-dialog .el-dialog__body) {
+  padding: 8px 20px 16px;
+}
+:deep(.emergency-dialog .el-dialog__footer) {
+  padding: 12px 20px;
+  background: rgba(250, 250, 250, 0.5);
   border-top: 1px solid #f1f1ef;
 }
 </style>
