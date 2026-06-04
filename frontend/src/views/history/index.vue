@@ -9,6 +9,7 @@
               <el-option label="合并" value="merge" />
               <el-option label="清理" value="clean" />
               <el-option label="配置" value="config" />
+              <el-option label="调度" value="schedule" />
             </el-select>
             <span class="action-divider"></span>
             <button class="text-action" @click="loadHistory(currentPage)">
@@ -129,7 +130,7 @@ async function loadHistory(page: number) {
 }
 
 function taskLabel(task: string) {
-  const map: Record<string, string> = { merge: "合并", clean: "清理", config: "配置" };
+  const map: Record<string, string> = { merge: "合并", clean: "清理", config: "配置", schedule: "调度" };
   return map[task] || task;
 }
 
