@@ -138,7 +138,7 @@
           >
             <div class="recent-left">
               <span class="recent-icon" :class="row.status === 'failed' ? 'icon-error' : ''">
-                {{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : '⚙️' }}
+                {{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}
               </span>
               <span class="recent-who">{{ row.streamer || '全局' }}</span>
               <span class="recent-action">{{ row.detail || formatDetail(row) }}</span>
