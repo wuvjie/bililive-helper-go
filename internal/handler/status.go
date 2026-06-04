@@ -214,12 +214,16 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 	for _, si := range infos {
 		totalPendingCount += si.pendingCount
 		totalPendingSize += si.pendingSize
+		var mtime int64
+		if !si.latestTime.IsZero() {
+			mtime = si.latestTime.Unix()
+		}
 		streamers = append(streamers, gin.H{
 			"name":       si.name,
 			"files":      si.count,
 			"size_bytes": si.size,
 			"size_gb":    float64(int(float64(si.size)/1073741824*100)) / 100,
-			"mtime":      si.latestTime.Unix(),
+			"mtime":      mtime,
 		})
 	}
 
