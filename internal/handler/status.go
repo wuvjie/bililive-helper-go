@@ -153,11 +153,12 @@ func (h *Handler) GetStreamers(c *gin.Context) {
 // scanAllStreamers 一次性扫描所有主播目录，返回主播列表、待合并文件数和总大小。
 func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 	type streamerInfo struct {
-		name        string
-		size        int64
-		count       int
+		name         string
+		size         int64
+		count        int
 		pendingCount int
 		pendingSize  int64
+		latestTime   time.Time
 	}
 
 	entries, err := os.ReadDir(root)
@@ -174,6 +175,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 		folderEntries, _ := os.ReadDir(folder)
 		var totalSize, pendSize int64
 		var totalCount, pendCount int
+		var latest time.Time
 		for _, fe := range folderEntries {
 			if fe.IsDir() {
 				continue
@@ -188,6 +190,9 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			}
 			totalSize += info.Size()
 			totalCount++
+			if info.ModTime().After(latest) {
+				latest = info.ModTime()
+			}
 			if !utils.IsMergedFile(name) {
 				pendSize += info.Size()
 				pendCount++
@@ -195,7 +200,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 		}
 		infos = append(infos, streamerInfo{
 			name: entry.Name(), size: totalSize, count: totalCount,
-			pendingCount: pendCount, pendingSize: pendSize,
+			pendingCount: pendCount, pendingSize: pendSize, latestTime: latest,
 		})
 	}
 
@@ -214,6 +219,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			"files":      si.count,
 			"size_bytes": si.size,
 			"size_gb":    float64(int(float64(si.size)/1073741824*100)) / 100,
+			"mtime":      si.latestTime.Unix(),
 		})
 	}
 
