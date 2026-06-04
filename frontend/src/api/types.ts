@@ -123,10 +123,38 @@ export interface CleanEstimate {
   total_size_gb: number;
 }
 
+export interface ConfigAnalysis {
+  streamer_count: number;
+  total_videos: number;
+  merged_count: number;
+  daily_output_gb: number;
+  days_until_full: number;
+}
+
+export interface ConfigDTO {
+  TARGET_DIR: string;
+  TRIGGER_THRESHOLD: number;
+  TARGET_THRESHOLD: number;
+  MIN_KEEP_PER_STREAMER: number;
+  SAFE_AGE_MINUTES: number;
+  GAP_MINUTES: number;
+  MERGE_AGE_MINUTES: number;
+  WHITELIST_KEYWORDS: string[];
+  SAFE_MODE: string;
+  SAFE_DAYS: number;
+  MAX_DELETE_PER_RUN: number;
+  BACKUP_START_HOUR: number;
+  BACKUP_START_MINUTE: number;
+  BACKUP_END_HOUR: number;
+  BACKUP_END_MINUTE: number;
+  PORT: number;
+  LOG_DIR: string;
+}
+
 export interface ConfigRecommend {
   risk_level: string;
   reason: string;
-  analysis: Record<string, any>;
+  analysis: ConfigAnalysis;
   current_usage: number;
   total_gb: number;
   free_gb: number;

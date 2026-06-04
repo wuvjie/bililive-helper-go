@@ -193,7 +193,7 @@ func (s *SchedulerService) runTask(task string) {
 			utils.NotifyWebhook(fmt.Sprintf("自动合并完成：%d 场次 (%.1f GB)", res.Done, res.TotalGB))
 		}
 	case "clean":
-		res, err := s.clean.Run("", nil)
+		res, err := s.clean.Run(s.ctx, "", nil)
 		if err != nil {
 			s.logToFile(task, fmt.Sprintf("❌ 清理失败: %v", err))
 		} else if res != nil && res.Deleted > 0 {

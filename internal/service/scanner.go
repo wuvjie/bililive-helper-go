@@ -41,6 +41,12 @@ type convertTask struct {
 	Name    string
 }
 
+const (
+	recordingActiveThreshold = 5 * time.Minute // 录制活跃判定阈值：最新文件在此时间内被认为还在录制
+	defaultGapMinutes        = 30              // 场次间隔回退值：未配置时的默认分钟数
+	defaultMergeAgeMinutes   = 30              // 合并安全期回退值：未配置时的默认分钟数
+)
+
 // isFileBeingWritten 通过比较两次文件大小来检测文件是否正在被写入。
 // 文件缺失、不可访问或大小变化时返回 true。
 
@@ -93,7 +99,7 @@ func (s *MergeService) getVideoFiles(folder string) []videoFile {
 		ext := strings.ToLower(filepath.Ext(name))
 		if ext == ".mp4" {
 			// Only consider MP4 files that are large enough to be valid
-			if info, err := entry.Info(); err == nil && info.Size() >= 10240 {
+			if info, err := entry.Info(); err == nil && info.Size() >= minValidFileSize {
 				base := strings.TrimSuffix(name, ext)
 				mp4Bases[base] = true
 			}
@@ -171,7 +177,7 @@ func isStreamActive(folder string, batchKey string) bool {
 		return false
 	}
 	// 最新文件在最近 5 分钟内被修改 → 认为还在录制
-	return time.Since(newestMtime) < 5*time.Minute
+	return time.Since(newestMtime) < recordingActiveThreshold
 }
 
 // scanTasks 扫描录制目录，将文件按主播分组、按时间排序、按间隔分场次。
@@ -186,7 +192,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 
 	gapMinutes := cfg.GapMinutes
 	if gapMinutes <= 0 {
-		gapMinutes = 30
+		gapMinutes = defaultGapMinutes
 	}
 
 	for _, entry := range entries {
@@ -252,12 +258,12 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 				actualOutputPath := outputPath
 				if strings.HasSuffix(outputName, ".flv") {
 					mp4Path := strings.TrimSuffix(outputPath, ".flv") + ".mp4"
-					if info, err := os.Stat(mp4Path); err == nil && info.Size() >= 10240 {
+					if info, err := os.Stat(mp4Path); err == nil && info.Size() >= minValidFileSize {
 						actualOutputPath = mp4Path
 					}
 				}
 
-				if info, err := os.Stat(actualOutputPath); err == nil && info.Size() >= 10240 {
+				if info, err := os.Stat(actualOutputPath); err == nil && info.Size() >= minValidFileSize {
 					if ffmpeg.QuickProbe(context.Background(), actualOutputPath) == nil {
 						for _, v := range batch {
 							utils.SafeUnlink(filepath.Join(folder, v.Name))
@@ -314,7 +320,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 						ageMin := time.Since(flvInfo.ModTime()).Minutes()
 						mergeAgeMin := float64(cfg.MergeAgeMinutes)
 						if mergeAgeMin <= 0 {
-							mergeAgeMin = 30
+							mergeAgeMin = defaultMergeAgeMinutes
 						}
 						if ageMin < mergeAgeMin {
 							s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %s → 等待安全期（%.0f分钟前，需%.0f分钟）", entry.Name(), singleName, ageMin, mergeAgeMin))
@@ -323,7 +329,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 
 						mp4Name := utils.MakeMP4Name(singleName)
 						mp4Path := filepath.Join(folder, mp4Name)
-						if mp4Info, err := os.Stat(mp4Path); err == nil && mp4Info.Size() >= 10240 {
+						if mp4Info, err := os.Stat(mp4Path); err == nil && mp4Info.Size() >= minValidFileSize {
 							if ffmpeg.QuickProbe(context.Background(), mp4Path) == nil {
 								utils.SafeUnlink(flvPath)
 								s.logToFile("merge", fmt.Sprintf("[%s] ✅ %s → 已有MP4，清理FLV", entry.Name(), singleName))
@@ -361,7 +367,7 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 				ageMinutes := time.Since(latestMtime).Minutes()
 				mergeAgeMinutes := float64(cfg.MergeAgeMinutes)
 				if mergeAgeMinutes <= 0 {
-					mergeAgeMinutes = 30
+					mergeAgeMinutes = defaultMergeAgeMinutes
 				}
 
 				if ageMinutes < mergeAgeMinutes {
@@ -374,11 +380,11 @@ func (s *MergeService) scanTasks(root, streamer string, cfg config.Config) ([]me
 					continue
 				}
 
-				s.logToFile("merge", fmt.Sprintf("[%s] 🔗 %d个文件 (%.1f GB) → 待合并", entry.Name(), len(names), float64(size)/1073741824))
+				s.logToFile("merge", fmt.Sprintf("[%s] 🔗 %d个文件 (%.1f GB) → 待合并", entry.Name(), len(names), float64(size)/oneGB))
 				tasks = append(tasks, mergeTask{
 					Files:  names,
 					Folder: folder,
-					SizeGB: float64(size) / 1073741824,
+					SizeGB: float64(size) / oneGB,
 				})
 			}
 		}

@@ -273,7 +273,7 @@ import { getConfig, saveConfig, getConfigRecommend, getConfigExport, importConfi
 import { getSchedule, saveSchedule, runTask } from "@/api/schedule";
 import { setupCheck } from "@/api/setup";
 import { getCleanEstimate } from "@/api/task";
-import type { ScheduleStatus, SetupCheck, CleanEstimate, ConfigRecommend } from "@/api/types";
+import type { ScheduleStatus, SetupCheck, CleanEstimate, ConfigRecommend, ConfigDTO } from "@/api/types";
 
 const activeTab = ref("general");
 const saving = ref(false);
@@ -283,7 +283,7 @@ const diagLoading = ref(false);
 const recommendLoading = ref(false);
 
 // Using ref instead of reactive for the config object to allow full replacement from API response
-const config = ref<Record<string, any>>({});
+const config = ref<ConfigDTO>({} as ConfigDTO);
 const scheduleForm = reactive({
   merge_enabled: true,
   clean_enabled: true,
@@ -422,7 +422,7 @@ async function handleImport() {
     const c = await getConfig();
     config.value = c;
     if (Array.isArray(c.WHITELIST_KEYWORDS)) {
-      config.value.WHITELIST_KEYWORDS = c.WHITELIST_KEYWORDS.join(", ");
+      (config.value as Record<string, unknown>).WHITELIST_KEYWORDS = c.WHITELIST_KEYWORDS.join(", ");
     }
   } catch (e: any) {
     if (e instanceof SyntaxError) {
@@ -454,7 +454,7 @@ onMounted(async () => {
   if (c.status === "fulfilled") {
     config.value = c.value;
     if (Array.isArray(c.value.WHITELIST_KEYWORDS)) {
-      config.value.WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
+      (config.value as Record<string, unknown>).WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
     }
     const cv = c.value;
     if (cv.BACKUP_START_HOUR != null) {
@@ -486,7 +486,7 @@ onActivated(async () => {
   if (c.status === "fulfilled") {
     config.value = c.value;
     if (Array.isArray(c.value.WHITELIST_KEYWORDS)) {
-      config.value.WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
+      (config.value as Record<string, unknown>).WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
     }
   }
   if (s.status === "fulfilled") {

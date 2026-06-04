@@ -1,8 +1,8 @@
 import { get, post } from "@/utils/http";
-import type { ConfigRecommend } from "./types";
+import type { ConfigDTO, ConfigRecommend } from "./types";
 
 export function getConfig() {
-  return get<Record<string, any>>("/config");
+  return get<ConfigDTO>("/config");
 }
 
 export function saveConfig(data: Record<string, any>) {
