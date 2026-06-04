@@ -3,6 +3,7 @@ export interface StreamerInfo {
   files: number;
   size_bytes: number;
   size_gb: number;
+  mtime: number;
 }
 
 export interface DiskInfo {

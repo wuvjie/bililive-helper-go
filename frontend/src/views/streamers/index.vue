@@ -49,6 +49,12 @@
           </template>
         </el-table-column>
 
+        <el-table-column prop="mtime" label="最新视频" width="140" align="right" header-align="right" sortable>
+          <template #default="{ row }">
+            <span class="mono-val">{{ row.mtime ? formatRelativeTime(row.mtime) : '-' }}</span>
+          </template>
+        </el-table-column>
+
         <el-table-column label="操作" width="100" align="right" header-align="right">
           <template #default="{ row }">
             <button class="ghost-action" @click="goToTasks(row.name)">管理文件</button>
@@ -79,6 +85,16 @@ const filteredStreamers = computed(() => {
 
 function goToTasks(name: string) {
   router.push({ path: "/tasks", query: { streamer: name } });
+}
+
+function formatRelativeTime(ts: number): string {
+  const diff = Date.now() / 1000 - ts;
+  if (diff < 60) return "刚刚";
+  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
+  if (diff < 2592000) return `${Math.floor(diff / 86400)} 天前`;
+  const d = new Date(ts * 1000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 onMounted(async () => {
