@@ -10,32 +10,32 @@
             <el-form-item label="录制目录">
               <el-input v-model="config.TARGET_DIR" placeholder="/path/to/recordings" style="max-width: 520px" />
             </el-form-item>
-            <el-form-item label="合并保护期(分钟)">
+            <el-form-item label="合并保护期(分钟)" :class="{ 'field-highlight': highlightFields.includes('MERGE_AGE_MINUTES') }">
               <el-input-number v-model="config.MERGE_AGE_MINUTES" :min="5" :max="1440" />
             </el-form-item>
-            <el-form-item label="片段间隔(分钟)">
+            <el-form-item label="片段间隔(分钟)" :class="{ 'field-highlight': highlightFields.includes('GAP_MINUTES') }">
               <el-input-number v-model="config.GAP_MINUTES" :min="1" :max="120" />
             </el-form-item>
-            <el-form-item label="安全模式">
+            <el-form-item label="安全模式" :class="{ 'field-highlight': highlightFields.includes('SAFE_MODE') }">
               <el-select v-model="config.SAFE_MODE" style="width: 200px" @change="onSafeModeChange">
                 <el-option label="按小时" value="hours" />
                 <el-option label="按天" value="days" />
               </el-select>
             </el-form-item>
-            <el-form-item v-if="config.SAFE_MODE === 'hours'" label="清理保护期(分钟)">
+            <el-form-item v-if="config.SAFE_MODE === 'hours'" label="清理保护期(分钟)" :class="{ 'field-highlight': highlightFields.includes('SAFE_AGE_MINUTES') }">
               <el-input-number v-model="config.SAFE_AGE_MINUTES" :min="10" :max="1440" />
             </el-form-item>
             <el-form-item v-if="config.SAFE_MODE === 'days'" label="清理保护期(天)">
               <el-input-number v-model="config.SAFE_DAYS" :min="1" :max="365" />
             </el-form-item>
-            <el-form-item label="单次最大删除数">
+            <el-form-item label="单次最大删除数" :class="{ 'field-highlight': highlightFields.includes('MAX_DELETE_PER_RUN') }">
               <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" />
             </el-form-item>
             <el-form-item label="白名单关键词">
               <el-input v-model="config.WHITELIST_KEYWORDS" placeholder="关键词用英文逗号分隔" style="max-width: 520px" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="saving" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
+              <el-button type="primary" :loading="savingConfig" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
             </el-form-item>
           </el-form>
         </el-tab-pane>
@@ -59,7 +59,7 @@
               <el-input-number v-model="config.MIN_KEEP_PER_STREAMER" :min="1" :max="50" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="saving" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
+              <el-button type="primary" :loading="savingConfig" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
             </el-form-item>
             <el-divider />
             <el-form-item label="清理预估">
@@ -101,8 +101,9 @@
             <el-form-item label="结束时间">
               <el-time-picker v-model="backupEnd" format="HH:mm" value-format="HH:mm" style="width: 160px" />
             </el-form-item>
+            <div class="backup-hint">支持跨午夜，如 23:00 - 06:00</div>
             <el-form-item>
-              <el-button type="primary" :loading="saving" style="width: 128px" @click="handleSaveSchedule">保存计划</el-button>
+              <el-button type="primary" :loading="savingSchedule" style="width: 128px" @click="handleSaveSchedule">保存计划</el-button>
             </el-form-item>
             <div class="section-divider">🎮 手动触发</div>
             <el-form-item>
@@ -320,7 +321,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onActivated } from "vue";
+import { ref, reactive, computed, watch, nextTick, onMounted, onActivated } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigRecommend, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
@@ -331,11 +332,13 @@ import { useSSE } from "@/utils/sse";
 import type { ScheduleStatus, SetupCheck, CleanEstimate, ConfigRecommend, ConfigDTO } from "@/api/types";
 
 const activeTab = ref("general");
-const saving = ref(false);
+const savingConfig = ref(false);
+const savingSchedule = ref(false);
 const configLoading = ref(false);
 const scheduleLoading = ref(false);
 const diagLoading = ref(false);
 const recommendLoading = ref(false);
+const highlightFields = ref<string[]>([]);
 
 // Using ref instead of reactive for the config object to allow full replacement from API response
 const config = ref<ConfigDTO>({} as ConfigDTO);
@@ -430,7 +433,7 @@ async function handleSaveConfig() {
     ElMessage.error("触发阈值必须大于目标阈值，请调整后重试");
     return;
   }
-  saving.value = true;
+  savingConfig.value = true;
   try {
     const payload = { ...config.value };
     if (typeof payload.WHITELIST_KEYWORDS === "string") {
@@ -440,12 +443,12 @@ async function handleSaveConfig() {
     isDirty.value = false;
     ElMessage.success("配置已保存");
   } finally {
-    saving.value = false;
+    savingConfig.value = false;
   }
 }
 
 async function handleSaveSchedule() {
-  saving.value = true;
+  savingSchedule.value = true;
   try {
     const data: Record<string, any> = { ...scheduleForm };
     if (backupStart.value) {
@@ -462,7 +465,7 @@ async function handleSaveSchedule() {
     isDirty.value = false;
     ElMessage.success("计划已保存");
   } finally {
-    saving.value = false;
+    savingSchedule.value = false;
   }
 }
 
@@ -478,6 +481,15 @@ async function loadRecommend() {
 function applyRecommend() {
   if (!recommend.value) return;
   const r = recommend.value;
+  const fieldsToHighlight: string[] = [];
+  if (config.value.TRIGGER_THRESHOLD !== r.TRIGGER_THRESHOLD) fieldsToHighlight.push("TRIGGER_THRESHOLD");
+  if (config.value.TARGET_THRESHOLD !== r.TARGET_THRESHOLD) fieldsToHighlight.push("TARGET_THRESHOLD");
+  if (config.value.MIN_KEEP_PER_STREAMER !== r.MIN_KEEP_PER_STREAMER) fieldsToHighlight.push("MIN_KEEP_PER_STREAMER");
+  if (config.value.SAFE_AGE_MINUTES !== r.SAFE_AGE_MINUTES) fieldsToHighlight.push("SAFE_AGE_MINUTES");
+  if (config.value.SAFE_MODE !== r.SAFE_MODE) fieldsToHighlight.push("SAFE_MODE");
+  if (config.value.MERGE_AGE_MINUTES !== r.MERGE_AGE_MINUTES) fieldsToHighlight.push("MERGE_AGE_MINUTES");
+  if (config.value.MAX_DELETE_PER_RUN !== r.MAX_DELETE_PER_RUN) fieldsToHighlight.push("MAX_DELETE_PER_RUN");
+  if (config.value.GAP_MINUTES !== r.GAP_MINUTES) fieldsToHighlight.push("GAP_MINUTES");
   config.value.TRIGGER_THRESHOLD = r.TRIGGER_THRESHOLD;
   config.value.TARGET_THRESHOLD = r.TARGET_THRESHOLD;
   config.value.MIN_KEEP_PER_STREAMER = r.MIN_KEEP_PER_STREAMER;
@@ -487,6 +499,10 @@ function applyRecommend() {
   config.value.MAX_DELETE_PER_RUN = r.MAX_DELETE_PER_RUN;
   config.value.GAP_MINUTES = r.GAP_MINUTES;
   activeTab.value = "general";
+  nextTick(() => {
+    highlightFields.value = fieldsToHighlight;
+    setTimeout(() => { highlightFields.value = []; }, 3000);
+  });
   ElMessage.success("已填入推荐值，请手动保存");
 }
 
@@ -514,6 +530,15 @@ async function handleImport() {
   }
   try {
     const data = JSON.parse(importJson.value);
+    try {
+      await ElMessageBox.confirm(
+        "导入将覆盖当前所有配置，是否继续？",
+        "确认导入配置",
+        { confirmButtonText: "导入", cancelButtonText: "取消", type: "warning" }
+      );
+    } catch {
+      return;
+    }
     await apiImportConfig(data);
     ElMessage.success("导入成功");
     suppressDirty = true;
@@ -534,10 +559,20 @@ async function handleImport() {
 }
 
 async function triggerManualTask(task: "merge" | "clean") {
+  const label = task === "merge" ? "合并" : "清理";
+  try {
+    await ElMessageBox.confirm(
+      `即将手动触发${label}任务，是否继续？`,
+      `确认执行${label}`,
+      { confirmButtonText: "执行", cancelButtonText: "取消", type: "warning" }
+    );
+  } catch {
+    return;
+  }
   taskRunning.value = true;
   try {
     await runTask(task);
-    ElMessage.success(`${task === "merge" ? "合并" : "清理"}任务已触发`);
+    ElMessage.success(`${label}任务已触发`);
   } catch {
     // Error handled by interceptor
   } finally {
@@ -651,6 +686,15 @@ onActivated(async () => {
 /* Input Number — mono digits */
 .settings-form :deep(.el-input__inner) {
   font-family: var(--font-mono);
+}
+
+/* Field highlight animation for recommended values */
+.field-highlight {
+  animation: highlight-pulse 3s ease-out forwards;
+}
+@keyframes highlight-pulse {
+  0% { background: #fdf6e3; border-radius: 6px; }
+  100% { background: transparent; }
 }
 
 /* Slider row — constrained to 520px matrix, vertically centered */
@@ -802,6 +846,7 @@ onActivated(async () => {
   color: var(--slate);
 }
 .backup-spacer { flex: 1; min-height: 0; }
+.backup-hint { font-size: 12px; color: var(--stone); margin: -8px 0 8px 144px; }
 .btn-full { width: 100%; }
 
 .recommend-actions { margin-top: 12px; }

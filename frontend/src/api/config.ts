@@ -10,7 +10,7 @@ export function saveConfig(data: Record<string, any>) {
 }
 
 export function getConfigRecommend() {
-  return get<ConfigRecommend>("/config/recommend");
+  return get<ConfigRecommend>("/config/recommend", undefined, { timeout: 60000 });
 }
 
 export function getConfigExport() {

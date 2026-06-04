@@ -14,5 +14,5 @@ export function getStreamers() {
 }
 
 export function getStreamerFiles(name: string) {
-  return get<StreamerFile[]>(`/streamers/${encodeURIComponent(name)}/files`);
+  return get<StreamerFile[]>(`/streamers/${encodeURIComponent(name)}/files`, undefined, { timeout: 30000 });
 }

@@ -531,7 +531,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	}
 
 	// fsync — 确保数据刷入持久存储后再删除原始文件
-	if fd, err := os.OpenFile(concatOutputPath, os.O_RDWR, 0); err == nil {
+	if fd, err := os.OpenFile(concatOutputPath, os.O_RDONLY, 0); err == nil {
 		if syncErr := fd.Sync(); syncErr != nil {
 			fd.Close()
 			s.logToFile("merge", fmt.Sprintf("❌ fsync 失败: %v，删除不可靠输出，保留原始文件", syncErr))
@@ -689,7 +689,8 @@ func SortByFilename(files []string) {
 // CleanupTempFiles 清理录制目录中的残留临时文件。
 // 包括：concat 临时文件、.mp4.tmp/.flv.tmp 文件、孤立 TS 文件、崩溃残留的 .merge_tmp_* 目录。
 func (s *MergeService) CleanupTempFiles() int {
-	root := s.config.TargetDir
+	cfg := s.config.Snapshot()
+	root := cfg.TargetDir
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		return 0

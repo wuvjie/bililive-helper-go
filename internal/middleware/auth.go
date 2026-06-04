@@ -69,8 +69,8 @@ func RateLimiter(maxPerMinute int) (gin.HandlerFunc, func()) {
 			if b.tokens > maxPerMinute {
 				b.tokens = maxPerMinute
 			}
-			b.lastFill = time.Now()
 		}
+		b.lastFill = time.Now()
 		if b.tokens <= 0 {
 			mu.Unlock()
 			c.JSON(http.StatusTooManyRequests, gin.H{"error": "请求过于频繁，请稍后再试"})
