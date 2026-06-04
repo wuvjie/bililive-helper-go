@@ -592,7 +592,8 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 }
 
 // ManualMerge 手动合并指定主播的指定文件列表。
-// 获取主播锁后校验文件合法性，然后调用 doMerge 执行合并。
+// 获取主播锁后校验文件合法性，按文件名时间排序后调用 doMerge 执行合并。
+// ctx 用于控制合并过程的取消。
 func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files []string, onProgress ProgressFunc) error {
 	name := streamer
 	locked, sl := s.tryLockStreamer(name)

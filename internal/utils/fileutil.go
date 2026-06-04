@@ -20,7 +20,7 @@ func IsVideoFile(name string) bool {
 }
 
 // ValidateFilename 校验文件名安全性，防止路径穿越攻击。
-// 拒绝空名、"."、".."、包含路径分隔符或空字节的文件名。
+// 拒绝空名、"."、".."、包含路径分隔符、管道符或空字节的文件名。
 func ValidateFilename(filename string) bool {
 	if filename == "" || filename == "." || filename == ".." {
 		return false
@@ -54,6 +54,7 @@ func SafeUnlink(path string) error {
 // MakeOutputName 根据批次中第一个文件生成合并后的输出文件名。
 // 标准格式：[YYYY-MM-DD HH-MM-SS][streamer][title]-合并版.ext
 // 若文件名不含 "]" 则回退为 stem + "-合并版" + ext。
+// 已有的 "-合并版" 后缀会被去掉，避免生成双后缀（如 xxx-合并版-合并版.mp4）。
 func MakeOutputName(firstFile string) string {
 	ext := filepath.Ext(firstFile)
 	stem := strings.TrimSuffix(firstFile, ext)
