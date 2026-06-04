@@ -169,7 +169,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	tasks, convertTasks := s.scanTasks(root, streamer, cfg)
 	if len(tasks) == 0 && len(convertTasks) == 0 {
 		s.logToFile("merge", "ℹ 无待合并文件")
-		s.history.Add("merge", streamer, "success", "无待合并文件")
+		s.history.Add("merge", streamer, "success", "扫描完成，无待合并文件")
 		onProgress("ℹ 无待合并文件")
 		return &MergeResult{}, nil
 	}
@@ -187,7 +187,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	if diskErr == nil && disk.Free < 10*1024*1024*1024 { // < 10GB free
 		s.logToFile("merge", fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过所有操作", float64(disk.Free)/1073741824))
 		onProgress(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过", float64(disk.Free)/1073741824))
-		s.history.Add("merge", streamer, "fail", fmt.Sprintf("磁盘空间不足: %.1f GB", float64(disk.Free)/1073741824))
+		s.history.Add("merge", streamer, "fail", fmt.Sprintf("磁盘空间不足: %.1f GB（使用率 %.1f%%）", float64(disk.Free)/1073741824, disk.UsedPct))
 		return &MergeResult{}, nil
 	}
 
@@ -287,7 +287,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	} else {
 		msg := fmt.Sprintf("ℹ 完成: 扫描 %d 个主播, 无需合并", totalScanned)
 		s.logToFile("merge", msg)
-		s.history.Add("merge", streamer, "success", "无新合并")
+		s.history.Add("merge", streamer, "success", fmt.Sprintf("扫描 %d 个主播，无需合并", totalScanned))
 		onProgress(msg)
 	}
 	onProgress("───────────────────────────")
@@ -629,7 +629,7 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	start := time.Now()
 	if s.doMerge(ctx, validFiles, folder, onProgress) {
 		duration := time.Since(start).Seconds()
-		s.history.AddWithStats("merge", streamer, "success", len(validFiles), 0, totalInputBytes, duration, fmt.Sprintf("手动合并 %d 个文件", len(validFiles)))
+		s.history.AddWithStats("merge", streamer, "success", len(validFiles), 0, totalInputBytes, duration, fmt.Sprintf("手动合并 %d 个文件 (%s)", len(validFiles), utils.FormatSize(totalInputBytes)))
 		onProgress(fmt.Sprintf("✅ 手动合并 %d 个文件完成", len(validFiles)))
 		return nil
 	}

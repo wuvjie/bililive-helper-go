@@ -390,6 +390,6 @@ func (h *Handler) ImportConfig(c *gin.Context) {
 		return
 	}
 
-	go h.history.Add("config", "", "success", "配置已导入")
+	go h.history.Add("config", "", "success", fmt.Sprintf("配置已导入（%d 项）", len(cfgData)))
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "配置导入成功"})
 }
