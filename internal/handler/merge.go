@@ -175,6 +175,11 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 	done := make(chan string, 1)
 	ctx := c.Request.Context()
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				done <- fmt.Sprintf("❌ 内部错误: %v", r)
+			}
+		}()
 		done <- fn(ctx, onProgress)
 	}()
 
@@ -258,12 +263,7 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 		CleanEnabled:  req.CleanEnabled,
 	}
 
-	if err := h.scheduler.SaveSchedule(schedule); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存失败"})
-		return
-	}
-
-	// 如果请求中包含静默时段字段，同步更新到配置
+	// 如果请求中包含静默时段字段，先更新配置再保存调度（保证原子性）
 	backupChanged := false
 	if req.BackupStartHour != nil || req.BackupStartMin != nil || req.BackupEndHour != nil || req.BackupEndMin != nil {
 		if err := h.config.Apply(func() error {
@@ -285,6 +285,11 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+	}
+
+	if err := h.scheduler.SaveSchedule(schedule); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存失败"})
+		return
 	}
 
 	go func() {
@@ -352,17 +357,7 @@ func (h *Handler) CleanEstimate(c *gin.Context) {
 			if utils.IsMergedFile(name) {
 				continue
 			}
-			isWhitelisted := false
-			lowerName := strings.ToLower(name)
-			lowerEntryName := strings.ToLower(entry.Name())
-			for _, kw := range wl {
-				lowerKw := strings.ToLower(kw)
-				if strings.Contains(lowerName, lowerKw) || strings.Contains(lowerEntryName, lowerKw) {
-					isWhitelisted = true
-					break
-				}
-			}
-			if isWhitelisted {
+			if utils.ContainsAny(name, wl) || utils.ContainsAny(entry.Name(), wl) {
 				continue
 			}
 			info, err := fe.Info()

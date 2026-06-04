@@ -282,11 +282,13 @@ func (h *Handler) SetupInit(c *gin.Context) {
 
 	// 重新哈希密码用于运行时登录验证
 	hashed, err := hashPassword(cfg.Password)
-	if err == nil {
-		h.passwordMu.Lock()
-		h.hashedPassword = hashed
-		h.passwordMu.Unlock()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码哈希失败"})
+		return
 	}
+	h.passwordMu.Lock()
+	h.hashedPassword = hashed
+	h.passwordMu.Unlock()
 
 	// 自动登录：设置 Session
 	session := sessions.Default(c)
