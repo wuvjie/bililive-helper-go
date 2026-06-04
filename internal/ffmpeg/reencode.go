@@ -37,6 +37,8 @@ func Reencode(ctx context.Context, files []string, folder, output string, onProg
 	}
 
 	// filter_complex: [0:v][0:a][1:v][1:a]...concat=n=N:v=1:a=1[outv][outa]
+	// TODO: 当前假定所有输入均为 1 视频流 + 1 音频流。遇纯音频/纯视频录制会报错，
+	//       需 ffprobe 预检流信息后动态生成 filter_complex。
 	n := len(files)
 	var filterParts []string
 	for i := 0; i < n; i++ {

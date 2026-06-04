@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"bililive-helper/internal/config"
@@ -34,7 +35,7 @@ type MergeService struct {
 // streamerLock 用于 per-streamer 粒度的合并锁，防止同一主播并发合并。
 type streamerLock struct {
 	mu        sync.Mutex
-	createdAt time.Time
+	createdAt atomic.Int64 // Unix 时间戳，避免 time.Time 的 data race
 }
 
 const lockTimeout = 4 * time.Hour
@@ -47,20 +48,20 @@ func (s *MergeService) tryLockStreamer(name string) (bool, *streamerLock) {
 	sl := val.(*streamerLock)
 
 	if sl.mu.TryLock() {
-		sl.createdAt = now
+		sl.createdAt.Store(now.Unix())
 		return true, sl
 	}
 
 	// 安全网：锁持有超过超时时间后尝试回收。
 	// CompareAndDelete 避免销毁仍在合法持有锁的 goroutine 的锁
 	// — 如果 map 条目在 LoadOrStore 和 Delete 之间被替换，静默退让。
-	if now.Sub(sl.createdAt) > lockTimeout {
+	if now.Sub(time.Unix(sl.createdAt.Load(), 0)) > lockTimeout {
 		if s.streamerLocks.CompareAndDelete(name, sl) {
 			s.logger.Warn("回收过期主播锁", zap.String("streamer", name))
 			newVal, _ := s.streamerLocks.LoadOrStore(name, &streamerLock{})
 			newSl := newVal.(*streamerLock)
 			if newSl.mu.TryLock() {
-				newSl.createdAt = now
+				newSl.createdAt.Store(now.Unix())
 				return true, newSl
 			}
 		}
@@ -197,7 +198,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	mergeFailed := 0
 	failedReasons := make(map[string]int)
 	for i, ct := range convertTasks {
-		if cfg.IsBackupWindow() {
+		if cfg.IsBackupWindow() || ctx.Err() != nil {
 			break
 		}
 		var flvSize int64
@@ -488,7 +489,6 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		if err != nil {
 			s.logToFile("merge", fmt.Sprintf("❌ FLV→TS 转换失败 %s: %v", filepath.Base(f), err))
 			onProgress(fmt.Sprintf("❌ 转换失败: %s", filepath.Base(f)))
-			os.RemoveAll(tmpDir)
 			return s.concatReencode(ctx, files, folder, outputPath, onProgress)
 		}
 		tsFiles = append(tsFiles, filepath.ToSlash(tsPath))
@@ -528,7 +528,9 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		fd.Close()
 	}
 
-	// FLV->MP4 转换：仅在 concat 输出到不同文件路径时需要
+	// FLV->MP4 转换：仅在 concat 输出到不同文件路径时需要。
+	// 注意：此条件依赖 ConcatTS 将 .flv 输出自动转为 .mp4 的行为（concatOutputPath 已是 .mp4）。
+	// 若修改 MakeMP4Name 或 ConcatTS 的命名/输出规则，需同步检查此处条件。
 	if outputIsFLV && concatOutputPath != filepath.Join(folder, utils.MakeMP4Name(output)) {
 		mp4Name := utils.MakeMP4Name(output)
 		mp4Path := filepath.Join(folder, mp4Name)
@@ -536,9 +538,11 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 
 		if err := ffmpeg.ConvertViaTS(ctx, concatOutputPath, mp4Path); err != nil {
 			s.logToFile("merge", fmt.Sprintf("❌ FLV→MP4 失败: %v，保留 FLV", err))
+			return false
 		} else if err := ffmpeg.ValidateOutput(ctx, mp4Path); err != nil {
 			s.logToFile("merge", "❌ MP4 输出损坏，保留 FLV")
 			utils.SafeUnlink(mp4Path)
+			return false
 		} else {
 			if !latestSrcMtime.IsZero() {
 				os.Chtimes(mp4Path, latestSrcMtime, latestSrcMtime)

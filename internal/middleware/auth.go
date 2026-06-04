@@ -100,12 +100,15 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		// API Token 认证（Bearer）— 使用 constant-time 比较防止时序攻击
-		authHeader := c.GetHeader("Authorization")
-		if strings.HasPrefix(authHeader, "Bearer ") {
-			token := strings.TrimPrefix(authHeader, "Bearer ")
-			if expectedToken != "" && subtle.ConstantTimeCompare([]byte(token), expectedTokenBytes) == 1 {
-				c.Next()
-				return
+		// 仅在 API_TOKEN 已配置时启用 Bearer 认证，避免空 token 绕过
+		if expectedToken != "" {
+			authHeader := c.GetHeader("Authorization")
+			if strings.HasPrefix(authHeader, "Bearer ") {
+				token := strings.TrimPrefix(authHeader, "Bearer ")
+				if subtle.ConstantTimeCompare([]byte(token), expectedTokenBytes) == 1 {
+					c.Next()
+					return
+				}
 			}
 		}
 

@@ -51,6 +51,9 @@ func Run(ctx context.Context, opts Options) error {
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait() }()
 
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+
 	select {
 	case err := <-done:
 		return err
@@ -58,7 +61,7 @@ func Run(ctx context.Context, opts Options) error {
 		killProcessGroup(cmd)
 		<-done
 		return ctx.Err()
-	case <-time.After(timeout):
+	case <-timer.C:
 		killProcessGroup(cmd)
 		<-done
 		return fmt.Errorf("ffmpeg 超时（%v）", timeout)
