@@ -151,6 +151,7 @@ func (h *Handler) GetStreamers(c *gin.Context) {
 }
 
 // scanAllStreamers 一次性扫描所有主播目录，返回主播列表、待合并文件数和总大小。
+// 每个主播包含 name、files、size_bytes、size_gb 和 mtime（最近视频的修改时间戳，无文件时为 0）。
 func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 	type streamerInfo struct {
 		name         string

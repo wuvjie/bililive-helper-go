@@ -37,6 +37,7 @@ schedule.json
 history.json
 .salt
 .credentials.json
+.env
 
 # Logs
 *.log
