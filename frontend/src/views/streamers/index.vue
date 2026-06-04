@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onActivated } from "vue";
 import { useRouter } from "vue-router";
 import { getStreamers } from "@/api/status";
 import { Search } from "@element-plus/icons-vue";
@@ -87,6 +87,13 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+});
+
+// Refresh data when component is re-activated by keep-alive router-view
+onActivated(async () => {
+  try {
+    streamers.value = await getStreamers();
+  } catch { /* ignore */ }
 });
 </script>
 

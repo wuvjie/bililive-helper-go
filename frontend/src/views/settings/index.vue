@@ -45,12 +45,12 @@
           <el-form label-width="144px" label-position="left" class="settings-form">
             <el-form-item label="触发清理阈值">
               <div class="slider-row">
-                <el-slider v-model="config.TRIGGER_THRESHOLD" :min="50" :max="99" :format-tooltip="(v: number) => v + '%'" class="slider-flex" />
+                <el-slider v-model="config.TRIGGER_THRESHOLD" :min="50" :max="99" :format-tooltip="(v: number) => v + '%'" class="slider-flex" @change="onTriggerChange" />
               </div>
             </el-form-item>
             <el-form-item label="目标清理阈值">
               <div class="slider-row">
-                <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="(v: number) => v + '%'" class="slider-flex" />
+                <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="(v: number) => v + '%'" class="slider-flex" @change="onTargetChange" />
               </div>
             </el-form-item>
             <el-form-item label="每主播最少保留">
@@ -267,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, onActivated } from "vue";
 import { ElMessage } from "element-plus";
 import { getConfig, saveConfig, getConfigRecommend, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
 import { getSchedule, saveSchedule, runTask } from "@/api/schedule";
@@ -317,7 +317,24 @@ const recommendTable = computed(() => {
   ];
 });
 
+// Threshold cross-validation: trigger must always be > target
+function onTriggerChange(val: number) {
+  if (config.value.TARGET_THRESHOLD >= val) {
+    config.value.TARGET_THRESHOLD = val - 1;
+  }
+}
+function onTargetChange(val: number) {
+  if (config.value.TRIGGER_THRESHOLD <= val) {
+    config.value.TRIGGER_THRESHOLD = val + 1;
+  }
+}
+
 async function handleSaveConfig() {
+  // Safety-net: re-validate before submit
+  if (config.value.TRIGGER_THRESHOLD <= config.value.TARGET_THRESHOLD) {
+    ElMessage.error("触发阈值必须大于目标阈值，请调整后重试");
+    return;
+  }
   saving.value = true;
   try {
     const payload = { ...config.value };
@@ -445,6 +462,31 @@ onMounted(async () => {
     }
     if (cv.BACKUP_END_HOUR != null) {
       backupEnd.value = `${String(cv.BACKUP_END_HOUR).padStart(2, "0")}:${String(cv.BACKUP_END_MINUTE || 0).padStart(2, "0")}`;
+    }
+  }
+  if (s.status === "fulfilled") {
+    const sv = s.value;
+    scheduleForm.merge_enabled = sv.merge_enabled;
+    scheduleForm.clean_enabled = sv.clean_enabled;
+    scheduleForm.merge_interval = sv.merge_interval;
+    scheduleForm.clean_interval = sv.clean_interval;
+  }
+  if (d.status === "fulfilled") setupData.value = d.value;
+  if (ce.status === "fulfilled") cleanEstimate.value = ce.value;
+});
+
+// Refresh data when component is re-activated by keep-alive router-view
+onActivated(async () => {
+  const [c, s, d, ce] = await Promise.allSettled([
+    getConfig(),
+    getSchedule(),
+    setupCheck(),
+    getCleanEstimate()
+  ]);
+  if (c.status === "fulfilled") {
+    config.value = c.value;
+    if (Array.isArray(c.value.WHITELIST_KEYWORDS)) {
+      config.value.WHITELIST_KEYWORDS = c.value.WHITELIST_KEYWORDS.join(", ");
     }
   }
   if (s.status === "fulfilled") {

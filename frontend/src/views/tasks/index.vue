@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted, onActivated } from "vue";
+import { ref, watch, nextTick, onMounted, onUnmounted, onActivated } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox, type TableInstance } from "element-plus";
 import { getStreamers, getStreamerFiles } from "@/api/status";
@@ -156,6 +156,14 @@ const files = ref<StreamerFile[]>([]);
 const selectedFiles = ref<StreamerFile[]>([]);
 const tableRef = ref<TableInstance>();
 const sse = useSSE();
+
+async function loadSchedule() {
+  try {
+    schedule.value = await getSchedule();
+  } catch {
+    // silently ignore
+  }
+}
 
 async function loadFiles() {
   if (!selectedStreamer.value) {
@@ -210,6 +218,21 @@ async function handleClean() {
     // User cancelled
   }
 }
+
+// When SSE finishes (isRunning goes from true -> false), refresh data and show notification
+watch(() => sse.isRunning.value, async (running, wasRunning) => {
+  if (wasRunning && !running) {
+    await Promise.allSettled([loadFiles(), loadSchedule()]);
+    const lastLine = sse.lines.value.at(-1);
+    if (lastLine) {
+      if (/✅/.test(lastLine.text)) {
+        ElMessage.success(lastLine.text);
+      } else if (/❌/.test(lastLine.text)) {
+        ElMessage.error(lastLine.text);
+      }
+    }
+  }
+});
 
 onMounted(async () => {
   const [s, st] = await Promise.allSettled([getSchedule(), getStreamers()]);
