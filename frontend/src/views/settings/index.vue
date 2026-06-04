@@ -381,8 +381,8 @@ const emergencySSE = useSSE();
 const isDirty = ref(false);
 let suppressDirty = false; // suppress watcher during initial load / save reset
 
-watch(config, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true });
-watch(scheduleForm, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true });
+watch(config, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true, flush: 'sync' });
+watch(scheduleForm, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true, flush: 'sync' });
 
 onBeforeRouteLeave(async (_to, _from, next) => {
   if (!isDirty.value) { next(); return; }
