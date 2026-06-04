@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -227,7 +228,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		fileList := strings.Join(task.Files, " + ")
 		onProgress(fmt.Sprintf("⚙ [%d/%d] %s ⚙ %s (%.1f GB)", i+1, len(tasks), streamerName, fileList, task.SizeGB))
 		s.logToFile("merge", fmt.Sprintf("⚙ %s 合并 %d 个文件: %s", streamerName, len(task.Files), fileList))
-		if s.doMerge(ctx, task.Files, task.Folder, "", onProgress) {
+		if s.doMerge(ctx, task.Files, task.Folder, onProgress) {
 			done++
 			mergeDone++
 			totalGB += task.SizeGB
@@ -402,7 +403,8 @@ func checkFileAvailability(folder string, files []string) error {
 
 // doMerge 执行多文件合并的完整流程：FLV→TS→拼接→MP4→校验→删除原始文件。
 // 合并失败时自动 fallback 到重编码模式。
-func (s *MergeService) doMerge(ctx context.Context, files []string, folder string, customOutputName string, onProgress ProgressFunc) bool {
+// 调用方须保证 files 按时间升序排列（files[0] 为最早的文件）。
+func (s *MergeService) doMerge(ctx context.Context, files []string, folder string, onProgress ProgressFunc) bool {
 	if len(files) < 2 {
 		return false
 	}
@@ -417,26 +419,27 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		return false
 	}
 
-	// 输出文件名：优先使用用户自定义名称，否则自动生成
-	var output string
-	if customOutputName != "" {
-		output = customOutputName
-	} else {
-		output = utils.MakeOutputName(files[0])
-	}
+	// 输出文件名：取最早的文件生成
+	output := utils.MakeOutputName(files[0])
 	outputPath := filepath.Join(folder, output)
 
 	// 手动合并时：如果输出文件已存在，自动加序号避免覆盖
 	if _, err := os.Stat(outputPath); err == nil {
 		ext := filepath.Ext(output)
 		stem := strings.TrimSuffix(output, ext)
-		for i := 2; ; i++ {
+		found := false
+		for i := 2; i <= 1000; i++ {
 			candidate := fmt.Sprintf("%s-%d%s", stem, i, ext)
 			if _, err := os.Stat(filepath.Join(folder, candidate)); os.IsNotExist(err) {
 				output = candidate
 				outputPath = filepath.Join(folder, output)
+				found = true
 				break
 			}
+		}
+		if !found {
+			s.logToFile("merge", "❌ 无法找到可用的输出文件名（已尝试 1000 个后缀）")
+			return false
 		}
 		s.logToFile("merge", fmt.Sprintf("⚠ 输出文件已存在，自动重命名为: %s", output))
 	}
@@ -566,7 +569,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 
 // ManualMerge 手动合并指定主播的指定文件列表。
 // 获取主播锁后校验文件合法性，然后调用 doMerge 执行合并。
-func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files []string, outputName string, onProgress ProgressFunc) error {
+func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files []string, onProgress ProgressFunc) error {
 	name := streamer
 	locked, sl := s.tryLockStreamer(name)
 	if !locked {
@@ -602,19 +605,8 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 		return fmt.Errorf("有效文件不足2个")
 	}
 
-	// 非合并版文件排前面（确保输出文件名不与输入重名）
-	var reordered []string
-	for _, f := range validFiles {
-		if !utils.IsMergedFile(f) {
-			reordered = append(reordered, f)
-		}
-	}
-	for _, f := range validFiles {
-		if utils.IsMergedFile(f) {
-			reordered = append(reordered, f)
-		}
-	}
-	validFiles = reordered
+	// 按文件名中的日期时间升序排序（确保合并后时间线正确）
+	SortByFilename(validFiles)
 
 	onProgress(fmt.Sprintf("⏳ 手动合并 %d 个文件", len(validFiles)))
 	hasOriginal := false
@@ -628,13 +620,42 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 		return fmt.Errorf("所选文件全部是合并版，请至少选择一个原始文件")
 	}
 
-	if s.doMerge(ctx, validFiles, folder, outputName, onProgress) {
+	if s.doMerge(ctx, validFiles, folder, onProgress) {
 		s.history.Add("merge", streamer, "success", fmt.Sprintf("手动合并 %d 个文件", len(validFiles)))
 		onProgress(fmt.Sprintf("✅ 手动合并 %d 个文件完成", len(validFiles)))
 		return nil
 	}
 
 	return fmt.Errorf("合并失败")
+}
+
+// SortByFilename 按文件名中的日期时间升序排列文件列表。
+// 预解析所有文件名后再排序，避免比较器中重复调用 ParseFilename（含正则）。
+// 可解析的文件按日期排序，同日期按文件名字典序（001 < 002）；
+// 不可解析的文件（零值 time）排在最前，按字典序排列。
+func SortByFilename(files []string) {
+	type item struct {
+		name string
+		dt   time.Time
+	}
+	items := make([]item, len(files))
+	for i, f := range files {
+		_, dt, ok := utils.ParseFilename(f)
+		if ok {
+			items[i] = item{name: f, dt: dt}
+		} else {
+			items[i] = item{name: f}
+		}
+	}
+	sort.SliceStable(items, func(i, j int) bool {
+		if items[i].dt.Equal(items[j].dt) {
+			return items[i].name < items[j].name
+		}
+		return items[i].dt.Before(items[j].dt)
+	})
+	for i, it := range items {
+		files[i] = it.name
+	}
 }
 
 // CleanupTempFiles 清理录制目录中的残留临时文件。
@@ -675,6 +696,16 @@ func (s *MergeService) CleanupTempFiles() int {
 		for _, fe := range fileEntries {
 			name := fe.Name()
 
+			// 清理崩溃残留的 .merge_tmp_* 临时目录
+			if fe.IsDir() && strings.HasPrefix(name, ".merge_tmp_") {
+				tmpPath := filepath.Join(folder, name)
+				if err := os.RemoveAll(tmpPath); err == nil {
+					cleaned++
+					s.logToFile("merge", fmt.Sprintf("🗑 清理残留临时目录: %s", name))
+				}
+				continue
+			}
+
 			// 清理残留的 concat 临时文件
 			if strings.HasPrefix(name, ".concat_") && strings.HasSuffix(name, ".txt") {
 				path := filepath.Join(folder, name)
@@ -708,18 +739,6 @@ func (s *MergeService) CleanupTempFiles() int {
 							s.logToFile("merge", fmt.Sprintf("🗑 清理孤立TS: %s", name))
 						}
 					}
-				}
-			}
-		}
-
-		// 清理崩溃残留的 .merge_tmp_* 临时目录
-		tmpEntries, _ := os.ReadDir(folder)
-		for _, te := range tmpEntries {
-			if te.IsDir() && strings.HasPrefix(te.Name(), ".merge_tmp_") {
-				tmpPath := filepath.Join(folder, te.Name())
-				if err := os.RemoveAll(tmpPath); err == nil {
-					cleaned++
-					s.logToFile("merge", fmt.Sprintf("🗑 清理残留临时目录: %s", te.Name()))
 				}
 			}
 		}

@@ -19,6 +19,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// maxManualMergeFiles 手动合并/重试时允许的最大文件数量上限。
+const maxManualMergeFiles = 100
+
 // RunMerge 执行全局或指定主播的合并任务，通过 SSE 流式返回进度。
 func (h *Handler) RunMerge(c *gin.Context) {
 	var req struct {
@@ -47,9 +50,8 @@ func (h *Handler) RunMerge(c *gin.Context) {
 // ManualMerge 手动合并指定主播的指定文件列表（至少 2 个文件）。
 func (h *Handler) ManualMerge(c *gin.Context) {
 	var req struct {
-		Streamer   string   `json:"streamer" binding:"required"`
-		Files      []string `json:"files" binding:"required"`
-		OutputName string   `json:"output_name"` // 可选：自定义输出文件名
+		Streamer string   `json:"streamer" binding:"required"`
+		Files    []string `json:"files" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
@@ -59,7 +61,11 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "至少选择2个文件"})
 		return
 	}
-	h.runManualMergeSSEWithName(c, req.Streamer, req.Files, req.OutputName, "手动合并")
+	if len(req.Files) > maxManualMergeFiles {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles)})
+		return
+	}
+	h.runManualMergeSSE(c, req.Streamer, req.Files, "手动合并")
 }
 
 // MergeRetry 重试之前失败的合并操作。
@@ -72,16 +78,16 @@ func (h *Handler) MergeRetry(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
 		return
 	}
+	if len(req.Files) > maxManualMergeFiles {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles)})
+		return
+	}
 	h.runManualMergeSSE(c, req.Streamer, req.Files, "重试")
 }
 
 func (h *Handler) runManualMergeSSE(c *gin.Context, streamer string, files []string, label string) {
-	h.runManualMergeSSEWithName(c, streamer, files, "", label)
-}
-
-func (h *Handler) runManualMergeSSEWithName(c *gin.Context, streamer string, files []string, outputName string, label string) {
 	h.runSSE(c, "merge", func(ctx context.Context, onProgress func(string)) string {
-		if err := h.merge.ManualMerge(ctx, streamer, files, outputName, onProgress); err != nil {
+		if err := h.merge.ManualMerge(ctx, streamer, files, onProgress); err != nil {
 			h.logger.Error(label+"失败", zap.Error(err))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}
@@ -183,6 +189,7 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 		case <-notify:
 			if v := latest.Load(); v != nil {
 				if msg := v.(string); msg != "" && msg != lastSent {
+					msg = strings.ReplaceAll(msg, "\n", "\ndata: ")
 					fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
 					c.Writer.Flush()
 					lastSent = msg
@@ -191,12 +198,14 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 		case <-ticker.C:
 			if v := latest.Load(); v != nil {
 				if msg := v.(string); msg != "" && msg != lastSent {
+					msg = strings.ReplaceAll(msg, "\n", "\ndata: ")
 					fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
 					c.Writer.Flush()
 					lastSent = msg
 				}
 			}
 		case result := <-done:
+			result = strings.ReplaceAll(result, "\n", "\ndata: ")
 			fmt.Fprintf(c.Writer, "data: %s\n\n", result)
 			fmt.Fprintf(c.Writer, "data: [END]\n\n")
 			c.Writer.Flush()
@@ -383,7 +392,7 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 
 	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
 		// 临时覆盖目标阈值（紧急清理结束后自动恢复原值）
-		if req.TargetPct > 0 && req.TargetPct < 100 {
+		if req.TargetPct >= 10 && req.TargetPct < 100 {
 			originalTarget := h.config.Snapshot().TargetThreshold
 			h.config.Apply(func() error {
 				h.config.TargetThreshold = req.TargetPct

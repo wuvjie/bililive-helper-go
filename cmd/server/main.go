@@ -29,7 +29,10 @@ import (
 // main 是应用程序入口函数。
 // 负责加载配置、初始化服务、注册路由、启动 HTTP 服务器，并监听系统信号实现优雅停机。
 func main() {
-	logger, _ := zap.NewProduction()
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("初始化日志失败: %v", err)
+	}
 	defer logger.Sync()
 
 	// 加载配置：config.json -> 环境变量覆盖 -> 自动生成凭据

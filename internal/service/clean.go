@@ -331,7 +331,7 @@ func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64,
 		}
 
 		// Execute delete
-		if err := os.Remove(f.Path); err != nil {
+		if err := utils.SafeUnlink(f.Path); err != nil {
 			s.logToFile("clean", fmt.Sprintf("⚠ 删除失败: %s (%v)", f.Name, err))
 			continue
 		}
@@ -339,8 +339,9 @@ func (s *CleanService) deleteFiles(candidates []candidateFile, needToFree int64,
 		deleted++
 		freed += f.Size
 		sn := f.Name
-		if len([]rune(sn)) > 35 {
-			sn = string([]rune(sn)[:10]) + "…" + string([]rune(sn)[len([]rune(sn))-22:])
+		runes := []rune(sn)
+		if len(runes) > 35 {
+			sn = string(runes[:10]) + "…" + string(runes[len(runes)-22:])
 		}
 		s.logToFile("clean", fmt.Sprintf("🗑 [%s] %s (%s)", filepath.Base(filepath.Dir(f.Path)), sn, utils.FormatSize(f.Size)))
 		onProgress(fmt.Sprintf("🗑 [%s] %s (%s)", filepath.Base(filepath.Dir(f.Path)), sn, utils.FormatSize(f.Size)))
