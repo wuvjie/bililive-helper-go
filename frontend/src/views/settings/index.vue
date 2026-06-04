@@ -966,9 +966,10 @@ onActivated(async () => {
 
 /* Emergency clean dialog — compact geek overrides */
 :deep(.emergency-dialog .el-dialog) {
-  max-width: 440px;
+  max-width: 420px;
   border-radius: 6px;
   overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.06);
 }
 :deep(.emergency-dialog .el-dialog__header) {
   padding: 16px 20px 8px;
@@ -978,8 +979,21 @@ onActivated(async () => {
   padding: 8px 20px 16px;
 }
 :deep(.emergency-dialog .el-dialog__footer) {
-  padding: 12px 20px;
-  background: rgba(250, 250, 250, 0.5);
+  padding: 12px 20px 16px;
+  background: rgba(250, 250, 250, 0.4);
   border-top: 1px solid #f1f1ef;
+}
+:deep(.emergency-dialog .el-dialog__footer .el-button) {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+:deep(.emergency-dialog .el-input-number--small) {
+  width: 96px;
+}
+:deep(.emergency-dialog .el-input-number--small .el-input__wrapper) {
+  border-radius: 6px;
 }
 </style>
