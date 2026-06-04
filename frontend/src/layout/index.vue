@@ -54,6 +54,20 @@
         </div>
       </header>
 
+      <!-- Disk usage alert banner -->
+      <div
+        v-if="showDiskBanner"
+        class="disk-alert-banner"
+        :class="diskBannerClass"
+        role="alert"
+        @click="goToTasks"
+      >
+        <span class="disk-alert-text">{{ diskBannerText }}</span>
+        <button class="disk-alert-close" @click.stop="dismissDiskBanner" title="关闭">
+          <el-icon><Close /></el-icon>
+        </button>
+      </div>
+
       <main class="layout-content">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
@@ -86,17 +100,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from "vue";
-import { useRoute } from "vue-router";
+import { computed, ref, reactive, onMounted, onActivated } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useAppStore } from "@/store/modules/app";
 import { logout, changePassword } from "@/api/auth";
+import { getStatusDetail } from "@/api/status";
 import {
   Monitor, User, VideoPlay, Document, Setting,
-  Fold, Expand, Refresh, FullScreen
+  Fold, Expand, Refresh, FullScreen, Close
 } from "@element-plus/icons-vue";
 
 const route = useRoute();
+const router = useRouter();
 const appStore = useAppStore();
 
 const menuItems = [
@@ -136,6 +152,50 @@ async function handleChangePassword() {
   } catch { /* handled by interceptor */ }
   finally { pwSaving.value = false; }
 }
+
+// ---- Disk usage alert ----
+const diskUsedPct = ref(0);
+const dismissedAlertLevel = ref(0); // 0 = not dismissed, 1 = dismissed warning, 2 = dismissed critical
+
+const diskAlertLevel = computed(() => {
+  const pct = diskUsedPct.value;
+  if (pct >= 95) return 2;
+  if (pct >= 90) return 1;
+  return 0;
+});
+
+const showDiskBanner = computed(() => {
+  const level = diskAlertLevel.value;
+  if (level === 0) return false;
+  if (level === 1) return dismissedAlertLevel.value < 1;
+  return dismissedAlertLevel.value < 2;
+});
+
+const diskBannerClass = computed(() => diskAlertLevel.value >= 2 ? "critical" : "warning");
+const diskBannerText = computed(() =>
+  diskAlertLevel.value >= 2
+    ? `🚨 磁盘空间严重不足（${diskUsedPct.value}%），请立即清理`
+    : `⚠️ 磁盘使用率 ${diskUsedPct.value}%，建议及时清理`
+);
+
+function dismissDiskBanner() {
+  dismissedAlertLevel.value = diskAlertLevel.value;
+}
+
+function goToTasks() {
+  router.push("/tasks");
+}
+
+async function fetchDiskStatus() {
+  try {
+    const data = await getStatusDetail();
+    diskUsedPct.value = data.disk.usage_pct;
+    if (diskAlertLevel.value === 0) dismissedAlertLevel.value = 0;
+  } catch { /* silently ignore */ }
+}
+
+onMounted(() => fetchDiskStatus());
+onActivated(() => fetchDiskStatus());
 </script>
 
 <style lang="scss" scoped>
@@ -199,6 +259,33 @@ async function handleChangePassword() {
 }
 
 .layout-content { flex: 1; overflow-y: auto; padding: 24px; padding-bottom: 48px; }
+
+/* Disk usage alert banner */
+.disk-alert-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px; flex-shrink: 0; cursor: pointer;
+  transition: background 0.15s; user-select: none;
+  border-bottom: 1px solid var(--hairline);
+}
+.disk-alert-banner.warning {
+  background: color-mix(in srgb, #e6a23c 14%, transparent);
+  color: #b88230;
+}
+.disk-alert-banner.warning:hover { background: color-mix(in srgb, #e6a23c 22%, transparent); }
+.disk-alert-banner.critical {
+  background: color-mix(in srgb, #f56c6c 14%, transparent);
+  color: #c45656;
+}
+.disk-alert-banner.critical:hover { background: color-mix(in srgb, #f56c6c 22%, transparent); }
+.disk-alert-text { font-size: 13px; font-weight: 500; line-height: 1.4; }
+.disk-alert-close {
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent; cursor: pointer;
+  padding: 2px; margin-left: 12px; border-radius: 50%;
+  transition: background 0.15s; color: inherit; flex-shrink: 0;
+}
+.disk-alert-close:hover { background: rgba(0,0,0,0.08); }
+.disk-alert-close .el-icon { font-size: 15px; }
 
 /* Password dialog footer — right-aligned buttons */
 .pw-footer { display: flex; justify-content: flex-end; gap: 8px; }

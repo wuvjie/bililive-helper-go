@@ -133,6 +133,12 @@
       height="400px"
       @clear="sse.clear"
     />
+    <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value" class="retry-bar">
+      <button class="ops-action ops-retry" @click="sse.retryLast()">
+        <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+        重新连接
+      </button>
+    </div>
   </div>
 </template>
 
@@ -199,10 +205,19 @@ async function handleMerge() {
     ElMessage.warning("至少选择2个文件");
     return;
   }
-  sse.startSSE("/api/merge/manual", {
-    streamer: selectedStreamer.value,
-    files: selectedFiles.value.map(f => f.name)
-  });
+  try {
+    await ElMessageBox.confirm(
+      `即将合并 ${selectedFiles.value.length} 个文件，是否继续？`,
+      "确认合并",
+      { type: "warning", confirmButtonText: "确认合并", cancelButtonText: "取消" }
+    );
+    sse.startSSE("/api/merge/manual", {
+      streamer: selectedStreamer.value,
+      files: selectedFiles.value.map(f => f.name)
+    });
+  } catch {
+    // User cancelled
+  }
 }
 
 async function handleClean() {
@@ -326,6 +341,15 @@ onActivated(async () => {
 }
 /* Clean button — hover turns red */
 .ops-clean:hover:not(:disabled) { color: #c4554d !important; }
+
+/* Retry bar — shown below terminal when SSE fails */
+.retry-bar {
+  display: flex; justify-content: flex-end; padding: 8px 0;
+}
+.ops-retry {
+  color: #d9730d;
+}
+.ops-retry:hover:not(:disabled) { color: #b85c00 !important; }
 
 /* Status dot text in table */
 .status-dot-text {
