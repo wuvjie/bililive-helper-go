@@ -319,7 +319,9 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 			h.logger.Info(detail)
 			h.history.Add("schedule", "", "success", detail)
 		} else {
-			detail := fmt.Sprintf("调度已保存: 合并 %d分钟, 清理 %d分钟", req.MergeInterval, req.CleanInterval)
+			detail := fmt.Sprintf("调度已保存: 合并 %s/%d分钟, 清理 %s/%d分钟",
+				map[bool]string{true: "已启用", false: "已禁用"}[req.MergeEnabled], req.MergeInterval,
+				map[bool]string{true: "已启用", false: "已禁用"}[req.CleanEnabled], req.CleanInterval)
 			h.logger.Info(detail)
 			h.history.Add("schedule", "", "success", detail)
 		}
