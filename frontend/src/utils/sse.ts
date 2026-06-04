@@ -32,10 +32,14 @@ export function useSSE() {
     error.value = null;
   }
 
+  /** Last SSE call parameters, cached so callers can implement retry. */
+  const lastRequest = ref<{ url: string; body?: Record<string, any> } | null>(null);
+
   async function startSSE(url: string, body?: Record<string, any>) {
     abort(); // cancel any in-flight request
     clear();
     isRunning.value = true;
+    lastRequest.value = { url, body };
     abortController = new AbortController();
 
     try {
@@ -85,11 +89,32 @@ export function useSSE() {
       }
     } catch (e: any) {
       if (e.name === "AbortError") return;
-      error.value = e.message;
-      addLine(`❌ 错误: ${e.message}`);
+
+      const msg = (e.message || "").toLowerCase();
+      const isNetworkError =
+        msg.includes("failed to fetch") ||
+        msg.includes("networkerror") ||
+        msg.includes("network request failed") ||
+        msg.includes("network") ||
+        msg.includes("load failed") ||
+        msg.includes("err_internet_disconnected") ||
+        msg.includes("err_name_not_resolved");
+
+      const friendlyMsg = isNetworkError
+        ? "网络连接中断，请检查网络后重试"
+        : e.message;
+
+      error.value = friendlyMsg;
+      addLine(`❌ ${friendlyMsg}`);
     } finally {
       isRunning.value = false;
     }
+  }
+
+  function retryLast() {
+    if (!lastRequest.value) return;
+    const { url, body } = lastRequest.value;
+    startSSE(url, body);
   }
 
   function abort() {
@@ -97,5 +122,5 @@ export function useSSE() {
     isRunning.value = false;
   }
 
-  return { lines, isRunning, error, addLine, clear, startSSE, abort };
+  return { lines, isRunning, error, lastRequest, addLine, clear, startSSE, abort, retryLast };
 }
