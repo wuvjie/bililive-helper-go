@@ -21,7 +21,7 @@
       </template>
 
       <el-table :data="filteredStreamers" v-loading="loading" empty-text="暂无主播数据" class="helper-clean-table">
-        <el-table-column type="index" label="#" width="64" align="right" header-align="right">
+        <el-table-column type="index" label="#" width="72" align="right" header-align="right">
           <template #default="{ $index }">
             <span class="idx-num">{{ $index + 1 }}</span>
           </template>
