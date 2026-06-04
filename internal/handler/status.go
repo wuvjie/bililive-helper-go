@@ -262,7 +262,7 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 			"name":      name,
 			"size":      info.Size(),
 			"size_str":  utils.FormatSize(info.Size()),
-			"mtime":     float64(info.ModTime().Unix()),
+			"mtime":     info.ModTime().Unix(),
 			"is_merged": strings.Contains(name, "-合并版"),
 		})
 	}
