@@ -29,11 +29,6 @@ func NewCleanService(config *config.Config, logger *zap.Logger, history *History
 	return &CleanService{config: config, logger: logger, history: history}
 }
 
-func (s *CleanService) logToFile(task, message string) {
-	cfg := s.config.Snapshot()
-	logToFile(cfg.LogDir, task, message, s.logger)
-}
-
 // CleanResult 保存清理操作的结果。
 type CleanResult struct {
 	Deleted int
@@ -314,15 +309,15 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	// 4. 执行删除 — 跳过两次快照间大小变化的文件（正在写入）
 	for _, f := range candidates {
 		if ctx.Err() != nil {
-			s.logToFile("clean", "⚠ 上下文取消，终止清理")
+			s.logger.Info("⚠ 上下文取消，终止清理")
 			break
 		}
 		if deleted >= cfg.MaxDeletePerRun {
-			s.logToFile("clean", fmt.Sprintf("ℹ 已达单次删除上限 %d 个文件", cfg.MaxDeletePerRun))
+			s.logger.Info(fmt.Sprintf("ℹ 已达单次删除上限 %d 个文件", cfg.MaxDeletePerRun))
 			break
 		}
 		if needToFree > 0 && freed >= needToFree {
-			s.logToFile("clean", fmt.Sprintf("ℹ 已释放 %s，达到目标", utils.FormatSize(freed)))
+			s.logger.Info(fmt.Sprintf("ℹ 已释放 %s，达到目标", utils.FormatSize(freed)))
 			break
 		}
 		if _, err := os.Stat(f.Path); os.IsNotExist(err) {
@@ -333,13 +328,13 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 		s1, ok1 := sizeMap1[f.Path]
 		s2, ok2 := sizeMap2[f.Path]
 		if ok1 && ok2 && s1 != s2 {
-			s.logToFile("clean", fmt.Sprintf("⏭ 跳过（被占用正在写入）: %s", f.Name))
+			s.logger.Info(fmt.Sprintf("⏭ 跳过（被占用正在写入）: %s", f.Name))
 			continue
 		}
 
 		// 执行删除
 		if err := utils.SafeUnlink(f.Path); err != nil {
-			s.logToFile("clean", fmt.Sprintf("⚠ 删除失败: %s (%v)", f.Name, err))
+			s.logger.Info(fmt.Sprintf("⚠ 删除失败: %s (%v)", f.Name, err))
 			continue
 		}
 
@@ -350,7 +345,7 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 		if len(runes) > 35 {
 			sn = string(runes[:10]) + "…" + string(runes[len(runes)-22:])
 		}
-		s.logToFile("clean", fmt.Sprintf("🗑 [%s] %s (%s)", filepath.Base(filepath.Dir(f.Path)), sn, utils.FormatSize(f.Size)))
+		s.logger.Info(fmt.Sprintf("🗑 [%s] %s (%s)", filepath.Base(filepath.Dir(f.Path)), sn, utils.FormatSize(f.Size)))
 		onProgress(fmt.Sprintf("🗑 [%s] %s (%s)", filepath.Base(filepath.Dir(f.Path)), sn, utils.FormatSize(f.Size)))
 	}
 

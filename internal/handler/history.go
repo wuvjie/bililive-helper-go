@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,8 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// validLogID 校验操作日志 ID 格式：只允许小写字母、数字、下划线和十六进制字符。
-var validLogID = regexp.MustCompile(`^[a-z]+_[0-9]+_[0-9a-f]+$`)
+// validLogID 校验操作日志 ID 格式：{type}_{YYYYMMDD}_{HHMMSS}_{4位hex}
+var validLogID = regexp.MustCompile(`^[a-z]+_\d{8}_\d{6}_[0-9a-f]{4}$`)
 
 // GetHistory 分页查询历史记录，支持按任务类型和主播名过滤。
 func (h *Handler) GetHistory(c *gin.Context) {
@@ -56,8 +57,12 @@ func (h *Handler) GetLogContent(c *gin.Context) {
 	}
 
 	logID := c.Query("log_id")
-	if logID == "" || !validLogID.MatchString(logID) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的日志 ID"})
+	if logID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少日志 ID"})
+		return
+	}
+	if !validLogID.MatchString(logID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("无效的日志 ID: %s", logID)})
 		return
 	}
 

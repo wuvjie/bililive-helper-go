@@ -92,11 +92,6 @@ func NewMergeService(config *config.Config, logger *zap.Logger, history *History
 	return &MergeService{config: config, logger: logger, history: history}
 }
 
-// logToFile 向任务日志文件追加一行带时间戳的日志，午夜自动轮转。
-func (s *MergeService) logToFile(task, message string) {
-	logToFile(s.config.LogDir, task, message, s.logger)
-}
-
 // MergeResult 保存合并操作的结果。
 type MergeResult struct {
 	Done    int
@@ -753,7 +748,7 @@ func (s *MergeService) CleanupTempFiles() int {
 				tmpPath := filepath.Join(folder, name)
 				if err := os.RemoveAll(tmpPath); err == nil {
 					cleaned++
-					s.logToFile("merge", fmt.Sprintf("🗑 清理残留临时目录: %s", name))
+					s.logger.Info(fmt.Sprintf("🗑 清理残留临时目录: %s", name))
 				}
 				continue
 			}
@@ -763,7 +758,7 @@ func (s *MergeService) CleanupTempFiles() int {
 				path := filepath.Join(folder, name)
 				if err := os.Remove(path); err == nil {
 					cleaned++
-					s.logToFile("merge", fmt.Sprintf("🗑 清理临时文件: %s", name))
+					s.logger.Info(fmt.Sprintf("🗑 清理临时文件: %s", name))
 				}
 			}
 
@@ -772,7 +767,7 @@ func (s *MergeService) CleanupTempFiles() int {
 				path := filepath.Join(folder, name)
 				if err := os.Remove(path); err == nil {
 					cleaned++
-					s.logToFile("merge", fmt.Sprintf("🗑 清理临时文件: %s", name))
+					s.logger.Info(fmt.Sprintf("🗑 清理临时文件: %s", name))
 				}
 			}
 
@@ -788,7 +783,7 @@ func (s *MergeService) CleanupTempFiles() int {
 					if info, err := fe.Info(); err == nil && info.Size() >= minValidFileSize {
 						if err := utils.SafeUnlink(path); err == nil {
 							cleaned++
-							s.logToFile("merge", fmt.Sprintf("🗑 清理孤立TS: %s", name))
+							s.logger.Info(fmt.Sprintf("🗑 清理孤立TS: %s", name))
 						}
 					}
 				}

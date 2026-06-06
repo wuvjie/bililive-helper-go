@@ -182,13 +182,13 @@ func (s *SchedulerService) runTask(task string) {
 		s.wg.Done()
 	}()
 
-	s.logToFile(task, fmt.Sprintf("▶ 调度触发 → %s", map[string]string{"merge": "合并", "clean": "清理"}[task]))
+	s.logger.Info(fmt.Sprintf("▶ 调度触发 → %s", map[string]string{"merge": "合并", "clean": "清理"}[task]))
 
 	switch task {
 	case "merge":
 		res, logID, err := s.merge.Run(s.ctx, "", nil)
 		if err != nil {
-			s.logToFile(task, fmt.Sprintf("❌ 合并失败: %v", err))
+			s.logger.Info(fmt.Sprintf("❌ 合并失败: %v", err))
 		} else if res != nil && res.Done > 0 {
 			utils.NotifyWebhook(fmt.Sprintf("自动合并完成：%d 场次 (%.1f GB)", res.Done, res.TotalGB))
 		}
@@ -196,17 +196,12 @@ func (s *SchedulerService) runTask(task string) {
 	case "clean":
 		res, logID, err := s.clean.Run(s.ctx, "", nil)
 		if err != nil {
-			s.logToFile(task, fmt.Sprintf("❌ 清理失败: %v", err))
+			s.logger.Info(fmt.Sprintf("❌ 清理失败: %v", err))
 		} else if res != nil && res.Deleted > 0 {
 			utils.NotifyWebhook(fmt.Sprintf("自动清理完成：%d 文件，释放 %s", res.Deleted, utils.FormatSize(res.Freed)))
 		}
 		_ = logID // logID 已在 clean.Run 内部写入 history
 	}
-}
-
-func (s *SchedulerService) logToFile(task, message string) {
-	// 使用与合并/清理任务相同的日志轮转策略
-	logToFile(s.config.LogDir, task, message, s.logger)
 }
 
 // GetStatus 返回当前调度状态（各任务的启用状态、间隔、上次/下次执行时间、是否运行中）。
