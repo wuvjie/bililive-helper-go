@@ -160,6 +160,11 @@ function formatDetail(row: HistoryRecord) {
 
 async function viewLog(row: HistoryRecord) {
   if (!row.log_id) return;
+  // 预校验 log_id 格式：{type}_{YYYYMMDD}_{HHMMSS}_{4位hex}
+  if (!/^[a-z]+_\d{8}_\d{6}_[0-9a-f]{4}$/.test(row.log_id)) {
+    ElMessage.warning("该记录的日志格式不兼容，请刷新页面");
+    return;
+  }
   logDialogVisible.value = true;
   logContent.value = "";
   logLoading.value = true;
