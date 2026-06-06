@@ -145,7 +145,8 @@ func SecurityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("X-Content-Type-Options", "nosniff")
 		c.Header("X-Frame-Options", "SAMEORIGIN")
-		c.Header("X-XSS-Protection", "1; mode=block")
+		// X-XSS-Protection 已弃用且在旧版 IE/Edge 中可能引入漏洞，设为 0 禁用
+		c.Header("X-XSS-Protection", "0")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		// 注意：login.html 包含内联 <script>，需要 'unsafe-inline'。
 		// 如需更严格的 CSP，需将 login.html 中的内联脚本提取为外部文件。

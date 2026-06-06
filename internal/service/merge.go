@@ -554,54 +554,21 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	// fsync — 确保数据刷入持久存储后再删除原始文件
 	fd, openErr := os.OpenFile(concatOutputPath, os.O_RDONLY, 0)
 	if openErr != nil {
-		opLog.Log(fmt.Sprintf("❌ 无法打开输出文件进行 fsync: %v，保留原始文件", openErr))
-		return false
+		opLog.Log(fmt.Sprintf("❌ 无法打开输出文件进行 fsync: %v，尝试重编码", openErr))
+		return s.concatReencode(ctx, files, folder, concatOutputPath, onProgress, opLog)
 	}
 	if syncErr := fd.Sync(); syncErr != nil {
 		fd.Close()
-		opLog.Log(fmt.Sprintf("❌ fsync 失败: %v，删除不可靠输出，保留原始文件", syncErr))
-		utils.SafeUnlink(concatOutputPath) // 删除不可靠输出，防止下次被误判为已合并
-		return false
+		opLog.Log(fmt.Sprintf("❌ fsync 失败: %v，尝试重编码", syncErr))
+		utils.SafeUnlink(concatOutputPath) // 删除不可靠输出
+		return s.concatReencode(ctx, files, folder, concatOutputPath, onProgress, opLog)
 	}
 	fd.Close()
 
-	// FLV->MP4 转换：仅在 concat 输出到不同文件路径时需要。
-	// 注意：此条件依赖 ConcatTS 将 .flv 输出自动转为 .mp4 的行为（concatOutputPath 已是 .mp4）。
-	// 若修改 MakeMP4Name 或 ConcatTS 的命名/输出规则，需同步检查此处条件。
-	if outputIsFLV && concatOutputPath != filepath.Join(folder, utils.MakeMP4Name(output)) {
-		mp4Name := utils.MakeMP4Name(output)
-		mp4Path := filepath.Join(folder, mp4Name)
-		onProgress(fmt.Sprintf("🔄 转换 FLV→MP4: %s", mp4Name))
-
-		if err := ffmpeg.ConvertViaTS(ctx, concatOutputPath, mp4Path); err != nil {
-			opLog.Log(fmt.Sprintf("❌ FLV→MP4 失败: %v，保留 FLV", err))
-			return false
-		} else if err := ffmpeg.ValidateOutput(ctx, mp4Path); err != nil {
-			opLog.Log(fmt.Sprintf("❌ MP4 输出损坏，保留 FLV: %s", mp4Name))
-			utils.SafeUnlink(mp4Path)
-			return false
-		} else {
-			if !latestSrcMtime.IsZero() {
-				if err := os.Chtimes(mp4Path, latestSrcMtime, latestSrcMtime); err != nil {
-					opLog.Log(fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(mp4Path), err))
-				}
-			}
-			utils.SafeUnlink(concatOutputPath)
-			opLog.Log(fmt.Sprintf("✅ FLV→MP4 完成: %s", mp4Name))
-		}
-	} else if outputIsFLV {
-		// ConcatTS 已直接输出 MP4 — 只需保留录制时间戳
-		if !latestSrcMtime.IsZero() {
-			if err := os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime); err != nil {
-				opLog.Log(fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(concatOutputPath), err))
-			}
-		}
-	} else {
-		// 非 FLV 输出：保留合并文件的录制时间
-		if !latestSrcMtime.IsZero() {
-			if err := os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime); err != nil {
-				opLog.Log(fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(concatOutputPath), err))
-			}
+	// 保留录制时间戳
+	if !latestSrcMtime.IsZero() {
+		if err := os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime); err != nil {
+			opLog.Log(fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(concatOutputPath), err))
 		}
 	}
 

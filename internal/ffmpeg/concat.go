@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync/atomic"
 )
 
 // ConcatTS 使用 ffmpeg concat 协议将多个 TS 文件合并为单个输出文件。
@@ -15,19 +16,20 @@ import (
 func ConcatTS(ctx context.Context, tsFiles []string, output string, onProgress func(string)) error {
 	concatArg := "concat:" + strings.Join(tsFiles, "|")
 
-	var durationUs int64
+	var durationUs atomic.Int64
 	onStdout := func(line string) {
 		if onProgress == nil {
 			return
 		}
 		if strings.HasPrefix(line, "duration_us=") {
 			if d, err := strconv.ParseInt(strings.TrimPrefix(line, "duration_us="), 10, 64); err == nil {
-				durationUs = d
+				durationUs.Store(d)
 			}
 		} else if strings.HasPrefix(line, "out_time_us=") {
 			if t, err := strconv.ParseInt(strings.TrimPrefix(line, "out_time_us="), 10, 64); err == nil {
-				if durationUs > 0 {
-					pct := float64(t) / float64(durationUs) * 100
+				dur := durationUs.Load()
+				if dur > 0 {
+					pct := float64(t) / float64(dur) * 100
 					if pct > 100 {
 						pct = 100
 					}

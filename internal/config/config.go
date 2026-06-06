@@ -223,7 +223,7 @@ func (c *Config) Apply(fn func() error) error {
 	}
 	// 原子写入：先写临时文件再 sync+rename，防止崩溃时数据损坏
 	tmp := c.ConfigFile + ".tmp"
-	if err := atomicWriteFile(tmp, data, 0600); err != nil {
+	if err := AtomicWriteFile(tmp, data, 0600); err != nil {
 		*c = old
 		return err
 	}
@@ -278,7 +278,7 @@ func (c *Config) SaveCredential() error {
 		return err
 	}
 	tmp := file + ".tmp"
-	if err := atomicWriteFile(tmp, data, 0600); err != nil {
+	if err := AtomicWriteFile(tmp, data, 0600); err != nil {
 		return err
 	}
 	if err := os.Rename(tmp, file); err != nil {
@@ -288,9 +288,9 @@ func (c *Config) SaveCredential() error {
 	return nil
 }
 
-// atomicWriteFile 将数据写入临时文件并 fsync，确保数据刷入持久存储后再返回。
+// AtomicWriteFile 将数据写入临时文件并 fsync，确保数据刷入持久存储后再返回。
 // 用于配合 os.Rename 实现崩溃安全的原子写入。
-func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
+func AtomicWriteFile(path string, data []byte, perm os.FileMode) error {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
 	if err != nil {
 		return err
