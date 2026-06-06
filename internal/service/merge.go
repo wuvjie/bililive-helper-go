@@ -92,7 +92,7 @@ func NewMergeService(config *config.Config, logger *zap.Logger, history *History
 	return &MergeService{config: config, logger: logger, history: history}
 }
 
-// logToFile appends a timestamped line to the task log file, rotating at midnight.
+// logToFile 向任务日志文件追加一行带时间戳的日志，午夜自动轮转。
 func (s *MergeService) logToFile(task, message string) {
 	logToFile(s.config.LogDir, task, message, s.logger)
 }
@@ -114,7 +114,7 @@ func (s *MergeService) checkDiskSpaceForMerge(tasks []mergeTask, targetDir strin
 	if err != nil {
 		return fmt.Errorf("获取磁盘信息失败: %w", err)
 	}
-	// TS pipeline peak space: source files + TS intermediates + output ~ 3x source + 2GB headroom
+	// TS 管线峰值空间：源文件 + TS 中间文件 + 输出文件 ≈ 3 倍源文件 + 2GB 余量
 	needed := (totalSourceBytes * 3) + tsMergeHeadroomBytes
 	if int64(disk.Free) < needed {
 		return fmt.Errorf("磁盘空间不足：需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
@@ -128,9 +128,9 @@ func classifyMergeFailure(folder, firstFile string) string {
 	output := utils.MakeOutputName(firstFile)
 	outputPath := filepath.Join(folder, output)
 
-	// Check if output was created but then deleted by validation probe
+	// 检查输出文件是否存在（可能被校验探针删除）
 	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
-		// Check if source files have issues
+		// 检查源文件是否有问题
 		firstPath := filepath.Join(folder, firstFile)
 		if info, err := os.Stat(firstPath); err != nil {
 			return "源文件不存在"
@@ -140,7 +140,7 @@ func classifyMergeFailure(folder, firstFile string) string {
 		return "ffmpeg输出校验失败"
 	}
 
-	// Output exists but too small
+	// 输出存在但过小
 	if info, err := os.Stat(outputPath); err == nil {
 		if info.Size() < minValidFileSize {
 			return fmt.Sprintf("输出过小(%s)", utils.FormatSize(info.Size()))
@@ -230,7 +230,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		}
 	}
 
-	// Merge tasks
+	// 处理待合并任务
 	for i, task := range tasks {
 		if cfg.IsBackupWindow() {
 			break
@@ -257,7 +257,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		s.unlockStreamer(sl)
 	}
 
-	// Summary
+	// 合并结果汇总
 	totalScanned := 0
 	if dirs, err := os.ReadDir(root); err == nil {
 		for _, d := range dirs {
@@ -309,20 +309,20 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 // convertFlvToMp4 将单个 FLV 文件转换为 MP4（通过 TS 中间格式）。
 // 转换成功后保留原始录制时间，删除原始 FLV 文件。
 func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path string, onProgress ProgressFunc, opLog *OpLogger) bool {
-	// Check source file is not locked
+	// 跳过正在被录制软件锁定的文件
 	if isFileBeingWritten(flvPath, 1*time.Second) {
 		onProgress(fmt.Sprintf("⚠ %s 被占用，跳过", filepath.Base(flvPath)))
 		return false
 	}
 
-	// Check disk space
+	// 检查磁盘空间
 	disk, diskErr := utils.GetDiskUsage(filepath.Dir(flvPath))
 	if diskErr == nil && disk.Free < minConvertFreeBytes {
 		onProgress(fmt.Sprintf("⚠ 磁盘空间不足（仅剩 %.1f GB / 需要 %.1f GB），跳过转换", float64(disk.Free)/oneGB, float64(minConvertFreeBytes)/oneGB))
 		return false
 	}
 
-	// Capture original recording time before conversion
+	// 转换前保留原始录制时间戳
 	var flvMtime time.Time
 	if info, err := os.Stat(flvPath); err == nil {
 		flvMtime = info.ModTime()
@@ -346,7 +346,7 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 		}
 	}
 
-	// Delete original with retry
+	// 删除原始文件（带重试）
 	if err := utils.SafeUnlink(flvPath); err != nil {
 		opLog.Log(fmt.Sprintf("⚠ 删除原始文件失败: %v", err))
 	}
@@ -363,7 +363,7 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 // concatReencode 使用 ffmpeg concat filter 重编码合并文件。
 // 作为 stream-copy 失败时的 fallback（编解码器不兼容、头部损坏等情况）。
 func (s *MergeService) concatReencode(ctx context.Context, files []string, folder, outputPath string, onProgress ProgressFunc, opLog *OpLogger) bool {
-	// Check total input size — skip re-encode for large files on weak hardware
+	// 检查输入文件总大小 — 大文件在低配硬件上跳过重编码
 	var totalSize int64
 	var latestSrcMtime time.Time
 	for _, f := range files {
@@ -384,7 +384,7 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 		return false
 	}
 
-	// Preserve original recording time
+	// 保留原始录制时间
 	if !latestSrcMtime.IsZero() {
 		if err := os.Chtimes(outputPath, latestSrcMtime, latestSrcMtime); err != nil {
 			opLog.Log(fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(outputPath), err))
@@ -431,7 +431,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		return false
 	}
 
-	// Check all files are accessible and not locked
+	// 检查所有文件是否可访问且未被锁定
 	if err := checkFileAvailability(folder, files); err != nil {
 		onProgress(fmt.Sprintf("⚠ %v", err))
 		return false
@@ -462,14 +462,14 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		opLog.Log(fmt.Sprintf("⚠ 输出文件已存在，自动重命名为: %s", output))
 	}
 
-	// Check disk space
+	// 检查磁盘空间
 	disk, diskErr := utils.GetDiskUsage(folder)
 	if diskErr == nil && disk.Free < minMergeFreeBytes {
 		opLog.Log(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB / 需要 %.1f GB），跳过", float64(disk.Free)/oneGB, float64(minMergeFreeBytes)/oneGB))
 		return false
 	}
 
-	// Capture latest source mtime and total size for timestamp correction and progress
+	// 记录最新源文件的修改时间和总大小，用于时间戳校正和进度显示
 	var latestSrcMtime time.Time
 	var totalFileSize int64
 	for _, f := range files {

@@ -15,7 +15,7 @@ func ConvertViaTS(ctx context.Context, input, output string) error {
 	tsPath := output + ".tmp.ts"
 	defer os.Remove(tsPath)
 
-	// Step 1: input -> TS
+	// 步骤 1：输入文件 → TS
 	err := Run(ctx, Options{
 		Args: []string{"-nostdin", "-i", input, "-c", "copy", "-bsf:v", "h264_mp4toannexb", "-y", "-loglevel", "error", tsPath},
 	})
@@ -23,7 +23,7 @@ func ConvertViaTS(ctx context.Context, input, output string) error {
 		return fmt.Errorf("转换 TS 失败: %w", err)
 	}
 
-	// Step 2: TS -> output
+	// 步骤 2：TS → 输出文件
 	err = Run(ctx, Options{
 		Args: []string{"-nostdin", "-i", tsPath, "-c", "copy", "-y", "-loglevel", "error", output},
 	})

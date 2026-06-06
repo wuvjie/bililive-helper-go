@@ -57,20 +57,20 @@ var (
 		BackupEndHour:      12,
 		BackupEndMinute:    0,
 		Port:               5000,
-		Password:           "",  // auto-generated on first run if not set
-		SecretKey:          "",  // auto-generated on first run if not set
+		Password:           "",  // 首次运行时自动生成（如未设置）
+		SecretKey:          "",  // 首次运行时自动生成（如未设置）
 		LogDir:             "/vol1/1000/docker/bililive-helper-go",
 	}
 	mu sync.RWMutex
 )
 
-// ConfigExists returns true if config.json exists in the given log directory.
+// ConfigExists 检查指定日志目录下是否存在 config.json 文件。
 func ConfigExists(logDir string) bool {
 	_, err := os.Stat(filepath.Join(logDir, "config.json"))
 	return err == nil
 }
 
-// DefaultConfig returns a copy of the default configuration (without credentials).
+// DefaultConfig 返回默认配置的副本（不含凭据信息）。
 func DefaultConfig() Config {
 	cfg := defaultConfig
 	cfg.WhitelistKeywords = append([]string(nil), defaultConfig.WhitelistKeywords...)
@@ -109,7 +109,7 @@ func Load() *Config {
 	if v := os.Getenv("SECRET_KEY"); v != "" {
 		cfg.SecretKey = v
 	}
-	// Update ConfigFile path in case LOG_DIR changed via env
+	// LOG_DIR 通过环境变量变更后，更新 ConfigFile 路径
 	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")
 
 	// 首次运行自动生成随机凭据（无配置文件且无环境变量时）
@@ -130,7 +130,7 @@ func Load() *Config {
 		fmt.Printf("登录密码: %s\n", cfg.Password)
 		fmt.Printf("请登录后及时修改密码\n")
 		fmt.Printf("═══════════════\n")
-		// Persist auto-generated password so it survives restarts
+		// 持久化自动生成的密码，使其在重启后仍然有效
 		if err := cfg.SaveCredential(); err != nil {
 			fmt.Printf("[WARN] 密码持久化失败: %v\n", err)
 		}
@@ -189,8 +189,8 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// IsBackupWindow returns true if the current time falls within the configured quiet window.
-// Supports windows that wrap around midnight (e.g. 22:30 - 06:15).
+// IsBackupWindow 判断当前时间是否在静默时段内。
+// 支持跨午夜的时段配置（如 22:30 - 06:15）。
 func (c *Config) IsBackupWindow() bool {
 	now := time.Now()
 	cur := now.Hour()*60 + now.Minute()
@@ -199,7 +199,7 @@ func (c *Config) IsBackupWindow() bool {
 	if start <= end {
 		return cur >= start && cur < end
 	}
-	// Wraps midnight (e.g. 22:30 - 06:15)
+	// 跨午夜时段（如 22:30 - 06:15）
 	return cur >= start || cur < end
 }
 
@@ -208,7 +208,7 @@ func (c *Config) IsBackupWindow() bool {
 func (c *Config) Apply(fn func() error) error {
 	mu.Lock()
 	defer mu.Unlock()
-	// Snapshot for rollback (deep copy slice to avoid aliasing)
+	// 快照用于回滚（深拷贝切片避免别名问题）
 	old := *c
 	old.WhitelistKeywords = append([]string(nil), c.WhitelistKeywords...)
 	if err := fn(); err != nil {
@@ -220,7 +220,7 @@ func (c *Config) Apply(fn func() error) error {
 		*c = old
 		return err
 	}
-	// Atomic write: write to tmp file then rename to prevent corruption on crash
+	// 原子写入：先写临时文件再 rename，防止崩溃时数据损坏
 	tmp := c.ConfigFile + ".tmp"
 	if err := os.WriteFile(tmp, data, 0644); err != nil {
 		*c = old
@@ -244,14 +244,14 @@ func (c *Config) GetHistoryFile() string {
 	return filepath.Join(c.LogDir, "history.json")
 }
 
-// GetCredentialFile returns the path to the credentials file that stores
-// the password outside config.json (since Password has json:"-").
+// GetCredentialFile 返回凭据文件路径。
+// 密码通过 json:"-" 排除在 config.json 之外，单独存储在此文件中。
 func (c *Config) GetCredentialFile() string {
 	return filepath.Join(c.LogDir, ".credentials.json")
 }
 
-// LoadCredential reads the persisted password from the credential file.
-// Returns empty string if no credential file exists.
+// LoadCredential 从凭据文件读取持久化的密码。
+// 凭据文件不存在时返回空字符串。
 func (c *Config) LoadCredential() string {
 	file := c.GetCredentialFile()
 	data, err := os.ReadFile(file)
@@ -267,7 +267,7 @@ func (c *Config) LoadCredential() string {
 	return cred.Password
 }
 
-// SaveCredential persists the current password to a credential file.
+// SaveCredential 将当前密码持久化到凭据文件。
 func (c *Config) SaveCredential() error {
 	file := c.GetCredentialFile()
 	data, err := json.Marshal(struct {

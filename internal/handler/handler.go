@@ -30,8 +30,8 @@ type Handler struct {
 func NewHandler(config *config.Config, logger *zap.Logger, merge *service.MergeService, clean *service.CleanService, history *service.HistoryService, scheduler *service.SchedulerService) *Handler {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(config.Password), bcrypt.DefaultCost)
 	if err != nil {
-		// bcrypt failure is unrecoverable at runtime — log and fall back to
-		// a value that will never match any input so logins fail safely.
+		// bcrypt 失败不可恢复 — 记录日志并使用永远不匹配的哈希值，
+		// 确保登录安全地失败（而非 panic）。
 		logger.Error("bcrypt 哈希密码失败，登录将不可用", zap.Error(err))
 		hashed = []byte("!invalid-hash!")
 	}

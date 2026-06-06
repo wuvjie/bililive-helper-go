@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	minValidSize     = 10240   // 10KB absolute minimum
-	minSizePerSecond = 5000    // 5KB/s — below this bitrate something is wrong
+	minValidSize     = 10240   // 10KB: 文件最小有效大小
+	minSizePerSecond = 5000    // 5KB/s: 低于此码率视为异常
 	probeTimeout     = 30 * time.Second
 )
 
@@ -73,7 +73,7 @@ func probeMetadata(ctx context.Context, path string) (duration float64, streams 
 	probeCtx, cancel := context.WithTimeout(ctx, probeTimeout)
 	defer cancel()
 
-	// Get duration
+	// 获取时长
 	cmd := exec.CommandContext(probeCtx, "ffprobe",
 		"-v", "quiet",
 		"-show_entries", "format=duration",
@@ -88,7 +88,7 @@ func probeMetadata(ctx context.Context, path string) (duration float64, streams 
 		return 0, 0, fmt.Errorf("解析时长失败: %s", strings.TrimSpace(string(out)))
 	}
 
-	// Count streams
+	// 统计流数量
 	cmd2 := exec.CommandContext(probeCtx, "ffprobe",
 		"-v", "quiet",
 		"-show_entries", "stream=index",
@@ -109,12 +109,12 @@ func probeMetadata(ctx context.Context, path string) (duration float64, streams 
 // multiPointDecode 在文件的 3 个位置解码短片段（10%、50%、90%）。
 // 使用 -v warning 容忍轻微的时间戳不连续。
 func multiPointDecode(ctx context.Context, path string, duration float64) error {
-	// For very short files (< 30s), decode the entire file
+	// 短文件（< 30s）直接解码整个文件
 	if duration < 30 {
 		return singleDecode(ctx, path, 0, duration)
 	}
 
-	// Sample at 10%, 50%, 90% — each segment is 5 seconds
+	// 在 10%、50%、90% 位置采样，每段 5 秒
 	positions := []float64{
 		duration * 0.10,
 		duration * 0.50,
@@ -157,7 +157,7 @@ func singleDecode(ctx context.Context, path string, start, durationSec float64) 
 		return fmt.Errorf("解码段 @%.0fs 出现致命错误: %s", start, truncate(output, 200))
 	}
 
-	// Non-fatal warnings with non-zero exit — acceptable for live recordings
+	// 非致命警告且非零退出码 — 直播录制中可接受
 	return nil
 }
 
@@ -229,6 +229,7 @@ func QuickProbe(ctx context.Context, path string) error {
 	return nil
 }
 
+// truncate 截断字符串到指定最大长度，超出部分用 "..." 替代。
 func truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
