@@ -633,7 +633,7 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 
 	if len(validFiles) < 2 {
 		if len(skipped) > 0 {
-			return fmt.Errorf("有效文件不足2个（%d 个文件已被自动合并处理或删除，请刷新文件列表）", len(skipped))
+			return fmt.Errorf("有效文件不足2个（%d 个文件已不存在，请刷新文件列表）", len(skipped))
 		}
 		return fmt.Errorf("有效文件不足2个")
 	}
@@ -642,8 +642,8 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	SortByFilename(validFiles)
 
 	if len(skipped) > 0 {
-		s.logToFile("merge", fmt.Sprintf("⚠ %d 个文件已被自动合并处理或删除，跳过", len(skipped)))
-		onProgress(fmt.Sprintf("⚠ %d 个文件已失效，使用剩余 %d 个文件继续", len(skipped), len(validFiles)))
+		s.logToFile("merge", fmt.Sprintf("⚠ %d 个文件已不存在，跳过", len(skipped)))
+		onProgress(fmt.Sprintf("⚠ %d 个文件已不存在，使用剩余 %d 个文件继续", len(skipped), len(validFiles)))
 	}
 
 	onProgress(fmt.Sprintf("⏳ 手动合并 %d 个文件", len(validFiles)))
