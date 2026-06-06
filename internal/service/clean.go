@@ -156,7 +156,7 @@ type candidateFile struct {
 	Path  string
 	Name  string
 	Size  int64
-	Mtime float64
+	Mtime int64 // Unix 时间戳（秒）
 }
 
 // calculateNeedToFree 计算需要释放的字节数以达到目标阈值。
@@ -181,6 +181,7 @@ func (s *CleanService) collectCandidates(root, streamer string, cfg config.Confi
 	perStreamer := make(map[string]streamerStats)
 	entries, err := os.ReadDir(root)
 	if err != nil {
+		s.logger.Warn("读取根目录失败，跳过清理", zap.Error(err))
 		return nil, nil
 	}
 	for _, entry := range entries {
@@ -247,7 +248,7 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 			Path:  filepath.Join(folder, name),
 			Name:  name,
 			Size:  info.Size(),
-			Mtime: float64(info.ModTime().Unix()),
+			Mtime: info.ModTime().Unix(),
 		})
 	}
 
@@ -266,12 +267,12 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 		}
 		if cfg.SafeMode == "days" {
 			cutoff := time.Now().AddDate(0, 0, -cfg.SafeDays)
-			if time.Unix(int64(v.Mtime), 0).After(cutoff) {
+			if time.Unix(v.Mtime, 0).After(cutoff) {
 				continue
 			}
 		} else {
 			cutoff := time.Now().Add(-time.Duration(cfg.SafeAgeMinutes) * time.Minute)
-			if time.Unix(int64(v.Mtime), 0).After(cutoff) {
+			if time.Unix(v.Mtime, 0).After(cutoff) {
 				continue
 			}
 		}
@@ -294,7 +295,11 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	}
 
 	// 2. 等待 1 秒后再次记录大小 — 正在写入的文件大小会不同
-	time.Sleep(1 * time.Second)
+	select {
+	case <-time.After(1 * time.Second):
+	case <-ctx.Done():
+		return 0, 0
+	}
 
 	// 3. 记录第二次快照
 	sizeMap2 := make(map[string]int64)

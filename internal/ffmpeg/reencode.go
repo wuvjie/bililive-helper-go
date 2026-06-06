@@ -117,7 +117,10 @@ var (
 
 func detectVideoEncoder() string {
 	encoderOnce.Do(func() {
-		if out, err := exec.Command("ffmpeg", "-encoders").Output(); err == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "ffmpeg", "-encoders")
+		if out, err := cmd.Output(); err == nil {
 			if strings.Contains(string(out), "h264_rkmpp") {
 				cachedEncoder = "h264_rkmpp"
 				return

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"bililive-helper/internal/model"
@@ -357,12 +356,15 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 
 	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
 		// 临时覆盖目标阈值（紧急清理结束后自动恢复原值）
+		// 使用 Apply 保证原子性，defer 确保恢复
 		if req.TargetPct >= 10 && req.TargetPct < 100 {
 			originalTarget := h.config.Snapshot().TargetThreshold
-			h.config.Apply(func() error {
+			if err := h.config.Apply(func() error {
 				h.config.TargetThreshold = req.TargetPct
 				return nil
-			})
+			}); err != nil {
+				return fmt.Sprintf("❌ 设置目标阈值失败: %s", err.Error())
+			}
 			defer h.config.Apply(func() error {
 				h.config.TargetThreshold = originalTarget
 				return nil
@@ -409,7 +411,7 @@ func (h *Handler) SetupCheck(c *gin.Context) {
 	// 测试 ffmpeg 进程组创建能力
 	if checks["ffmpeg_ok"].(bool) {
 		cmd := exec.Command("ffmpeg", "-version")
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+		setProcessGroup(cmd)
 		if err := cmd.Run(); err == nil {
 			checks["ffmpeg_process_group_ok"] = true
 		} else {

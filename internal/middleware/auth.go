@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"bililive-helper/internal/config"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -85,9 +87,9 @@ func RateLimiter(maxPerMinute int) (gin.HandlerFunc, func()) {
 }
 
 // AuthRequired 认证中间件，支持两种认证方式：
-// 1. Session Cookie 认证（浏览器端）
+// 1. Session Cookie 认证（浏览器端），校验 session_version 防止旧 session 被利用
 // 2. Bearer Token 认证（API 调用，constant-time 比较防时序攻击）
-func AuthRequired() gin.HandlerFunc {
+func AuthRequired(cfg *config.Config) gin.HandlerFunc {
 	expectedToken := os.Getenv("API_TOKEN")
 	expectedTokenBytes := []byte(expectedToken)
 
@@ -95,6 +97,22 @@ func AuthRequired() gin.HandlerFunc {
 		// Session 认证（浏览器）
 		session := sessions.Default(c)
 		if session.Get("authenticated") == true {
+			// 校验 session_version：改密后旧 session 自动失效
+			sessionVer, _ := session.Get("session_version").(int)
+			currentVer := cfg.Snapshot().SessionVersion
+			if sessionVer != currentVer {
+				session.Clear()
+				session.Options(sessions.Options{MaxAge: -1})
+				session.Save()
+				if strings.HasPrefix(c.Request.URL.Path, "/api") {
+					c.JSON(http.StatusUnauthorized, gin.H{"error": "登录已过期，请重新登录"})
+					c.Abort()
+					return
+				}
+				c.Redirect(http.StatusFound, "/login")
+				c.Abort()
+				return
+			}
 			c.Next()
 			return
 		}
@@ -129,6 +147,8 @@ func SecurityHeaders() gin.HandlerFunc {
 		c.Header("X-Frame-Options", "SAMEORIGIN")
 		c.Header("X-XSS-Protection", "1; mode=block")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		// 注意：login.html 包含内联 <script>，需要 'unsafe-inline'。
+		// 如需更严格的 CSP，需将 login.html 中的内联脚本提取为外部文件。
 		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'self'; form-action 'self'; frame-ancestors 'self'")
 		c.Next()
 	}

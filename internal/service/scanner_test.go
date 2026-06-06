@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,7 +11,7 @@ import (
 func TestIsFileBeingWritten_FileDoesNotExist(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "nonexistent.flv")
-	got := isFileBeingWritten(path, 10*time.Millisecond)
+	got := isFileBeingWritten(context.Background(), path, 10*time.Millisecond)
 	if !got {
 		t.Error("expected true for nonexistent file, got false")
 	}
@@ -22,7 +23,7 @@ func TestIsFileBeingWritten_StableFile(t *testing.T) {
 	if err := os.WriteFile(path, make([]byte, 4096), 0644); err != nil {
 		t.Fatal(err)
 	}
-	got := isFileBeingWritten(path, 10*time.Millisecond)
+	got := isFileBeingWritten(context.Background(), path, 10*time.Millisecond)
 	if got {
 		t.Error("expected false for stable file, got true")
 	}
@@ -49,7 +50,7 @@ func TestIsFileBeingWritten_SizeChanging(t *testing.T) {
 		}
 	}()
 
-	got := isFileBeingWritten(path, 50*time.Millisecond)
+	got := isFileBeingWritten(context.Background(), path, 50*time.Millisecond)
 	<-done
 	if !got {
 		t.Error("expected true for changing file, got false")
@@ -62,7 +63,7 @@ func TestIsFileSizeStable_StableFile(t *testing.T) {
 	if err := os.WriteFile(path, make([]byte, 8192), 0644); err != nil {
 		t.Fatal(err)
 	}
-	got := isFileSizeStable(path, 10*time.Millisecond)
+	got := isFileSizeStable(context.Background(), path, 10*time.Millisecond)
 	if !got {
 		t.Error("expected true for stable file, got false")
 	}
@@ -89,7 +90,7 @@ func TestIsFileSizeStable_ChangingFile(t *testing.T) {
 		}
 	}()
 
-	got := isFileSizeStable(path, 50*time.Millisecond)
+	got := isFileSizeStable(context.Background(), path, 50*time.Millisecond)
 	<-done
 	if got {
 		t.Error("expected false for changing file, got true")
@@ -99,7 +100,7 @@ func TestIsFileSizeStable_ChangingFile(t *testing.T) {
 func TestIsFileSizeStable_NonexistentFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "nonexistent.flv")
-	got := isFileSizeStable(path, 10*time.Millisecond)
+	got := isFileSizeStable(context.Background(), path, 10*time.Millisecond)
 	if got {
 		t.Error("expected false for nonexistent file, got true")
 	}

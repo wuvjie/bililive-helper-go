@@ -244,27 +244,30 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			onProgress(fmt.Sprintf("── %s ──", streamerName))
 			lastStreamer = streamerName
 		}
-		locked, sl := s.tryLockStreamer(streamerName)
-		if !locked {
-			continue
-		}
-		onProgress(fmt.Sprintf("[%s] ⚙ 合并 %d 个文件 (%s)", streamerName, len(task.Files), utils.FormatSize(int64(task.SizeGB*oneGB))))
-		if s.doMerge(ctx, task.Files, task.Folder, onProgress, opLog) {
-			done++
-			mergeDone++
-			totalGB += task.SizeGB
-			outputName := utils.MakeOutputName(task.Files[0])
-			if strings.HasSuffix(outputName, ".flv") {
-				outputName = strings.TrimSuffix(outputName, ".flv") + ".mp4"
+		// 使用匿名函数确保 defer unlock，防止 panic 时锁泄漏
+		func() {
+			locked, sl := s.tryLockStreamer(streamerName)
+			if !locked {
+				return
 			}
-			onProgress(fmt.Sprintf("[%s] ✅ → %s", streamerName, outputName))
-		} else {
-			mergeFailed++
-			reason := classifyMergeFailure(task.Folder, task.Files[0])
-			failedReasons[reason]++
-			onProgress(fmt.Sprintf("[%s] ❌ 失败: %s", streamerName, reason))
-		}
-		s.unlockStreamer(sl)
+			defer s.unlockStreamer(sl)
+			onProgress(fmt.Sprintf("[%s] ⚙ 合并 %d 个文件 (%s)", streamerName, len(task.Files), utils.FormatSize(int64(task.SizeGB*oneGB))))
+			if s.doMerge(ctx, task.Files, task.Folder, onProgress, opLog) {
+				done++
+				mergeDone++
+				totalGB += task.SizeGB
+				outputName := utils.MakeOutputName(task.Files[0])
+				if strings.HasSuffix(outputName, ".flv") {
+					outputName = strings.TrimSuffix(outputName, ".flv") + ".mp4"
+				}
+				onProgress(fmt.Sprintf("[%s] ✅ → %s", streamerName, outputName))
+			} else {
+				mergeFailed++
+				reason := classifyMergeFailure(task.Folder, task.Files[0])
+				failedReasons[reason]++
+				onProgress(fmt.Sprintf("[%s] ❌ 失败: %s", streamerName, reason))
+			}
+		}()
 	}
 
 	// 合并结果汇总
@@ -316,7 +319,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 // 转换成功后保留原始录制时间，删除原始 FLV 文件。
 func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path string, onProgress ProgressFunc, opLog *OpLogger) bool {
 	// 跳过正在被录制软件锁定的文件
-	if isFileBeingWritten(flvPath, 1*time.Second) {
+	if isFileBeingWritten(ctx, flvPath, 1*time.Second) {
 		onProgress(fmt.Sprintf("⚠ %s 被占用，跳过", filepath.Base(flvPath)))
 		return false
 	}
@@ -407,10 +410,16 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 
 // checkFileAvailability 检查批次中的所有文件是否可访问且未被锁定。
 // 文件不存在时，检查是否有对应的合并版（说明已被之前的合并处理）。
-func checkFileAvailability(folder string, files []string) error {
+func checkFileAvailability(ctx context.Context, folder string, files []string) error {
 	for _, f := range files {
-		path := filepath.Join(folder, f)
-		if _, err := os.Stat(path); err != nil {
+		// 路径穿越防护：确保文件路径在预期目录内
+		fullPath := filepath.Join(folder, f)
+		cleanPath := filepath.Clean(fullPath)
+		cleanFolder := filepath.Clean(folder)
+		if !strings.HasPrefix(cleanPath, cleanFolder+string(os.PathSeparator)) {
+			return fmt.Errorf("路径穿越检测: %s", f)
+		}
+		if _, err := os.Stat(fullPath); err != nil {
 			// 文件不存在，检查是否已有合并版输出
 			mergedName := utils.MakeOutputName(f)
 			mergedPath := filepath.Join(folder, mergedName)
@@ -419,7 +428,7 @@ func checkFileAvailability(folder string, files []string) error {
 			}
 			return fmt.Errorf("文件不存在: %s", f)
 		}
-		if isFileBeingWritten(path, 1*time.Second) {
+		if isFileBeingWritten(ctx, fullPath, 1*time.Second) {
 			return fmt.Errorf("文件被占用: %s", f)
 		}
 	}
@@ -438,7 +447,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	}
 
 	// 检查所有文件是否可访问且未被锁定
-	if err := checkFileAvailability(folder, files); err != nil {
+	if err := checkFileAvailability(ctx, folder, files); err != nil {
 		onProgress(fmt.Sprintf("⚠ %v", err))
 		return false
 	}
@@ -529,27 +538,32 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		opLog.Log(fmt.Sprintf("⚠ TS 拼接失败: %v，切换重编码", err))
 		onProgress("⚠ 拼接失败，切换重编码…")
 		utils.SafeUnlink(concatOutputPath)
-		return s.concatReencode(ctx, files, folder, outputPath, onProgress, opLog)
+		// 使用 concatOutputPath（已是 .mp4）而非原始 outputPath（可能是 .flv），
+		// 确保重编码输出也是 MP4 容器
+		return s.concatReencode(ctx, files, folder, concatOutputPath, onProgress, opLog)
 	}
 
 	// 步骤 3：校验输出文件
 	if err := ffmpeg.ValidateOutput(ctx, concatOutputPath); err != nil {
 		opLog.Log(fmt.Sprintf("⚠ 输出校验失败: %v，切换重编码", err))
 		utils.SafeUnlink(concatOutputPath)
-		return s.concatReencode(ctx, files, folder, outputPath, onProgress, opLog)
+		// 使用 concatOutputPath（已是 .mp4）确保重编码输出也是 MP4 容器
+		return s.concatReencode(ctx, files, folder, concatOutputPath, onProgress, opLog)
 	}
 
 	// fsync — 确保数据刷入持久存储后再删除原始文件
-	if fd, err := os.OpenFile(concatOutputPath, os.O_RDONLY, 0); err == nil {
-		if syncErr := fd.Sync(); syncErr != nil {
-			fd.Close()
-			opLog.Log(fmt.Sprintf("❌ fsync 失败: %v，删除不可靠输出，保留原始文件", syncErr))
-			utils.SafeUnlink(concatOutputPath) // 删除不可靠输出，防止下次被误判为已合并
-			os.RemoveAll(tmpDir)
-			return false
-		}
-		fd.Close()
+	fd, openErr := os.OpenFile(concatOutputPath, os.O_RDONLY, 0)
+	if openErr != nil {
+		opLog.Log(fmt.Sprintf("❌ 无法打开输出文件进行 fsync: %v，保留原始文件", openErr))
+		return false
 	}
+	if syncErr := fd.Sync(); syncErr != nil {
+		fd.Close()
+		opLog.Log(fmt.Sprintf("❌ fsync 失败: %v，删除不可靠输出，保留原始文件", syncErr))
+		utils.SafeUnlink(concatOutputPath) // 删除不可靠输出，防止下次被误判为已合并
+		return false
+	}
+	fd.Close()
 
 	// FLV->MP4 转换：仅在 concat 输出到不同文件路径时需要。
 	// 注意：此条件依赖 ConcatTS 将 .flv 输出自动转为 .mp4 的行为（concatOutputPath 已是 .mp4）。
@@ -593,7 +607,9 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 
 	// 合并校验通过后删除原始文件
 	for _, f := range files {
-		utils.SafeUnlink(filepath.Join(folder, f))
+		if err := utils.SafeUnlink(filepath.Join(folder, f)); err != nil {
+			opLog.Log(fmt.Sprintf("⚠ 删除源文件失败: %s (%v)", f, err))
+		}
 	}
 
 	return true

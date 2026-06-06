@@ -50,13 +50,16 @@ const (
 
 // isFileBeingWritten 通过比较两次文件大小来检测文件是否正在被写入。
 // 文件缺失、不可访问或大小变化时返回 true。
-
-func isFileBeingWritten(path string, interval time.Duration) bool {
+func isFileBeingWritten(ctx context.Context, path string, interval time.Duration) bool {
 	info1, err := os.Stat(path)
 	if err != nil {
 		return true
 	}
-	time.Sleep(interval)
+	select {
+	case <-time.After(interval):
+	case <-ctx.Done():
+		return true
+	}
 	info2, err := os.Stat(path)
 	if err != nil {
 		return true
@@ -66,12 +69,16 @@ func isFileBeingWritten(path string, interval time.Duration) bool {
 
 // isFileSizeStable 检查文件大小在指定间隔内是否保持稳定。
 // 最终安全检查 — 捕获挂起的写入进程。
-func isFileSizeStable(path string, interval time.Duration) bool {
+func isFileSizeStable(ctx context.Context, path string, interval time.Duration) bool {
 	info1, err := os.Stat(path)
 	if err != nil {
 		return false
 	}
-	time.Sleep(interval)
+	select {
+	case <-time.After(interval):
+	case <-ctx.Done():
+		return false
+	}
 	info2, err := os.Stat(path)
 	if err != nil {
 		return false
@@ -236,7 +243,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					defer wg.Done()
 					defer func() { <-sem }() // 释放信号量槽位
 					path := filepath.Join(folder, items[idx].Name)
-					dur, err := utils.GetVideoDuration(path)
+					dur, err := utils.GetVideoDuration(ctx, path)
 					if err == nil && dur > 0 {
 						items[idx].EndTime = items[idx].Datetime.Add(time.Duration(dur * float64(time.Second)))
 					} else {
@@ -277,11 +284,15 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				if info, err := os.Stat(actualOutputPath); err == nil && info.Size() >= minValidFileSize {
 					if ffmpeg.QuickProbe(ctx, actualOutputPath) == nil {
 						for _, v := range batch {
-							utils.SafeUnlink(filepath.Join(folder, v.Name))
+							if err := utils.SafeUnlink(filepath.Join(folder, v.Name)); err != nil {
+								s.logger.Warn("清理原片失败", zap.String("file", v.Name), zap.Error(err))
+							}
 						}
 						s.logger.Info(fmt.Sprintf("[%s] ✅ %s → 已合并，清理原片", entry.Name(), filepath.Base(actualOutputPath)))
 					} else {
-						utils.SafeUnlink(actualOutputPath)
+						if err := utils.SafeUnlink(actualOutputPath); err != nil {
+							s.logger.Warn("清理损坏输出失败", zap.String("file", filepath.Base(actualOutputPath)), zap.Error(err))
+						}
 						s.logger.Info(fmt.Sprintf("[%s] ⚠ %s → 输出损坏，将重新合并", entry.Name(), filepath.Base(actualOutputPath)))
 					}
 					continue
@@ -297,7 +308,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					if info == nil || info.Size() == 0 {
 						continue
 					}
-					if !utils.IsVideoHealthy(path) {
+					if !utils.IsVideoHealthy(ctx, path) {
 						s.logger.Info(fmt.Sprintf("[%s] ⏭ 跳过损坏文件: %s", entry.Name(), v.Name))
 						continue
 					}
@@ -366,7 +377,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				}
 
 				lastFile := filepath.Join(folder, names[len(names)-1])
-				if isFileBeingWritten(lastFile, 2*time.Second) {
+				if isFileBeingWritten(ctx, lastFile, 2*time.Second) {
 					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 文件写入中，跳过", entry.Name(), len(names)))
 					continue
 				}
@@ -386,7 +397,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					continue
 				}
 
-				if !isFileSizeStable(lastFile, 1*time.Minute) {
+				if !isFileSizeStable(ctx, lastFile, 1*time.Minute) {
 					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 文件大小仍在变化", entry.Name(), len(names)))
 					continue
 				}

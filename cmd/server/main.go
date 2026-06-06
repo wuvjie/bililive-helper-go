@@ -64,6 +64,12 @@ func main() {
 
 	r := gin.Default()
 
+	// 安全：限制可信代理，防止 X-Forwarded-For 伪造绕过限流。
+	// 仅信任本机回环地址；如有反向代理，将其 IP 加入列表。
+	if err := r.SetTrustedProxies([]string{"127.0.0.1", "::1"}); err != nil {
+		log.Fatalf("设置可信代理失败: %v", err)
+	}
+
 	store := cookie.NewStore([]byte(cfg.SecretKey))
 	// Session 安全配置：HttpOnly 防 XSS、SameSiteLax 防 CSRF、可选 Secure 标志
 	secure := os.Getenv("COOKIE_SECURE") == "true"
@@ -94,6 +100,8 @@ func main() {
 
 	r.GET("/", h.Index)
 	r.GET("/login", h.LoginPage)
+	// Logout 使用 GET 以兼容前端 window.location.href 调用。
+	// SameSite=Lax cookie 限制了跨站 GET 请求携带 cookie，风险可接受。
 	r.GET("/logout", h.Logout)
 	r.GET("/favicon.ico", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 
@@ -108,7 +116,7 @@ func main() {
 
 		// 需要认证的接口
 		auth := api.Group("")
-		auth.Use(middleware.AuthRequired())
+		auth.Use(middleware.AuthRequired(cfg))
 		rateLimiter, stopRateLimiter := middleware.RateLimiter(60) // 已认证接口：60 次 POST/分钟/IP
 		auth.Use(rateLimiter)
 		defer stopRateLimiter()
