@@ -39,6 +39,8 @@ func (s *HistoryService) Add(task, streamer, status, detail, logID string) {
 }
 
 // AddWithStats 添加一条带统计数据的历史记录（文件数、释放/合并字节数、耗时）。
+// 采用乐观写入策略：先更新内存缓存，再持久化到磁盘。
+// 磁盘写入失败时记录保留在内存中，下次成功写入时自动持久化。
 func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount int, freedBytes, mergedBytes int64, duration float64, detail, logID string) {
 	s.ensureLoadedSafe()
 	s.mu.Lock()
@@ -65,6 +67,8 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 	records := append([]model.HistoryRecord{}, s.cache...)
 	records = append(records, record)
 	records = s.cleanupRecords(records)
+	// 先更新内存缓存，确保即使磁盘写入失败记录也不丢失
+	s.cache = records
 	s.saveRecords(records)
 }
 
@@ -157,7 +161,14 @@ func (s *HistoryService) doLoad() {
 		Records []model.HistoryRecord `json:"records"`
 	}
 	if err := json.Unmarshal(data, &wrapper); err != nil {
-		s.logger.Warn("历史记录解析失败，重建空记录", zap.Error(err))
+		// C4: 备份损坏文件，避免数据永久丢失
+		backupFile := file + ".corrupt." + time.Now().Format("20060102150405")
+		if bErr := os.WriteFile(backupFile, data, 0600); bErr != nil {
+			s.logger.Warn("备份损坏历史文件失败", zap.Error(bErr))
+		} else {
+			s.logger.Warn("历史记录解析失败，已备份损坏文件",
+				zap.String("backup", backupFile), zap.Error(err))
+		}
 		s.loaded = true
 		s.cache = nil
 		return
@@ -166,6 +177,10 @@ func (s *HistoryService) doLoad() {
 	s.loaded = true
 }
 
+// saveRecords 将历史记录原子写入磁盘（write → fsync → rename）。
+// 成功后更新内存缓存。注意：AddWithStats 已采用乐观写入策略（先更新缓存再调用本函数），
+// 因此本函数的"失败不更新缓存"仅对 CleanupOldRecords 等直接调用者生效。
+// 调用者必须持有写锁。
 func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 	file := s.config.GetHistoryFile()
 	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
@@ -181,14 +196,28 @@ func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 		return
 	}
 	tmp := file + ".tmp"
-	if err := os.WriteFile(tmp, data, 0644); err != nil {
-		s.logger.Warn("写入历史记录临时文件失败", zap.Error(err))
-		os.Remove(tmp)
+	// 手动 Open → Write → Sync → Close，确保数据刷入持久存储后再 rename
+	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	if err != nil {
+		s.logger.Warn("创建历史记录临时文件失败", zap.Error(err))
 		return
 	}
-	if err := os.Rename(tmp, file); err != nil {
-		s.logger.Warn("原子替换历史记录文件失败", zap.Error(err))
+	if _, err := f.Write(data); err != nil {
+		f.Close()
 		os.Remove(tmp)
+		s.logger.Warn("写入历史记录临时文件失败", zap.Error(err))
+		return
+	}
+	if err := f.Sync(); err != nil {
+		f.Close()
+		os.Remove(tmp)
+		s.logger.Warn("fsync 历史记录失败", zap.Error(err))
+		return
+	}
+	f.Close()
+	if err := os.Rename(tmp, file); err != nil {
+		os.Remove(tmp)
+		s.logger.Warn("原子替换历史记录文件失败", zap.Error(err))
 		return
 	}
 	// 原子 rename 成功后才更新内存缓存

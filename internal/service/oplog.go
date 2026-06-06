@@ -36,11 +36,14 @@ func NewOpLogger(logDir, taskType string) (*OpLogger, error) {
 
 // Log 写入一行带时间戳的日志。并发安全。
 func (l *OpLogger) Log(msg string) {
-	if l == nil || l.closed {
+	if l == nil {
 		return
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	if l.closed {
+		return
+	}
 	fmt.Fprintf(l.file, "[%s] %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
 }
 
@@ -65,11 +68,14 @@ func (l *OpLogger) LogID() string {
 
 // Close 关闭日志文件。重复调用安全。
 func (l *OpLogger) Close() {
-	if l == nil || l.closed {
+	if l == nil {
 		return
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	if l.closed {
+		return
+	}
 	l.closed = true
 	l.file.Close()
 }

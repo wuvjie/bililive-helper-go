@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os/exec"
 	"time"
 )
@@ -31,21 +32,29 @@ func Run(ctx context.Context, opts Options) error {
 	cmd := exec.Command("ffmpeg", opts.Args...)
 	setProcessGroup(cmd)
 
+	// StdoutPipe 必须在 Start 之前创建（os/exec 要求），
+	// 但 goroutine 在 Start 之后启动，避免 Start 失败时 goroutine 泄漏。
+	var stdoutPipe io.Reader
 	if opts.OnStdout != nil {
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
 			return fmt.Errorf("创建 stdout pipe 失败: %w", err)
 		}
-		go func() {
-			scanner := bufio.NewScanner(stdout)
-			for scanner.Scan() {
-				opts.OnStdout(scanner.Text())
-			}
-		}()
+		stdoutPipe = stdout
 	}
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("启动 ffmpeg 失败: %w", err)
+	}
+
+	// 进程已启动，安全启动 goroutine 读取 stdout
+	if opts.OnStdout != nil && stdoutPipe != nil {
+		go func() {
+			scanner := bufio.NewScanner(stdoutPipe)
+			for scanner.Scan() {
+				opts.OnStdout(scanner.Text())
+			}
+		}()
 	}
 
 	done := make(chan error, 1)

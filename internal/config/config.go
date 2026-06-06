@@ -37,6 +37,7 @@ type Config struct {
 	SecretKey          string   `json:"-"`
 	LogDir             string   `json:"LOG_DIR"`
 	ConfigFile         string   `json:"-"`
+	SessionVersion     int      `json:"SESSION_VERSION,omitempty"` // 改密时递增，使旧 Session 失效
 }
 
 var (
@@ -220,9 +221,9 @@ func (c *Config) Apply(fn func() error) error {
 		*c = old
 		return err
 	}
-	// 原子写入：先写临时文件再 rename，防止崩溃时数据损坏
+	// 原子写入：先写临时文件再 sync+rename，防止崩溃时数据损坏
 	tmp := c.ConfigFile + ".tmp"
-	if err := os.WriteFile(tmp, data, 0644); err != nil {
+	if err := atomicWriteFile(tmp, data, 0600); err != nil {
 		*c = old
 		return err
 	}
@@ -277,7 +278,7 @@ func (c *Config) SaveCredential() error {
 		return err
 	}
 	tmp := file + ".tmp"
-	if err := os.WriteFile(tmp, data, 0600); err != nil {
+	if err := atomicWriteFile(tmp, data, 0600); err != nil {
 		return err
 	}
 	if err := os.Rename(tmp, file); err != nil {
@@ -285,6 +286,26 @@ func (c *Config) SaveCredential() error {
 		return err
 	}
 	return nil
+}
+
+// atomicWriteFile 将数据写入临时文件并 fsync，确保数据刷入持久存储后再返回。
+// 用于配合 os.Rename 实现崩溃安全的原子写入。
+func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		f.Close()
+		os.Remove(path)
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		f.Close()
+		os.Remove(path)
+		return err
+	}
+	return f.Close()
 }
 
 // ConfigDTO 是 Config 的安全数据传输对象，不包含密码和密钥等敏感字段。

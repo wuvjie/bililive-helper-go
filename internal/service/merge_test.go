@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -140,7 +141,7 @@ func TestCheckFileAvailability_AllAccessible(t *testing.T) {
 	if err := os.WriteFile(f2, []byte("world"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := checkFileAvailability(dir, []string{"a.flv", "b.flv"}); err != nil {
+	if err := checkFileAvailability(context.Background(), dir, []string{"a.flv", "b.flv"}); err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
 }
@@ -151,7 +152,7 @@ func TestCheckFileAvailability_MissingFile(t *testing.T) {
 	if err := os.WriteFile(f1, []byte("data"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	err := checkFileAvailability(dir, []string{"exists.flv", "missing.flv"})
+	err := checkFileAvailability(context.Background(), dir, []string{"exists.flv", "missing.flv"})
 	if err == nil {
 		t.Error("expected error for missing file, got nil")
 	}
@@ -160,7 +161,7 @@ func TestCheckFileAvailability_MissingFile(t *testing.T) {
 func TestCheckFileAvailability_EmptyFileList(t *testing.T) {
 	dir := t.TempDir()
 	// Empty list means no files to check — should pass.
-	if err := checkFileAvailability(dir, []string{}); err != nil {
+	if err := checkFileAvailability(context.Background(), dir, []string{}); err != nil {
 		t.Errorf("expected nil for empty list, got %v", err)
 	}
 }
@@ -176,7 +177,7 @@ func TestCheckFileAvailability_DirectoryInsteadOfFile(t *testing.T) {
 	// on the Stat check. However, the file name is a directory, and
 	// checkFileAvailability does not distinguish files from directories
 	// at the Stat level — this documents current behaviour.
-	err := checkFileAvailability(dir, []string{"sub.flv"})
+	err := checkFileAvailability(context.Background(), dir, []string{"sub.flv"})
 	// The current implementation treats the directory as accessible (nil),
 	// unless isFileBeingWritten flags it. Document this behaviour.
 	if err != nil {

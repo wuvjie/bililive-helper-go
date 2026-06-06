@@ -28,6 +28,7 @@ func ConvertViaTS(ctx context.Context, input, output string) error {
 		Args: []string{"-nostdin", "-i", tsPath, "-c", "copy", "-y", "-loglevel", "error", output},
 	})
 	if err != nil {
+		os.Remove(output) // 清理部分写入的输出文件
 		return fmt.Errorf("TS→输出 失败: %w", err)
 	}
 

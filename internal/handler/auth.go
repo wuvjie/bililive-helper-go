@@ -90,7 +90,7 @@ func (h *Handler) Index(c *gin.Context) {
 }
 
 // Login 处理用户登录请求。
-// 验证密码后设置 Session，失败时随机延迟以防止时序攻击。
+// 验证密码后设置 Session。bcrypt 本身提供常量时间比较，防止时序攻击。
 func (h *Handler) Login(c *gin.Context) {
 	ip := c.ClientIP()
 	if isRateLimited(ip) {
@@ -111,8 +111,6 @@ func (h *Handler) Login(c *gin.Context) {
 	h.passwordMu.RUnlock()
 	if !passwordOK {
 		recordAttempt(ip)
-		// 随机延迟防止时序攻击（通过响应时间差异推断密码正确性）
-		time.Sleep(100*time.Millisecond + time.Duration(len(req.Password)%7)*20*time.Millisecond)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
 		return
 	}
@@ -122,6 +120,7 @@ func (h *Handler) Login(c *gin.Context) {
 	session.Clear()
 	session.Set("authenticated", true)
 	session.Set("login_time", time.Now().Unix())
+	session.Set("session_version", h.config.Snapshot().SessionVersion)
 	if err := session.Save(); err != nil {
 		h.logger.Warn("session 保存失败", zap.Error(err))
 	}
@@ -146,6 +145,7 @@ func (h *Handler) Health(c *gin.Context) {
 
 // ChangePassword 允许已认证用户修改密码。
 // 验证旧密码后更新配置文件、凭据文件和运行时哈希。
+// 递增 SessionVersion 使所有旧 Session 自动失效。
 func (h *Handler) ChangePassword(c *gin.Context) {
 	var req struct {
 		OldPassword string `json:"old_password" binding:"required"`
@@ -169,9 +169,10 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// 更新配置并持久化
+	// 更新配置并持久化（递增 SessionVersion 使旧 Session 失效）
 	if err := h.config.Apply(func() error {
 		h.config.Password = req.NewPassword
+		h.config.SessionVersion++
 		return nil
 	}); err != nil {
 		h.logger.Error("密码配置写入失败", zap.Error(err))
@@ -248,7 +249,8 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	}
 	tmp := cfg.ConfigFile + ".tmp"
 	if err := os.WriteFile(tmp, data, 0644); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置写入失败: " + err.Error()})
+		h.logger.Error("配置写入失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置写入失败，请检查目录权限"})
 		return
 	}
 	if err := os.Rename(tmp, cfg.ConfigFile); err != nil {
@@ -299,6 +301,7 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	session.Clear()
 	session.Set("authenticated", true)
 	session.Set("login_time", time.Now().Unix())
+	session.Set("session_version", h.config.Snapshot().SessionVersion)
 	if err := session.Save(); err != nil {
 		h.logger.Warn("session 保存失败", zap.Error(err))
 	}
