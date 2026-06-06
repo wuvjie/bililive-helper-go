@@ -224,27 +224,17 @@ async function handleMerge() {
   const selectedNames = new Set(selectedFiles.value.map(f => f.name));
   await loadFiles();
   const stillValid = files.value.filter(f => selectedNames.has(f.name));
-  if (stillValid.length < 2) {
-    ElMessage.warning(`文件已变化，仅剩 ${stillValid.length} 个有效文件，请重新选择`);
+  if (stillValid.length < selectedFiles.value.length) {
+    ElMessage.warning("部分文件已被自动合并处理，请刷新文件列表重新选择");
     selectedFiles.value = [];
     tableRef.value?.clearSelection();
     return;
-  }
-  if (stillValid.length < selectedFiles.value.length) {
-    ElMessage.info(`${selectedFiles.value.length - stillValid.length} 个文件已被自动合并处理，使用剩余 ${stillValid.length} 个文件`);
-    selectedFiles.value = stillValid;
-    tableRef.value?.clearSelection();
-    nextTick(() => {
-      stillValid.forEach(row => tableRef.value!.toggleRowSelection(row, true));
-    });
   }
 
   sse.startSSE("/api/merge/manual", {
     streamer: selectedStreamer.value,
     files: stillValid.map(f => f.name)
   });
-}
-  }
 }
 
 async function handleClean() {
