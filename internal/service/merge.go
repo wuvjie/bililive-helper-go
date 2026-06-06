@@ -401,14 +401,19 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 }
 
 // checkFileAvailability 检查批次中的所有文件是否可访问且未被锁定。
+// 文件不存在时，检查是否有对应的合并版（说明已被之前的合并处理）。
 func checkFileAvailability(folder string, files []string) error {
 	for _, f := range files {
 		path := filepath.Join(folder, f)
 		if _, err := os.Stat(path); err != nil {
+			// 文件不存在，检查是否已有合并版输出
+			mergedName := utils.MakeOutputName(f)
+			mergedPath := filepath.Join(folder, mergedName)
+			if _, merr := os.Stat(mergedPath); merr == nil {
+				return fmt.Errorf("文件已合并: %s → %s", f, mergedName)
+			}
 			return fmt.Errorf("文件不存在: %s", f)
 		}
-		// Try to open for reading — if another process has it locked for writing,
-		// the file might still be readable, but check if it's being written to
 		if isFileBeingWritten(path, 1*time.Second) {
 			return fmt.Errorf("文件被占用: %s", f)
 		}
