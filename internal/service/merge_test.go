@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"bililive-helper/internal/utils"
@@ -184,6 +185,44 @@ func TestCheckFileAvailability_DirectoryInsteadOfFile(t *testing.T) {
 		t.Logf("directory check returned error (acceptable): %v", err)
 	} else {
 		t.Log("directory treated as accessible — current implementation does not distinguish")
+	}
+}
+
+func TestCheckFileAvailability_PathTraversalRejected(t *testing.T) {
+	dir := t.TempDir()
+	// Create a file outside the directory
+	outside := filepath.Join(dir, "..", "outside.flv")
+	if err := os.WriteFile(outside, []byte("data"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(outside)
+
+	// Attempt path traversal
+	err := checkFileAvailability(context.Background(), dir, []string{"../outside.flv"})
+	if err == nil {
+		t.Error("expected error for path traversal, got nil")
+	}
+	if err != nil && !strings.Contains(err.Error(), "路径穿越") {
+		t.Errorf("expected path traversal error, got: %v", err)
+	}
+}
+
+func TestCheckFileAvailability_FileAlreadyMerged(t *testing.T) {
+	dir := t.TempDir()
+	// Source file does not exist, but its merged output does
+	firstFile := "[2026-06-01 10-00-00][streamer][title]001.flv"
+	mergedName := utils.MakeOutputName(firstFile)
+	mergedPath := filepath.Join(dir, mergedName)
+	if err := os.WriteFile(mergedPath, make([]byte, 4096), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := checkFileAvailability(context.Background(), dir, []string{firstFile})
+	if err == nil {
+		t.Error("expected 'already merged' error, got nil")
+	}
+	if err != nil && !strings.Contains(err.Error(), "文件已合并") {
+		t.Errorf("expected 'already merged' error, got: %v", err)
 	}
 }
 

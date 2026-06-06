@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
-	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -98,6 +96,9 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+	// 限制请求体大小为 1KB，防止内存耗尽攻击
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024)
+
 	var req struct {
 		Password string `json:"password" binding:"required"`
 	}
@@ -169,21 +170,26 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// 更新配置并持久化（递增 SessionVersion 使旧 Session 失效）
-	if err := h.config.Apply(func() error {
-		h.config.Password = req.NewPassword
-		h.config.SessionVersion++
-		return nil
-	}); err != nil {
-		h.logger.Error("密码配置写入失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码更新失败"})
+	// 先在内存中设置新密码，然后持久化到凭据文件。
+	// 这样如果凭据保存失败，不会留下版本不一致的状态。
+	h.config.Password = req.NewPassword
+	if err := h.config.SaveCredential(); err != nil {
+		h.config.Password = "" // 回滚内存
+		h.logger.Error("密码持久化失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码持久化失败，请检查磁盘空间和权限"})
 		return
 	}
 
-	// 持久化密码到凭据文件（Password 字段 json:"-" 不会写入 config.json）
-	if err := h.config.SaveCredential(); err != nil {
-		h.logger.Error("密码持久化失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码持久化失败，请检查磁盘空间和权限"})
+	// 持久化成功，更新配置（递增 SessionVersion 使旧 Session 失效）
+	if err := h.config.Apply(func() error {
+		h.config.SessionVersion++
+		return nil
+	}); err != nil {
+		// 凭据文件已更新为新密码，但配置更新失败。
+		// 运行时仍使用旧密码（内存哈希未更新），用户可重试。
+		// 重启后会加载新密码 + 旧 SessionVersion，不影响登录。
+		h.logger.Error("密码配置写入失败（凭据已更新，可重试）", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码更新失败，请重试"})
 		return
 	}
 
@@ -241,25 +247,7 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	cfg.SecretKey = utils.RandomHex(16)
 	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")
 
-	// 原子写入 config.json
-	data, err := json.MarshalIndent(cfg, "", "  ")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置生成失败"})
-		return
-	}
-	tmp := cfg.ConfigFile + ".tmp"
-	if err := os.WriteFile(tmp, data, 0644); err != nil {
-		h.logger.Error("配置写入失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置写入失败，请检查目录权限"})
-		return
-	}
-	if err := os.Rename(tmp, cfg.ConfigFile); err != nil {
-		os.Remove(tmp)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置保存失败"})
-		return
-	}
-
-	// 在写锁保护下更新运行时配置
+	// 原子写入 config.json（通过 Apply 内部的 atomicWriteFile + fsync）
 	if err := h.config.Apply(func() error {
 		h.config.TargetDir = cfg.TargetDir
 		h.config.LogDir = cfg.LogDir
@@ -268,8 +256,8 @@ func (h *Handler) SetupInit(c *gin.Context) {
 		h.config.SecretKey = cfg.SecretKey
 		return nil
 	}); err != nil {
-		h.logger.Error("初始化运行时配置更新失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "运行时配置更新失败"})
+		h.logger.Error("初始化配置写入失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置写入失败，请检查目录权限"})
 		return
 	}
 

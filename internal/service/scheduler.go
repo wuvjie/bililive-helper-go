@@ -36,7 +36,7 @@ type SchedulerService struct {
 	running      map[string]bool
 	scheduleMu   sync.RWMutex
 	scheduleConf model.ScheduleConfig
-	mu           sync.Mutex
+	mu           sync.RWMutex
 	ctx          context.Context
 	cancel       context.CancelFunc
 }
@@ -207,8 +207,8 @@ func (s *SchedulerService) runTask(task string) {
 // GetStatus 返回当前调度状态（各任务的启用状态、间隔、上次/下次执行时间、是否运行中）。
 func (s *SchedulerService) GetStatus() model.ScheduleStatus {
 	schedule := s.getSchedule()
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	hasRunning := s.running["merge"] || s.running["clean"]
 
@@ -248,9 +248,9 @@ func (s *SchedulerService) SaveSchedule(schedule model.ScheduleConfig) error {
 	if err != nil {
 		return fmt.Errorf("序列化调度配置失败: %w", err)
 	}
-	// 原子写入：先写临时文件再 rename，防止崩溃时数据损坏
+	// 原子写入（fsync + rename），防止崩溃时数据损坏
 	tmp := file + ".tmp"
-	if err := os.WriteFile(tmp, data, 0644); err != nil {
+	if err := config.AtomicWriteFile(tmp, data, 0600); err != nil {
 		return err
 	}
 	if err := os.Rename(tmp, file); err != nil {
