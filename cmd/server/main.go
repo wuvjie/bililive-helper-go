@@ -137,7 +137,6 @@ func main() {
 			auth.POST("/clean/emergency", h.EmergencyClean)
 			auth.GET("/history", h.GetHistory)
 			auth.GET("/history/export", h.ExportHistory)
-			auth.GET("/logs/list/:task", h.GetLogList)
 			auth.GET("/logs/content/:task", h.GetLogContent)
 			auth.GET("/setup/check", h.SetupCheck)
 		}
