@@ -186,19 +186,21 @@ func (s *SchedulerService) runTask(task string) {
 
 	switch task {
 	case "merge":
-		res, err := s.merge.Run(s.ctx, "", nil)
+		res, logID, err := s.merge.Run(s.ctx, "", nil)
 		if err != nil {
 			s.logToFile(task, fmt.Sprintf("❌ 合并失败: %v", err))
 		} else if res != nil && res.Done > 0 {
 			utils.NotifyWebhook(fmt.Sprintf("自动合并完成：%d 场次 (%.1f GB)", res.Done, res.TotalGB))
 		}
+		_ = logID // logID 已在 merge.Run 内部写入 history
 	case "clean":
-		res, err := s.clean.Run(s.ctx, "", nil)
+		res, logID, err := s.clean.Run(s.ctx, "", nil)
 		if err != nil {
 			s.logToFile(task, fmt.Sprintf("❌ 清理失败: %v", err))
 		} else if res != nil && res.Deleted > 0 {
 			utils.NotifyWebhook(fmt.Sprintf("自动清理完成：%d 文件，释放 %s", res.Deleted, utils.FormatSize(res.Freed)))
 		}
+		_ = logID // logID 已在 clean.Run 内部写入 history
 	}
 }
 

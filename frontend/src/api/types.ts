@@ -79,6 +79,7 @@ export interface HistoryRecord {
   merged_bytes: number;
   duration: number;
   detail: string;
+  log_id?: string;
 }
 
 export interface HistoryResponse {

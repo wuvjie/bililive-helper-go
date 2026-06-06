@@ -34,12 +34,12 @@ func NewHistoryService(config *config.Config, logger *zap.Logger) *HistoryServic
 }
 
 // Add 添加一条简要历史记录（无统计数据）。
-func (s *HistoryService) Add(task, streamer, status, detail string) {
-	s.AddWithStats(task, streamer, status, 0, 0, 0, 0, detail)
+func (s *HistoryService) Add(task, streamer, status, detail, logID string) {
+	s.AddWithStats(task, streamer, status, 0, 0, 0, 0, detail, logID)
 }
 
 // AddWithStats 添加一条带统计数据的历史记录（文件数、释放/合并字节数、耗时）。
-func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount int, freedBytes, mergedBytes int64, duration float64, detail string) {
+func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount int, freedBytes, mergedBytes int64, duration float64, detail, logID string) {
 	s.ensureLoadedSafe()
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -56,6 +56,7 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 		MergedBytes: mergedBytes,
 		Duration:    duration,
 		Detail:      detail,
+		LogID:       logID,
 	}
 	if record.Streamer == "" {
 		record.Streamer = "全局"

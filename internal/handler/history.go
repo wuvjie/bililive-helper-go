@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,6 +14,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// validLogID 校验操作日志 ID 格式：只允许小写字母、数字、下划线和十六进制字符。
+var validLogID = regexp.MustCompile(`^[a-z]+_[0-9]+_[0-9a-f]+$`)
 
 // GetHistory 分页查询历史记录，支持按任务类型和主播名过滤。
 func (h *Handler) GetHistory(c *gin.Context) {
@@ -105,28 +109,28 @@ func (h *Handler) listLogFiles(task string) []gin.H {
 	return files
 }
 
-// GetLogContent 返回指定日志文件的内容（最近 200 行）。
+// GetLogContent 根据 log_id 返回对应的操作日志内容（最近 200 行）。
 func (h *Handler) GetLogContent(c *gin.Context) {
 	task := c.Param("task")
 	if !utils.ValidateFilename(task) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "非法任务名"})
 		return
 	}
-	file := c.Query("file")
 
-	if file == "" || !strings.HasPrefix(file, task+"_videos.log") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效文件"})
-		return
-	}
-	if strings.Contains(file, "..") || strings.Contains(file, "/") || strings.Contains(file, "\\") || strings.Contains(file, "\x00") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效文件"})
+	logID := c.Query("log_id")
+	if logID == "" || !validLogID.MatchString(logID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的日志 ID"})
 		return
 	}
 
-	path := filepath.Join(h.config.LogDir, task+"_log", file)
+	path := filepath.Join(h.config.LogDir, task+"_log", "op_"+logID+".log")
 	content, err := os.ReadFile(path)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "文件不存在"})
+		if os.IsNotExist(err) {
+			c.String(http.StatusOK, "[系统提示] 该操作日志已超过 30 天，已被自动清理")
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取日志失败"})
 		return
 	}
 

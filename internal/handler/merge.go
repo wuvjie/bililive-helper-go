@@ -33,13 +33,13 @@ func (h *Handler) RunMerge(c *gin.Context) {
 	}
 
 	h.runSSE(c, "merge", func(ctx context.Context, onProgress func(string)) string {
-		result, err := h.merge.Run(ctx, req.Streamer, onProgress)
+		result, logID, err := h.merge.Run(ctx, req.Streamer, onProgress)
 		if err != nil {
-			h.logger.Error("合并失败", zap.Error(err))
+			h.logger.Error("合并失败", zap.Error(err), zap.String("logID", logID))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}
 		if result.Done > 0 {
-			h.logger.Info("合并完成", zap.Int("done", result.Done), zap.Float64("gb", result.TotalGB))
+			h.logger.Info("合并完成", zap.Int("done", result.Done), zap.Float64("gb", result.TotalGB), zap.String("logID", logID))
 			utils.NotifyWebhook(fmt.Sprintf("手动合并完成：%d 场次 (%.1f GB)", result.Done, result.TotalGB))
 			return fmt.Sprintf("✅ 完成: 合并 %d 场次 (%.1f GB)", result.Done, result.TotalGB)
 		}
@@ -87,10 +87,12 @@ func (h *Handler) MergeRetry(c *gin.Context) {
 
 func (h *Handler) runManualMergeSSE(c *gin.Context, streamer string, files []string, label string) {
 	h.runSSE(c, "merge", func(ctx context.Context, onProgress func(string)) string {
-		if err := h.merge.ManualMerge(ctx, streamer, files, onProgress); err != nil {
-			h.logger.Error(label+"失败", zap.Error(err))
+		logID, err := h.merge.ManualMerge(ctx, streamer, files, onProgress)
+		if err != nil {
+			h.logger.Error(label+"失败", zap.Error(err), zap.String("logID", logID))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}
+		_ = logID // logID 已在 ManualMerge 内部写入 history
 		return fmt.Sprintf("✅ 完成: %s %d 个文件", label, len(files))
 	})
 }
@@ -106,13 +108,13 @@ func (h *Handler) RunClean(c *gin.Context) {
 	}
 
 	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
-		result, err := h.clean.Run(ctx, req.Streamer, onProgress)
+		result, logID, err := h.clean.Run(ctx, req.Streamer, onProgress)
 		if err != nil {
-			h.logger.Error("清理失败", zap.Error(err))
+			h.logger.Error("清理失败", zap.Error(err), zap.String("logID", logID))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}
 		if result.Deleted > 0 {
-			h.logger.Info("清理完成", zap.Int("deleted", result.Deleted), zap.Int64("freed", result.Freed))
+			h.logger.Info("清理完成", zap.Int("deleted", result.Deleted), zap.Int64("freed", result.Freed), zap.String("logID", logID))
 			utils.NotifyWebhook(fmt.Sprintf("手动清理完成：%d 文件，释放 %s", result.Deleted, utils.FormatSize(result.Freed)))
 			return fmt.Sprintf("✅ 完成: 删除 %d 文件，释放 %s", result.Deleted, utils.FormatSize(result.Freed))
 		}
@@ -283,13 +285,13 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 		if len(changes) > 0 {
 			detail := fmt.Sprintf("调度变更: %s", strings.Join(changes, ", "))
 			h.logger.Info(detail)
-			h.history.Add("schedule", "", "success", detail)
+			h.history.Add("schedule", "", "success", detail, "")
 		} else {
 			detail := fmt.Sprintf("调度已保存: 合并 %s/%d分钟, 清理 %s/%d分钟",
 				map[bool]string{true: "已启用", false: "已禁用"}[req.MergeEnabled], req.MergeInterval,
 				map[bool]string{true: "已启用", false: "已禁用"}[req.CleanEnabled], req.CleanInterval)
 			h.logger.Info(detail)
-			h.history.Add("schedule", "", "success", detail)
+			h.history.Add("schedule", "", "success", detail, "")
 		}
 	}()
 	c.JSON(http.StatusOK, gin.H{"status": "success", "schedule": h.scheduler.GetStatus()})
@@ -366,10 +368,11 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 				return nil
 			})
 		}
-		result, err := h.clean.Run(ctx, "", onProgress)
+		result, logID, err := h.clean.Run(ctx, "", onProgress)
 		if err != nil {
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}
+		_ = logID // logID 已在 clean.Run 内部写入 history
 		if result.Deleted > 0 {
 			return fmt.Sprintf("✅ 完成: 删除 %d 文件，释放 %s", result.Deleted, utils.FormatSize(result.Freed))
 		}

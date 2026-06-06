@@ -46,9 +46,9 @@ func (h *Handler) SaveConfig(c *gin.Context) {
 
 	if changeDetail != "" {
 		h.logger.Info(changeDetail)
-		go h.history.Add("config", "", "success", changeDetail)
+		go h.history.Add("config", "", "success", changeDetail, "")
 	} else {
-		go h.history.Add("config", "", "success", "配置未变更")
+		go h.history.Add("config", "", "success", "配置未变更", "")
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
@@ -391,6 +391,6 @@ func (h *Handler) ImportConfig(c *gin.Context) {
 		return
 	}
 
-	go h.history.Add("config", "", "success", fmt.Sprintf("配置已导入（%d 项）", len(cfgData)))
+	go h.history.Add("config", "", "success", fmt.Sprintf("配置已导入（%d 项）", len(cfgData)), "")
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "配置导入成功"})
 }

@@ -63,7 +63,7 @@
         <el-table-column label="" width="80" align="center">
           <template #default="{ row }">
             <button
-              v-if="row.task === 'merge' || row.task === 'clean'"
+              v-if="row.log_id && (row.task === 'merge' || row.task === 'clean')"
               class="log-view-btn"
               @click="viewLog(row)"
             >
@@ -93,14 +93,6 @@
 
     <!-- Log Viewer Dialog -->
     <el-dialog v-model="logDialogVisible" title="日志查看" width="70%" top="5vh" destroy-on-close>
-      <el-tabs v-model="activeLogFile" @tab-change="loadLogContent">
-        <el-tab-pane
-          v-for="lf in logFiles"
-          :key="lf.filename"
-          :label="lf.date"
-          :name="lf.filename"
-        />
-      </el-tabs>
       <pre class="log-content" v-loading="logLoading">{{ logContent }}</pre>
     </el-dialog>
   </div>
@@ -110,9 +102,9 @@
 import { ref, onMounted, onActivated } from "vue";
 import router from "@/router";
 import { ElMessage } from "element-plus";
-import { getHistory, exportHistory, getLogList, getLogContent } from "@/api/history";
+import { getHistory, exportHistory, getLogContent } from "@/api/history";
 import { formatBytes } from "@/utils/format";
-import type { HistoryRecord, LogFile } from "@/api/types";
+import type { HistoryRecord } from "@/api/types";
 
 const history = ref<HistoryRecord[]>([]);
 const loading = ref(false);
@@ -123,8 +115,6 @@ const filterTask = ref("");
 const filterStreamer = ref("");
 
 const logDialogVisible = ref(false);
-const logFiles = ref<LogFile[]>([]);
-const activeLogFile = ref("");
 const logContent = ref("");
 const logLoading = ref(false);
 
@@ -169,27 +159,14 @@ function formatDetail(row: HistoryRecord) {
 }
 
 async function viewLog(row: HistoryRecord) {
+  if (!row.log_id) return;
   logDialogVisible.value = true;
   logContent.value = "";
-  try {
-    logFiles.value = await getLogList(row.task);
-    if (logFiles.value.length > 0) {
-      activeLogFile.value = logFiles.value[0].filename;
-      await loadLogContent();
-    }
-  } catch {
-    logFiles.value = [];
-  }
-}
-
-async function loadLogContent() {
-  if (!activeLogFile.value) return;
   logLoading.value = true;
   try {
-    const task = logFiles.value[0]?.task || "merge";
-    logContent.value = await getLogContent(task, activeLogFile.value);
+    logContent.value = await getLogContent(row.task, row.log_id);
   } catch {
-    logContent.value = "无法加载日志内容";
+    logContent.value = "日志加载失败";
   } finally {
     logLoading.value = false;
   }

@@ -14,6 +14,7 @@ type HistoryRecord struct {
 	MergedBytes int64   `json:"merged_bytes"`
 	Duration    float64 `json:"duration"`
 	Detail      string  `json:"detail"`
+	LogID       string  `json:"log_id,omitempty"`
 }
 
 // ScheduleConfig 表示定时调度配置（合并/清理间隔和启用状态）。
