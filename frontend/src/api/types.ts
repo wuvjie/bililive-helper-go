@@ -90,13 +90,6 @@ export interface HistoryResponse {
   pages: number;
 }
 
-export interface LogFile {
-  date: string;
-  filename: string;
-  mtime: number;
-  task: string;
-}
-
 export interface StreamerFile {
   name: string;
   size: number;

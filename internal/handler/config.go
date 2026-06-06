@@ -93,7 +93,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 	var minKeep, safeAge, mergeAge, maxDelete int
 	safeMode := "hours"
 
-	// Base strategy from disk size
+	// 基于磁盘容量的基础策略
 	if totalGB < 256 {
 		trigger, target = 75, 60
 		minKeep, safeAge, mergeAge, maxDelete = 2, 120, 20, 5
@@ -105,7 +105,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		minKeep, safeAge, mergeAge, maxDelete = 3, 120, 30, 15
 	}
 
-	// Adjust strategy based on risk level
+	// 根据风险等级调整策略
 	switch riskLevel {
 	case "critical":
 		trigger = usedPct - 3
@@ -159,7 +159,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 		}
 	}
 
-	// Build reason
+	// 构建推荐理由
 	var reasonParts []string
 	if totalGB < 256 {
 		reasonParts = append(reasonParts, fmt.Sprintf("%.0fGB小盘", totalGB))
@@ -289,7 +289,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 			}
 		}
 
-		// Per-streamer daily output from recent 7-day window
+		// 统计近 7 天的文件大小用于估算日产出
 		if streamerRecentSize > 0 {
 			result.DailyOutputGB += float64(streamerRecentSize) / 1073741824 / 7
 		}

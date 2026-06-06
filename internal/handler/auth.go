@@ -169,7 +169,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// Update config and persist
+	// 更新配置并持久化
 	if err := h.config.Apply(func() error {
 		h.config.Password = req.NewPassword
 		return nil
@@ -179,7 +179,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// Persist password to credential file (since Password has json:"-")
+	// 持久化密码到凭据文件（Password 字段 json:"-" 不会写入 config.json）
 	if err := h.config.SaveCredential(); err != nil {
 		h.logger.Error("密码持久化失败", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码持久化失败，请检查磁盘空间和权限"})

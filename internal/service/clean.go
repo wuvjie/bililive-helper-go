@@ -108,7 +108,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	candidates, perStreamer := s.collectCandidates(root, streamer, cfg)
 
-	// Log per-streamer summary
+	// 按主播记录清理摘要日志
 	for name, info := range perStreamer {
 		if info.total <= cfg.MinKeepPerStreamer {
 			opLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，全部保留（≤%d）", name, info.total, cfg.MinKeepPerStreamer))
@@ -133,7 +133,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 		iMerged := utils.IsMergedFile(candidates[i].Name)
 		jMerged := utils.IsMergedFile(candidates[j].Name)
 		if iMerged != jMerged {
-			return iMerged // merged files first (true > false)
+			return iMerged // 已合并文件优先（true > false）
 		}
 		return candidates[i].Mtime < candidates[j].Mtime
 	})
@@ -147,7 +147,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	msg := fmt.Sprintf("✅ 完成: 删除 %d 文件，释放 %s", deleted, utils.FormatSize(freed))
 	onProgress(msg)
 
-	// Show disk usage after deletion for user feedback
+	// 删除后显示磁盘使用率
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
 		onProgress(fmt.Sprintf("📊 当前磁盘 %.1f%%", diskAfter.UsedPct))
 	}
@@ -337,7 +337,7 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 			continue
 		}
 
-		// Execute delete
+		// 执行删除
 		if err := utils.SafeUnlink(f.Path); err != nil {
 			s.logToFile("clean", fmt.Sprintf("⚠ 删除失败: %s (%v)", f.Name, err))
 			continue

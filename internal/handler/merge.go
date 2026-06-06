@@ -396,17 +396,17 @@ func (h *Handler) SetupCheck(c *gin.Context) {
 		"ffprobe_ok":          false,
 	}
 
-	// Check ffmpeg
+	// 检查 ffmpeg 可用性
 	if path, err := exec.LookPath("ffmpeg"); err == nil {
 		checks["ffmpeg_ok"] = true
 		checks["ffmpeg_path"] = path
 	}
-	// Check ffprobe
+	// 检查 ffprobe 可用性
 	if path, err := exec.LookPath("ffprobe"); err == nil {
 		checks["ffprobe_ok"] = true
 		checks["ffprobe_path"] = path
 	}
-	// Test ffmpeg process group creation
+	// 测试 ffmpeg 进程组创建能力
 	if checks["ffmpeg_ok"].(bool) {
 		cmd := exec.Command("ffmpeg", "-version")
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}

@@ -99,7 +99,7 @@ func (s *MergeService) getVideoFiles(folder string) []videoFile {
 		}
 		ext := strings.ToLower(filepath.Ext(name))
 		if ext == ".mp4" {
-			// Only consider MP4 files that are large enough to be valid
+			// 仅保留足够大的 MP4 文件（排除损坏的小文件）
 			if info, err := entry.Info(); err == nil && info.Size() >= minValidFileSize {
 				base := strings.TrimSuffix(name, ext)
 				mp4Bases[base] = true

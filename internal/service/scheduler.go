@@ -100,7 +100,7 @@ func (s *SchedulerService) loop() {
 		case <-ticker.C:
 			s.runDueTasks()
 
-			// Daily cleanup
+			// 每日自动清理过期历史记录
 			today := time.Now().Format("2006-01-02")
 			if today != lastDay {
 				lastDay = today
@@ -205,7 +205,7 @@ func (s *SchedulerService) runTask(task string) {
 }
 
 func (s *SchedulerService) logToFile(task, message string) {
-	// Use the same log rotation as merge/clean tasks
+	// 使用与合并/清理任务相同的日志轮转策略
 	logToFile(s.config.LogDir, task, message, s.logger)
 }
 
@@ -253,7 +253,7 @@ func (s *SchedulerService) SaveSchedule(schedule model.ScheduleConfig) error {
 	if err != nil {
 		return fmt.Errorf("序列化调度配置失败: %w", err)
 	}
-	// Atomic write: tmp file then rename to prevent corruption on crash
+	// 原子写入：先写临时文件再 rename，防止崩溃时数据损坏
 	tmp := file + ".tmp"
 	if err := os.WriteFile(tmp, data, 0644); err != nil {
 		return err
