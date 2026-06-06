@@ -295,6 +295,13 @@ onActivated(async () => {
   const [s, st] = await Promise.allSettled([getSchedule(), getStreamers()]);
   if (s.status === "fulfilled") schedule.value = s.value;
   if (st.status === "fulfilled") streamers.value = st.value;
+
+  // 检查 query 参数，支持从主播管理页面跳转时自动选择主播
+  const queryStreamer = route.query.streamer as string;
+  if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
+    selectedStreamer.value = queryStreamer;
+    await loadFiles();
+  }
 });
 </script>
 
