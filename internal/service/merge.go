@@ -242,7 +242,11 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			done++
 			mergeDone++
 			totalGB += task.SizeGB
-			opLog.Log(fmt.Sprintf("✅ %s 完成 → %s", streamerName, utils.MakeOutputName(task.Files[0])))
+			outputName := utils.MakeOutputName(task.Files[0])
+			if strings.HasSuffix(outputName, ".flv") {
+				outputName = strings.TrimSuffix(outputName, ".flv") + ".mp4"
+			}
+			opLog.Log(fmt.Sprintf("✅ %s 完成 → %s", streamerName, outputName))
 		} else {
 			mergeFailed++
 			reason := classifyMergeFailure(task.Folder, task.Files[0])
