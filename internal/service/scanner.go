@@ -298,7 +298,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 						continue
 					}
 					if !utils.IsVideoHealthy(path) {
-						s.logToFile("merge", fmt.Sprintf("⏭ [%s] 跳过损坏文件: %s", entry.Name(), v.Name))
+						s.logToFile("merge", fmt.Sprintf("[%s] ⏭ 跳过损坏文件: %s", entry.Name(), v.Name))
 						continue
 					}
 					names = append(names, v.Name)
@@ -306,7 +306,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				}
 
 				if len(names) == 0 {
-					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ 全部文件无效，跳过", entry.Name()))
+					s.logToFile("merge", fmt.Sprintf("[%s] ⏭ %d 个文件全部无效，跳过", entry.Name(), len(batch)))
 					continue
 				}
 
