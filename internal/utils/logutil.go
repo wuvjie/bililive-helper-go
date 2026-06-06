@@ -1,14 +1,11 @@
 // Package utils 提供通用工具函数。
-// 包含磁盘查询、文件操作、视频解析、日志管理、字符串处理和 Webhook 通知等功能。
+// 包含磁盘查询、文件操作、视频解析、字符串处理和 Webhook 通知等功能。
 package utils
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -27,37 +24,6 @@ func FormatSize(bytes int64) string {
 		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(MB))
 	default:
 		return fmt.Sprintf("%.2f KB", float64(bytes)/float64(KB))
-	}
-}
-
-// RotateLogAndPrune 将当前日志文件重命名为前一天的日期归档，并清理超过 keepDays 天的归档文件。
-func RotateLogAndPrune(logFile, prefix string, keepDays int) {
-	info, err := os.Stat(logFile)
-	if err != nil {
-		return
-	}
-	fileDay := info.ModTime().Format("2006-01-02")
-	today := time.Now().Format("2006-01-02")
-	if fileDay == today {
-		return
-	}
-	archived := logFile + "." + fileDay
-	os.Rename(logFile, archived)
-	if keepDays <= 0 {
-		keepDays = 30
-	}
-	cutoff := time.Now().AddDate(0, 0, -keepDays)
-	dir := filepath.Dir(logFile)
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return
-	}
-	for _, e := range entries {
-		if !e.IsDir() && strings.HasPrefix(e.Name(), prefix+".") {
-			if ei, err := e.Info(); err == nil && ei.ModTime().Before(cutoff) {
-				os.Remove(filepath.Join(dir, e.Name()))
-			}
-		}
 	}
 }
 
