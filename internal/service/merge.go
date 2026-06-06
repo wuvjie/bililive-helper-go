@@ -617,6 +617,7 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 
 	var validFiles []string
 	var totalInputBytes int64
+	var skipped []string
 	for _, f := range files {
 		if !utils.ValidateFilename(f) {
 			return fmt.Errorf("非法文件名: %s", f)
@@ -625,15 +626,25 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 		if info, err := os.Stat(path); err == nil {
 			validFiles = append(validFiles, f)
 			totalInputBytes += info.Size()
+		} else {
+			skipped = append(skipped, f)
 		}
 	}
 
 	if len(validFiles) < 2 {
+		if len(skipped) > 0 {
+			return fmt.Errorf("有效文件不足2个（%d 个文件已被自动合并处理或删除，请刷新文件列表）", len(skipped))
+		}
 		return fmt.Errorf("有效文件不足2个")
 	}
 
 	// 按文件名中的日期时间升序排序（确保合并后时间线正确）
 	SortByFilename(validFiles)
+
+	if len(skipped) > 0 {
+		s.logToFile("merge", fmt.Sprintf("⚠ %d 个文件已被自动合并处理或删除，跳过", len(skipped)))
+		onProgress(fmt.Sprintf("⚠ %d 个文件已失效，使用剩余 %d 个文件继续", len(skipped), len(validFiles)))
+	}
 
 	onProgress(fmt.Sprintf("⏳ 手动合并 %d 个文件", len(validFiles)))
 	hasOriginal := false
