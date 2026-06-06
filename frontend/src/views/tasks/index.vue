@@ -225,7 +225,7 @@ async function handleMerge() {
   await loadFiles();
   const stillValid = files.value.filter(f => selectedNames.has(f.name));
   if (stillValid.length < selectedFiles.value.length) {
-    ElMessage.warning("部分文件已被自动合并处理，请刷新文件列表重新选择");
+    ElMessage.warning("部分文件已不存在，请刷新文件列表重新选择");
     selectedFiles.value = [];
     tableRef.value?.clearSelection();
     return;
