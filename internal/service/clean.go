@@ -68,9 +68,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	if streamer != "" {
 		tag = fmt.Sprintf("[%s]", streamer)
 	}
-	opLog.Log("═══════════════════════════════════════════")
 	onProgress(fmt.Sprintf("▶ 开始 %s 清理", tag))
-	onProgress("───────────────────────────")
 
 	disk, err := utils.GetDiskUsage(root)
 	if err != nil {
@@ -105,6 +103,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	// 按主播记录清理摘要日志
 	for name, info := range perStreamer {
+		opLog.Log(fmt.Sprintf("── %s ──", name))
 		if info.total <= cfg.MinKeepPerStreamer {
 			opLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，全部保留（≤%d）", name, info.total, cfg.MinKeepPerStreamer))
 		} else if info.skipped > 0 {
@@ -146,7 +145,6 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
 		onProgress(fmt.Sprintf("📊 当前磁盘 %.1f%%", diskAfter.UsedPct))
 	}
-	opLog.Log("═══════════════════════════════════════════")
 
 	s.history.AddWithStats("clean", streamer, "success", deleted, freed, 0, duration,
 		fmt.Sprintf("删除 %d 文件，释放 %s", deleted, utils.FormatSize(freed)), opLog.LogID())

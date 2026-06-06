@@ -173,7 +173,6 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	if streamer != "" {
 		tag = fmt.Sprintf("[%s]", streamer)
 	}
-	opLog.Log("═══════════════════════════════════════════")
 	onProgress(fmt.Sprintf("▶ 开始 %s 合并", tag))
 	onProgress(fmt.Sprintf("⚙ 扫描 %s ...", root))
 
@@ -206,38 +205,50 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	mergeDone := 0
 	mergeFailed := 0
 	failedReasons := make(map[string]int)
-	for i, ct := range convertTasks {
+	lastStreamer := ""
+	for _, ct := range convertTasks {
 		if cfg.IsBackupWindow() || ctx.Err() != nil {
 			break
+		}
+		streamerName := filepath.Base(filepath.Dir(ct.FlvPath))
+		if streamerName != lastStreamer {
+			onProgress(fmt.Sprintf("── %s ──", streamerName))
+			lastStreamer = streamerName
 		}
 		var flvSize int64
 		if fi, err := os.Stat(ct.FlvPath); err == nil {
 			flvSize = fi.Size()
 		}
-		onProgress(fmt.Sprintf("🔄 [%d/%d] 转换 %s: %s → %s", i+1, len(convertTasks), ct.Name, filepath.Base(ct.FlvPath), filepath.Base(ct.Mp4Path)))
+		onProgress(fmt.Sprintf("[%s] 🔄 FLV→MP4: %s → %s", streamerName, filepath.Base(ct.FlvPath), filepath.Base(ct.Mp4Path)))
 		if s.convertFlvToMp4(ctx, ct.FlvPath, ct.Mp4Path, onProgress, opLog) {
 			done++
 			convertDone++
 			totalGB += float64(flvSize) / oneGB
-			onProgress(fmt.Sprintf("✅ [%s] 转换完成", ct.Name))
+			if info, err := os.Stat(ct.Mp4Path); err == nil {
+				onProgress(fmt.Sprintf("[%s] ✅ → %s (%s)", streamerName, filepath.Base(ct.Mp4Path), utils.FormatSize(info.Size())))
+			} else {
+				onProgress(fmt.Sprintf("[%s] ✅ → %s", streamerName, filepath.Base(ct.Mp4Path)))
+			}
 		} else {
-			onProgress(fmt.Sprintf("❌ [%s] 转换失败", ct.Name))
+			onProgress(fmt.Sprintf("[%s] ❌ 转换失败", streamerName))
 		}
 	}
 
 	// 处理待合并任务
-	for i, task := range tasks {
+	for _, task := range tasks {
 		if cfg.IsBackupWindow() {
 			break
 		}
 		streamerName := filepath.Base(task.Folder)
+		if streamerName != lastStreamer {
+			onProgress(fmt.Sprintf("── %s ──", streamerName))
+			lastStreamer = streamerName
+		}
 		locked, sl := s.tryLockStreamer(streamerName)
 		if !locked {
 			continue
 		}
-		fileList := strings.Join(task.Files, " + ")
-		onProgress(fmt.Sprintf("⚙ [%d/%d] %s 合并 %s (%.1f GB)", i+1, len(tasks), streamerName, fileList, task.SizeGB))
-		opLog.Log(fmt.Sprintf("⚙ %s 合并 %d 个文件: %s", streamerName, len(task.Files), fileList))
+		onProgress(fmt.Sprintf("[%s] ⚙ 合并 %d 个文件 (%s)", streamerName, len(task.Files), utils.FormatSize(int64(task.SizeGB*oneGB))))
 		if s.doMerge(ctx, task.Files, task.Folder, onProgress, opLog) {
 			done++
 			mergeDone++
@@ -246,12 +257,12 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			if strings.HasSuffix(outputName, ".flv") {
 				outputName = strings.TrimSuffix(outputName, ".flv") + ".mp4"
 			}
-			opLog.Log(fmt.Sprintf("✅ %s 完成 → %s", streamerName, outputName))
+			onProgress(fmt.Sprintf("[%s] ✅ → %s", streamerName, outputName))
 		} else {
 			mergeFailed++
 			reason := classifyMergeFailure(task.Folder, task.Files[0])
 			failedReasons[reason]++
-			onProgress(fmt.Sprintf("❌ [%s] 失败: %s", streamerName, reason))
+			onProgress(fmt.Sprintf("[%s] ❌ 失败: %s", streamerName, reason))
 		}
 		s.unlockStreamer(sl)
 	}
@@ -270,7 +281,6 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	}
 	duration := time.Since(start).Seconds()
 
-	onProgress("───────────────────────────")
 	if done > 0 {
 		var parts []string
 		if convertDone > 0 {
@@ -299,9 +309,6 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		s.history.Add("merge", streamer, "success", fmt.Sprintf("扫描 %d 个主播，无需合并", totalScanned), opLog.LogID())
 		onProgress(msg)
 	}
-	onProgress("───────────────────────────")
-	opLog.Log("═══════════════════════════════════════════")
-
 	return &MergeResult{Done: done, TotalGB: totalGB}, opLog.LogID(), nil
 }
 
@@ -480,8 +487,6 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		}
 	}
 
-	onProgress(fmt.Sprintf("⚙ 合并 %d 个文件 (%.1f GB)…", len(files), float64(totalFileSize)/oneGB))
-
 	// 步骤 1：将每个输入文件转换为 TS 格式（已是 TS 的跳过）
 	var tsFiles []string
 	tmpDir := filepath.Join(folder, ".merge_tmp_"+time.Now().Format("20060102150405"))
@@ -591,7 +596,6 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		utils.SafeUnlink(filepath.Join(folder, f))
 	}
 
-	opLog.Log(fmt.Sprintf("✅ 合并成功: %s (%d 个文件)", output, len(files)))
 	return true
 }
 
