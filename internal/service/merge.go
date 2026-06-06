@@ -252,7 +252,6 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			mergeFailed++
 			reason := classifyMergeFailure(task.Folder, task.Files[0])
 			failedReasons[reason]++
-			opLog.Log(fmt.Sprintf("❌ %s 失败: %s", streamerName, reason))
 			onProgress(fmt.Sprintf("❌ [%s] 失败: %s", streamerName, reason))
 		}
 		s.unlockStreamer(sl)
@@ -655,7 +654,6 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	SortByFilename(validFiles)
 
 	if len(skipped) > 0 {
-		opLog.Log(fmt.Sprintf("⚠ %d 个文件已不存在，跳过", len(skipped)))
 		onProgress(fmt.Sprintf("⚠ %d 个文件已不存在，使用剩余 %d 个文件继续", len(skipped), len(validFiles)))
 	}
 

@@ -314,7 +314,7 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	// 4. 执行删除 — 跳过两次快照间大小变化的文件（正在写入）
 	for _, f := range candidates {
 		if ctx.Err() != nil {
-			s.logToFile("clean", "⏹ 上下文取消，终止清理")
+			s.logToFile("clean", "⚠ 上下文取消，终止清理")
 			break
 		}
 		if deleted >= cfg.MaxDeletePerRun {
