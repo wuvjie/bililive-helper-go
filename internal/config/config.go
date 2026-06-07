@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -110,6 +111,11 @@ func Load() *Config {
 	}
 	if v := os.Getenv("SECRET_KEY"); v != "" {
 		cfg.SecretKey = v
+	}
+	if v := os.Getenv("PORT"); v != "" {
+		if p, err := strconv.Atoi(v); err == nil && p > 0 && p <= 65535 {
+			cfg.Port = p
+		}
 	}
 	// LOG_DIR 通过环境变量变更后，更新 ConfigFile 路径
 	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")

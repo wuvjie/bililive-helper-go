@@ -264,6 +264,7 @@ bililive-helper-go/
 | `COOKIE_SECURE` | Session cookie Secure 标志（HTTPS 时设为 true） | `false` |
 | `WEBHOOK_URL` | 任务完成通知 webhook（JSON POST） | 空（不通知） |
 | `API_TOKEN` | API Token（用于 Bearer 认证） | 空（未启用） |
+| `PORT` | 监听端口（也可通过 config.json 设置） | `5000` |
 
 ### 配置文件（config.json）
 
