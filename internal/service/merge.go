@@ -256,11 +256,6 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 				done++
 				mergeDone++
 				totalGB += task.SizeGB
-				outputName := utils.MakeOutputName(task.Files[0])
-				if strings.HasSuffix(outputName, ".flv") {
-					outputName = strings.TrimSuffix(outputName, ".flv") + ".mp4"
-				}
-				onProgress(fmt.Sprintf("[%s] ✅ → %s", streamerName, outputName))
 			} else {
 				mergeFailed++
 				reason := classifyMergeFailure(task.Folder, task.Files[0])
@@ -358,12 +353,6 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 	// 删除原始文件（带重试）
 	if err := utils.SafeUnlink(flvPath); err != nil {
 		opLog.Log(fmt.Sprintf("⚠ 删除原始文件失败: %v", err))
-	}
-
-	if info, err := os.Stat(mp4Path); err != nil {
-		opLog.Log(fmt.Sprintf("✅ FLV→MP4 完成: %s (大小未知)", filepath.Base(mp4Path)))
-	} else {
-		opLog.Log(fmt.Sprintf("✅ FLV→MP4 完成: %s (%s)", filepath.Base(mp4Path), utils.FormatSize(info.Size())))
 	}
 	return true
 }
@@ -569,6 +558,13 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		if err := os.Chtimes(concatOutputPath, latestSrcMtime, latestSrcMtime); err != nil {
 			opLog.Log(fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(concatOutputPath), err))
 		}
+	}
+
+	// doMerge 负责输出完成消息（谁干活谁汇报）
+	if info, err := os.Stat(concatOutputPath); err == nil {
+		onProgress(fmt.Sprintf("✅ → %s (%s)", filepath.Base(concatOutputPath), utils.FormatSize(info.Size())))
+	} else {
+		onProgress(fmt.Sprintf("✅ → %s", filepath.Base(concatOutputPath)))
 	}
 
 	// 合并校验通过后删除原始文件
