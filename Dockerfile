@@ -1,12 +1,14 @@
 # 镜像源配置（默认国内源，海外构建传 --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org）
 ARG ALPINE_MIRROR=mirrors.aliyun.com
 ARG GO_PROXY=https://goproxy.cn,direct
+ARG NPM_REGISTRY=https://registry.npmmirror.com
 
 # Stage 1: Build frontend
 FROM node:20-alpine AS frontend-builder
+ARG NPM_REGISTRY
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm config set registry ${NPM_REGISTRY} && npm ci
 COPY frontend/ ./
 RUN npm run build
 
