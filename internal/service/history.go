@@ -196,25 +196,10 @@ func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 		return
 	}
 	tmp := file + ".tmp"
-	// 手动 Open → Write → Sync → Close，确保数据刷入持久存储后再 rename
-	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
-	if err != nil {
-		s.logger.Warn("创建历史记录临时文件失败", zap.Error(err))
+	if err := config.AtomicWriteFile(tmp, data, 0600); err != nil {
+		s.logger.Warn("写入历史记录失败", zap.Error(err))
 		return
 	}
-	if _, err := f.Write(data); err != nil {
-		f.Close()
-		os.Remove(tmp)
-		s.logger.Warn("写入历史记录临时文件失败", zap.Error(err))
-		return
-	}
-	if err := f.Sync(); err != nil {
-		f.Close()
-		os.Remove(tmp)
-		s.logger.Warn("fsync 历史记录失败", zap.Error(err))
-		return
-	}
-	f.Close()
 	if err := os.Rename(tmp, file); err != nil {
 		os.Remove(tmp)
 		s.logger.Warn("原子替换历史记录文件失败", zap.Error(err))
