@@ -9,13 +9,16 @@ import (
 	"time"
 )
 
+const maxOpLogSize = 10 * 1024 * 1024 // 10MB: 单个操作日志文件大小上限
+
 // OpLogger 封装单次操作的日志生命周期。
 // 每次合并/清理操作创建一个独立的 OpLogger，写入独立的日志文件。
 type OpLogger struct {
-	mu     sync.Mutex
-	file   *os.File
-	logID  string
-	closed bool
+	mu      sync.Mutex
+	file    *os.File
+	logID   string
+	closed  bool
+	written int64 // 已写入字节数，用于大小限制
 }
 
 // NewOpLogger 创建操作日志器。logDir 为日志目录（如 merge_log/），taskType 为操作类型（merge/clean）。
@@ -34,17 +37,19 @@ func NewOpLogger(logDir, taskType string) (*OpLogger, error) {
 	return &OpLogger{file: f, logID: logID}, nil
 }
 
-// Log 写入一行带时间戳的日志。并发安全。
+// Log 写入一行带时间戳的日志。并发安全。超过大小限制后停止写入。
 func (l *OpLogger) Log(msg string) {
 	if l == nil {
 		return
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if l.closed {
+	if l.closed || l.written >= maxOpLogSize {
 		return
 	}
-	fmt.Fprintf(l.file, "[%s] %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
+	line := fmt.Sprintf("[%s] %s\n", time.Now().Format("2006-01-02 15:04:05"), msg)
+	n, _ := fmt.Fprint(l.file, line)
+	l.written += int64(n)
 }
 
 // ProgressFunc 返回一个 ProgressFunc，同时写入日志文件和调用 SSE 回调。
