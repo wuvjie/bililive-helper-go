@@ -87,9 +87,9 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 		onProgress(fmt.Sprintf("⚙ %s 清理目标: %.1f%% → %.0f%%", tag, disk.UsedPct, cfg.TargetThreshold))
 	} else {
 		if disk.UsedPct > 95 {
-			msg := fmt.Sprintf("❌ %s 磁盘 %.1f%% 超过 95%% 安全上限", tag, disk.UsedPct)
+			msg := fmt.Sprintf("❌ %s 磁盘 %.1f%% 超过 95%% 安全上限，请手动检查磁盘空间", tag, disk.UsedPct)
 			onProgress(msg)
-			return nil, opLog.LogID(), fmt.Errorf("磁盘使用率 %.1f%% 超过 95%%，无法执行清理", disk.UsedPct)
+			return nil, opLog.LogID(), fmt.Errorf("磁盘使用率 %.1f%% 超过 95%% 安全上限，请手动清理磁盘空间", disk.UsedPct)
 		}
 		opLog.Log(fmt.Sprintf("▶ %s 清理", tag))
 	}

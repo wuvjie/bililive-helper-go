@@ -52,7 +52,7 @@ func (h *Handler) ExportHistory(c *gin.Context) {
 func (h *Handler) GetLogContent(c *gin.Context) {
 	task := c.Param("task")
 	if !utils.ValidateFilename(task) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "非法任务名"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的任务类型，仅支持 merge 或 clean"})
 		return
 	}
 

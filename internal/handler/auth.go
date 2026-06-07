@@ -92,7 +92,7 @@ func (h *Handler) Index(c *gin.Context) {
 func (h *Handler) Login(c *gin.Context) {
 	ip := c.ClientIP()
 	if isRateLimited(ip) {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "登录尝试次数过多，请5分钟后再试"})
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "登录尝试次数过多，请 5 分钟后再试"})
 		return
 	}
 
@@ -103,7 +103,7 @@ func (h *Handler) Login(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求格式错误，请发送 JSON 数据"})
 		return
 	}
 

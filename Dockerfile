@@ -1,3 +1,7 @@
+# 镜像源配置（国内构建使用 mirrors.aliyun.com，海外构建使用默认源）
+ARG ALPINE_MIRROR=dl-cdn.alpinelinux.org
+ARG GO_PROXY=https://proxy.golang.org,direct
+
 # Stage 1: Build frontend
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
@@ -8,10 +12,12 @@ RUN npm run build
 
 # Stage 2: Build Go binary
 FROM golang:1.25-alpine AS builder
+ARG ALPINE_MIRROR
+ARG GO_PROXY
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+RUN sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_MIRROR}/g" /etc/apk/repositories
 RUN apk add --no-cache git
-ENV GOPROXY=https://goproxy.cn,direct
+ENV GOPROXY=${GO_PROXY}
 
 WORKDIR /app
 COPY go.mod go.sum ./
@@ -21,8 +27,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o bililive-helper ./cmd/server
 
 # Stage 3: Minimal runtime image with ffmpeg
 FROM alpine:3.19
+ARG ALPINE_MIRROR
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+LABEL maintainer="wuvjie"
+LABEL description="Bililive Helper - 直播录制后处理工具"
+LABEL org.opencontainers.image.source="https://github.com/wuvjie/bililive-helper-go"
+
+RUN sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_MIRROR}/g" /etc/apk/repositories
 RUN apk add --no-cache ffmpeg ca-certificates tzdata curl
 
 WORKDIR /app
