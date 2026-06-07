@@ -7,11 +7,15 @@ services:
       - "5689:5000"
     volumes:
       - /vol2:/vol2                                              # video storage mount
-      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go  # config + logs persistence (excludes templates/ which is built inside container)
+      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go  # config + logs persistence
     environment:
       - TARGET_DIR=/vol2/1000/video/bililive-go/抖音
       - LOG_DIR=/vol1/1000/docker/bililive-helper-go
       - TZ=Asia/Shanghai
+      # - PASSWORD=your_password          # 可选：通过环境变量设置密码（优先于初始化向导）
+      # - COOKIE_SECURE=true              # HTTPS 反向代理时启用
+      # - WEBHOOK_URL=https://your-webhook # 任务完成通知
+      # - API_TOKEN=your_api_token        # Bearer Token 认证（用于 API 调用）
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5000/api/health"]
       interval: 30s
@@ -22,8 +26,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '3.0'
-          memory: 4G
+          cpus: '3.0'    # 4 核留 1 核给录制进程
+          memory: 4G     # 8G 留 4G 给录制进程
     logging:
       driver: "json-file"
       options:
@@ -32,6 +36,7 @@ services:
     networks:
       - nas
 
+# 使用前需创建网络：docker network create nas
 networks:
   nas:
     external: true

@@ -200,7 +200,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 	}
 	if err := rec.Validate(); err != nil {
 		h.logger.Warn("推荐配置校验失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "推荐配置生成异常"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "推荐配置生成失败"})
 		return
 	}
 

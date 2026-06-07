@@ -57,7 +57,7 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 		return
 	}
 	if len(req.Files) < 2 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "至少选择2个文件"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "至少选择 2 个文件"})
 		return
 	}
 	if len(req.Files) > maxManualMergeFiles {
@@ -193,7 +193,11 @@ func (h *Handler) RunTask(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": fmt.Sprintf("%s 已触发", task)})
+	taskName := map[string]string{"merge": "合并", "clean": "清理"}[task]
+	if taskName == "" {
+		taskName = task
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": fmt.Sprintf("%s任务已触发", taskName)})
 }
 
 // GetSchedule 返回当前调度状态（间隔、启用状态、上次/下次执行时间）。
@@ -350,7 +354,7 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 		Confirm   bool    `json:"confirm"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil || !req.Confirm {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "需要确认"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请勾选确认选项后再执行紧急清理"})
 		return
 	}
 

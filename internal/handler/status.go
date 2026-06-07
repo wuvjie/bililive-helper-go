@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -235,13 +236,13 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 func (h *Handler) GetStreamerFiles(c *gin.Context) {
 	streamer := c.Param("name")
 	if !utils.ValidateFilename(streamer) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "非法主播名"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "主播名包含非法字符"})
 		return
 	}
 	cfg := h.config.ToDTO()
 	folder := filepath.Join(cfg.TargetDir, streamer)
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "目录不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("主播 %s 的目录不存在", streamer)})
 		return
 	}
 

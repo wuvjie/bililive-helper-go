@@ -589,7 +589,7 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	name := streamer
 	locked, sl := s.tryLockStreamer(name)
 	if !locked {
-		return "", fmt.Errorf("%s 合并任务正在执行中", name)
+		return "", fmt.Errorf("%s 合并任务正在执行中，请稍后再试", name)
 	}
 	defer s.unlockStreamer(sl)
 
