@@ -362,12 +362,9 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 
 	if info, err := os.Stat(mp4Path); err != nil {
 		opLog.Log(fmt.Sprintf("✅ FLV→MP4 完成: %s (大小未知)", filepath.Base(mp4Path)))
-		onProgress(fmt.Sprintf("✅ 完成: %s", filepath.Base(mp4Path)))
 	} else {
 		opLog.Log(fmt.Sprintf("✅ FLV→MP4 完成: %s (%s)", filepath.Base(mp4Path), utils.FormatSize(info.Size())))
-		onProgress(fmt.Sprintf("✅ 完成: %s (%s)", filepath.Base(mp4Path), utils.FormatSize(info.Size())))
 	}
-	onProgress(fmt.Sprintf("✅ 完成: %s", filepath.Base(mp4Path)))
 	return true
 }
 
