@@ -44,6 +44,12 @@ export function markAuthenticated() {
   isAuthenticated = true;
 }
 
+// Reset auth state on session expiry (called from 401 interceptor)
+export function markUnauthenticated() {
+  authChecked = false;
+  isAuthenticated = false;
+}
+
 async function checkAuth(): Promise<boolean> {
   // Try /api/auth/check first, fall back to /api/status for older backends
   try {
