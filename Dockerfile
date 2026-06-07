@@ -1,6 +1,6 @@
-# 镜像源配置（国内构建使用 mirrors.aliyun.com，海外构建使用默认源）
-ARG ALPINE_MIRROR=dl-cdn.alpinelinux.org
-ARG GO_PROXY=https://proxy.golang.org,direct
+# 镜像源配置（默认国内源，海外构建传 --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org）
+ARG ALPINE_MIRROR=mirrors.aliyun.com
+ARG GO_PROXY=https://goproxy.cn,direct
 
 # Stage 1: Build frontend
 FROM node:20-alpine AS frontend-builder
