@@ -340,6 +340,7 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 
 	if err := ffmpeg.ValidateOutput(ctx, mp4Path); err != nil {
 		opLog.Log(fmt.Sprintf("❌ MP4 输出校验失败: %v，保留原始文件", err))
+		utils.SafeUnlink(mp4Path) // 清理校验失败的部分输出
 		return false
 	}
 

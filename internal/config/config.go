@@ -17,7 +17,8 @@ import (
 // Config 是应用程序的核心配置结构体。
 // 字段通过 JSON 序列化持久化到 config.json，Password 和 SecretKey 使用 json:"-" 排除。
 type Config struct {
-	TargetDir          string   `json:"TARGET_DIR"`
+	mu                 *sync.RWMutex `json:"-"` // 实例级读写锁，保护并发读写
+	TargetDir          string        `json:"TARGET_DIR"`
 	TriggerThreshold   float64  `json:"TRIGGER_THRESHOLD"`
 	TargetThreshold    float64  `json:"TARGET_THRESHOLD"`
 	MinKeepPerStreamer int      `json:"MIN_KEEP_PER_STREAMER"`
@@ -42,6 +43,7 @@ type Config struct {
 
 var (
 	defaultConfig = Config{
+		mu:                 &sync.RWMutex{},
 		TargetDir:          "/vol2/1000/video/bililive-go/抖音",
 		TriggerThreshold:   80,
 		TargetThreshold:    60,
@@ -62,7 +64,6 @@ var (
 		SecretKey:          "",  // 首次运行时自动生成（如未设置）
 		LogDir:             "/vol1/1000/docker/bililive-helper-go",
 	}
-	mu sync.RWMutex
 )
 
 // ConfigExists 检查指定日志目录下是否存在 config.json 文件。
@@ -207,8 +208,8 @@ func (c *Config) IsBackupWindow() bool {
 // Apply 在写锁保护下执行配置修改函数 fn，成功后原子写入磁盘。
 // 如果 fn 返回错误或写入失败，所有修改将回滚到调用前的状态。
 func (c *Config) Apply(fn func() error) error {
-	mu.Lock()
-	defer mu.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	// 快照用于回滚（深拷贝切片避免别名问题）
 	old := *c
 	old.WhitelistKeywords = append([]string(nil), c.WhitelistKeywords...)
@@ -331,15 +332,15 @@ type ConfigDTO struct {
 
 // ToDTO 返回不含敏感字段的配置副本（线程安全）。
 func (c *Config) ToDTO() ConfigDTO {
-	mu.RLock()
-	defer mu.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.ToDTOSnapshot()
 }
 
 // Snapshot 返回配置的深拷贝副本，用于并发读取场景（线程安全）。
 func (c *Config) Snapshot() Config {
-	mu.RLock()
-	defer mu.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	snap := *c
 	snap.WhitelistKeywords = append([]string(nil), c.WhitelistKeywords...)
 	return snap

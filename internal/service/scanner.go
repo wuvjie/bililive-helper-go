@@ -34,6 +34,14 @@ type mergeTask struct {
 	SizeGB float64
 }
 
+// pendingBatch 保存通过快速检查但尚未验证文件稳定性的候选批次。
+type pendingBatch struct {
+	Names    []string
+	Folder   string
+	Size     int64
+	Streamer string
+}
+
 // convertTask 表示一个待转换的任务（FLV 转 MP4）。
 type convertTask struct {
 	FlvPath string
@@ -193,6 +201,7 @@ func isStreamActive(folder string, batchKey string) bool {
 func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg config.Config) ([]mergeTask, []convertTask) {
 	var tasks []mergeTask
 	var convertTasks []convertTask
+	var pending []pendingBatch // Phase 1: 收集候选，Phase 2: 并发验证稳定性
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		return nil, nil
@@ -397,19 +406,45 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					continue
 				}
 
-				if !isFileSizeStable(ctx, lastFile, 1*time.Minute) {
-					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 文件大小仍在变化", entry.Name(), len(names)))
-					continue
-				}
-
-				s.logger.Info(fmt.Sprintf("[%s] 🔗 %d个文件 (%.1f GB) → 待合并", entry.Name(), len(names), float64(size)/oneGB))
-				tasks = append(tasks, mergeTask{
-					Files:  names,
-					Folder: folder,
-					SizeGB: float64(size) / oneGB,
+				// Phase 1: 通过快速检查，加入候选列表（不阻塞）
+				s.logger.Info(fmt.Sprintf("[%s] 🔗 %d个文件 (%.1f GB) → 候选待验证", entry.Name(), len(names), float64(size)/oneGB))
+				pending = append(pending, pendingBatch{
+					Names:    names,
+					Folder:   folder,
+					Size:     size,
+					Streamer: entry.Name(),
 				})
 			}
 		}
+	}
+	// Phase 2: 并发验证候选批次的文件稳定性（避免串行阻塞 1 分钟/批次）
+	if len(pending) > 0 {
+		s.logger.Info(fmt.Sprintf("⏳ 并发验证 %d 个候选批次的文件稳定性...", len(pending)))
+		var wg sync.WaitGroup
+		sem := make(chan struct{}, 4) // 限制并发数为 4
+		var mu sync.Mutex
+		for i := range pending {
+			wg.Add(1)
+			sem <- struct{}{}
+			go func(pb *pendingBatch) {
+				defer wg.Done()
+				defer func() { <-sem }()
+				lastFile := filepath.Join(pb.Folder, pb.Names[len(pb.Names)-1])
+				if isFileSizeStable(ctx, lastFile, 1*time.Minute) {
+					mu.Lock()
+					tasks = append(tasks, mergeTask{
+						Files:  pb.Names,
+						Folder: pb.Folder,
+						SizeGB: float64(pb.Size) / oneGB,
+					})
+					mu.Unlock()
+					s.logger.Info(fmt.Sprintf("[%s] ✅ %d个文件 (%.1f GB) → 稳定，待合并", pb.Streamer, len(pb.Names), float64(pb.Size)/oneGB))
+				} else {
+					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 文件大小仍在变化，跳过", pb.Streamer, len(pb.Names)))
+				}
+			}(&pending[i])
+		}
+		wg.Wait()
 	}
 	return tasks, convertTasks
 }
