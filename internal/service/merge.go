@@ -287,12 +287,23 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		if mergeDone > 0 {
 			parts = append(parts, fmt.Sprintf("合并 %d 场次 (%.1f GB)", mergeDone, totalGB))
 		}
+		if mergeFailed > 0 {
+			var failParts []string
+			for reason, cnt := range failedReasons {
+				failParts = append(failParts, fmt.Sprintf("%s x%d", reason, cnt))
+			}
+			parts = append(parts, fmt.Sprintf("失败 %d 项(%s)", mergeFailed, strings.Join(failParts, ", ")))
+		}
 		detail := strings.Join(parts, ", ")
 		if detail == "" {
 			detail = fmt.Sprintf("完成 %d 项", done)
 		}
+		status := "success"
+		if mergeFailed > 0 {
+			status = "partial"
+		}
 		msg := fmt.Sprintf("✅ 完成: 扫描 %d 个主播, %s", totalScanned, detail)
-		s.history.AddWithStats("merge", streamer, "success", done, 0, int64(totalGB*oneGB), duration, detail, opLog.LogID())
+		s.history.AddWithStats("merge", streamer, status, done, 0, int64(totalGB*oneGB), duration, detail, opLog.LogID())
 		onProgress(msg)
 	} else if mergeFailed > 0 {
 		var parts []string
