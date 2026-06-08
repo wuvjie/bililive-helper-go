@@ -245,6 +245,7 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	cfg := config.DefaultConfig()
 	cfg.Password = req.Password
 	cfg.SecretKey = utils.RandomHex(16)
+	cfg.LogDir = h.config.LogDir // 使用运行时的 LOG_DIR（来自环境变量）
 	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")
 
 	// 原子写入 config.json（通过 Apply 内部的 atomicWriteFile + fsync）
