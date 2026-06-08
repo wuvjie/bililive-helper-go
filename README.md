@@ -275,8 +275,8 @@ bililive-helper-go/
 |------|------|--------|
 | `PASSWORD` | 登录密码（可选，优先通过初始化向导设置；适用于自动化部署） | 首次启动自动生成 |
 | `SECRET_KEY` | Session 签名密钥（可选，通常无需设置） | 首次启动自动生成 |
-| `TARGET_DIR` | 录制视频目录 | `/path/to/videos` |
-| `LOG_DIR` | 日志和配置存储目录 | `/path/to/logs` |
+| `TARGET_DIR` | 录制视频目录 | `/vol2/1000/video/bililive-go/抖音` |
+| `LOG_DIR` | 日志和配置存储目录 | `/vol1/1000/docker/bililive-helper-go` |
 | `TZ` | 时区 | `Asia/Shanghai` |
 | `COOKIE_SECURE` | Session cookie Secure 标志（HTTPS 时设为 true） | `false` |
 | `WEBHOOK_URL` | 任务完成通知 webhook（JSON POST） | 空（不通知） |
@@ -289,7 +289,7 @@ bililive-helper-go/
 
 | 字段 | 类型 | 说明 | 默认值 |
 |------|------|------|--------|
-| `TARGET_DIR` | string | 录制视频目录 | `/path/to/videos` |
+| `TARGET_DIR` | string | 录制视频目录 | `/vol2/1000/video/bililive-go/抖音` |
 | `TRIGGER_THRESHOLD` | float | 清理触发阈值（磁盘使用率 %） | 80 |
 | `TARGET_THRESHOLD` | float | 清理目标阈值（磁盘使用率 %） | 60 |
 | `MIN_KEEP_PER_STREAMER` | int | 每主播最少保留文件数 | 3 |
