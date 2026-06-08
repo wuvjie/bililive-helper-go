@@ -75,10 +75,8 @@ router.beforeEach(async (to, _from, next) => {
       if (res.ok) {
         const data = await res.json();
         isFirstRun = data.first_run;
-      } else {
-        // Endpoint exists but returned error — assume first run for safety
-        isFirstRun = true;
       }
+      // 非 OK 响应（如 500）不改变 isFirstRun，避免服务端错误时误跳转到初始化页面
     } catch {
       // Endpoint doesn't exist (old binary) — cannot determine, skip setup check
     }

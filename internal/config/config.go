@@ -179,7 +179,7 @@ func (c *Config) Validate() error {
 	if c.MaxDeletePerRun < 1 {
 		return fmt.Errorf("MAX_DELETE_PER_RUN 不能小于 1")
 	}
-	if c.Port < 0 || c.Port > 65535 {
+	if c.Port < 1 || c.Port > 65535 {
 		return fmt.Errorf("PORT 必须在 0-65535 之间")
 	}
 	if c.BackupStartHour < 0 || c.BackupStartHour > 23 {

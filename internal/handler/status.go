@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
 
 	"bililive-helper/internal/utils"
@@ -265,7 +264,7 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 			"size":      info.Size(),
 			"size_str":  utils.FormatSize(info.Size()),
 			"mtime":     info.ModTime().Unix(),
-			"is_merged": strings.Contains(name, "-合并版"),
+			"is_merged": utils.IsMergedFile(name),
 		})
 	}
 	c.JSON(http.StatusOK, files)

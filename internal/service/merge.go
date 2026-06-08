@@ -420,7 +420,8 @@ func checkFileAvailability(ctx context.Context, folder string, files []string) e
 		if !strings.HasPrefix(cleanPath, cleanFolder+string(os.PathSeparator)) {
 			return fmt.Errorf("路径穿越检测: %s", f)
 		}
-		if _, err := os.Stat(fullPath); err != nil {
+		info, err := os.Stat(fullPath)
+		if err != nil {
 			// 文件不存在，检查是否已有合并版输出
 			mergedName := utils.MakeOutputName(f)
 			mergedPath := filepath.Join(folder, mergedName)
@@ -428,6 +429,9 @@ func checkFileAvailability(ctx context.Context, folder string, files []string) e
 				return fmt.Errorf("文件已合并: %s → %s", f, mergedName)
 			}
 			return fmt.Errorf("文件不存在: %s", f)
+		}
+		if info.IsDir() {
+			return fmt.Errorf("路径是目录而非文件: %s", f)
 		}
 		if isFileBeingWritten(ctx, fullPath, 1*time.Second) {
 			return fmt.Errorf("文件被占用: %s", f)
@@ -558,13 +562,12 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		opLog.Log(fmt.Sprintf("❌ 无法打开输出文件进行 fsync: %v，尝试重编码", openErr))
 		return s.concatReencode(ctx, files, folder, concatOutputPath, onProgress, opLog)
 	}
+	defer fd.Close()
 	if syncErr := fd.Sync(); syncErr != nil {
-		fd.Close()
 		opLog.Log(fmt.Sprintf("❌ fsync 失败: %v，尝试重编码", syncErr))
 		utils.SafeUnlink(concatOutputPath) // 删除不可靠输出
 		return s.concatReencode(ctx, files, folder, concatOutputPath, onProgress, opLog)
 	}
-	fd.Close()
 
 	// 保留录制时间戳
 	if !latestSrcMtime.IsZero() {

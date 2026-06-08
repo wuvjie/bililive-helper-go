@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -265,7 +266,8 @@ func (h *Handler) SetupInit(c *gin.Context) {
 	// 持久化密码到凭据文件（Password 字段 json:"-" 不会写入 config.json）
 	if err := h.config.SaveCredential(); err != nil {
 		h.logger.Error("密码持久化失败，初始化回滚", zap.Error(err))
-		// 回滚运行时配置到初始化前状态
+		// 回滚：删除已写入的 config.json，恢复首次运行状态
+		os.Remove(h.config.ConfigFile)
 		h.config.Apply(func() error {
 			h.config.Password = ""
 			h.config.SecretKey = ""

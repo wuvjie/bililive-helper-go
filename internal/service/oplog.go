@@ -54,7 +54,14 @@ func (l *OpLogger) Log(msg string) {
 
 // ProgressFunc 返回一个 ProgressFunc，同时写入日志文件和调用 SSE 回调。
 // 调用方只需传入原始的 onProgress 回调，返回值替代 onProgress 使用。
+// 当 OpLogger 为 nil 时（创建失败），直接透传 SSE 回调。
 func (l *OpLogger) ProgressFunc(sseCallback func(string)) func(string) {
+	if l == nil {
+		if sseCallback != nil {
+			return sseCallback
+		}
+		return func(string) {}
+	}
 	return func(msg string) {
 		l.Log(msg)
 		if sseCallback != nil {
