@@ -45,7 +45,7 @@ type Config struct {
 var (
 	defaultConfig = Config{
 		mu:                 &sync.RWMutex{},
-		TargetDir:          "/vol2/1000/video/bililive-go/抖音",
+		TargetDir:          "/path/to/videos",
 		TriggerThreshold:   80,
 		TargetThreshold:    60,
 		MinKeepPerStreamer: 3,
@@ -63,7 +63,7 @@ var (
 		Port:               5000,
 		Password:           "",  // 首次运行时自动生成（如未设置）
 		SecretKey:          "",  // 首次运行时自动生成（如未设置）
-		LogDir:             "/vol1/1000/docker/bililive-helper-go",
+		LogDir:             "/path/to/logs",
 	}
 )
 
