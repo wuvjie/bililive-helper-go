@@ -33,7 +33,7 @@ ARG ALPINE_MIRROR
 
 LABEL maintainer="wuvjie"
 LABEL description="Bililive Helper - 直播录制后处理工具"
-LABEL org.opencontainers.image.source="https://github.com/your-username/bililive-helper-go"
+LABEL org.opencontainers.image.source="https://github.com/wuvjie/bililive-helper-go"
 
 RUN sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_MIRROR}/g" /etc/apk/repositories
 RUN apk add --no-cache ffmpeg ca-certificates tzdata curl

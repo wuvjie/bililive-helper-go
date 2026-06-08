@@ -155,7 +155,6 @@ bililive-helper-go/
 │   ├── service/
 │   │   ├── clean.go               # 智能清理服务
 │   │   ├── history.go             # 历史记录持久化服务
-│   │   ├── log.go                 # 日志模块（已迁移到 oplog.go）
 │   │   ├── oplog.go               # 操作日志器（per-operation 独立日志文件）
 │   │   ├── merge.go               # 合并服务（主流程）
 │   │   ├── scanner.go             # 文件扫描、分组、场次划分
