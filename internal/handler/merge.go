@@ -38,8 +38,15 @@ func (h *Handler) RunMerge(c *gin.Context) {
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
 		}
 		if result.Done > 0 {
-			h.logger.Info("合并完成", zap.Int("done", result.Done), zap.Float64("gb", result.TotalGB), zap.String("logID", logID))
-			utils.NotifyWebhook(fmt.Sprintf("手动合并完成：%d 场次 (%.1f GB)", result.Done, result.TotalGB))
+			h.logger.Info("合并完成", zap.Int("done", result.Done), zap.Int("failed", result.Failed), zap.Float64("gb", result.TotalGB), zap.String("logID", logID))
+			webhookMsg := fmt.Sprintf("手动合并完成：%d 场次 (%.1f GB)", result.Done, result.TotalGB)
+			if result.Failed > 0 {
+				webhookMsg += fmt.Sprintf("，失败 %d 项", result.Failed)
+			}
+			utils.NotifyWebhook(webhookMsg)
+			if result.Failed > 0 {
+				return fmt.Sprintf("✅ 完成: 合并 %d 场次 (%.1f GB)，失败 %d 项", result.Done, result.TotalGB, result.Failed)
+			}
 			return fmt.Sprintf("✅ 完成: 合并 %d 场次 (%.1f GB)", result.Done, result.TotalGB)
 		}
 		return "✅ 完成"

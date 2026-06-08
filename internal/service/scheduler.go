@@ -190,9 +190,13 @@ func (s *SchedulerService) runTask(task string) {
 		if err != nil {
 			s.logger.Info(fmt.Sprintf("❌ 合并失败: %v", err))
 		} else if res != nil && res.Done > 0 {
-			utils.NotifyWebhook(fmt.Sprintf("自动合并完成：%d 场次 (%.1f GB)", res.Done, res.TotalGB))
+			webhookMsg := fmt.Sprintf("自动合并完成：%d 场次 (%.1f GB)", res.Done, res.TotalGB)
+			if res.Failed > 0 {
+				webhookMsg += fmt.Sprintf("，失败 %d 项", res.Failed)
+			}
+			utils.NotifyWebhook(webhookMsg)
 		}
-		_ = logID // logID 已在 merge.Run 内部写入 history
+		_ = logID
 	case "clean":
 		res, logID, err := s.clean.Run(s.ctx, "", nil)
 		if err != nil {
