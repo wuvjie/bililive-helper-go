@@ -30,7 +30,7 @@ func NewOpLogger(logDir, taskType string) (*OpLogger, error) {
 	}
 	logID := fmt.Sprintf("%s_%s_%04x", taskType, time.Now().Format("20060102_150405"), rand.Intn(0xFFFF))
 	path := filepath.Join(logDir, "op_"+logID+".log")
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("创建日志文件失败: %w", err)
 	}
