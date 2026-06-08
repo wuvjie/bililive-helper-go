@@ -47,13 +47,13 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="streamer" label="主播" width="120" show-overflow-tooltip />
+        <el-table-column prop="streamer" label="主播" width="120" show-overflow-tooltip sortable />
         <el-table-column label="详情" min-width="250">
           <template #default="{ row }">
             <span class="detail-text">{{ row.detail || formatDetail(row) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100" align="right" header-align="right">
+        <el-table-column prop="status" label="状态" width="100" align="right" header-align="right" sortable>
           <template #default="{ row }">
             <span class="status-dot-text" :class="row.status === 'success' ? 'dot-success' : 'dot-fail'">
               {{ row.status === 'success' ? '成功' : '失败' }}

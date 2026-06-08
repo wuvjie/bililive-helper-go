@@ -97,26 +97,27 @@
           :data="files"
           size="small"
           max-height="300"
+          :default-sort="{ prop: 'mtime', order: 'descending' }"
           @selection-change="handleSelectionChange"
           class="mt-12"
         >
           <el-table-column type="selection" width="45" :selectable="() => true" />
-          <el-table-column prop="name" label="文件名" min-width="300" show-overflow-tooltip>
+          <el-table-column prop="name" label="文件名" min-width="300" show-overflow-tooltip sortable>
             <template #default="{ row }">
               <span class="file-name">{{ row.name }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="size_str" label="大小" width="100" align="right" header-align="right">
+          <el-table-column prop="size" label="大小" width="100" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
             <template #default="{ row }">
               <span class="mono-val">{{ row.size_str }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="修改时间" width="170" align="right" header-align="right">
+          <el-table-column prop="mtime" label="修改时间" width="170" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => a.mtime - b.mtime">
             <template #default="{ row }">
               <span class="mono-val-sm">{{ formatTime(row.mtime) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="100" align="right" header-align="right">
+          <el-table-column prop="is_merged" label="状态" width="100" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => Number(a.is_merged) - Number(b.is_merged)">
             <template #default="{ row }">
               <span class="status-dot-text" :class="row.is_merged ? 'dot-merged' : 'dot-pending'">
                 {{ row.is_merged ? '已合并' : '未合并' }}
