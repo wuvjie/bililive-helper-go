@@ -4,35 +4,51 @@ services:
     image: bililive-helper-go
     container_name: bililive-helper-go
     ports:
+      # 宿主机端口:容器端口，访问 http://IP:5689
       - "5689:5000"
     volumes:
-      - /vol2:/vol2                                              # video storage mount
-      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go  # config + logs persistence
+      # 录像存储目录（bililive-go 的录制输出所在位置）
+      - /vol2:/vol2
+      # 配置文件、日志、历史记录的持久化目录
+      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go
     environment:
+      # 录制视频根目录（含各主播子目录）
       - TARGET_DIR=/vol2/1000/video/bililive-go/抖音
+      # 日志和配置文件存储目录
       - LOG_DIR=/vol1/1000/docker/bililive-helper-go
+      # 时区
       - TZ=Asia/Shanghai
-      # - PASSWORD=your_password          # 可选：通过环境变量设置密码（优先于初始化向导）
-      # - COOKIE_SECURE=true              # HTTPS 反向代理时启用
-      # - WEBHOOK_URL=https://your-webhook # 任务完成通知
-      # - API_TOKEN=your_api_token        # Bearer Token 认证（用于 API 调用）
+      # --- 以下为可选配置，取消注释即可生效 ---
+      # 登录密码（不设则首次启动时通过网页向导设置）
+      # - PASSWORD=your_password
+      # 使用 HTTPS 反向代理时设为 true
+      # - COOKIE_SECURE=true
+      # 任务完成通知（支持 Bark/Slack/飞书等兼容 Webhook）
+      # - WEBHOOK_URL=https://your-webhook
+      # API Token（用于外部程序通过 Bearer 认证调用接口）
+      # - API_TOKEN=your_api_token
+    # 健康检查（Docker 自动检测服务是否正常）
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5000/api/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+      interval: 30s   # 每 30 秒检查一次
+      timeout: 5s     # 超时时间
+      retries: 3      # 连续失败 3 次标记为不健康
+      start_period: 10s # 启动后 10 秒内不检查
+    # 容器异常退出自动重启
     restart: always
+    # 资源限制（防止占用过多系统资源影响录制）
     deploy:
       resources:
         limits:
-          cpus: '3.0'    # 4 核留 1 核给录制进程
-          memory: 4G     # 8G 留 4G 给录制进程
+          cpus: '3.0'    # CPU 上限（建议留 1 核给录制进程）
+          memory: 4G     # 内存上限（建议留一半给录制进程）
+    # 日志轮转（防止日志文件无限增长占满磁盘）
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "10m"  # 单个日志文件最大 10MB
+        max-file: "3"    # 最多保留 3 个日志文件
+    # Docker 网络（需提前创建：docker network create nas）
     networks:
       - nas
 
