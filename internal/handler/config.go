@@ -383,6 +383,9 @@ func (h *Handler) ImportConfig(c *gin.Context) {
 		return
 	}
 
+	// 过滤掉不应导入的内部字段
+	delete(cfgData, "SESSION_VERSION")
+
 	if err := h.config.Apply(func() error {
 		h.config.ApplyFromMap(cfgData)
 		return h.config.Validate()

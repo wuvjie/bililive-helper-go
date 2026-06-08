@@ -46,7 +46,9 @@ func SafeUnlink(path string) error {
 		if err == nil || os.IsNotExist(err) {
 			return nil
 		}
-		time.Sleep(500 * time.Millisecond)
+		if i < 2 {
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
 	return fmt.Errorf("删除文件失败 %s: %w", path, err)
 }

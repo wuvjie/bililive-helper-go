@@ -211,14 +211,17 @@ func (s *SchedulerService) runTask(task string) {
 // nextRunWithCatchUp 计算下次运行时间，自动跳过已过去的执行窗口。
 // 如果 lastRun + interval 已在过去，持续加 interval 直到找到未来时间。
 func nextRunWithCatchUp(lastRun time.Time, intervalMin int) float64 {
-	if lastRun.IsZero() {
+	if lastRun.IsZero() || intervalMin <= 0 {
 		return 0
 	}
 	interval := time.Duration(intervalMin) * time.Minute
 	next := lastRun.Add(interval)
 	now := time.Now()
-	for next.Before(now) {
+	// 安全上限：最多跳过 100 个周期，防止异常值导致长时间循环
+	maxIterations := 100
+	for next.Before(now) && maxIterations > 0 {
 		next = next.Add(interval)
+		maxIterations--
 	}
 	return float64(next.Unix())
 }
@@ -314,5 +317,8 @@ func (s *SchedulerService) loadSchedule() model.ScheduleConfig {
 		s.logger.Warn("调度配置解析失败，使用默认值", zap.Error(err), zap.String("file", file))
 		return defaultSchedule
 	}
+	// 与 SaveSchedule 一致的边界校验，防止手动编辑或旧版本写入的无效值
+	schedule.MergeInterval = max(10, min(1440, schedule.MergeInterval))
+	schedule.CleanInterval = max(10, min(1440, schedule.CleanInterval))
 	return schedule
 }

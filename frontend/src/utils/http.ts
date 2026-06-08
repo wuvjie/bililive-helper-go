@@ -18,7 +18,9 @@ http.interceptors.response.use(
       router.push("/login");
       return Promise.reject(error);
     }
-    const msg = error.response?.data?.message || error.response?.data?.error || error.message;
+    const data = error.response?.data;
+    const msg = typeof data === 'string' ? data
+      : data?.message || data?.error || error.message;
     ElMessage.error(msg);
     return Promise.reject(error);
   }

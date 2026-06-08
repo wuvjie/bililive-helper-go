@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var filenameRegex = regexp.MustCompile(`^\[(\d{4}-\d{2}-\d{2}) (\d{2}-\d{2}-\d{2})\](\[.+?\]\[.+?\]).*\.(mp4|flv|ts)$`)
+var filenameRegex = regexp.MustCompile(`(?i)^\[(\d{4}-\d{2}-\d{2}) (\d{2}-\d{2}-\d{2})\](\[.+?\]\[.+?\]).*\.(mp4|flv|ts)$`)
 
 // ParseFilename 从 bililive-go 格式的文件名中解析录制时间和主播标识。
 // 期望格式：[YYYY-MM-DD HH-MM-SS][streamer_id][title].ext
