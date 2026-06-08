@@ -20,14 +20,14 @@ func TestSortByFilename_DifferentDates(t *testing.T) {
 		{
 			name: "dates sorted ascending",
 			input: []string{
-				"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
-				"[2026-06-01 10-00-00][怡宝][怡宝]001.mp4",
-				"[2026-06-03 21-06-44][怡宝][怡宝]001.mp4",
+				"[2026-06-04 00-19-00][user1][title1]001.mp4",
+				"[2026-06-01 10-00-00][user1][title1]001.mp4",
+				"[2026-06-03 21-06-44][user1][title1]001.mp4",
 			},
 			expected: []string{
-				"[2026-06-01 10-00-00][怡宝][怡宝]001.mp4",
-				"[2026-06-03 21-06-44][怡宝][怡宝]001.mp4",
-				"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
+				"[2026-06-01 10-00-00][user1][title1]001.mp4",
+				"[2026-06-03 21-06-44][user1][title1]001.mp4",
+				"[2026-06-04 00-19-00][user1][title1]001.mp4",
 			},
 		},
 		{
@@ -56,14 +56,14 @@ func TestSortByFilename_DifferentDates(t *testing.T) {
 
 func TestSortByFilename_SameDateDifferentSequence(t *testing.T) {
 	input := []string{
-		"[2026-06-04 00-19-00][怡宝][怡宝]003.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]002.mp4",
+		"[2026-06-04 00-19-00][user1][title1]003.mp4",
+		"[2026-06-04 00-19-00][user1][title1]001.mp4",
+		"[2026-06-04 00-19-00][user1][title1]002.mp4",
 	}
 	expected := []string{
-		"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]002.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]003.mp4",
+		"[2026-06-04 00-19-00][user1][title1]001.mp4",
+		"[2026-06-04 00-19-00][user1][title1]002.mp4",
+		"[2026-06-04 00-19-00][user1][title1]003.mp4",
 	}
 	SortByFilename(input)
 	if !reflect.DeepEqual(input, expected) {
@@ -74,15 +74,15 @@ func TestSortByFilename_SameDateDifferentSequence(t *testing.T) {
 func TestSortByFilename_MixedParsedAndUnparsed(t *testing.T) {
 	input := []string{
 		"randomfile.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
+		"[2026-06-04 00-19-00][user1][title1]001.mp4",
 		"another_unknown.flv",
-		"[2026-06-01 10-00-00][怡宝][怡宝]001.mp4",
+		"[2026-06-01 10-00-00][user1][title1]001.mp4",
 	}
 	expected := []string{
 		"another_unknown.flv",
 		"randomfile.mp4",
-		"[2026-06-01 10-00-00][怡宝][怡宝]001.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
+		"[2026-06-01 10-00-00][user1][title1]001.mp4",
+		"[2026-06-04 00-19-00][user1][title1]001.mp4",
 	}
 	SortByFilename(input)
 	if !reflect.DeepEqual(input, expected) {
@@ -92,14 +92,14 @@ func TestSortByFilename_MixedParsedAndUnparsed(t *testing.T) {
 
 func TestSortByFilename_MergedAndOriginal(t *testing.T) {
 	input := []string{
-		"[2026-06-03 21-06-44][怡宝][怡宝]-合并版.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
-		"[2026-06-03 21-06-44][怡宝][怡宝]001.mp4",
+		"[2026-06-03 21-06-44][user1][title1]-合并版.mp4",
+		"[2026-06-04 00-19-00][user1][title1]001.mp4",
+		"[2026-06-03 21-06-44][user1][title1]001.mp4",
 	}
 	expected := []string{
-		"[2026-06-03 21-06-44][怡宝][怡宝]-合并版.mp4",
-		"[2026-06-03 21-06-44][怡宝][怡宝]001.mp4",
-		"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
+		"[2026-06-03 21-06-44][user1][title1]-合并版.mp4",
+		"[2026-06-03 21-06-44][user1][title1]001.mp4",
+		"[2026-06-04 00-19-00][user1][title1]001.mp4",
 	}
 	SortByFilename(input)
 	if !reflect.DeepEqual(input, expected) {
@@ -116,8 +116,8 @@ func TestSortByFilename_EmptySlice(t *testing.T) {
 }
 
 func TestSortByFilename_SingleElement(t *testing.T) {
-	input := []string{"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4"}
-	expected := []string{"[2026-06-04 00-19-00][怡宝][怡宝]001.mp4"}
+	input := []string{"[2026-06-04 00-19-00][user1][title1]001.mp4"}
+	expected := []string{"[2026-06-04 00-19-00][user1][title1]001.mp4"}
 	SortByFilename(input)
 	if !reflect.DeepEqual(input, expected) {
 		t.Errorf("single element:\n  got  %v\n  want %v", input, expected)

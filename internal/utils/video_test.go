@@ -20,8 +20,8 @@ func TestParseFilename_Normal(t *testing.T) {
 	}{
 		{
 			name:      "standard flv file",
-			input:     "[2026-06-04 00-19-00][怡宝][怡宝]001.flv",
-			wantKey:   "[怡宝][怡宝]",
+			input:     "[2026-06-04 00-19-00][user1][title1]001.flv",
+			wantKey:   "[user1][title1]",
 			wantOk:    true,
 			wantYear:  2026,
 			wantMonth: time.June,
@@ -84,14 +84,14 @@ func TestParseFilename_MergedFile(t *testing.T) {
 	}{
 		{
 			name:    "merged mp4 file",
-			input:   "[2026-06-03 21-06-44][怡宝][怡宝]-合并版.mp4",
-			wantKey: "[怡宝][怡宝]",
+			input:   "[2026-06-03 21-06-44][user1][title1]-合并版.mp4",
+			wantKey: "[user1][title1]",
 			wantOk:  true,
 		},
 		{
 			name:    "merged flv file",
-			input:   "[2026-06-03 21-06-44][怡宝][怡宝]-合并版.flv",
-			wantKey: "[怡宝][怡宝]",
+			input:   "[2026-06-03 21-06-44][user1][title1]-合并版.flv",
+			wantKey: "[user1][title1]",
 			wantOk:  true,
 		},
 	}
@@ -123,11 +123,11 @@ func TestParseFilename_NoMatch(t *testing.T) {
 		},
 		{
 			name:  "wrong date format",
-			input: "[2026/06/04 00-19-00][怡宝][怡宝]001.mp4",
+			input: "[2026/06/04 00-19-00][user1][title1]001.mp4",
 		},
 		{
 			name:  "unsupported extension",
-			input: "[2026-06-04 00-19-00][怡宝][怡宝]001.mkv",
+			input: "[2026-06-04 00-19-00][user1][title1]001.mkv",
 		},
 		{
 			name:  "empty string",
@@ -135,7 +135,7 @@ func TestParseFilename_NoMatch(t *testing.T) {
 		},
 		{
 			name:  "single bracket segment",
-			input: "[2026-06-04 00-19-00][怡宝]001.mp4",
+			input: "[2026-06-04 00-19-00][user1]001.mp4",
 		},
 	}
 	for _, tt := range tests {
@@ -157,21 +157,21 @@ func TestParseFilename_DifferentExtensions(t *testing.T) {
 	}{
 		{
 			name:    "flv extension",
-			input:   "[2026-06-04 00-19-00][怡宝][怡宝]001.flv",
+			input:   "[2026-06-04 00-19-00][user1][title1]001.flv",
 			wantOk:  true,
-			wantKey: "[怡宝][怡宝]",
+			wantKey: "[user1][title1]",
 		},
 		{
 			name:    "mp4 extension",
-			input:   "[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
+			input:   "[2026-06-04 00-19-00][user1][title1]001.mp4",
 			wantOk:  true,
-			wantKey: "[怡宝][怡宝]",
+			wantKey: "[user1][title1]",
 		},
 		{
 			name:    "ts extension",
-			input:   "[2026-06-04 00-19-00][怡宝][怡宝]001.ts",
+			input:   "[2026-06-04 00-19-00][user1][title1]001.ts",
 			wantOk:  true,
-			wantKey: "[怡宝][怡宝]",
+			wantKey: "[user1][title1]",
 		},
 	}
 	for _, tt := range tests {

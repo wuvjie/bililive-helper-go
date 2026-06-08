@@ -6,11 +6,11 @@ services:
     ports:
       - "5689:5000"
     volumes:
-      - /vol2:/vol2                                              # video storage mount
-      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go  # config + logs persistence
+      - /path/to/videos:/path/to/videos        # 录像存储目录挂载
+      - /path/to/logs:/path/to/logs            # 配置和日志持久化
     environment:
-      - TARGET_DIR=/vol2/1000/video/bililive-go/抖音
-      - LOG_DIR=/vol1/1000/docker/bililive-helper-go
+      - TARGET_DIR=/path/to/videos
+      - LOG_DIR=/path/to/logs
       - TZ=Asia/Shanghai
       # - PASSWORD=your_password          # 可选：通过环境变量设置密码（优先于初始化向导）
       # - COOKIE_SECURE=true              # HTTPS 反向代理时启用
@@ -34,9 +34,9 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - nas
+      - app-network
 
-# 使用前需创建网络：docker network create nas
+# 使用前需创建网络：docker network create app-network
 networks:
-  nas:
+  app-network:
     external: true

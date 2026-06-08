@@ -10,18 +10,18 @@ func TestMakeOutputName_NormalFlv(t *testing.T) {
 	}{
 		{
 			name:     "normal raw flv file",
-			input:    "[2026-06-04 00-19-00][怡宝][怡宝]001.flv",
-			expected: "[2026-06-04 00-19-00][怡宝][怡宝]-合并版.flv",
+			input:    "[2026-06-04 00-19-00][user1][title1]001.flv",
+			expected: "[2026-06-04 00-19-00][user1][title1]-合并版.flv",
 		},
 		{
 			name:     "normal raw mp4 file",
-			input:    "[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
-			expected: "[2026-06-04 00-19-00][怡宝][怡宝]-合并版.mp4",
+			input:    "[2026-06-04 00-19-00][user1][title1]001.mp4",
+			expected: "[2026-06-04 00-19-00][user1][title1]-合并版.mp4",
 		},
 		{
 			name:     "ts extension",
-			input:    "[2026-06-04 00-19-00][怡宝][怡宝]001.ts",
-			expected: "[2026-06-04 00-19-00][怡宝][怡宝]-合并版.ts",
+			input:    "[2026-06-04 00-19-00][user1][title1]001.ts",
+			expected: "[2026-06-04 00-19-00][user1][title1]-合并版.ts",
 		},
 	}
 	for _, tt := range tests {
@@ -42,13 +42,13 @@ func TestMakeOutputName_MergedInput(t *testing.T) {
 	}{
 		{
 			name:     "merged file input should not produce double suffix",
-			input:    "[2026-06-03 21-06-44][怡宝][怡宝]-合并版.mp4",
-			expected: "[2026-06-03 21-06-44][怡宝][怡宝]-合并版.mp4",
+			input:    "[2026-06-03 21-06-44][user1][title1]-合并版.mp4",
+			expected: "[2026-06-03 21-06-44][user1][title1]-合并版.mp4",
 		},
 		{
 			name:     "merged flv input",
-			input:    "[2026-06-03 21-06-44][怡宝][怡宝]-合并版.flv",
-			expected: "[2026-06-03 21-06-44][怡宝][怡宝]-合并版.flv",
+			input:    "[2026-06-03 21-06-44][user1][title1]-合并版.flv",
+			expected: "[2026-06-03 21-06-44][user1][title1]-合并版.flv",
 		},
 	}
 	for _, tt := range tests {
@@ -96,13 +96,13 @@ func TestMakeOutputName_ExtensionPreserved(t *testing.T) {
 	}{
 		{
 			name:     "flv extension preserved",
-			input:    "[2026-06-04 00-19-00][怡宝][怡宝]001.flv",
-			expected: "[2026-06-04 00-19-00][怡宝][怡宝]-合并版.flv",
+			input:    "[2026-06-04 00-19-00][user1][title1]001.flv",
+			expected: "[2026-06-04 00-19-00][user1][title1]-合并版.flv",
 		},
 		{
 			name:     "mp4 extension preserved",
-			input:    "[2026-06-04 00-19-00][怡宝][怡宝]001.mp4",
-			expected: "[2026-06-04 00-19-00][怡宝][怡宝]-合并版.mp4",
+			input:    "[2026-06-04 00-19-00][user1][title1]001.mp4",
+			expected: "[2026-06-04 00-19-00][user1][title1]-合并版.mp4",
 		},
 	}
 	for _, tt := range tests {
@@ -128,8 +128,8 @@ func TestMakeOutputName_EdgeCases(t *testing.T) {
 		},
 		{
 			name:     "empty extension",
-			input:    "[2026-06-04 00-19-00][怡宝][怡宝]001",
-			expected: "[2026-06-04 00-19-00][怡宝][怡宝]-合并版",
+			input:    "[2026-06-04 00-19-00][user1][title1]001",
+			expected: "[2026-06-04 00-19-00][user1][title1]-合并版",
 		},
 	}
 	for _, tt := range tests {
@@ -150,7 +150,7 @@ func TestValidateFilename(t *testing.T) {
 	}{
 		{name: "normal flv file", input: "video001.flv", expected: true},
 		{name: "normal mp4 file", input: "record.mp4", expected: true},
-		{name: "chinese filename", input: "怡宝直播.mp4", expected: true},
+		{name: "chinese filename", input: "直播回放.mp4", expected: true},
 		{name: "long filename", input: "a]b" + string(make([]byte, 200)) + ".flv", expected: false}, // contains null bytes
 		{name: "empty string", input: "", expected: false},
 		{name: "dot", input: ".", expected: false},
@@ -190,7 +190,7 @@ func TestIsMergedFile(t *testing.T) {
 		input    string
 		expected bool
 	}{
-		{name: "contains merged tag", input: "[2026-06-04][怡宝]-合并版.flv", expected: true},
+		{name: "contains merged tag", input: "[2026-06-04][user1]-合并版.flv", expected: true},
 		{name: "merged tag in middle", input: "abc-合并版xyz.flv", expected: true},
 		{name: "no merged tag", input: "video001.flv", expected: false},
 		{name: "empty string", input: "", expected: false},
@@ -242,7 +242,7 @@ func TestMakeMP4Name(t *testing.T) {
 		{name: "already mp4", input: "video.mp4", expected: "video.mp4"},
 		{name: "ts to mp4", input: "video.ts", expected: "video.mp4"},
 		{name: "no extension adds mp4", input: "video", expected: "video.mp4"},
-		{name: "path preserved", input: "[2026-06-04 00-19-00][怡宝][怡宝]001.flv", expected: "[2026-06-04 00-19-00][怡宝][怡宝]001.mp4"},
+		{name: "path preserved", input: "[2026-06-04 00-19-00][user1][title1]001.flv", expected: "[2026-06-04 00-19-00][user1][title1]001.mp4"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
