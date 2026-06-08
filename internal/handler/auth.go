@@ -242,11 +242,12 @@ func (h *Handler) SetupInit(c *gin.Context) {
 		return
 	}
 
-	// 目录来自环境变量（docker-compose），首次启动时使用默认值
+	// 目录来自环境变量（docker-compose），使用运行时值而非默认值
 	cfg := config.DefaultConfig()
+	cfg.TargetDir = h.config.TargetDir // 使用运行时的 TARGET_DIR（来自环境变量）
+	cfg.LogDir = h.config.LogDir       // 使用运行时的 LOG_DIR（来自环境变量）
 	cfg.Password = req.Password
 	cfg.SecretKey = utils.RandomHex(16)
-	cfg.LogDir = h.config.LogDir // 使用运行时的 LOG_DIR（来自环境变量）
 	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")
 
 	// 原子写入 config.json（通过 Apply 内部的 atomicWriteFile + fsync）
