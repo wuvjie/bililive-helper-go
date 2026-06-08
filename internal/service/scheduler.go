@@ -204,6 +204,21 @@ func (s *SchedulerService) runTask(task string) {
 	}
 }
 
+// nextRunWithCatchUp 计算下次运行时间，自动跳过已过去的执行窗口。
+// 如果 lastRun + interval 已在过去，持续加 interval 直到找到未来时间。
+func nextRunWithCatchUp(lastRun time.Time, intervalMin int) float64 {
+	if lastRun.IsZero() {
+		return 0
+	}
+	interval := time.Duration(intervalMin) * time.Minute
+	next := lastRun.Add(interval)
+	now := time.Now()
+	for next.Before(now) {
+		next = next.Add(interval)
+	}
+	return float64(next.Unix())
+}
+
 // GetStatus 返回当前调度状态（各任务的启用状态、间隔、上次/下次执行时间、是否运行中）。
 func (s *SchedulerService) GetStatus() model.ScheduleStatus {
 	schedule := s.getSchedule()
@@ -222,14 +237,14 @@ func (s *SchedulerService) GetStatus() model.ScheduleStatus {
 			Enabled:   schedule.MergeEnabled,
 			Interval:  schedule.MergeInterval,
 			LastRun:   float64(s.lastRun["merge"].Unix()),
-			NextRun:   float64(s.lastRun["merge"].Add(time.Duration(schedule.MergeInterval) * time.Minute).Unix()),
+			NextRun:   nextRunWithCatchUp(s.lastRun["merge"], schedule.MergeInterval),
 			IsRunning: s.running["merge"],
 		},
 		Clean: model.TaskStatus{
 			Enabled:   schedule.CleanEnabled,
 			Interval:  schedule.CleanInterval,
 			LastRun:   float64(s.lastRun["clean"].Unix()),
-			NextRun:   float64(s.lastRun["clean"].Add(time.Duration(schedule.CleanInterval) * time.Minute).Unix()),
+			NextRun:   nextRunWithCatchUp(s.lastRun["clean"], schedule.CleanInterval),
 			IsRunning: s.running["clean"],
 		},
 	}
