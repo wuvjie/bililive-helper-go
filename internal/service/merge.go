@@ -95,6 +95,7 @@ func NewMergeService(config *config.Config, logger *zap.Logger, history *History
 // MergeResult 保存合并操作的结果。
 type MergeResult struct {
 	Done    int
+	Failed  int
 	TotalGB float64
 }
 
@@ -318,7 +319,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		s.history.Add("merge", streamer, "success", fmt.Sprintf("扫描 %d 个主播，无需合并", totalScanned), opLog.LogID())
 		onProgress(msg)
 	}
-	return &MergeResult{Done: done, TotalGB: totalGB}, opLog.LogID(), nil
+	return &MergeResult{Done: done, Failed: mergeFailed, TotalGB: totalGB}, opLog.LogID(), nil
 }
 
 // convertFlvToMp4 将单个 FLV 文件转换为 MP4（通过 TS 中间格式）。

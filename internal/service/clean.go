@@ -132,13 +132,24 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 		return candidates[i].Mtime < candidates[j].Mtime
 	})
 
-	deleted, freed := s.deleteFiles(ctx, candidates, needToFree, cfg, onProgress)
+	deleted, freed, truncated := s.deleteFiles(ctx, candidates, needToFree, cfg, onProgress)
 
 	onProgress("───────────────────────────")
 
 	duration := time.Since(start).Seconds()
 
-	msg := fmt.Sprintf("✅ 完成: 删除 %d 文件，释放 %s", deleted, utils.FormatSize(freed))
+	status := "success"
+	statusMsg := fmt.Sprintf("删除 %d 文件，释放 %s", deleted, utils.FormatSize(freed))
+	if truncated {
+		if ctx.Err() != nil {
+			status = "partial"
+			statusMsg += "（任务被中断）"
+		} else {
+			statusMsg += fmt.Sprintf("（已达单次删除上限 %d）", cfg.MaxDeletePerRun)
+		}
+	}
+
+	msg := fmt.Sprintf("✅ 完成: %s", statusMsg)
 	onProgress(msg)
 
 	// 删除后显示磁盘使用率
@@ -146,8 +157,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 		onProgress(fmt.Sprintf("📊 当前磁盘 %.1f%%", diskAfter.UsedPct))
 	}
 
-	s.history.AddWithStats("clean", streamer, "success", deleted, freed, 0, duration,
-		fmt.Sprintf("删除 %d 文件，释放 %s", deleted, utils.FormatSize(freed)), opLog.LogID())
+	s.history.AddWithStats("clean", streamer, status, deleted, freed, 0, duration, statusMsg, opLog.LogID())
 
 	return &CleanResult{Deleted: deleted, Freed: freed}, opLog.LogID(), nil
 }
@@ -282,9 +292,11 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 
 // deleteFiles 执行文件删除，使用双快照检测跳过正在写入的文件。
 // 受单次删除上限和目标释放量双重约束。
-func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFile, needToFree int64, cfg config.Config, onProgress ProgressFunc) (int, int64) {
+// 返回 (deleted, freed, truncated)，truncated 表示因限制条件提前终止。
+func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFile, needToFree int64, cfg config.Config, onProgress ProgressFunc) (int, int64, bool) {
 	deleted := 0
 	freed := int64(0)
+	truncated := false
 
 	// 1. 记录所有候选文件的大小（第一次快照）
 	sizeMap1 := make(map[string]int64)
@@ -298,7 +310,7 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	select {
 	case <-time.After(1 * time.Second):
 	case <-ctx.Done():
-		return 0, 0
+		return 0, 0, true
 	}
 
 	// 3. 记录第二次快照
@@ -313,10 +325,12 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	for _, f := range candidates {
 		if ctx.Err() != nil {
 			s.logger.Info("⚠ 上下文取消，终止清理")
+			truncated = true
 			break
 		}
 		if deleted >= cfg.MaxDeletePerRun {
 			s.logger.Info(fmt.Sprintf("ℹ 已达单次删除上限 %d 个文件", cfg.MaxDeletePerRun))
+			truncated = true
 			break
 		}
 		if needToFree > 0 && freed >= needToFree {
@@ -352,5 +366,5 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 		onProgress(fmt.Sprintf("🗑 [%s] %s (%s)", filepath.Base(filepath.Dir(f.Path)), sn, utils.FormatSize(f.Size)))
 	}
 
-	return deleted, freed
+	return deleted, freed, truncated
 }
