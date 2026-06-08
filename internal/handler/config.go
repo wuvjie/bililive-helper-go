@@ -59,7 +59,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	disk, err := utils.GetDiskUsage(cfg.TargetDir)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取磁盘信息失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("获取磁盘信息失败（%s）: %v", cfg.TargetDir, err)})
 		return
 	}
 

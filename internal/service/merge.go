@@ -108,7 +108,7 @@ func (s *MergeService) checkDiskSpaceForMerge(tasks []mergeTask, targetDir strin
 	}
 	disk, err := utils.GetDiskUsage(targetDir)
 	if err != nil {
-		return fmt.Errorf("获取磁盘信息失败: %w", err)
+		return fmt.Errorf("获取磁盘信息失败（%s）: %w", targetDir, err)
 	}
 	// TS 管线峰值空间：源文件 + TS 中间文件 + 输出文件 ≈ 3 倍源文件 + 2GB 余量
 	needed := (totalSourceBytes * 3) + tsMergeHeadroomBytes
