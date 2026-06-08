@@ -6,16 +6,22 @@ services:
     ports:
       - "5689:5000"
     volumes:
-      - /path/to/videos:/path/to/videos        # 录像存储目录挂载
-      - /path/to/logs:/path/to/logs            # 配置和日志持久化
+      # ⬇️ 改成你自己的 bililive-go 录像输出目录（宿主机路径:容器路径）
+      - /bililive-go/recordings:/data/videos
+      # ⬇️ 配置文件和日志的持久化目录，一般不用改
+      - ./data:/data/logs
     environment:
-      - TARGET_DIR=/path/to/videos
-      - LOG_DIR=/path/to/logs
+      # 录像目录（与 volumes 中容器路径一致）
+      - TARGET_DIR=/data/videos
+      # 日志和配置目录（与 volumes 中容器路径一致）
+      - LOG_DIR=/data/logs
       - TZ=Asia/Shanghai
-      # - PASSWORD=your_password          # 可选：通过环境变量设置密码（优先于初始化向导）
-      # - COOKIE_SECURE=true              # HTTPS 反向代理时启用
-      # - WEBHOOK_URL=https://your-webhook # 任务完成通知
-      # - API_TOKEN=your_api_token        # Bearer Token 认证（用于 API 调用）
+      # --- 以下为可选配置，取消注释即可生效 ---
+      # - PASSWORD=your_password            # 设置登录密码（不设则首次启动时通过向导设置）
+      # - COOKIE_SECURE=true                # 使用 HTTPS 反向代理时启用
+      # - WEBHOOK_URL=https://your-webhook  # 任务完成时发送通知（Bark/Slack/飞书等）
+      # - API_TOKEN=your_api_token          # Bearer Token（用于外部 API 调用）
+      # - PORT=5000                         # 容器内监听端口（一般不用改）
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5000/api/health"]
       interval: 30s
@@ -26,17 +32,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '3.0'    # 4 核留 1 核给录制进程
-          memory: 4G     # 8G 留 4G 给录制进程
+          cpus: '3.0'
+          memory: 4G
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    networks:
-      - app-network
-
-# 使用前需创建网络：docker network create app-network
-networks:
-  app-network:
-    external: true
