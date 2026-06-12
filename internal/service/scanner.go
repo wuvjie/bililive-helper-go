@@ -262,6 +262,20 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 			}
 			wg.Wait()
 
+			// 修正：同时间戳的分片文件，EndTime 应顺序累加而非各自独立计算。
+			// bililive-go 文件名中的时间是场次开始时间，不是每个分片的开始时间。
+			// 例：001.flv(30min) 002.flv(30min) 都标 21:33，
+			//     正确 EndTime: 001→22:03, 002→22:33（而非都是 22:03）
+			for i := 1; i < len(items); i++ {
+				if !items[i].Datetime.After(items[i-1].Datetime) {
+					dur := items[i].EndTime.Sub(items[i].Datetime)
+					if dur <= 0 {
+						dur = 0
+					}
+					items[i].EndTime = items[i-1].EndTime.Add(dur)
+				}
+			}
+
 			// 用前一个文件的结束时间 vs 下一个文件的开始时间 计算 gap
 			// gap < GapMinutes → 同场次，合并；gap > GapMinutes → 不同场次，分批
 			batches := [][]videoFile{{items[0]}}
