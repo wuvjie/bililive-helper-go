@@ -86,13 +86,15 @@ git clone https://github.com/wuvjie/bililive-helper-go.git
 cd bililive-helper-go
 
 # 2. 修改 docker-compose.yml 中的录像目录（必须）
-#    将 /bililive-go/recordings 改为你实际的 bililive-go 录像输出路径
-#    例：/vol2/1000/video/bililive-go/抖音
+#    将 /vol2/1000/video/bililive-go/抖音 改为你实际的 bililive-go 录像输出路径
 
-# 3. 启动
+# 3. 构建镜像（首次需要，约 3-5 分钟）
+docker compose build
+
+# 4. 启动
 docker compose up -d
 
-# 4. 访问 Web 控制台（首次运行进入初始化向导）
+# 5. 访问 Web 控制台（首次运行进入初始化向导）
 open http://localhost:5689
 ```
 
