@@ -26,7 +26,7 @@ func (h *Handler) RunMerge(c *gin.Context) {
 		Streamer string `json:"streamer"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil && c.Request.ContentLength > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数格式错误"})
+		failBadRequest(c, "参数格式错误")
 		return
 	}
 
@@ -59,15 +59,15 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 		Files    []string `json:"files" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		failBadRequest(c, "参数错误")
 		return
 	}
 	if len(req.Files) < 2 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "至少选择 2 个文件"})
+		failBadRequest(c, "至少选择 2 个文件")
 		return
 	}
 	if len(req.Files) > maxManualMergeFiles {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles)})
+		failBadRequest(c, fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles))
 		return
 	}
 	h.runManualMergeSSE(c, req.Streamer, req.Files, "手动合并")
@@ -80,11 +80,11 @@ func (h *Handler) MergeRetry(c *gin.Context) {
 		Files    []string `json:"files" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		failBadRequest(c, "参数错误")
 		return
 	}
 	if len(req.Files) > maxManualMergeFiles {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles)})
+		failBadRequest(c, fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles))
 		return
 	}
 	h.runManualMergeSSE(c, req.Streamer, req.Files, "重试")
@@ -108,7 +108,7 @@ func (h *Handler) RunClean(c *gin.Context) {
 		Streamer string `json:"streamer"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil && c.Request.ContentLength > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数格式错误"})
+		failBadRequest(c, "参数格式错误")
 		return
 	}
 
@@ -131,14 +131,14 @@ func (h *Handler) RunClean(c *gin.Context) {
 func (h *Handler) RunTask(c *gin.Context) {
 	task := c.Param("task")
 	if err := h.scheduler.RunTask(task); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		failBadRequest(c, err.Error())
 		return
 	}
 	taskName := map[string]string{"merge": "合并", "clean": "清理"}[task]
 	if taskName == "" {
 		taskName = task
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": fmt.Sprintf("%s任务已触发", taskName)})
+	okMsg(c, fmt.Sprintf("%s任务已触发", taskName))
 }
 
 // GetSchedule 返回当前调度状态（间隔、启用状态、上次/下次执行时间）。
@@ -160,7 +160,7 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 		BackupEndMin     *int   `json:"BACKUP_END_MINUTE"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		failBadRequest(c, "参数错误")
 		return
 	}
 
@@ -194,13 +194,13 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 			backupChanged = true
 			return h.config.Validate()
 		}); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			failBadRequest(c, err.Error())
 			return
 		}
 	}
 
 	if err := h.scheduler.SaveSchedule(schedule); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存失败"})
+		failInternal(c, "保存失败")
 		return
 	}
 
@@ -238,7 +238,7 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 			h.history.Add("schedule", "", "success", detail, "")
 		}
 	}()
-	c.JSON(http.StatusOK, gin.H{"status": "success", "schedule": h.scheduler.GetStatus()})
+	ok(c, gin.H{"status": "success", "schedule": h.scheduler.GetStatus()})
 }
 
 // CleanEstimate 预估可清理的文件数量和大小（不含白名单和已合并文件）。
@@ -277,7 +277,7 @@ func (h *Handler) CleanEstimate(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"file_count":    count,
 		"total_size_gb": float64(int(float64(totalSize)/1073741824*100)) / 100,
 	})
@@ -290,7 +290,7 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 		Confirm   bool    `json:"confirm"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil || !req.Confirm {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请勾选确认选项后再执行紧急清理"})
+		failBadRequest(c, "请勾选确认选项后再执行紧急清理")
 		return
 	}
 

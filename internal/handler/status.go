@@ -19,11 +19,11 @@ func (h *Handler) Status(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	disk, err := utils.GetDiskUsage(cfg.TargetDir)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("获取磁盘信息失败（%s）: %v", cfg.TargetDir, err)})
+		failInternal(c, fmt.Sprintf("获取磁盘信息失败（%s）: %v", cfg.TargetDir, err))
 		return
 	}
 	streamers, _, _ := h.scanAllStreamers(cfg.TargetDir)
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"disk_usage": disk.UsedPct,
 		"streamers":  streamers,
 		"total_gb":   float64(int(float64(disk.Total)/1073741824*10)) / 10,
@@ -35,12 +35,12 @@ func (h *Handler) StatusDetail(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	disk, err := utils.GetDiskUsage(cfg.TargetDir)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("获取磁盘信息失败（%s）: %v", cfg.TargetDir, err)})
+		failInternal(c, fmt.Sprintf("获取磁盘信息失败（%s）: %v", cfg.TargetDir, err))
 		return
 	}
 
 	streamers, pendingCount, pendingSize := h.scanAllStreamers(cfg.TargetDir)
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"disk": gin.H{
 			"usage_pct": disk.UsedPct,
 			"total_gb":  float64(int(float64(disk.Total)/1073741824*10)) / 10,
@@ -127,7 +127,7 @@ func (h *Handler) Stats(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"today": gin.H{
 			"merge_count": todayMerge,
 			"merge_bytes": todayMergeBytes,
@@ -231,13 +231,13 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 func (h *Handler) GetStreamerFiles(c *gin.Context) {
 	streamer := c.Param("name")
 	if !utils.ValidateFilename(streamer) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "主播名包含非法字符"})
+		failBadRequest(c, "主播名包含非法字符")
 		return
 	}
 	cfg := h.config.ToDTO()
 	folder := filepath.Join(cfg.TargetDir, streamer)
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
-		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("主播 %s 的目录不存在", streamer)})
+		failNotFound(c, fmt.Sprintf("主播 %s 的目录不存在", streamer))
 		return
 	}
 

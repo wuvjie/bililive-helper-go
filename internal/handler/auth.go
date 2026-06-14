@@ -93,7 +93,7 @@ func (h *Handler) Index(c *gin.Context) {
 func (h *Handler) Login(c *gin.Context) {
 	ip := c.ClientIP()
 	if isRateLimited(ip) {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "登录尝试次数过多，请 5 分钟后再试"})
+		failTooMany(c, "登录尝试次数过多，请 5 分钟后再试")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *Handler) Login(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请求格式错误，请发送 JSON 数据"})
+		failBadRequest(c, "请求格式错误，请发送 JSON 数据")
 		return
 	}
 
@@ -113,7 +113,7 @@ func (h *Handler) Login(c *gin.Context) {
 	h.passwordMu.RUnlock()
 	if !passwordOK {
 		recordAttempt(ip)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
+		failUnauthorized(c, "密码错误")
 		return
 	}
 
@@ -126,7 +126,7 @@ func (h *Handler) Login(c *gin.Context) {
 	if err := session.Save(); err != nil {
 		h.logger.Warn("session 保存失败", zap.Error(err))
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "登录成功"})
+	okMsg(c, "登录成功")
 }
 
 // Logout 处理用户登出，清除 Session 并重定向到登录页。
@@ -142,7 +142,7 @@ func (h *Handler) Logout(c *gin.Context) {
 
 // Health 返回服务健康状态，用于 Docker 健康检查。
 func (h *Handler) Health(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"ok": true})
+	ok(c, gin.H{"ok": true})
 }
 
 // ChangePassword 允许已认证用户修改密码。
@@ -154,12 +154,12 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		NewPassword string `json:"new_password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请填写旧密码和新密码"})
+		failBadRequest(c, "请填写旧密码和新密码")
 		return
 	}
 
 	if len(req.NewPassword) < 6 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "新密码至少 6 个字符"})
+		failBadRequest(c, "新密码至少 6 个字符")
 		return
 	}
 
@@ -167,7 +167,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	oldHashed := h.hashedPassword
 	h.passwordMu.RUnlock()
 	if !verifyPassword(oldHashed, req.OldPassword) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "旧密码错误"})
+		failUnauthorized(c, "旧密码错误")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	if err := h.config.SaveCredential(); err != nil {
 		h.config.Password = "" // 回滚内存
 		h.logger.Error("密码持久化失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码持久化失败，请检查磁盘空间和权限"})
+		failInternal(c, "密码持久化失败，请检查磁盘空间和权限")
 		return
 	}
 
@@ -190,28 +190,28 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		// 运行时仍使用旧密码（内存哈希未更新），用户可重试。
 		// 重启后会加载新密码 + 旧 SessionVersion，不影响登录。
 		h.logger.Error("密码配置写入失败（凭据已更新，可重试）", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码更新失败，请重试"})
+		failInternal(c, "密码更新失败，请重试")
 		return
 	}
 
 	// 更新运行时密码哈希
 	hashed, err := hashPassword(req.NewPassword)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码更新失败"})
+		failInternal(c, "密码更新失败")
 		return
 	}
 	h.passwordMu.Lock()
 	h.hashedPassword = hashed
 	h.passwordMu.Unlock()
 
-	c.JSON(http.StatusOK, gin.H{"message": "密码已更新"})
+	okMsg(c, "密码已更新")
 }
 
 // SetupStatus 返回当前是否为首次运行（config.json 不存在）。
 // 此接口无需认证，前端据此决定是否显示初始化向导。
 func (h *Handler) SetupStatus(c *gin.Context) {
 	firstRun := !config.ConfigExists(h.config.LogDir)
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"first_run": firstRun,
 		"log_dir":   h.config.LogDir,
 	})
@@ -225,7 +225,7 @@ func (h *Handler) SetupInit(c *gin.Context) {
 
 	// 如果配置已存在则拒绝（防止重复初始化）
 	if config.ConfigExists(h.config.LogDir) {
-		c.JSON(http.StatusConflict, gin.H{"error": "系统已完成初始化"})
+		failConflict(c, "系统已完成初始化")
 		return
 	}
 
@@ -233,12 +233,12 @@ func (h *Handler) SetupInit(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请设置密码"})
+		failBadRequest(c, "请设置密码")
 		return
 	}
 
 	if len(req.Password) < 6 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "密码至少 6 个字符"})
+		failBadRequest(c, "密码至少 6 个字符")
 		return
 	}
 
@@ -260,7 +260,7 @@ func (h *Handler) SetupInit(c *gin.Context) {
 		return nil
 	}); err != nil {
 		h.logger.Error("初始化配置写入失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "配置写入失败，请检查目录权限"})
+		failInternal(c, "配置写入失败，请检查目录权限")
 		return
 	}
 
@@ -274,14 +274,14 @@ func (h *Handler) SetupInit(c *gin.Context) {
 			h.config.SecretKey = ""
 			return nil
 		})
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码持久化失败，请检查磁盘空间和权限"})
+		failInternal(c, "密码持久化失败，请检查磁盘空间和权限")
 		return
 	}
 
 	// 重新哈希密码用于运行时登录验证
 	hashed, err := hashPassword(cfg.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "密码哈希失败"})
+		failInternal(c, "密码哈希失败")
 		return
 	}
 	h.passwordMu.Lock()
@@ -298,5 +298,5 @@ func (h *Handler) SetupInit(c *gin.Context) {
 		h.logger.Warn("session 保存失败", zap.Error(err))
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "初始化成功"})
+	okMsg(c, "初始化成功")
 }
