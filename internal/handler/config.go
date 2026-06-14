@@ -25,7 +25,7 @@ func (h *Handler) GetConfig(c *gin.Context) {
 func (h *Handler) SaveConfig(c *gin.Context) {
 	var req map[string]interface{}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		failBadRequest(c, "参数错误")
 		return
 	}
 
@@ -39,7 +39,7 @@ func (h *Handler) SaveConfig(c *gin.Context) {
 		changeDetail = config.DiffDTO(old, h.config.ToDTOSnapshot())
 		return nil
 	}); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		failBadRequest(c, err.Error())
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *Handler) SaveConfig(c *gin.Context) {
 	} else {
 		go h.history.Add("config", "", "success", "配置未变更", "")
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "success"})
+	okStatus(c)
 }
 
 // RecommendConfig 基于磁盘大小、内容分析和风险评估，返回智能推荐配置。
@@ -58,7 +58,7 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	disk, err := utils.GetDiskUsage(cfg.TargetDir)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("获取磁盘信息失败（%s）: %v", cfg.TargetDir, err)})
+		failInternal(c, fmt.Sprintf("获取磁盘信息失败（%s）: %v", cfg.TargetDir, err))
 		return
 	}
 
@@ -199,11 +199,11 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 	}
 	if err := rec.Validate(); err != nil {
 		h.logger.Warn("推荐配置校验失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "推荐配置生成失败"})
+		failInternal(c, "推荐配置生成失败")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"TRIGGER_THRESHOLD":     trigger,
 		"TARGET_THRESHOLD":      target,
 		"MIN_KEEP_PER_STREAMER": minKeep,
@@ -327,7 +327,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 // DefaultConfig 返回默认配置值。
 func (h *Handler) DefaultConfig(c *gin.Context) {
 	d := config.DefaultConfig()
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"TRIGGER_THRESHOLD":     d.TriggerThreshold,
 		"TARGET_THRESHOLD":      d.TargetThreshold,
 		"MIN_KEEP_PER_STREAMER": d.MinKeepPerStreamer,
@@ -353,7 +353,7 @@ func (h *Handler) ExportConfig(c *gin.Context) {
 		records = records[len(records)-100:]
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"version":     "2.0.0",
 		"exported_at": time.Now().Format(time.RFC3339),
 		"config":      cfg,
@@ -366,13 +366,13 @@ func (h *Handler) ExportConfig(c *gin.Context) {
 func (h *Handler) ImportConfig(c *gin.Context) {
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
+		failBadRequest(c, "参数错误")
 		return
 	}
 
 	cfgData, ok := data["config"].(map[string]interface{})
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少配置数据"})
+		failBadRequest(c, "缺少配置数据")
 		return
 	}
 
@@ -383,10 +383,10 @@ func (h *Handler) ImportConfig(c *gin.Context) {
 		h.config.ApplyFromMap(cfgData)
 		return h.config.Validate()
 	}); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		failBadRequest(c, err.Error())
 		return
 	}
 
 	go h.history.Add("config", "", "success", fmt.Sprintf("配置已导入（%d 项）", len(cfgData)), "")
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "配置导入成功"})
+	okMsg(c, "配置导入成功")
 }

@@ -34,7 +34,7 @@ func (h *Handler) GetHistory(c *gin.Context) {
 	records, total := h.history.GetRecords(task, streamer, page, perPage)
 	pages := (total + perPage - 1) / perPage
 
-	c.JSON(http.StatusOK, gin.H{
+	ok(c, gin.H{
 		"items":    records,
 		"total":    total,
 		"page":     page,
@@ -52,17 +52,17 @@ func (h *Handler) ExportHistory(c *gin.Context) {
 func (h *Handler) GetLogContent(c *gin.Context) {
 	task := c.Param("task")
 	if !utils.ValidateFilename(task) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "任务名包含非法字符"})
+		failBadRequest(c, "任务名包含非法字符")
 		return
 	}
 
 	logID := c.Query("log_id")
 	if logID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少日志 ID"})
+		failBadRequest(c, "缺少日志 ID")
 		return
 	}
 	if !validLogID.MatchString(logID) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("无效的日志 ID: %s", logID)})
+		failBadRequest(c, fmt.Sprintf("无效的日志 ID: %s", logID))
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *Handler) GetLogContent(c *gin.Context) {
 			c.String(http.StatusOK, "[系统提示] 该操作日志已超过 30 天，已被自动清理")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取日志失败"})
+		failInternal(c, "读取日志失败")
 		return
 	}
 
