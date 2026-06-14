@@ -33,9 +33,10 @@ import { useRouter } from "vue-router";
 import { ElMessage, type FormInstance } from "element-plus";
 import { Lock } from "@element-plus/icons-vue";
 import { login } from "@/api/auth";
-import { markAuthenticated } from "@/router";
+import { useAuthStore } from "@/store/modules/auth";
 
 const router = useRouter();
+const auth = useAuthStore();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
 const form = reactive({ password: "" });
@@ -47,7 +48,7 @@ async function handleLogin() {
   loading.value = true;
   try {
     await login(form.password);
-    markAuthenticated();
+    auth.markAuthenticated();
     ElMessage.success("登录成功");
     router.push("/");
   } catch { /* handled */ }

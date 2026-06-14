@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-router";
 import Layout from "@/layout/index.vue";
+import { useAuthStore } from "@/store/modules/auth";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -31,27 +32,7 @@ const routes: RouteRecordRaw[] = [
 
 const router = createRouter({ history: createWebHashHistory(), routes });
 
-let setupChecked = false;
-let isFirstRun = false;
-let authChecked = false;
-let isAuthenticated = false;
-
-// Call after login or setup to skip the next auth check
-// but still force a fresh setup-status check on next navigation
-export function markAuthenticated() {
-  setupChecked = false; // re-check first-run on next navigation
-  authChecked = true;
-  isAuthenticated = true;
-}
-
-// Reset auth state on session expiry (called from 401 interceptor)
-export function markUnauthenticated() {
-  authChecked = false;
-  isAuthenticated = false;
-}
-
 async function checkAuth(): Promise<boolean> {
-  // Try /api/auth/check first, fall back to /api/status for older backends
   try {
     const res = await fetch("/api/auth/check", { credentials: "same-origin" });
     if (res.ok) return true;
@@ -68,33 +49,32 @@ router.beforeEach(async (to, _from) => {
 
   if (to.meta.public) return true;
 
-  // Check first-run status once per session
-  if (!setupChecked) {
+  // 认证状态管理（从模块级变量迁移到 Pinia store）
+  const auth = useAuthStore();
+
+  // 首次运行检查（每个 session 只检查一次）
+  if (!auth.setupChecked) {
     try {
       const res = await fetch("/api/setup/status", { credentials: "same-origin" });
       if (res.ok) {
         const data = await res.json();
-        isFirstRun = data.first_run;
+        auth.markSetupChecked(data.first_run);
       }
-      // 非 OK 响应（如 500）不改变 isFirstRun，避免服务端错误时误跳转到初始化页面
     } catch {
-      // Endpoint doesn't exist (old binary) — cannot determine, skip setup check
+      auth.markSetupChecked(false);
     }
-    setupChecked = true;
   }
 
-  if (isFirstRun) return "/setup";
+  if (auth.isFirstRun) return "/setup";
 
-  if (authChecked && isAuthenticated) return true;
+  if (auth.isAuthenticated) return true;
 
   const ok = await checkAuth();
   if (ok) {
-    authChecked = true;
-    isAuthenticated = true;
+    auth.markAuthenticated();
     return true;
   } else {
-    authChecked = false;
-    isAuthenticated = false;
+    auth.markUnauthenticated();
     return "/login";
   }
 });

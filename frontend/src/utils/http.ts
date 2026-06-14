@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig } from "axios";
 import { ElMessage } from "element-plus";
 import router from "@/router";
-import { markUnauthenticated } from "@/router";
+import { useAuthStore } from "@/store/modules/auth";
 
 const http: AxiosInstance = axios.create({
   baseURL: "/api",
@@ -14,7 +14,7 @@ http.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      markUnauthenticated(); // 重置路由守卫状态，防止 auth 循环
+      useAuthStore().markUnauthenticated(); // 重置认证状态，防止 auth 循环
       router.push("/login");
       return Promise.reject(error);
     }

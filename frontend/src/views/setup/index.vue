@@ -39,9 +39,10 @@ import { reactive, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, type FormInstance } from "element-plus";
 import { setupInit, setupStatus } from "@/api/setup";
-import { markAuthenticated } from "@/router";
+import { useAuthStore } from "@/store/modules/auth";
 
 const router = useRouter();
+const auth = useAuthStore();
 const formRef = ref<FormInstance>();
 const loading = ref(false);
 const form = reactive({ password: "", confirmPassword: "" });
@@ -82,7 +83,7 @@ async function handleSubmit() {
   loading.value = true;
   try {
     await setupInit({ password: form.password });
-    markAuthenticated();
+    auth.markAuthenticated();
     ElMessage.success("配置完成");
     router.push("/");
   } catch {
