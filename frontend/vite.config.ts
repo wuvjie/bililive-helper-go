@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: "../templates",
       emptyOutDir: false,
-      rollupOptions: {
+      rolldownOptions: {
         output: {
           chunkFileNames: "assets/[name]-[hash].js",
           entryFileNames: "assets/[name]-[hash].js",

@@ -63,10 +63,10 @@ async function checkAuth(): Promise<boolean> {
   return false;
 }
 
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to, _from) => {
   document.title = `${to.meta.title || "Bililive Helper"} - Bililive Helper`;
 
-  if (to.meta.public) { next(); return; }
+  if (to.meta.public) return true;
 
   // Check first-run status once per session
   if (!setupChecked) {
@@ -83,19 +83,19 @@ router.beforeEach(async (to, _from, next) => {
     setupChecked = true;
   }
 
-  if (isFirstRun) { next("/setup"); return; }
+  if (isFirstRun) return "/setup";
 
-  if (authChecked && isAuthenticated) { next(); return; }
+  if (authChecked && isAuthenticated) return true;
 
   const ok = await checkAuth();
   if (ok) {
     authChecked = true;
     isAuthenticated = true;
-    next();
+    return true;
   } else {
     authChecked = false;
     isAuthenticated = false;
-    next("/login");
+    return "/login";
   }
 });
 
