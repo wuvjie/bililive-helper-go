@@ -9,6 +9,7 @@
 3. 理清职责边界（业务逻辑归 service、handler 只做 HTTP 适配）
 4. 拆分超大函数和 God Component
 5. 前后端补全工程化基础设施（ESLint、Vitest、Go 单元测试）
+6. 依赖升级到最新版本（Go 1.26、Gin 1.12、Pinia 3、Vue Router 5、Vite 8、TypeScript 6）
 
 ## 约束
 
@@ -16,6 +17,159 @@
 - config.json / .credentials.json / schedule.json 格式不变
 - Docker 部署方式和环境变量名不变
 - 数据库不在本次范围内（保留文件存储）
+
+## 技术栈评估结论
+
+当前技术栈（Go + Gin + Vue 3 + Element Plus + Vite）是本项目的最佳选择，不需要更换。
+重构的投入放在"如何写"而不是"用什么写"上。详见技术栈评估分析。
+
+---
+
+## 第零阶段：依赖升级
+
+> 原因：先升后改 — 如果先重构代码再升级依赖，重构时基于旧 API 写的代码在新版本中可能又需要改。
+> Pinia 3 + Vue Router 5 是 breaking change，前端重构（阶段六）的 composables 和 store 设计应直接基于新 API。
+
+### 0.1 后端依赖升级
+
+| 依赖 | 当前 | 目标 | Breaking Changes | 代码改动 |
+|------|------|------|-----------------|---------|
+| Go | 1.25 | 1.26 | 无 | go.mod 更新版本号 |
+| Gin | v1.9.1 | v1.12.0 | 无（`interface{}` → `any`，不影响本项目） | 无 |
+| Zap | v1.26.0 | v1.28.0 | 无（纯增量：`WithLazy`、`CheckPreWriteHook`） | 无 |
+| x/crypto | v0.52.0 | v0.53.0 | 无（bcrypt API 稳定） | 无 |
+| sessions | v0.0.5 | v1.1.0 | 跨大版本，但 cookie store API（`NewStore`/`Sessions`/`Default`/`Get`/`Set`/`Clear`/`Save`）不变 | 无代码改动，需测试 session cookie 兼容性（升级后让用户重新登录即可） |
+
+执行：
+```bash
+go get github.com/gin-gonic/gin@v1.12.0 go.uber.org/zap@v1.28.0 golang.org/x/crypto@latest github.com/gin-contrib/sessions@v1.1.0
+go mod tidy
+go build ./... && go test ./...
+```
+
+### 0.2 前端依赖升级（分步，每步验证）
+
+**第 1 步 — 无 breaking change 的 patch/minor 更新**
+
+| 依赖 | 当前 | 目标 | 说明 |
+|------|------|------|------|
+| Vue | ^3.5.0 | ^3.5.0 | semver 兼容，`npm update` 即可 |
+| Axios | ^1.7.0 | ^1.7.0 | semver 兼容 |
+| Element Plus | ^2.9.0 | ^2.14.2 | 次版本更新。**唯一注意点**：`el-teleport` 组件在 2.14.0 被移除（本项目未使用，安全）；disabled 优先级变化（v2.12.0，需检查表单禁用逻辑） |
+| Sass | ^1.80.0 | ^1.80.0 | 已满足 Vite 8 要求的 >=1.70.0 |
+
+```bash
+npm update vue axios element-plus sass
+npm run build   # 验证
+```
+
+**第 2 步 — Vite 6 → 8（构建工具）**
+
+Breaking Changes：
+- `build.rollupOptions` → `build.rolldownOptions`（Rolldown 替代 Rollup/esbuild）
+- JS 压缩从 esbuild 换为 Oxc，CSS 压缩换为 Lightning CSS（无自定义配置则自动适配）
+- 需要 Node.js 20.19+ 或 22.12+
+
+需改动 `vite.config.ts`：
+```diff
+  build: {
+    outDir: "../templates",
+    emptyOutDir: false,
+-   rollupOptions: {
++   rolldownOptions: {
+      output: {
+        chunkFileNames: "assets/[name]-[hash].js",
+        entryFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash].[ext]"
+      }
+    }
+  }
+```
+
+```bash
+npm install vite@^8.0.0 @vitejs/plugin-vue@^6.0.0
+# 验证 unplugin-auto-import 和 unplugin-vue-components 兼容 Vite 8
+npm run build   # 验证
+```
+
+**第 3 步 — TypeScript 5 → 6**
+
+Breaking Changes：
+- `baseUrl` 不再作为模块查找根 → `paths` 需要改为相对路径
+- `rootDir` 默认值变化 → 需显式指定
+- `types` 默认改为 `[]`（空数组）→ 本项目已显式设为 `["vite/client"]`，无影响
+
+需改动 `tsconfig.json`：
+```diff
+  {
+    "compilerOptions": {
+      "target": "ES2020",
+      "module": "ESNext",
+      "moduleResolution": "bundler",
+      "strict": true,
++     "rootDir": "./src",
+      "jsx": "preserve",
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "esModuleInterop": true,
+      "lib": ["ES2020", "DOM", "DOM.Iterable"],
+      "skipLibCheck": true,
+      "noEmit": true,
+      "baseUrl": ".",
+      "paths": {
+-       "@/*": ["src/*"]
++       "@/*": ["./src/*"]
+      },
+      "types": ["vite/client"]
+    }
+  }
+```
+
+```bash
+npm install typescript@^6.0.0
+npx vue-tsc --noEmit   # 验证类型检查通过，修复可能的新错误
+```
+
+**第 4 步 — Pinia 2 → 3 + Vue Router 4 → 5**
+
+Pinia 3 Breaking Changes：
+- 移除 `defineStore({ id })` 旧语法（本项目未使用，安全）
+- 移除 `PiniaStorePlugin` 类型（本项目未使用，安全）
+- 要求 Vue 3.5+ 和 TypeScript 5+（已满足）
+- 本项目的 setup store 模式（`defineStore('id', () => {...})`）**完全不受影响**
+
+Vue Router 5 Breaking Changes：
+- `next()` 回调标记 deprecated（仍可用，建议改为 return-value 模式）
+- 本项目不使用 `NavigationResult`，无影响
+
+需改动 `router/index.ts`：
+```diff
+- router.beforeEach(async (to, _from, next) => {
++ router.beforeEach(async (to, _from) => {
+    document.title = ...
+-   if (to.meta.public) { next(); return; }
++   if (to.meta.public) return true;
+    // ...
+-   next("/login");
++   return "/login";
+  });
+```
+
+```bash
+npm install pinia@^3.0.0 vue-router@^5.0.0
+npm run build   # 验证
+```
+
+### 0.3 前端依赖升级风险总结
+
+| 风险 | 依赖 | 说明 |
+|------|------|------|
+| 🟢 零风险 | Zap, x/crypto, Vue, Axios, Sass | 纯增量更新 |
+| 🟢 极低 | Gin, Pinia 3, Element Plus 2.14 | API 不受影响 |
+| 🟡 低 | sessions v1.1.0 | API 兼容，测试 cookie 兼容 |
+| 🟡 低 | Vue Router 5 | 改 guard 写法，~5 分钟 |
+| 🟡 中 | TypeScript 6 | tsconfig 改动 + 可能触发新类型错误 |
+| 🟡 中 | Vite 8 | rollupOptions → rolldownOptions + 验证 unplugin 兼容 |
 
 ---
 
@@ -504,21 +658,36 @@ type mockConfig struct { ... }        // 返回固定配置快照
 ## 执行顺序
 
 ```
-阶段 1 — fsutil + taskctx（基础设施）         ← 无风险，纯提取
-阶段 2 — service 接口化 + 函数拆分            ← 核心改动，需仔细验证
-阶段 3 — config 系统重构                      ← 独立模块，影响面可控
-阶段 4 — handler 层重构 + 路由拆分            ← 依赖阶段 2 的接口
-阶段 5 — main.go 拆分                         ← 依赖阶段 4 的路由注册
-阶段 6 — 前端组件拆分 + composables           ← 前后端可并行
-阶段 7 — 前端工程化（ESLint/Vitest/CSS）      ← 依赖阶段 6
-阶段 8 — 后端测试补全                         ← 依赖阶段 2-3 的接口
+阶段 0 — 依赖升级                              ← 最优先，确保基于最新 API
+  0.1 后端：Go 1.26 + Gin 1.12 + Zap 1.28 + sessions 1.1
+  0.2 前端分步：Element Plus 2.14 → Vite 8 → TypeScript 6 → Pinia 3 + Vue Router 5
+
+阶段 1 — fsutil + taskctx（基础设施）           ← 无风险，纯提取
+阶段 2 — service 接口化 + 函数拆分              ← 核心改动，需仔细验证
+阶段 3 — config 系统重构                        ← 独立模块，影响面可控
+阶段 4 — handler 层重构 + 路由拆分              ← 依赖阶段 2 的接口
+阶段 5 — main.go 拆分                           ← 依赖阶段 4 的路由注册
+阶段 6 — 前端组件拆分 + composables             ← 前后端可并行，基于 Pinia 3 / Vue Router 5 API
+阶段 7 — 前端工程化（ESLint/Vitest/CSS）        ← 依赖阶段 6，基于 Vite 8
+阶段 8 — 后端测试补全                           ← 依赖阶段 2-3 的接口
 ```
 
-每个阶段完成后：`go build ./...` + 现有测试通过 + 手动冒烟测试。
+每个阶段完成后：`go build ./...` + 现有测试通过 + `npm run build` + 手动冒烟测试。
 
 ---
 
 ## 文件变更概览
+
+### 阶段 0 升级涉及文件
+```
+go.mod                              — Go 版本 + 4 个依赖版本升级
+go.sum                              — 自动生成
+frontend/package.json               — 6 个依赖版本升级
+frontend/package-lock.json          — 自动生成
+frontend/vite.config.ts             — rollupOptions → rolldownOptions
+frontend/tsconfig.json              — rootDir + paths 调整
+frontend/src/router/index.ts        — guard next() → return（与阶段 6.4 合并）
+```
 
 ### 新增文件
 ```
