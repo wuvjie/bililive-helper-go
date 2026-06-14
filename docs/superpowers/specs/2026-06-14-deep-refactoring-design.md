@@ -10,6 +10,9 @@
 4. 拆分超大函数和 God Component
 5. 前后端补全工程化基础设施（ESLint、Vitest、Go 单元测试）
 6. 依赖升级到最新版本（Go 1.26、Gin 1.12、Pinia 3、Vue Router 5、Vite 8、TypeScript 6）
+7. 任务队列与并发控制（可配置并发上限，避免 I/O 争抢）
+8. 文件健康预检（合并前 ffprobe 快检，跳过损坏文件）
+9. 事件驱动调度（目录变化检测替代纯固定间隔，文件更快被处理）
 
 ## 约束
 
@@ -287,6 +290,7 @@ internal/fsutil/
 
 - `AtomicWriteFile`：write tmp → fsync → rename，一处实现，四处调用
 - `ScanStreamerDirs`：统一目录扫描逻辑，返回标准化的 `StreamerDir{Name, Path, Files []os.DirEntry}`
+- **文件健康预检**：扫描时同步调用 `ffprobe` 快检（文件大小 > 0 且可读取时长），返回 `FileHealth` 标记（Healthy / Corrupt / Skippable），合并时直接跳过损坏文件，避免浪费几十分钟的 ffmpeg 处理
 - **迁移策略（绞杀者模式）**：先建 fsutil，在一处调用点替换（如 scheduler.go），运行特征测试验证，确认无误后再替换下一处。旧函数暂时保留但标记 `// DEPRECATED: use fsutil.XXX`
 - 所有调用点迁移完成后，删除旧代码和 utils 中的冗余文件
 
@@ -325,7 +329,7 @@ func New(cfg *config.Config, logger *zap.Logger, taskType string, progress func(
 ### Mikado 依赖图
 
 ```
-目标：MergeService 和 CleanService 可测试 + 函数 <50 行
+目标：MergeService/CleanService 可测试 + 函数 <50 行 + 任务队列 + 事件驱动
 │
 ├── 叶子节点（无依赖，先做）：
 │   ├── 2.4a collectCandidates 返回值重构（指针切片 → 返回值）
@@ -335,11 +339,14 @@ func New(cfg *config.Config, logger *zap.Logger, taskType string, progress func(
 ├── 中间节点（依赖叶子）：
 │   ├── 2.3 ffmpeg.Executor 接口定义 + DefaultExecutor 实现
 │   ├── 2.1 TaskRunner 接口定义
+│   ├── 2.1a TaskQueue 队列实现（依赖 TaskRunner）
+│   ├── 2.1b DirWatcher 目录监听实现
 │   └── 2.2b MergeService.Run() 拆分（需要 2.3 的接口）
 │
 └── 根节点（依赖中间）：
     ├── 2.5 业务逻辑移出 Handler（需要 2.1 + 2.3 的接口）
-    └── MergeService/CleanService 实现 TaskRunner 接口
+    ├── MergeService/CleanService 实现 TaskRunner 接口
+    └── SchedulerService 改造：TaskQueue + DirWatcher + 兜底定时器
 ```
 
 每个叶子节点改动独立提交后运行特征测试验证。
@@ -366,6 +373,56 @@ type TaskResult struct {
 - `MergeService` 和 `CleanService` 各自实现 `TaskRunner`
 - `SchedulerService` 持有 `[]TaskRunner` 切片，用注册模式替代 switch
 - 添加新任务类型只需实现接口并注册，无需修改 scheduler 代码（Open/Closed Principle）
+
+### 2.1a 任务队列与并发控制
+
+当前状态：20 个主播同时下播会同时触发 20 个合并进程，I/O 争抢导致全部变慢。
+
+新增设计：
+```go
+type TaskQueue struct {
+    sem     chan struct{}          // 并发信号量，如 make(chan struct{}, 3)
+    queue   chan TaskRequest       // 等待队列
+    running sync.Map              // 当前运行中的任务
+}
+
+type TaskRequest struct {
+    Runner   TaskRunner
+    Priority int                   // 可选优先级
+    EnqueuedAt time.Time
+}
+
+func (q *TaskQueue) Submit(req TaskRequest)  // 提交到队列
+func (q *TaskQueue) Run(ctx context.Context)  // 消费循环
+```
+
+- 用户可配置并发上限（如 `max_concurrent_tasks: 3`）
+- 超出并发数的任务排队等待
+- 配置项加入 config.json（兼容现有格式）
+
+### 2.1b 事件驱动调度（替代纯固定间隔）
+
+当前状态：定时器每 6 小时触发一次，主播 6 点下播要等到凌晨 12 点才合并。
+
+新增设计：
+```go
+type SchedulerService struct {
+    // ... 现有字段 ...
+    watcher    *DirWatcher        // 目录变化监听
+    debounce   time.Duration      // 防抖时间（默认 5 分钟）
+}
+
+type DirWatcher struct {
+    root     string
+    interval time.Duration        // 轮询间隔（轻量实现，不用 fsnotify）
+    onChange func(streamer string) // 检测到变化时的回调
+}
+```
+
+- 实现方式：轻量轮询（每分钟检查各主播目录的修改时间），比 fsnotify 更可靠（Docker/网络文件系统下 fsnotify 不稳定）
+- 检测到"某主播目录 N 分钟无变化" → 认为录制结束 → 提交合并任务到队列
+- 固定间隔降级为"兜底"（每天凌晨跑一次确保无遗漏）
+- 防抖时间可配置（防止录制中途短暂暂停被误判为结束）
 
 ### 2.2 拆分 MergeService 大函数
 
@@ -833,11 +890,13 @@ frontend/src/router/index.ts        — guard next() → return（与阶段 6.4 
 ### 新增文件
 ```
 internal/fsutil/atomic.go
-internal/fsutil/scan.go
+internal/fsutil/scan.go              — 含文件健康预检（ffprobe 快检）
 internal/fsutil/safeio.go
 internal/fsutil/path.go
 internal/taskctx/taskctx.go
-internal/service/interfaces.go
+internal/service/interfaces.go       — TaskRunner 接口
+internal/service/taskqueue.go        — 任务队列与并发控制
+internal/service/dirwatcher.go       — 目录变化监听（事件驱动调度）
 internal/handler/response.go
 internal/handler/routes.go
 internal/handler/sse.go
@@ -862,7 +921,7 @@ frontend/src/style/_components.scss
 internal/config/config.go          — 拆分为 config.go + dto.go + validate.go
 internal/service/merge.go          — 函数拆分 + 接口注入
 internal/service/clean.go          — 函数拆分 + 接口注入
-internal/service/scheduler.go      — 注册模式替代 switch
+internal/service/scheduler.go      — 注册模式替代 switch + TaskQueue + DirWatcher 事件驱动
 internal/handler/merge.go          — 业务逻辑移出 + typed response
 internal/handler/config.go         — 业务逻辑移出 + typed response
 internal/handler/status.go         — typed response
