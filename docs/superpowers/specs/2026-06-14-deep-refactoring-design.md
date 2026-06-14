@@ -23,6 +23,98 @@
 当前技术栈（Go + Gin + Vue 3 + Element Plus + Vite）是本项目的最佳选择，不需要更换。
 重构的投入放在"如何写"而不是"用什么写"上。详见技术栈评估分析。
 
+## 方法论
+
+本次重构遵循以下行业最佳实践：
+
+| 方法论 | 来源 | 在本项目中的应用 |
+|--------|------|-----------------|
+| **特征测试先行** | Michael Feathers《Working Effectively with Legacy Code》 | 在任何重构之前，为关键路径写 Characterization Tests，记录当前行为作为基线 |
+| **绞杀者模式** | Martin Fowler / Paul Hammant | 新代码与旧代码短暂共存（如 fsutil 替代 utils 中的函数），逐个迁移验证后再删除旧代码 |
+| **Mikado 依赖图** | Ola Ellnestam & Daniel Brolund | 对每个大阶段画出内部依赖关系，优先完成叶子节点（无依赖的原子改动） |
+| **先让改动变简单** | Kent Beck "Make the change easy, then make the easy change" | 每个阶段先问"这个改动要变得简单需要什么条件"，先创造条件 |
+| **ADR 决策记录** | Michael Nygard | 每个重要架构决策记录为 ADR，存放在 `docs/adr/` |
+| **风险量化** | Fowler 技术债务象限 | 用 golangci-lint + gocyclo 建立静态分析基线，用数据驱动优先级 |
+| **API 契约验证** | Golden Master / Contract Testing | 重构前后端前，先记录 API 响应基线，重构后对比验证 |
+| **小步提交** | Fowler "Refactoring" | 每个叶子节点改动独立提交，代码库始终可编译可运行 |
+
+### 安全网层次
+
+```
+Level 0 — 静态分析基线（golangci-lint + gocyclo + vue-tsc）
+Level 1 — 特征测试（记录当前行为，重构后对比）
+Level 2 — API 响应基线（Golden Master，前后端兼容性保障）
+Level 3 — 单元测试（重构过程中逐步补充）
+Level 4 — 手动冒烟测试（每个阶段完成后）
+```
+
+### ADR 格式
+
+每个重要决策记录为 `docs/adr/NNNN-<title>.md`：
+```markdown
+# ADR-0001: 提取 fsutil 包替代散落的文件操作
+
+## Status: Accepted
+## Date: 2026-06-14
+## Context: 原子写入模式在 4 个文件中重复，目录扫描在 7+ 处独立实现
+## Decision: 新建 internal/fsutil 包统一文件操作，逐个迁移调用点
+## Consequences: 正面 — 消除重复、统一行为；负面 — 短暂的新旧共存期
+```
+
+---
+
+## 第负一阶段：建立安全网（重构前必做）
+
+> Michael Feathers: "Legacy code is code without tests. You cannot safely refactor code you cannot test."
+> 在任何代码改动之前，先建立行为基线。这不是"补测试"，而是"记录当前行为作为安全网"。
+
+### -1.1 静态分析基线
+
+```bash
+# Go 静态分析
+golangci-lint run ./...               # 代码质量基线
+gocyclo -over 15 ./internal/...       # 圈复杂度（当前 MergeService.Run 等超大函数会标红）
+
+# 前端类型检查
+cd frontend && npx vue-tsc --noEmit   # 类型错误基线
+```
+
+记录输出作为"before"快照，重构后对比确保不引入新问题。
+
+### -1.2 后端特征测试（Characterization Tests）
+
+为以下核心路径写特征测试 — 不验证"正确"，只记录"当前行为"：
+
+| 目标 | 测试内容 | 方法 |
+|------|---------|------|
+| `MergeService.scanTasks` | 扫描一组模拟目录，记录返回的分类结果 | 创建临时目录结构，调用函数，断言输出 |
+| `MergeService.SortByFilename` | 已有测试，扩展边界用例 | 补充空列表、单文件、跨天分片等 case |
+| `CleanService.collectCandidates` | 给定一组文件和配置，记录清理优先级 | 模拟不同大小/年龄的文件 |
+| `config.Validate` | 给定边界值，记录验证结果 | 包括有效和无效输入 |
+| `config.Apply` | 给定修改，记录原子写入行为 | 验证文件确实被原子更新 |
+| `ParseFilename` | 已有测试，确认覆盖率 | 确认 bililive-go 各种命名格式都被覆盖 |
+
+### -1.3 API 响应基线（Golden Master）
+
+为所有 API 端点记录当前响应格式作为基线：
+
+```bash
+# 启动服务，用 curl 记录所有端点的响应
+curl -s http://localhost:5000/api/health > tests/baseline/api_health.json
+curl -s http://localhost:5000/api/status > tests/baseline/api_status.json
+# ... 对所有端点重复
+```
+
+重构后运行相同命令，diff 对比确保 API 契约不变。
+
+### -1.4 前端快照基线
+
+```bash
+cd frontend
+npx vue-tsc --noEmit > ../tests/baseline/vue-tsc-before.txt 2>&1
+npm run build 2>&1 | tee ../tests/baseline/build-before.txt
+```
+
 ---
 
 ## 第零阶段：依赖升级
@@ -175,6 +267,8 @@ npm run build   # 验证
 
 ## 第一阶段：后端基础设施层
 
+> 应用 Strangler Fig 模式：新代码与旧代码短暂共存，逐个迁移调用点，验证后再删除旧代码。
+
 ### 1.1 新建 `internal/fsutil` 包 — 公共文件操作
 
 当前状态：
@@ -193,7 +287,8 @@ internal/fsutil/
 
 - `AtomicWriteFile`：write tmp → fsync → rename，一处实现，四处调用
 - `ScanStreamerDirs`：统一目录扫描逻辑，返回标准化的 `StreamerDir{Name, Path, Files []os.DirEntry}`
-- 所有现存的重复调用点全部迁移过来，删除原位置的重复代码
+- **迁移策略（绞杀者模式）**：先建 fsutil，在一处调用点替换（如 scheduler.go），运行特征测试验证，确认无误后再替换下一处。旧函数暂时保留但标记 `// DEPRECATED: use fsutil.XXX`
+- 所有调用点迁移完成后，删除旧代码和 utils 中的冗余文件
 
 ### 1.2 新建 `internal/taskctx` 包 — 统一任务上下文
 
@@ -224,6 +319,30 @@ func New(cfg *config.Config, logger *zap.Logger, taskType string, progress func(
 ---
 
 ## 第二阶段：后端 Service 层重构
+
+> 应用 Mikado 方法：此阶段内部依赖复杂，先做叶子节点，逐步向上。
+
+### Mikado 依赖图
+
+```
+目标：MergeService 和 CleanService 可测试 + 函数 <50 行
+│
+├── 叶子节点（无依赖，先做）：
+│   ├── 2.4a collectCandidates 返回值重构（指针切片 → 返回值）
+│   ├── 2.4b deleteFiles 拆分为 snapshot + filter + delete
+│   └── 2.2a 从 utils/video.go 迁移 ffprobe 函数到 ffmpeg 包
+│
+├── 中间节点（依赖叶子）：
+│   ├── 2.3 ffmpeg.Executor 接口定义 + DefaultExecutor 实现
+│   ├── 2.1 TaskRunner 接口定义
+│   └── 2.2b MergeService.Run() 拆分（需要 2.3 的接口）
+│
+└── 根节点（依赖中间）：
+    ├── 2.5 业务逻辑移出 Handler（需要 2.1 + 2.3 的接口）
+    └── MergeService/CleanService 实现 TaskRunner 接口
+```
+
+每个叶子节点改动独立提交后运行特征测试验证。
 
 ### 2.1 引入接口抽象 — `internal/service/interfaces.go`（新文件）
 
@@ -658,25 +777,47 @@ type mockConfig struct { ... }        // 返回固定配置快照
 ## 执行顺序
 
 ```
-阶段 0 — 依赖升级                              ← 最优先，确保基于最新 API
+阶段 -1 — 建立安全网                            ← 最最优先，任何代码改动之前
+  -1.1 静态分析基线（golangci-lint + gocyclo + vue-tsc）
+  -1.2 后端特征测试（核心路径的 Characterization Tests）
+  -1.3 API 响应基线（Golden Master）
+  -1.4 前端构建基线
+
+阶段 0 — 依赖升级                                ← 基于最新 API
   0.1 后端：Go 1.26 + Gin 1.12 + Zap 1.28 + sessions 1.1
   0.2 前端分步：Element Plus 2.14 → Vite 8 → TypeScript 6 → Pinia 3 + Vue Router 5
 
-阶段 1 — fsutil + taskctx（基础设施）           ← 无风险，纯提取
-阶段 2 — service 接口化 + 函数拆分              ← 核心改动，需仔细验证
-阶段 3 — config 系统重构                        ← 独立模块，影响面可控
-阶段 4 — handler 层重构 + 路由拆分              ← 依赖阶段 2 的接口
-阶段 5 — main.go 拆分                           ← 依赖阶段 4 的路由注册
-阶段 6 — 前端组件拆分 + composables             ← 前后端可并行，基于 Pinia 3 / Vue Router 5 API
-阶段 7 — 前端工程化（ESLint/Vitest/CSS）        ← 依赖阶段 6，基于 Vite 8
-阶段 8 — 后端测试补全                           ← 依赖阶段 2-3 的接口
+阶段 1 — fsutil + taskctx（基础设施）             ← 绞杀者模式，逐点迁移
+阶段 2 — service 接口化 + 函数拆分                ← Mikado 依赖图驱动，叶子节点优先
+阶段 3 — config 系统重构                          ← 独立模块，影响面可控
+阶段 4 — handler 层重构 + 路由拆分                ← 依赖阶段 2 的接口
+阶段 5 — main.go 拆分                             ← 依赖阶段 4 的路由注册
+阶段 6 — 前端组件拆分 + composables               ← 前后端可并行，基于 Pinia 3 / Vue Router 5 API
+阶段 7 — 前端工程化（ESLint/Vitest/CSS）          ← 依赖阶段 6，基于 Vite 8
+阶段 8 — 后端测试补全 + 静态分析对比              ← 依赖阶段 2-3 的接口，对比阶段 -1 基线
 ```
 
-每个阶段完成后：`go build ./...` + 现有测试通过 + `npm run build` + 手动冒烟测试。
+**关键规则：**
+- 每个叶子节点改动独立提交，代码库始终可编译可运行
+- 每阶段完成后运行特征测试（阶段 -1 建立的），确认行为未变
+- 阶段 8 完成后对比 golangci-lint / gocyclo 输出，确认复杂度下降
+- 重构提交和功能提交严格分开（不在同一个 commit 里既重构又改功能）
 
 ---
 
 ## 文件变更概览
+
+### 阶段 -1 安全网涉及文件
+```
+tests/baseline/                     — 新建目录，存放所有基线文件
+tests/baseline/api_*.json           — API 响应基线（Golden Master）
+tests/baseline/vue-tsc-before.txt   — 前端类型检查基线
+tests/baseline/build-before.txt     — 前端构建基线
+tests/baseline/lint-before.txt      — Go 静态分析基线
+internal/service/*_test.go          — 特征测试（扩展已有 + 新建）
+docs/adr/                           — 架构决策记录目录
+docs/adr/0001-fsutil-package.md     — 首个 ADR
+```
 
 ### 阶段 0 升级涉及文件
 ```
