@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )

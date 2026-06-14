@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"bililive-helper/internal/config"
+	"bililive-helper-go/internal/config"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"

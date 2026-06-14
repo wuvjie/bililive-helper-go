@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/utils"
 )
 
 const (

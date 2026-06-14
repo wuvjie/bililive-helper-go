@@ -13,10 +13,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bililive-helper/internal/config"
-	"bililive-helper/internal/ffmpeg"
-	"bililive-helper/internal/fsutil"
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/ffmpeg"
+	"bililive-helper-go/internal/fsutil"
+	"bililive-helper-go/internal/utils"
 
 	"go.uber.org/zap"
 )

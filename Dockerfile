@@ -25,7 +25,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o bililive-helper ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -o bililive-helper-go ./cmd/server
 
 # Stage 3: Minimal runtime image with ffmpeg
 FROM alpine:3.19
@@ -40,10 +40,10 @@ RUN apk add --no-cache ffmpeg ca-certificates tzdata curl
 
 WORKDIR /app
 
-COPY --from=builder /app/bililive-helper .
+COPY --from=builder /app/bililive-helper-go .
 COPY --from=frontend-builder /app/templates ./templates
 # login.html is a server-side template not built by Vite — copy from source
 COPY --from=builder /app/templates/login.html ./templates/login.html
 
 EXPOSE 5000
-CMD ["./bililive-helper"]
+CMD ["./bililive-helper-go"]

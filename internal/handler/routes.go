@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"bililive-helper/internal/config"
-	"bililive-helper/internal/middleware"
+	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"bililive-helper/internal/config"
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/utils"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"

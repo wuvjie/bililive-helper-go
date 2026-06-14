@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"bililive-helper/internal/fsutil"
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/fsutil"
+	"bililive-helper-go/internal/utils"
 )
 
 // Config 是应用程序的核心配置结构体。
