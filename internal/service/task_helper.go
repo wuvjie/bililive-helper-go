@@ -1,0 +1,67 @@
+// task_helper.go 提取 MergeService 和 CleanService 共享的启动样板代码。
+package service
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"bililive-helper/internal/config"
+)
+
+// TaskSetup 封装任务启动时的通用初始化逻辑。
+// 包括：配置快照、操作日志创建、进度回调包装、静默时段检查、路径存在性检查。
+type TaskSetup struct {
+	Cfg      config.Config
+	OpLog    *OpLogger
+	Progress ProgressFunc
+	LogID    string
+	Tag      string // "[全局]" 或 "[主播名]"
+}
+
+// PrepareTask 执行任务启动前的通用准备工作。
+// taskType: "merge" 或 "clean"；streamer 为空表示全局模式。
+// 返回 TaskSetup 和错误（静默时段或路径不存在时返回错误）。
+func PrepareTask(cfg *config.Config, logger interface{ Warn(string, ...interface{}) }, logDir, taskType, streamer string, onProgress ProgressFunc) (*TaskSetup, error) {
+	snap := cfg.Snapshot()
+
+	// 创建操作日志（失败时降级为 nil）
+	opLog, err := NewOpLogger(filepath.Join(snap.LogDir, logDir), taskType)
+	if err != nil {
+		opLog = nil
+	}
+
+	// 包装进度回调
+	if onProgress == nil {
+		onProgress = func(string) {}
+	}
+	progress := opLog.ProgressFunc(onProgress)
+
+	// 静默时段检查
+	if snap.IsBackupWindow() {
+		opLog.Close()
+		return nil, fmt.Errorf("当前处于静默时段（%d:%02d-%d:%02d），%s暂停",
+			snap.BackupStartHour, snap.BackupStartMinute,
+			snap.BackupEndHour, snap.BackupEndMinute,
+			taskType)
+	}
+
+	// 路径存在性检查
+	if _, err := os.Stat(snap.TargetDir); os.IsNotExist(err) {
+		opLog.Close()
+		return nil, fmt.Errorf("路径不存在: %s", snap.TargetDir)
+	}
+
+	tag := "[全局]"
+	if streamer != "" {
+		tag = fmt.Sprintf("[%s]", streamer)
+	}
+
+	return &TaskSetup{
+		Cfg:      snap,
+		OpLog:    opLog,
+		Progress: progress,
+		LogID:    opLog.LogID(),
+		Tag:      tag,
+	}, nil
+}

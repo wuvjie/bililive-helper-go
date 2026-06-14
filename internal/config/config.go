@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/utils"
 )
 
@@ -229,13 +230,7 @@ func (c *Config) Apply(fn func() error) error {
 		return err
 	}
 	// 原子写入：先写临时文件再 sync+rename，防止崩溃时数据损坏
-	tmp := c.ConfigFile + ".tmp"
-	if err := AtomicWriteFile(tmp, data, 0600); err != nil {
-		*c = old
-		return err
-	}
-	if err := os.Rename(tmp, c.ConfigFile); err != nil {
-		os.Remove(tmp)
+	if err := fsutil.AtomicSave(c.ConfigFile, data, 0600); err != nil {
 		*c = old
 		return err
 	}
@@ -284,19 +279,13 @@ func (c *Config) SaveCredential() error {
 	if err != nil {
 		return err
 	}
-	tmp := file + ".tmp"
-	if err := AtomicWriteFile(tmp, data, 0600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, file); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	return nil
+	return fsutil.AtomicSave(file, data, 0600)
 }
 
 // AtomicWriteFile 将数据写入临时文件并 fsync，确保数据刷入持久存储后再返回。
 // 用于配合 os.Rename 实现崩溃安全的原子写入。
+//
+// Deprecated: 使用 fsutil.AtomicWrite 或 fsutil.AtomicSave 替代。
 func AtomicWriteFile(path string, data []byte, perm os.FileMode) error {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
 	if err != nil {

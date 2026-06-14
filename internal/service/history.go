@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"bililive-helper/internal/config"
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/model"
 
 	"go.uber.org/zap"
@@ -183,10 +183,6 @@ func (s *HistoryService) doLoad() {
 // 调用者必须持有写锁。
 func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 	file := s.config.GetHistoryFile()
-	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
-		s.logger.Warn("创建历史记录目录失败", zap.Error(err))
-		return
-	}
 	wrapper := struct {
 		Records []model.HistoryRecord `json:"records"`
 	}{Records: records}
@@ -195,17 +191,11 @@ func (s *HistoryService) saveRecords(records []model.HistoryRecord) {
 		s.logger.Warn("序列化历史记录失败", zap.Error(err))
 		return
 	}
-	tmp := file + ".tmp"
-	if err := config.AtomicWriteFile(tmp, data, 0600); err != nil {
-		s.logger.Warn("写入历史记录失败", zap.Error(err))
+	if err := fsutil.AtomicSave(file, data, 0600); err != nil {
+		s.logger.Warn("原子写入历史记录失败", zap.Error(err))
 		return
 	}
-	if err := os.Rename(tmp, file); err != nil {
-		os.Remove(tmp)
-		s.logger.Warn("原子替换历史记录文件失败", zap.Error(err))
-		return
-	}
-	// 原子 rename 成功后才更新内存缓存
+	// 原子写入成功后才更新内存缓存
 	s.cache = records
 }
 
