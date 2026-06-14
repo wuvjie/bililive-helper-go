@@ -15,6 +15,7 @@ import (
 
 	"bililive-helper/internal/config"
 	"bililive-helper/internal/ffmpeg"
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/utils"
 
 	"go.uber.org/zap"
@@ -271,12 +272,8 @@ func (s *MergeService) runMerges(ctx context.Context, tasks []mergeTask, cfg con
 // summarizeResults 汇总合并结果并写入历史记录。
 func (s *MergeService) summarizeResults(ctx context.Context, root, streamer string, done, convertDone, mergeDone, mergeFailed int, failedReasons map[string]int, totalGB float64, start time.Time, logID string, onProgress ProgressFunc) {
 	totalScanned := 0
-	if dirs, err := os.ReadDir(root); err == nil {
-		for _, d := range dirs {
-			if d.IsDir() {
-				totalScanned++
-			}
-		}
+	if dirs, err := fsutil.ScanStreamerDirs(root); err == nil {
+		totalScanned = len(dirs)
 	}
 	if streamer != "" {
 		totalScanned = 1
@@ -713,20 +710,14 @@ func SortByFilename(files []string) {
 func (s *MergeService) CleanupTempFiles() int {
 	cfg := s.config.Snapshot()
 	root := cfg.TargetDir
-	entries, err := os.ReadDir(root)
+	dirs, err := fsutil.ScanStreamerDirs(root)
 	if err != nil {
 		return 0
 	}
 	cleaned := 0
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		folder := filepath.Join(root, entry.Name())
-		fileEntries, err := os.ReadDir(folder)
-		if err != nil {
-			continue
-		}
+	for _, dir := range dirs {
+		folder := dir.Path
+		fileEntries := dir.Files
 
 		// 收集有效 MP4 文件名用于孤立文件检测
 		mp4Bases := make(map[string]bool)
