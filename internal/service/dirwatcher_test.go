@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"bililive-helper/internal/config"
+	"bililive-helper-go/internal/config"
 
 	"go.uber.org/zap"
 )

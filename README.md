@@ -353,7 +353,7 @@ npm run dev
 cd frontend && npm run build
 
 # 编译后端
-cd .. && go build -o bililive-helper ./cmd/server
+cd .. && go build -o bililive-helper-go ./cmd/server
 
 # Docker 一键构建
 docker compose up -d --build

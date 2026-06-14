@@ -12,11 +12,11 @@ import (
 	"syscall"
 	"time"
 
-	"bililive-helper/internal/config"
-	"bililive-helper/internal/handler"
-	"bililive-helper/internal/middleware"
-	"bililive-helper/internal/service"
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/handler"
+	"bililive-helper-go/internal/middleware"
+	"bililive-helper-go/internal/service"
+	"bililive-helper-go/internal/utils"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"

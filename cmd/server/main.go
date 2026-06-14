@@ -4,7 +4,7 @@ package main
 import (
 	"log"
 
-	"bililive-helper/internal/app"
+	"bililive-helper-go/internal/app"
 )
 
 func main() {

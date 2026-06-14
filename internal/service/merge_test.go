@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/utils"
 )
 
 func TestSortByFilename_DifferentDates(t *testing.T) {

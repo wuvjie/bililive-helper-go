@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"bililive-helper/internal/config"
-	"bililive-helper/internal/fsutil"
-	"bililive-helper/internal/model"
+	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/fsutil"
+	"bililive-helper-go/internal/model"
 
 	"go.uber.org/zap"
 )

@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"bililive-helper/internal/fsutil"
-	"bililive-helper/internal/model"
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/fsutil"
+	"bililive-helper-go/internal/model"
+	"bililive-helper-go/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

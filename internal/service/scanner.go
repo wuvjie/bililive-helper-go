@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"bililive-helper/internal/config"
-	"bililive-helper/internal/ffmpeg"
-	"bililive-helper/internal/utils"
+	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/ffmpeg"
+	"bililive-helper-go/internal/utils"
 
 	"go.uber.org/zap"
 )

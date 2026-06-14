@@ -3,8 +3,8 @@
 package handler
 
 import (
-	"bililive-helper/internal/config"
-	"bililive-helper/internal/service"
+	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/service"
 	"sync"
 
 	"go.uber.org/zap"

@@ -1,4 +1,4 @@
-module bililive-helper
+module bililive-helper-go
 
 go 1.25.0
 
