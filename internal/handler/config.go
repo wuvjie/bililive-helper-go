@@ -3,13 +3,12 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
 	"bililive-helper/internal/config"
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -242,7 +241,7 @@ type contentAnalysis struct {
 // analyzeContent 扫描目标目录，分析视频库内容（主播数、文件数、日产出、间隔等）。
 func analyzeContent(root string, whitelist []string) contentAnalysis {
 	var result contentAnalysis
-	entries, err := os.ReadDir(root)
+	dirs, err := fsutil.ScanStreamerDirs(root)
 	if err != nil {
 		return result
 	}
@@ -250,17 +249,12 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 	now := time.Now()
 	var allGaps []float64
 
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
+	for _, dir := range dirs {
 		result.StreamerCount++
-		folder := filepath.Join(root, entry.Name())
 
 		var streamerModTimes []time.Time
 		var streamerRecentSize int64
-		folderEntries, _ := os.ReadDir(folder)
-		for _, fe := range folderEntries {
+		for _, fe := range dir.Files {
 			if fe.IsDir() {
 				continue
 			}
@@ -268,8 +262,7 @@ func analyzeContent(root string, whitelist []string) contentAnalysis {
 			if !utils.IsVideoFile(name) {
 				continue
 			}
-			// 跳过白名单文件 — 它们不会被清理，排除在分析之外
-			if utils.ContainsAny(name, whitelist) || utils.ContainsAny(entry.Name(), whitelist) {
+			if utils.ContainsAny(name, whitelist) || utils.ContainsAny(dir.Name, whitelist) {
 				continue
 			}
 			result.TotalVideos++

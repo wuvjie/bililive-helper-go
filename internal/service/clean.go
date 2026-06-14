@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"bililive-helper/internal/config"
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/utils"
 
 	"go.uber.org/zap"
@@ -170,25 +171,21 @@ type streamerStats struct {
 func (s *CleanService) collectCandidates(root, streamer string, cfg config.Config) ([]candidateFile, map[string]streamerStats) {
 	var candidates []candidateFile
 	perStreamer := make(map[string]streamerStats)
-	entries, err := os.ReadDir(root)
+	dirs, err := fsutil.ScanStreamerDirs(root)
 	if err != nil {
 		s.logger.Warn("读取根目录失败，跳过清理", zap.Error(err))
 		return nil, nil
 	}
-	for _, entry := range entries {
-		if !entry.IsDir() {
+	for _, dir := range dirs {
+		if streamer != "" && dir.Name != streamer {
 			continue
 		}
-		if streamer != "" && entry.Name() != streamer {
-			continue
-		}
-		folder := filepath.Join(root, entry.Name())
 		before := len(candidates)
-		streamerCandidates := s.collectStreamerCandidates(folder, entry.Name(), cfg)
+		streamerCandidates := s.collectStreamerCandidates(dir.Path, dir.Name, cfg)
 		candidates = append(candidates, streamerCandidates...)
 		after := len(candidates)
-		total := s.countVideos(folder)
-		perStreamer[entry.Name()] = streamerStats{
+		total := s.countVideos(dir.Path)
+		perStreamer[dir.Name] = streamerStats{
 			total:     total,
 			candidate: after - before,
 			skipped:   max(0, total-(after-before)-min(total, cfg.MinKeepPerStreamer)),
