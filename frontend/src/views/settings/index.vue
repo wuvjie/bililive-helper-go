@@ -360,7 +360,7 @@ async function handleSaveConfig() {
 async function handleSaveSchedule() {
   savingSchedule.value = true;
   try {
-    const data: Record<string, any> = { ...scheduleForm };
+    const data: Record<string, unknown> = { ...scheduleForm };
     if (backupStart.value) {
       const [h, m] = backupStart.value.split(":");
       data.BACKUP_START_HOUR = parseInt(h);
