@@ -1,0 +1,60 @@
+// 共享工具类 — 消除各组件中的重复样式定义
+// 使用方式：在组件中直接使用这些类名，不需要 scoped 定义
+
+// 数值显示（等宽字体）
+.mono-val {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.mono-val-sm {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--slate);
+}
+
+// 状态指示点
+.status-dot-sm {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+.dot-ok { background: var(--success); }
+.dot-err { background: var(--error); }
+.dot-off { background: var(--stone); }
+
+// 通用卡片
+.card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--hairline);
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 12px;
+}
+.card-body {
+  font-size: 13px;
+  color: var(--slate);
+}
+
+// 主按钮（统一样式）
+.btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  padding: 8px 20px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.btn-primary:hover {
+  background: var(--primary-pressed);
+}
