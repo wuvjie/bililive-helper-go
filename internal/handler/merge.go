@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -143,7 +142,7 @@ func (h *Handler) RunTask(c *gin.Context) {
 
 // GetSchedule 返回当前调度状态（间隔、启用状态、上次/下次执行时间）。
 func (h *Handler) GetSchedule(c *gin.Context) {
-	c.JSON(http.StatusOK, h.scheduler.GetStatus())
+	ok(c, h.scheduler.GetStatus())
 }
 
 // SaveSchedule 保存调度配置（合并/清理间隔、启用状态、静默时段）。
@@ -305,10 +304,14 @@ func (h *Handler) EmergencyClean(c *gin.Context) {
 			}); err != nil {
 				return fmt.Sprintf("❌ 设置目标阈值失败: %s", err.Error())
 			}
-			defer h.config.Apply(func() error {
-				h.config.TargetThreshold = originalTarget
-				return nil
-			})
+			defer func() {
+				if err := h.config.Apply(func() error {
+					h.config.TargetThreshold = originalTarget
+					return nil
+				}); err != nil {
+					h.logger.Error("紧急清理后恢复目标阈值失败", zap.Error(err))
+				}
+			}()
 		}
 		result, logID, err := h.clean.Run(ctx, "", onProgress)
 		if err != nil {
@@ -395,5 +398,5 @@ func (h *Handler) SetupCheck(c *gin.Context) {
 		checks["disk_usage_pct"] = disk.UsedPct
 	}
 
-	c.JSON(http.StatusOK, checks)
+	ok(c, checks)
 }

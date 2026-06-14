@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -148,7 +147,7 @@ func (h *Handler) Stats(c *gin.Context) {
 func (h *Handler) GetStreamers(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	streamers, _, _ := h.scanAllStreamers(cfg.TargetDir)
-	c.JSON(http.StatusOK, streamers)
+	ok(c, streamers)
 }
 
 // scanAllStreamers 一次性扫描所有主播目录，返回主播列表、待合并文件数和总大小。
@@ -263,5 +262,5 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 			"is_merged": utils.IsMergedFile(name),
 		})
 	}
-	c.JSON(http.StatusOK, files)
+	ok(c, files)
 }
