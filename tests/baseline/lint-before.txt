@@ -1,0 +1,82 @@
+cmd\server\main.go:36:19: Error return value of `logger.Sync` is not checked (errcheck)
+	defer logger.Sync()
+	                 ^
+internal\config\config.go:238:12: Error return value of `os.Remove` is not checked (errcheck)
+		os.Remove(tmp)
+		         ^
+internal\config\config.go:292:12: Error return value of `os.Remove` is not checked (errcheck)
+		os.Remove(tmp)
+		         ^
+internal\config\config.go:306:10: Error return value of `f.Close` is not checked (errcheck)
+		f.Close()
+		       ^
+internal\config\config.go:307:12: Error return value of `os.Remove` is not checked (errcheck)
+		os.Remove(path)
+		         ^
+internal\config\config.go:311:10: Error return value of `f.Close` is not checked (errcheck)
+		f.Close()
+		       ^
+internal\ffmpeg\proc_windows.go:13:19: Error return value of `cmd.Process.Kill` is not checked (errcheck)
+		cmd.Process.Kill()
+		                ^
+internal\handler\auth.go:272:17: Error return value of `h.config.Apply` is not checked (errcheck)
+		h.config.Apply(func() error {
+		              ^
+internal\handler\merge.go:172:17: Error return value of `fmt.Fprintf` is not checked (errcheck)
+					fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
+					           ^
+internal\handler\merge.go:181:17: Error return value of `fmt.Fprintf` is not checked (errcheck)
+					fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
+					           ^
+internal\handler\merge.go:188:15: Error return value of `fmt.Fprintf` is not checked (errcheck)
+			fmt.Fprintf(c.Writer, "data: %s\n\n", result)
+			           ^
+internal\handler\merge.go:379:24: Error return value of `h.config.Apply` is not checked (errcheck)
+			defer h.config.Apply(func() error {
+			                    ^
+internal\middleware\auth.go:106:17: Error return value of `session.Save` is not checked (errcheck)
+				session.Save()
+				            ^
+internal\service\merge.go:355:19: Error return value of `utils.SafeUnlink` is not checked (errcheck)
+		utils.SafeUnlink(mp4Path) // 清理校验失败的部分输出
+		                ^
+internal\service\merge.go:511:20: Error return value of `os.RemoveAll` is not checked (errcheck)
+	defer os.RemoveAll(tmpDir)
+	                  ^
+internal\service\merge.go:545:19: Error return value of `utils.SafeUnlink` is not checked (errcheck)
+		utils.SafeUnlink(concatOutputPath)
+		                ^
+internal\service\merge.go:554:19: Error return value of `utils.SafeUnlink` is not checked (errcheck)
+		utils.SafeUnlink(concatOutputPath)
+		                ^
+internal\service\merge.go:565:16: Error return value of `fd.Close` is not checked (errcheck)
+	defer fd.Close()
+	              ^
+internal\service\oplog.go:92:14: Error return value of `l.file.Close` is not checked (errcheck)
+	l.file.Close()
+	            ^
+internal\service\scanner_test.go:46:16: Error return value of `f.Close` is not checked (errcheck)
+		defer f.Close()
+		             ^
+internal\service\scanner_test.go:49:11: Error return value of `f.Write` is not checked (errcheck)
+			f.Write(make([]byte, 512))
+			       ^
+internal\service\scanner_test.go:89:11: Error return value of `f.Write` is not checked (errcheck)
+			f.Write(make([]byte, 512))
+			       ^
+internal\utils\disk_windows.go:21:17: Error return value of `h.Release` is not checked (errcheck)
+	defer h.Release()
+	               ^
+internal\utils\notify.go:39:24: Error return value of `resp.Body.Close` is not checked (errcheck)
+		defer resp.Body.Close()
+		                     ^
+internal\service\merge.go:539:3: ineffectual assignment to output (ineffassign)
+		output = strings.TrimSuffix(output, ".flv") + ".mp4"
+		^
+internal\utils\notify.go:40:3: SA9003: empty branch (staticcheck)
+		if resp.StatusCode >= 400 {
+		^
+26 issues:
+* errcheck: 24
+* ineffassign: 1
+* staticcheck: 1
