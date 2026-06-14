@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -162,22 +163,17 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 		latestTime   time.Time
 	}
 
-	entries, err := os.ReadDir(root)
+	dirs, err := fsutil.ScanStreamerDirs(root)
 	if err != nil {
 		return []gin.H{}, 0, 0
 	}
 
 	var infos []streamerInfo
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		folder := filepath.Join(root, entry.Name())
-		folderEntries, _ := os.ReadDir(folder)
+	for _, dir := range dirs {
 		var totalSize, pendSize int64
 		var totalCount, pendCount int
 		var latest time.Time
-		for _, fe := range folderEntries {
+		for _, fe := range dir.Files {
 			if fe.IsDir() {
 				continue
 			}
@@ -200,7 +196,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			}
 		}
 		infos = append(infos, streamerInfo{
-			name: entry.Name(), size: totalSize, count: totalCount,
+			name: dir.Name, size: totalSize, count: totalCount,
 			pendingCount: pendCount, pendingSize: pendSize, latestTime: latest,
 		})
 	}

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/model"
 	"bililive-helper/internal/utils"
 
@@ -244,22 +245,17 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 func (h *Handler) CleanEstimate(c *gin.Context) {
 	cfg := h.config.ToDTO()
 	root := cfg.TargetDir
-	entries, err := os.ReadDir(root)
+	dirs, err := fsutil.ScanStreamerDirs(root)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "目录不存在"})
+		failNotFound(c, "目录不存在")
 		return
 	}
 
 	var totalSize int64
 	count := 0
 	wl := cfg.WhitelistKeywords
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		folder := filepath.Join(root, entry.Name())
-		folderEntries, _ := os.ReadDir(folder)
-		for _, fe := range folderEntries {
+	for _, dir := range dirs {
+		for _, fe := range dir.Files {
 			if fe.IsDir() {
 				continue
 			}
@@ -270,7 +266,7 @@ func (h *Handler) CleanEstimate(c *gin.Context) {
 			if utils.IsMergedFile(name) {
 				continue
 			}
-			if utils.ContainsAny(name, wl) || utils.ContainsAny(entry.Name(), wl) {
+			if utils.ContainsAny(name, wl) || utils.ContainsAny(dir.Name, wl) {
 				continue
 			}
 			info, err := fe.Info()
