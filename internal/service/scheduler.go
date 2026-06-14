@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
 	"bililive-helper/internal/config"
+	"bililive-helper/internal/fsutil"
 	"bililive-helper/internal/model"
 	"bililive-helper/internal/utils"
 
@@ -263,20 +263,12 @@ func (s *SchedulerService) SaveSchedule(schedule model.ScheduleConfig) error {
 	schedule.CleanInterval = max(10, min(1440, schedule.CleanInterval))
 
 	file := s.config.GetScheduleFile()
-	if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
-		return fmt.Errorf("创建调度目录失败: %w", err)
-	}
 	data, err := json.MarshalIndent(schedule, "", "  ")
 	if err != nil {
 		return fmt.Errorf("序列化调度配置失败: %w", err)
 	}
 	// 原子写入（fsync + rename），防止崩溃时数据损坏
-	tmp := file + ".tmp"
-	if err := config.AtomicWriteFile(tmp, data, 0600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, file); err != nil {
-		os.Remove(tmp)
+	if err := fsutil.AtomicSave(file, data, 0600); err != nil {
 		return err
 	}
 
