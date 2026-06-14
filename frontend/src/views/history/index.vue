@@ -169,7 +169,8 @@ async function viewLog(row: HistoryRecord) {
   logContent.value = "";
   logLoading.value = true;
   try {
-    logContent.value = await getLogContent(row.task, row.log_id);
+    const res = await getLogContent(row.task, row.log_id);
+    logContent.value = res.content;
   } catch {
     logContent.value = "日志加载失败";
   } finally {
