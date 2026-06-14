@@ -51,3 +51,8 @@ func failTooMany(c *gin.Context, msg string) {
 func failInternal(c *gin.Context, msg string) {
 	fail(c, http.StatusInternalServerError, msg)
 }
+
+// failNotFound 返回 404 错误响应。
+func failNotFound(c *gin.Context, msg string) {
+	fail(c, http.StatusNotFound, msg)
+}
