@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -18,7 +17,7 @@ import (
 
 // GetConfig 返回当前配置（不含敏感字段）。
 func (h *Handler) GetConfig(c *gin.Context) {
-	c.JSON(http.StatusOK, h.config.ToDTO())
+	ok(c, h.config.ToDTO())
 }
 
 // SaveConfig 保存配置更新（部分更新，只修改请求中包含的字段）。

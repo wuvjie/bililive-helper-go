@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -45,7 +44,7 @@ func (h *Handler) GetHistory(c *gin.Context) {
 
 // ExportHistory 导出全部历史记录。
 func (h *Handler) ExportHistory(c *gin.Context) {
-	c.JSON(http.StatusOK, h.history.GetAllRecords())
+	ok(c, h.history.GetAllRecords())
 }
 
 // GetLogContent 根据 log_id 返回对应的操作日志内容（最近 200 行）。
@@ -70,7 +69,7 @@ func (h *Handler) GetLogContent(c *gin.Context) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			c.String(http.StatusOK, "[系统提示] 该操作日志已超过 30 天，已被自动清理")
+			ok(c, gin.H{"content": "[系统提示] 该操作日志已超过 30 天，已被自动清理"})
 			return
 		}
 		failInternal(c, "读取日志失败")
@@ -81,5 +80,5 @@ func (h *Handler) GetLogContent(c *gin.Context) {
 	if len(lines) > 200 {
 		lines = lines[len(lines)-200:]
 	}
-	c.String(http.StatusOK, strings.Join(lines, "\n"))
+	ok(c, gin.H{"content": strings.Join(lines, "\n")})
 }

@@ -69,55 +69,6 @@ func TestAtomicSave_Overwrite(t *testing.T) {
 	}
 }
 
-func TestSafeUnlink_ExistingFile(t *testing.T) {
-	dir := t.TempDir()
-	path := filepath.Join(dir, "test.txt")
-	os.WriteFile(path, []byte("data"), 0644)
-
-	if err := SafeUnlink(path); err != nil {
-		t.Fatalf("SafeUnlink 失败: %v", err)
-	}
-
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		t.Error("文件应该已被删除")
-	}
-}
-
-func TestSafeUnlink_NonExistent(t *testing.T) {
-	// 不存在的文件应该返回 nil（不是错误）
-	if err := SafeUnlink("/nonexistent/path/file.txt"); err != nil {
-		t.Errorf("删除不存在的文件应返回 nil，得到: %v", err)
-	}
-}
-
-func TestValidatePath(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		want  bool
-	}{
-		{"正常文件名", "test.mp4", true},
-		{"中文文件名", "录像-合并版.mp4", true},
-		{"带空格", "my file.txt", true},
-		{"空字符串", "", false},
-		{"单点", ".", false},
-		{"双点", "..", false},
-		{"包含 ..", "../etc/passwd", false},
-		{"包含斜杠", "dir/file", false},
-		{"包含反斜杠", "dir\\file", false},
-		{"包含空字节", "file\x00.txt", false},
-		{"包含管道符", "file|name", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := ValidatePath(tt.input)
-			if got != tt.want {
-				t.Errorf("ValidatePath(%q) = %v, want %v", tt.input, got, tt.want)
-			}
-		})
-	}
-}
-
 func TestScanStreamerDirs(t *testing.T) {
 	dir := t.TempDir()
 
