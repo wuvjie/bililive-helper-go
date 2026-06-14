@@ -203,7 +203,8 @@ func (s *CleanService) collectCandidates(root, streamer string, cfg config.Confi
 		}
 		folder := filepath.Join(root, entry.Name())
 		before := len(candidates)
-		s.collectStreamerCandidates(folder, entry.Name(), &candidates, cfg)
+		streamerCandidates := s.collectStreamerCandidates(folder, entry.Name(), cfg)
+		candidates = append(candidates, streamerCandidates...)
 		after := len(candidates)
 		total := s.countVideos(folder)
 		perStreamer[entry.Name()] = streamerStats{
@@ -231,14 +232,16 @@ func (s *CleanService) countVideos(folder string) int {
 
 // collectStreamerCandidates 收集单个主播目录下的可清理候选文件。
 // 应用保底数量、白名单过滤和安全期保护规则。
-func (s *CleanService) collectStreamerCandidates(folder, streamerName string, candidates *[]candidateFile, cfg config.Config) {
+// collectStreamerCandidates 收集指定主播目录下的候选清理文件。
+// 返回值替代原 *[]candidateFile 指针传参模式，数据流更清晰。
+func (s *CleanService) collectStreamerCandidates(folder, streamerName string, cfg config.Config) []candidateFile {
 	minKeep := cfg.MinKeepPerStreamer
 	wl := cfg.WhitelistKeywords
 
 	var videos []candidateFile
 	entries, err := os.ReadDir(folder)
 	if err != nil {
-		return
+		return nil
 	}
 
 	for _, entry := range entries {
@@ -267,10 +270,11 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 	})
 
 	if len(videos) <= minKeep {
-		return
+		return nil
 	}
 	videos = videos[:len(videos)-minKeep]
 
+	var result []candidateFile
 	for _, v := range videos {
 		if utils.ContainsAny(v.Name, wl) || utils.ContainsAny(streamerName, wl) {
 			continue
@@ -286,8 +290,9 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, ca
 				continue
 			}
 		}
-		*candidates = append(*candidates, v)
+		result = append(result, v)
 	}
+	return result
 }
 
 // deleteFiles 执行文件删除，使用双快照检测跳过正在写入的文件。

@@ -252,7 +252,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					defer wg.Done()
 					defer func() { <-sem }() // 释放信号量槽位
 					path := filepath.Join(folder, items[idx].Name)
-					dur, err := utils.GetVideoDuration(ctx, path)
+					dur, err := ffmpeg.ProbeDuration(ctx, path)
 					if err == nil && dur > 0 {
 						items[idx].EndTime = items[idx].Datetime.Add(time.Duration(dur * float64(time.Second)))
 					} else {
@@ -331,7 +331,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					if info == nil || info.Size() == 0 {
 						continue
 					}
-					if !utils.IsVideoHealthy(ctx, path) {
+					if !ffmpeg.ProbeHealth(ctx, path) {
 						s.logger.Info(fmt.Sprintf("[%s] ⏭ 跳过损坏文件: %s", entry.Name(), v.Name))
 						continue
 					}
