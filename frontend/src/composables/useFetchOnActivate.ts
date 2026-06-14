@@ -7,10 +7,7 @@ import { onMounted, onActivated } from "vue";
  * @param fetchFn - 数据加载函数
  * @param opts.onMountedOnly - 仅在 onMounted 时执行（如 setupCheck 只需首次加载）
  */
-export function useFetchOnActivate(
-  fetchFn: () => Promise<void>,
-  opts?: { onMountedOnly?: boolean }
-) {
+export function useFetchOnActivate(fetchFn: () => Promise<void>, opts?: { onMountedOnly?: boolean }) {
   onMounted(fetchFn);
   if (!opts?.onMountedOnly) {
     onActivated(fetchFn);

@@ -23,7 +23,7 @@ export function useSSE() {
     lines.value.push({
       time: new Date().toLocaleTimeString("zh-CN"),
       text,
-      type: classifyLine(text)
+      type: classifyLine(text),
     });
   }
 
@@ -48,7 +48,7 @@ export function useSSE() {
         headers: { "Content-Type": "application/json" },
         body: body ? JSON.stringify(body) : undefined,
         signal: abortController.signal,
-        credentials: "same-origin" // required for session cookie auth
+        credentials: "same-origin", // required for session cookie auth
       });
 
       if (!res.ok) {
@@ -100,9 +100,7 @@ export function useSSE() {
         msg.includes("err_internet_disconnected") ||
         msg.includes("err_name_not_resolved");
 
-      const friendlyMsg = isNetworkError
-        ? "网络连接中断，请检查网络后重试"
-        : e.message;
+      const friendlyMsg = isNetworkError ? "网络连接中断，请检查网络后重试" : e.message;
 
       error.value = friendlyMsg;
       addLine(`❌ ${friendlyMsg}`);
