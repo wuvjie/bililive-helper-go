@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 
 	"bililive-helper/internal/config"
+
+	"go.uber.org/zap"
 )
 
 // TaskSetup 封装任务启动时的通用初始化逻辑。
@@ -22,7 +24,7 @@ type TaskSetup struct {
 // PrepareTask 执行任务启动前的通用准备工作。
 // taskType: "merge" 或 "clean"；streamer 为空表示全局模式。
 // 返回 TaskSetup 和错误（静默时段或路径不存在时返回错误）。
-func PrepareTask(cfg *config.Config, logger interface{ Warn(string, ...interface{}) }, logDir, taskType, streamer string, onProgress ProgressFunc) (*TaskSetup, error) {
+func PrepareTask(cfg *config.Config, logger *zap.Logger, logDir, taskType, streamer string, onProgress ProgressFunc) (*TaskSetup, error) {
 	snap := cfg.Snapshot()
 
 	// 创建操作日志（失败时降级为 nil）

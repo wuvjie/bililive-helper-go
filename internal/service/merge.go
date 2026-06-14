@@ -150,62 +150,57 @@ func classifyMergeFailure(folder, firstFile string) string {
 // 参数 streamer 为空表示全局合并；onProgress 用于 SSE 进度回调。
 func (s *MergeService) Run(ctx context.Context, streamer string, onProgress ProgressFunc) (*MergeResult, string, error) {
 	start := time.Now()
-	cfg := s.config.Snapshot()
+
+	setup, err := PrepareTask(s.config, s.logger, "merge_log", "合并", streamer, onProgress)
+	if err != nil {
+		return nil, "", err
+	}
+	defer setup.OpLog.Close()
+	cfg := setup.Cfg
+	progress := setup.Progress
 	root := cfg.TargetDir
 
-	opLog, err := NewOpLogger(filepath.Join(cfg.LogDir, "merge_log"), "merge")
-	if err != nil {
-		opLog = nil // 降级为 nil，不阻断操作
-	}
-	defer opLog.Close()
-
-	if cfg.IsBackupWindow() {
-		return nil, opLog.LogID(), fmt.Errorf("当前处于静默时段（%d:%02d-%d:%02d），合并暂停", cfg.BackupStartHour, cfg.BackupStartMinute, cfg.BackupEndHour, cfg.BackupEndMinute)
-	}
-	if onProgress == nil {
-		onProgress = func(string) {}
-	}
-	onProgress = opLog.ProgressFunc(onProgress)
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		return nil, opLog.LogID(), fmt.Errorf("路径不存在: %s", root)
-	}
-
-	tag := "[全局]"
-	if streamer != "" {
-		tag = fmt.Sprintf("[%s]", streamer)
-	}
-	onProgress(fmt.Sprintf("▶ 开始 %s 合并", tag))
-	onProgress(fmt.Sprintf("⚙ 扫描 %s ...", root))
+	progress(fmt.Sprintf("▶ 开始 %s 合并", setup.Tag))
+	progress(fmt.Sprintf("⚙ 扫描 %s ...", root))
 
 	tasks, convertTasks := s.scanTasks(ctx, root, streamer, cfg)
 	if len(tasks) == 0 && len(convertTasks) == 0 {
-		s.history.Add("merge", streamer, "success", "扫描完成，无待合并文件", opLog.LogID())
-		onProgress("ℹ 无待合并文件")
-		return &MergeResult{}, opLog.LogID(), nil
+		s.history.Add("merge", streamer, "success", "扫描完成，无待合并文件", setup.LogID)
+		progress("ℹ 无待合并文件")
+		return &MergeResult{}, setup.LogID, nil
 	}
 
 	if len(tasks) > 0 {
 		if err := s.checkDiskSpaceForMerge(tasks, root); err != nil {
-			onProgress(fmt.Sprintf("❌ %s", err.Error()))
-			return nil, opLog.LogID(), err
+			progress(fmt.Sprintf("❌ %s", err.Error()))
+			return nil, setup.LogID, err
 		}
 	}
 
 	// 磁盘空间硬性检查 — 可用空间低于 10GB 时跳过所有操作
 	disk, diskErr := utils.GetDiskUsage(root)
-	if diskErr == nil && disk.Free < minDiskFreeBytes { // < 10GB free
-		opLog.Log(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过所有操作", float64(disk.Free)/oneGB))
-		onProgress(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB / 需要 10 GB），跳过", float64(disk.Free)/oneGB))
-		s.history.Add("merge", streamer, "fail", fmt.Sprintf("磁盘空间不足: %.1f GB（使用率 %.1f%%）", float64(disk.Free)/oneGB, disk.UsedPct), opLog.LogID())
-		return &MergeResult{}, opLog.LogID(), nil
+	if diskErr == nil && disk.Free < minDiskFreeBytes {
+		setup.OpLog.Log(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过所有操作", float64(disk.Free)/oneGB))
+		progress(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB / 需要 10 GB），跳过", float64(disk.Free)/oneGB))
+		s.history.Add("merge", streamer, "fail", fmt.Sprintf("磁盘空间不足: %.1f GB（使用率 %.1f%%）", float64(disk.Free)/oneGB, disk.UsedPct), setup.LogID)
+		return &MergeResult{}, setup.LogID, nil
 	}
 
+	// 执行 FLV 转换和合并
+	convertDone, totalGB := s.runConversions(ctx, convertTasks, cfg, progress, setup.OpLog)
+	mergeDone, mergeFailed, failedReasons, mergeGB := s.runMerges(ctx, tasks, cfg, progress, setup.OpLog)
+	totalGB += mergeGB
+	done := convertDone + mergeDone
+
+	// 结果汇总
+	s.summarizeResults(ctx, root, streamer, done, convertDone, mergeDone, mergeFailed, failedReasons, totalGB, start, setup.LogID, progress)
+	return &MergeResult{Done: done, Failed: mergeFailed, TotalGB: totalGB}, setup.LogID, nil
+}
+
+// runConversions 执行所有 FLV→MP4 转换任务。返回完成数和总大小（GB）。
+func (s *MergeService) runConversions(ctx context.Context, convertTasks []convertTask, cfg config.Config, onProgress ProgressFunc, opLog *OpLogger) (int, float64) {
 	done := 0
 	totalGB := 0.0
-	convertDone := 0
-	mergeDone := 0
-	mergeFailed := 0
-	failedReasons := make(map[string]int)
 	lastStreamer := ""
 	for _, ct := range convertTasks {
 		if cfg.IsBackupWindow() || ctx.Err() != nil {
@@ -223,7 +218,6 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		onProgress(fmt.Sprintf("[%s] 🔄 FLV→MP4: %s → %s", streamerName, filepath.Base(ct.FlvPath), filepath.Base(ct.Mp4Path)))
 		if s.convertFlvToMp4(ctx, ct.FlvPath, ct.Mp4Path, onProgress, opLog) {
 			done++
-			convertDone++
 			totalGB += float64(flvSize) / oneGB
 			if info, err := os.Stat(ct.Mp4Path); err == nil {
 				onProgress(fmt.Sprintf("[%s] ✅ → %s (%s)", streamerName, filepath.Base(ct.Mp4Path), utils.FormatSize(info.Size())))
@@ -234,8 +228,16 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			onProgress(fmt.Sprintf("[%s] ❌ 转换失败", streamerName))
 		}
 	}
+	return done, totalGB
+}
 
-	// 处理待合并任务
+// runMerges 执行所有合并任务。返回成功数、失败数、失败原因统计和总大小（GB）。
+func (s *MergeService) runMerges(ctx context.Context, tasks []mergeTask, cfg config.Config, onProgress ProgressFunc, opLog *OpLogger) (int, int, map[string]int, float64) {
+	done := 0
+	failed := 0
+	totalGB := 0.0
+	failedReasons := make(map[string]int)
+	lastStreamer := ""
 	for _, task := range tasks {
 		if cfg.IsBackupWindow() {
 			break
@@ -245,7 +247,6 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			onProgress(fmt.Sprintf("── %s ──", streamerName))
 			lastStreamer = streamerName
 		}
-		// 使用匿名函数确保 defer unlock，防止 panic 时锁泄漏
 		func() {
 			locked, sl := s.tryLockStreamer(streamerName)
 			if !locked {
@@ -255,18 +256,20 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			onProgress(fmt.Sprintf("[%s] ⚙ 合并 %d 个文件 (%s)", streamerName, len(task.Files), utils.FormatSize(int64(task.SizeGB*oneGB))))
 			if s.doMerge(ctx, task.Files, task.Folder, onProgress, opLog) {
 				done++
-				mergeDone++
 				totalGB += task.SizeGB
 			} else {
-				mergeFailed++
+				failed++
 				reason := classifyMergeFailure(task.Folder, task.Files[0])
 				failedReasons[reason]++
 				onProgress(fmt.Sprintf("[%s] ❌ 失败: %s", streamerName, reason))
 			}
 		}()
 	}
+	return done, failed, failedReasons, totalGB
+}
 
-	// 合并结果汇总
+// summarizeResults 汇总合并结果并写入历史记录。
+func (s *MergeService) summarizeResults(ctx context.Context, root, streamer string, done, convertDone, mergeDone, mergeFailed int, failedReasons map[string]int, totalGB float64, start time.Time, logID string, onProgress ProgressFunc) {
 	totalScanned := 0
 	if dirs, err := os.ReadDir(root); err == nil {
 		for _, d := range dirs {
@@ -304,7 +307,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			status = "partial"
 		}
 		msg := fmt.Sprintf("✅ 完成: 扫描 %d 个主播, %s", totalScanned, detail)
-		s.history.AddWithStats("merge", streamer, status, done, 0, int64(totalGB*oneGB), duration, detail, opLog.LogID())
+		s.history.AddWithStats("merge", streamer, status, done, 0, int64(totalGB*oneGB), duration, detail, logID)
 		onProgress(msg)
 	} else if mergeFailed > 0 {
 		var parts []string
@@ -312,14 +315,13 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 			parts = append(parts, fmt.Sprintf("%s x %d", reason, cnt))
 		}
 		msg := fmt.Sprintf("❌ 全部失败: 扫描 %d 个主播, %s", totalScanned, strings.Join(parts, ", "))
-		s.history.Add("merge", streamer, "fail", fmt.Sprintf("合并失败: %s", strings.Join(parts, ", ")), opLog.LogID())
+		s.history.Add("merge", streamer, "fail", fmt.Sprintf("合并失败: %s", strings.Join(parts, ", ")), logID)
 		onProgress(msg)
 	} else {
 		msg := fmt.Sprintf("ℹ 完成: 扫描 %d 个主播, 无需合并", totalScanned)
-		s.history.Add("merge", streamer, "success", fmt.Sprintf("扫描 %d 个主播，无需合并", totalScanned), opLog.LogID())
+		s.history.Add("merge", streamer, "success", fmt.Sprintf("扫描 %d 个主播，无需合并", totalScanned), logID)
 		onProgress(msg)
 	}
-	return &MergeResult{Done: done, Failed: mergeFailed, TotalGB: totalGB}, opLog.LogID(), nil
 }
 
 // convertFlvToMp4 将单个 FLV 文件转换为 MP4（通过 TS 中间格式）。

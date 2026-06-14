@@ -41,100 +41,82 @@ type CleanResult struct {
 // 参数 streamer 为空表示全局清理；onProgress 用于 SSE 进度回调。
 func (s *CleanService) Run(ctx context.Context, streamer string, onProgress ProgressFunc) (*CleanResult, string, error) {
 	start := time.Now()
-	cfg := s.config.Snapshot()
+
+	setup, err := PrepareTask(s.config, s.logger, "clean_log", "清理", streamer, onProgress)
+	if err != nil {
+		return nil, "", err
+	}
+	defer setup.OpLog.Close()
+	cfg := setup.Cfg
+	progress := setup.Progress
 	root := cfg.TargetDir
 
-	opLog, err := NewOpLogger(filepath.Join(cfg.LogDir, "clean_log"), "clean")
-	if err != nil {
-		opLog = nil // 降级为 nil，不阻断操作
-	}
-	defer opLog.Close()
-
-	if onProgress == nil {
-		onProgress = func(string) {}
-	}
-	onProgress = opLog.ProgressFunc(onProgress)
-
-	if cfg.IsBackupWindow() {
-		return nil, opLog.LogID(), fmt.Errorf("当前处于静默时段（%d:%02d-%d:%02d），清理暂停", cfg.BackupStartHour, cfg.BackupStartMinute, cfg.BackupEndHour, cfg.BackupEndMinute)
-	}
-
-	if _, err := os.Stat(root); os.IsNotExist(err) {
-		opLog.Log(fmt.Sprintf("❌ 路径不存在: %s", root))
-		return nil, opLog.LogID(), fmt.Errorf("路径不存在: %s", root)
-	}
-
-	tag := "[全局]"
-	if streamer != "" {
-		tag = fmt.Sprintf("[%s]", streamer)
-	}
-	onProgress(fmt.Sprintf("▶ 开始 %s 清理", tag))
+	progress(fmt.Sprintf("▶ 开始 %s 清理", setup.Tag))
 
 	disk, err := utils.GetDiskUsage(root)
 	if err != nil {
-		return nil, opLog.LogID(), err
+		return nil, setup.LogID, err
 	}
 
 	if streamer == "" {
 		if disk.UsedPct < cfg.TriggerThreshold {
-			msg := fmt.Sprintf("📊 %s 磁盘 %.1f%%（未达阈值 %.0f%%）", tag, disk.UsedPct, cfg.TriggerThreshold)
-			onProgress(msg)
+			msg := fmt.Sprintf("📊 %s 磁盘 %.1f%%（未达阈值 %.0f%%）", setup.Tag, disk.UsedPct, cfg.TriggerThreshold)
+			progress(msg)
 			s.history.Add("clean", streamer, "success",
-				fmt.Sprintf("磁盘 %.1f%% 未达阈值 %.0f%%", disk.UsedPct, cfg.TriggerThreshold), opLog.LogID())
-			return &CleanResult{}, opLog.LogID(), nil
+				fmt.Sprintf("磁盘 %.1f%% 未达阈值 %.0f%%", disk.UsedPct, cfg.TriggerThreshold), setup.LogID)
+			return &CleanResult{}, setup.LogID, nil
 		}
-		onProgress(fmt.Sprintf("📊 磁盘 %.1f%%（阈值 %.0f%%）", disk.UsedPct, cfg.TriggerThreshold))
-		onProgress(fmt.Sprintf("⚙ %s 清理目标: %.1f%% → %.0f%%", tag, disk.UsedPct, cfg.TargetThreshold))
+		progress(fmt.Sprintf("📊 磁盘 %.1f%%（阈值 %.0f%%）", disk.UsedPct, cfg.TriggerThreshold))
+		progress(fmt.Sprintf("⚙ %s 清理目标: %.1f%% → %.0f%%", setup.Tag, disk.UsedPct, cfg.TargetThreshold))
 	} else {
 		if disk.UsedPct > 95 {
-			msg := fmt.Sprintf("❌ %s 磁盘 %.1f%% 超过 95%% 安全上限，请手动检查磁盘空间", tag, disk.UsedPct)
-			onProgress(msg)
-			return nil, opLog.LogID(), fmt.Errorf("磁盘使用率 %.1f%% 超过 95%% 安全上限，请手动清理磁盘空间", disk.UsedPct)
+			msg := fmt.Sprintf("❌ %s 磁盘 %.1f%% 超过 95%% 安全上限，请手动检查磁盘空间", setup.Tag, disk.UsedPct)
+			progress(msg)
+			return nil, setup.LogID, fmt.Errorf("磁盘使用率 %.1f%% 超过 95%% 安全上限，请手动清理磁盘空间", disk.UsedPct)
 		}
-		opLog.Log(fmt.Sprintf("▶ %s 清理", tag))
+		setup.OpLog.Log(fmt.Sprintf("▶ %s 清理", setup.Tag))
 	}
 
 	needToFree := s.calculateNeedToFree(disk, cfg)
 	if needToFree > 0 {
-		onProgress(fmt.Sprintf("📊 需释放 %s 才能达到 %.0f%%", utils.FormatSize(needToFree), cfg.TargetThreshold))
+		progress(fmt.Sprintf("📊 需释放 %s 才能达到 %.0f%%", utils.FormatSize(needToFree), cfg.TargetThreshold))
 	}
 
 	candidates, perStreamer := s.collectCandidates(root, streamer, cfg)
 
 	// 按主播记录清理摘要日志
 	for name, info := range perStreamer {
-		opLog.Log(fmt.Sprintf("── %s ──", name))
+		setup.OpLog.Log(fmt.Sprintf("── %s ──", name))
 		if info.total <= cfg.MinKeepPerStreamer {
-			opLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，全部保留（≤%d）", name, info.total, cfg.MinKeepPerStreamer))
+			setup.OpLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，全部保留（≤%d）", name, info.total, cfg.MinKeepPerStreamer))
 		} else if info.skipped > 0 {
-			opLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，%d 个可清理，%d 个跳过（白名单/安全期）", name, info.total, info.candidate, info.skipped))
+			setup.OpLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，%d 个可清理，%d 个跳过（白名单/安全期）", name, info.total, info.candidate, info.skipped))
 		} else {
-			opLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，%d 个可清理", name, info.total, info.candidate))
+			setup.OpLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，%d 个可清理", name, info.total, info.candidate))
 		}
 	}
 
 	if len(candidates) == 0 {
 		msg := "ℹ 扫描完成，无符合条件的文件可删"
-		onProgress(msg)
-		s.history.Add("clean", streamer, "success", "无符合条件的文件可删", opLog.LogID())
-		return &CleanResult{}, opLog.LogID(), nil
+		progress(msg)
+		s.history.Add("clean", streamer, "success", "无符合条件的文件可删", setup.LogID)
+		return &CleanResult{}, setup.LogID, nil
 	}
 
-	onProgress(fmt.Sprintf("ℹ 发现 %d 个候选文件", len(candidates)))
+	progress(fmt.Sprintf("ℹ 发现 %d 个候选文件", len(candidates)))
 
 	sort.Slice(candidates, func(i, j int) bool {
-		// 排序策略：已合并文件优先删除（安全），其次按文件年龄从老到新
 		iMerged := utils.IsMergedFile(candidates[i].Name)
 		jMerged := utils.IsMergedFile(candidates[j].Name)
 		if iMerged != jMerged {
-			return iMerged // 已合并文件优先（true > false）
+			return iMerged
 		}
 		return candidates[i].Mtime < candidates[j].Mtime
 	})
 
-	deleted, freed, truncated := s.deleteFiles(ctx, candidates, needToFree, cfg, onProgress)
+	deleted, freed, truncated := s.deleteFiles(ctx, candidates, needToFree, cfg, progress)
 
-	onProgress("───────────────────────────")
+	progress("───────────────────────────")
 
 	duration := time.Since(start).Seconds()
 
@@ -150,16 +132,15 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	}
 
 	msg := fmt.Sprintf("✅ 完成: %s", statusMsg)
-	onProgress(msg)
+	progress(msg)
 
-	// 删除后显示磁盘使用率
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
-		onProgress(fmt.Sprintf("📊 当前磁盘 %.1f%%", diskAfter.UsedPct))
+		progress(fmt.Sprintf("📊 当前磁盘 %.1f%%", diskAfter.UsedPct))
 	}
 
-	s.history.AddWithStats("clean", streamer, status, deleted, freed, 0, duration, statusMsg, opLog.LogID())
+	s.history.AddWithStats("clean", streamer, status, deleted, freed, 0, duration, statusMsg, setup.LogID)
 
-	return &CleanResult{Deleted: deleted, Freed: freed}, opLog.LogID(), nil
+	return &CleanResult{Deleted: deleted, Freed: freed}, setup.LogID, nil
 }
 
 type candidateFile struct {
