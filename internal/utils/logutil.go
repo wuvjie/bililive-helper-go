@@ -27,8 +27,24 @@ func FormatSize(bytes int64) string {
 	}
 }
 
+// StartupInfo 封装启动摘要所需的所有配置信息。
+type StartupInfo struct {
+	Port              int
+	TargetDir         string
+	TriggerThreshold  float64
+	TargetThreshold   float64
+	GapMinutes        int
+	MergeAgeMinutes   int
+	BackupStartHour   int
+	BackupStartMinute int
+	BackupEndHour     int
+	BackupEndMinute   int
+	SafeMode          string
+	SafeDays          int
+}
+
 // LogStartup 打印系统配置和 FFmpeg 可用性的启动摘要日志。
-func LogStartup(logger *zap.Logger, cfgTargetDir string, triggerThreshold, targetThreshold float64, gapMinutes, mergeAgeMinutes, backupStartH, backupStartM, backupEndH, backupEndM int, safeMode string, safeDays, port int) {
+func LogStartup(logger *zap.Logger, info StartupInfo) {
 	logger.Info("═══ Bililive Helper 启动 ═══")
 
 	ffmpegOK, ffmpegVer := false, ""
@@ -52,18 +68,18 @@ func LogStartup(logger *zap.Logger, cfgTargetDir string, triggerThreshold, targe
 	}
 
 	logger.Info("系统摘要",
-		zap.Int("port", port),
-		zap.String("target_dir", cfgTargetDir),
+		zap.Int("port", info.Port),
+		zap.String("target_dir", info.TargetDir),
 		zap.Bool("ffmpeg", ffmpegOK),
 		zap.String("ffmpeg_ver", ffmpegVer),
 		zap.String("encoder", videoEncoder),
-		zap.Float64("trigger", triggerThreshold),
-		zap.Float64("target", targetThreshold),
-		zap.Int("gap_min", gapMinutes),
-		zap.Int("merge_age_min", mergeAgeMinutes),
-		zap.String("safe_mode", safeMode),
-		zap.Int("safe_days", safeDays),
-		zap.String("quiet_window", fmt.Sprintf("%02d:%02d-%02d:%02d", backupStartH, backupStartM, backupEndH, backupEndM)),
+		zap.Float64("trigger", info.TriggerThreshold),
+		zap.Float64("target", info.TargetThreshold),
+		zap.Int("gap_min", info.GapMinutes),
+		zap.Int("merge_age_min", info.MergeAgeMinutes),
+		zap.String("safe_mode", info.SafeMode),
+		zap.Int("safe_days", info.SafeDays),
+		zap.String("quiet_window", fmt.Sprintf("%02d:%02d-%02d:%02d", info.BackupStartHour, info.BackupStartMinute, info.BackupEndHour, info.BackupEndMinute)),
 	)
 	logger.Info("═══════════════════════════")
 }
