@@ -26,7 +26,7 @@ func NotifyWebhook(message string) {
 	}
 	go func() {
 		payload, err := json.Marshal(map[string]string{
-			"text":      "[Bililive Helper] " + message,
+			"text":      "[Bililive Helper Go] " + message,
 			"timestamp": time.Now().Format("2006-01-02 15:04:05"),
 		})
 		if err != nil {

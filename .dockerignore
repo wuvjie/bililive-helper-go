@@ -15,5 +15,5 @@ schedule.json
 config.json
 .credentials.json
 .salt
-bililive-helper
+bililive-helper-go
 *.exe

@@ -45,7 +45,7 @@ type StartupInfo struct {
 
 // LogStartup 打印系统配置和 FFmpeg 可用性的启动摘要日志。
 func LogStartup(logger *zap.Logger, info StartupInfo) {
-	logger.Info("═══ Bililive Helper 启动 ═══")
+	logger.Info("═══ Bililive Helper Go 启动 ═══")
 
 	ffmpegOK, ffmpegVer := false, ""
 	videoEncoder := "libx264"
