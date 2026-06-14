@@ -57,18 +57,7 @@
       </header>
 
       <!-- Disk usage alert banner -->
-      <div
-        v-if="showDiskBanner"
-        class="disk-alert-banner"
-        :class="diskBannerClass"
-        role="alert"
-        @click="goToTasks"
-      >
-        <span class="disk-alert-text">{{ diskBannerText }}</span>
-        <button class="disk-alert-close" @click.stop="dismissDiskBanner" title="关闭">
-          <el-icon><Close /></el-icon>
-        </button>
-      </div>
+      <DiskAlert :show="showDiskBanner" :level="diskAlertLevel" :used-pct="diskUsedPct" @dismiss="dismissDiskBanner" @navigate="goToTasks" />
 
       <main class="layout-content">
         <router-view v-slot="{ Component }">
@@ -82,36 +71,19 @@
     </div>
 
     <!-- Password change dialog -->
-    <el-dialog v-model="pwDialogVisible" title="修改密码" width="400px" destroy-on-close>
-      <el-form label-position="top" @submit.prevent="handleChangePassword">
-        <el-form-item label="旧密码">
-          <el-input v-model="pwForm.old_password" type="password" show-password placeholder="输入当前密码" />
-        </el-form-item>
-        <el-form-item label="新密码">
-          <el-input v-model="pwForm.new_password" type="password" show-password placeholder="至少 6 个字符" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="pw-footer">
-          <el-button @click="pwDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="pwSaving" @click="handleChangePassword">确认修改</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <PasswordDialog v-model:visible="pwDialogVisible" v-model:saving="pwSaving" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
 import { useAppStore } from "@/store/modules/app";
-import { logout, changePassword } from "@/api/auth";
+import { logout } from "@/api/auth";
 import { getStatusDetail } from "@/api/status";
-import {
-  Monitor, User, VideoPlay, Document, Setting,
-  Fold, Expand, Refresh, FullScreen, Close
-} from "@element-plus/icons-vue";
+import { Monitor, User, VideoPlay, Document, Setting, Fold, Expand, Refresh, FullScreen } from "@element-plus/icons-vue";
+import PasswordDialog from "./components/PasswordDialog.vue";
+import DiskAlert from "./components/DiskAlert.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -127,17 +99,12 @@ const menuItems = [
 
 const activeMenu = computed(() => route.path);
 const currentRoute = computed(() => route);
-
-// Mobile sidebar control
 const isMobile = computed(() => window.innerWidth < 768);
-function toggleSidebar() {
-  appStore.toggleSidebar();
-}
+function toggleSidebar() { appStore.toggleSidebar(); }
 
 // Password change dialog
 const pwDialogVisible = ref(false);
 const pwSaving = ref(false);
-const pwForm = reactive({ old_password: "", new_password: "" });
 
 function refreshPage() { window.location.reload(); }
 function toggleFullscreen() {
@@ -146,54 +113,25 @@ function toggleFullscreen() {
 }
 function handleCommand(cmd: string) {
   if (cmd === "logout") logout();
-  if (cmd === "change-password") { pwDialogVisible.value = true; }
-}
-async function handleChangePassword() {
-  if (!pwForm.old_password || !pwForm.new_password) { ElMessage.warning("请填写旧密码和新密码"); return; }
-  if (pwForm.new_password.length < 6) { ElMessage.warning("新密码至少 6 个字符"); return; }
-  pwSaving.value = true;
-  try {
-    await changePassword(pwForm.old_password, pwForm.new_password);
-    ElMessage.success("密码已更新");
-    pwDialogVisible.value = false;
-    pwForm.old_password = ""; pwForm.new_password = "";
-  } catch { /* handled by interceptor */ }
-  finally { pwSaving.value = false; }
+  if (cmd === "change-password") pwDialogVisible.value = true;
 }
 
-// ---- Disk usage alert ----
+// Disk usage alert
 const diskUsedPct = ref(0);
-const dismissedAlertLevel = ref(0); // 0 = not dismissed, 1 = dismissed warning, 2 = dismissed critical
-
+const dismissedAlertLevel = ref(0);
 const diskAlertLevel = computed(() => {
-  const pct = diskUsedPct.value;
-  if (pct >= 95) return 2;
-  if (pct >= 90) return 1;
+  if (diskUsedPct.value >= 95) return 2;
+  if (diskUsedPct.value >= 90) return 1;
   return 0;
 });
-
 const showDiskBanner = computed(() => {
   const level = diskAlertLevel.value;
   if (level === 0) return false;
   if (level === 1) return dismissedAlertLevel.value < 1;
   return dismissedAlertLevel.value < 2;
 });
-
-const diskBannerClass = computed(() => diskAlertLevel.value >= 2 ? "critical" : "warning");
-const diskBannerText = computed(() =>
-  diskAlertLevel.value >= 2
-    ? `🚨 磁盘空间严重不足（${diskUsedPct.value}%），请立即清理`
-    : `⚠️ 磁盘使用率 ${diskUsedPct.value}%，建议及时清理`
-);
-
-function dismissDiskBanner() {
-  dismissedAlertLevel.value = diskAlertLevel.value;
-}
-
-function goToTasks() {
-  router.push("/tasks");
-}
-
+function dismissDiskBanner() { dismissedAlertLevel.value = diskAlertLevel.value; }
+function goToTasks() { router.push("/tasks"); }
 async function fetchDiskStatus() {
   try {
     const data = await getStatusDetail();
@@ -201,7 +139,6 @@ async function fetchDiskStatus() {
     if (diskAlertLevel.value === 0) dismissedAlertLevel.value = 0;
   } catch { /* silently ignore */ }
 }
-
 onMounted(() => fetchDiskStatus());
 router.afterEach(() => fetchDiskStatus());
 </script>

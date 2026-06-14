@@ -130,7 +130,7 @@ async function loadHistory(page: number) {
   const seq = ++loadSeq;
   loading.value = true;
   try {
-    const params: Record<string, any> = { page, per_page: 20 };
+    const params: { page: number; per_page: number; task?: string; streamer?: string } = { page, per_page: 20 };
     if (filterTask.value) params.task = filterTask.value;
     if (filterStreamer.value) params.streamer = filterStreamer.value;
     const res = await getHistory(params);

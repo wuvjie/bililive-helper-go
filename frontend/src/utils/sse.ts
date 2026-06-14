@@ -33,9 +33,9 @@ export function useSSE() {
   }
 
   /** Last SSE call parameters, cached so callers can implement retry. */
-  const lastRequest = ref<{ url: string; body?: Record<string, any> } | null>(null);
+  const lastRequest = ref<{ url: string; body?: Record<string, unknown> } | null>(null);
 
-  async function startSSE(url: string, body?: Record<string, any>) {
+  async function startSSE(url: string, body?: Record<string, unknown>) {
     abort(); // cancel any in-flight request
     clear();
     isRunning.value = true;
