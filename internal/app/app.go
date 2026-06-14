@@ -87,7 +87,7 @@ func New() (*App, error) {
 	})
 
 	logger.Info("启动服务器", zap.Int("port", port))
-	fmt.Printf("Bililive Helper 启动成功，访问 http://localhost:%d\n", port)
+	fmt.Printf("Bililive Helper Go 启动成功，访问 http://localhost:%d\n", port)
 
 	return &App{
 		server: &http.Server{

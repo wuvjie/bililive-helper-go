@@ -74,7 +74,7 @@ async function checkAuth(): Promise<boolean> {
 }
 
 router.beforeEach(async (to, _from) => {
-  document.title = `${to.meta.title || "Bililive Helper"} - Bililive Helper`;
+  document.title = `${to.meta.title || "Bililive Helper Go"} - Bililive Helper Go`;
 
   if (to.meta.public) return true;
 

@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-logo">BH</div>
-      <h1 class="login-title">Bililive Helper</h1>
+      <h1 class="login-title">Bililive Helper Go</h1>
       <p class="login-sub">直播录制管理系统</p>
       <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleLogin" class="login-form">
         <el-form-item prop="password">

@@ -2,7 +2,7 @@
   <div class="setup-container">
     <div class="setup-card">
       <div class="setup-logo">BH</div>
-      <h1 class="setup-title">Bililive Helper</h1>
+      <h1 class="setup-title">Bililive Helper Go</h1>
       <p class="setup-sub">首次启动，请设置登录密码</p>
 
       <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleSubmit" class="setup-form">
