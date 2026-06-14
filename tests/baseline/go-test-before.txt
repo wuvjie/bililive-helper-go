@@ -1,0 +1,8 @@
+?   	bililive-helper/cmd/server	[no test files]
+?   	bililive-helper/internal/config	[no test files]
+?   	bililive-helper/internal/ffmpeg	[no test files]
+?   	bililive-helper/internal/handler	[no test files]
+?   	bililive-helper/internal/middleware	[no test files]
+?   	bililive-helper/internal/model	[no test files]
+ok  	bililive-helper/internal/service	4.773s
+ok  	bililive-helper/internal/utils	0.834s
