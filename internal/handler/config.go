@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -158,6 +159,10 @@ func (h *Handler) RecommendConfig(c *gin.Context) {
 			gapMinutes = 30
 		}
 	}
+
+	// 百分比阈值取整（避免前端显示 74.28966173589663 这样的值）
+	trigger = math.Round(trigger)
+	target = math.Round(target)
 
 	// 构建推荐理由
 	var reasonParts []string
