@@ -10,5 +10,5 @@ export function exportHistory() {
 }
 
 export function getLogContent(task: string, logId: string) {
-  return get<string>(`/logs/content/${task}`, { log_id: logId });
+  return get<{ content: string }>(`/logs/content/${task}`, { log_id: logId });
 }
