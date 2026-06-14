@@ -282,28 +282,6 @@ func (c *Config) SaveCredential() error {
 	return fsutil.AtomicSave(file, data, 0600)
 }
 
-// AtomicWriteFile 将数据写入临时文件并 fsync，确保数据刷入持久存储后再返回。
-// 用于配合 os.Rename 实现崩溃安全的原子写入。
-//
-// Deprecated: 使用 fsutil.AtomicWrite 或 fsutil.AtomicSave 替代。
-func AtomicWriteFile(path string, data []byte, perm os.FileMode) error {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, perm)
-	if err != nil {
-		return err
-	}
-	if _, err := f.Write(data); err != nil {
-		f.Close()
-		os.Remove(path)
-		return err
-	}
-	if err := f.Sync(); err != nil {
-		f.Close()
-		os.Remove(path)
-		return err
-	}
-	return f.Close()
-}
-
 // ConfigDTO 是 Config 的安全数据传输对象，不包含密码和密钥等敏感字段。
 type ConfigDTO struct {
 	TargetDir          string   `json:"TARGET_DIR"`
@@ -405,70 +383,6 @@ func (c *Config) ApplyFromJSON(data []byte) {
 	}
 	if raw, ok := m["PORT"]; ok {
 		json.Unmarshal(raw, &c.Port)
-	}
-}
-
-// ApplyFromMap 从 JSON 请求体的 map 中应用部分配置更新。
-//
-// Deprecated: 使用 ApplyFromJSON 替代，类型更安全。
-func (c *Config) ApplyFromMap(m map[string]interface{}) {
-	if v, ok := m["TARGET_DIR"].(string); ok {
-		if info, err := os.Stat(v); err != nil || !info.IsDir() {
-			fmt.Printf("[WARN] TARGET_DIR 无效，已忽略: %s (err=%v)\n", v, err)
-		} else {
-			c.TargetDir = v
-		}
-	}
-	if v, ok := m["TRIGGER_THRESHOLD"].(float64); ok {
-		c.TriggerThreshold = v
-	}
-	if v, ok := m["TARGET_THRESHOLD"].(float64); ok {
-		c.TargetThreshold = v
-	}
-	if v, ok := m["MIN_KEEP_PER_STREAMER"].(float64); ok {
-		c.MinKeepPerStreamer = int(v)
-	}
-	if v, ok := m["SAFE_AGE_MINUTES"].(float64); ok {
-		c.SafeAgeMinutes = int(v)
-	}
-	if v, ok := m["GAP_MINUTES"].(float64); ok {
-		c.GapMinutes = int(v)
-	}
-	if v, ok := m["MERGE_AGE_MINUTES"].(float64); ok {
-		c.MergeAgeMinutes = int(v)
-	}
-	if v, ok := m["SAFE_MODE"].(string); ok {
-		c.SafeMode = v
-	}
-	if v, ok := m["SAFE_DAYS"].(float64); ok {
-		c.SafeDays = int(v)
-	}
-	if v, ok := m["MAX_DELETE_PER_RUN"].(float64); ok {
-		c.MaxDeletePerRun = int(v)
-	}
-	if v, ok := m["BACKUP_START_HOUR"].(float64); ok {
-		c.BackupStartHour = int(v)
-	}
-	if v, ok := m["BACKUP_START_MINUTE"].(float64); ok {
-		c.BackupStartMinute = int(v)
-	}
-	if v, ok := m["BACKUP_END_HOUR"].(float64); ok {
-		c.BackupEndHour = int(v)
-	}
-	if v, ok := m["BACKUP_END_MINUTE"].(float64); ok {
-		c.BackupEndMinute = int(v)
-	}
-	if v, ok := m["WHITELIST_KEYWORDS"].([]interface{}); ok {
-		var keywords []string
-		for _, kw := range v {
-			if s, ok := kw.(string); ok {
-				keywords = append(keywords, s)
-			}
-		}
-		c.WhitelistKeywords = keywords
-	}
-	if v, ok := m["PORT"].(float64); ok {
-		c.Port = int(v)
 	}
 }
 

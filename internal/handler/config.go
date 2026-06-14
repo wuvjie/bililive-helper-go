@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -28,11 +29,13 @@ func (h *Handler) SaveConfig(c *gin.Context) {
 		failBadRequest(c, "参数错误")
 		return
 	}
+	// 序列化回 JSON 以使用类型安全的 ApplyFromJSON
+	data, _ := json.Marshal(req)
 
 	var changeDetail string
 	if err := h.config.Apply(func() error {
 		old := h.config.ToDTOSnapshot()
-		h.config.ApplyFromMap(req)
+		h.config.ApplyFromJSON(data)
 		if err := h.config.Validate(); err != nil {
 			return err
 		}
@@ -379,8 +382,10 @@ func (h *Handler) ImportConfig(c *gin.Context) {
 	// 过滤掉不应导入的内部字段
 	delete(cfgData, "SESSION_VERSION")
 
+	// 序列化为 JSON 以使用类型安全的 ApplyFromJSON
+	cfgJSON, _ := json.Marshal(cfgData)
 	if err := h.config.Apply(func() error {
-		h.config.ApplyFromMap(cfgData)
+		h.config.ApplyFromJSON(cfgJSON)
 		return h.config.Validate()
 	}); err != nil {
 		failBadRequest(c, err.Error())

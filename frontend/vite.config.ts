@@ -16,19 +16,19 @@ export default defineConfig(({ mode }) => {
     base: "/",
     resolve: {
       alias: {
-        "@": resolve(__dirname, "src")
-      }
+        "@": resolve(__dirname, "src"),
+      },
     },
     plugins: [
       vue(),
       AutoImport({
         resolvers: [ElementPlusResolver()],
         imports: ["vue", "vue-router", "pinia"],
-        dts: "src/auto-imports.d.ts"
+        dts: "src/auto-imports.d.ts",
       }),
       Components({
         resolvers: [ElementPlusResolver()],
-        dts: "src/components.d.ts"
+        dts: "src/components.d.ts",
       }),
       {
         name: "clean-stale-assets",
@@ -39,16 +39,16 @@ export default defineConfig(({ mode }) => {
               rmSync(assetsDir, { recursive: true });
             }
           } catch {}
-        }
-      }
+        },
+      },
     ],
     server: {
       port: 3000,
       proxy: {
         "/api": { target: "http://localhost:5000", changeOrigin: true },
         "/login": { target: "http://localhost:5000", changeOrigin: true },
-        "/logout": { target: "http://localhost:5000", changeOrigin: true }
-      }
+        "/logout": { target: "http://localhost:5000", changeOrigin: true },
+      },
     },
     build: {
       outDir: "../templates",
@@ -57,9 +57,9 @@ export default defineConfig(({ mode }) => {
         output: {
           chunkFileNames: "assets/[name]-[hash].js",
           entryFileNames: "assets/[name]-[hash].js",
-          assetFileNames: "assets/[name]-[hash].[ext]"
-        }
-      }
-    }
+          assetFileNames: "assets/[name]-[hash].[ext]",
+        },
+      },
+    },
   };
 });
