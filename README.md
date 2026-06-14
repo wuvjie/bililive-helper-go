@@ -104,7 +104,7 @@ open http://localhost:5689
 
 ### 海外构建
 
-默认使用国内镜像源（阿里云 + goproxy.cn + npmmirror + docker.1ms.run）。海外环境需传入 build-arg 覆盖：
+默认使用国内镜像源（阿里云 + goproxy.cn + npmmirror + docker.xuanyuan.me）。海外环境需传入 build-arg 覆盖：
 
 ```bash
 docker compose build \
