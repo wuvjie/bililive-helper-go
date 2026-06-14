@@ -341,8 +341,76 @@ func (c *Config) Snapshot() Config {
 	return snap
 }
 
+// ApplyFromJSON 从 JSON 请求体应用部分配置更新。
+// 使用 JSON 反序列化直接更新 Config struct，类型安全，替代原来的 map[string]interface{} 模式。
+// TARGET_DIR 会额外验证目录是否存在。只更新 JSON 中存在的字段（零值字段不覆盖）。
+func (c *Config) ApplyFromJSON(data []byte) {
+	// 先解析为 map 检查哪些字段存在，再逐个应用
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(data, &m); err != nil {
+		fmt.Printf("[WARN] 配置 JSON 解析失败: %v\n", err)
+		return
+	}
+
+	if raw, ok := m["TARGET_DIR"]; ok {
+		var v string
+		json.Unmarshal(raw, &v)
+		if info, err := os.Stat(v); err != nil || !info.IsDir() {
+			fmt.Printf("[WARN] TARGET_DIR 无效，已忽略: %s (err=%v)\n", v, err)
+		} else {
+			c.TargetDir = v
+		}
+	}
+	if raw, ok := m["TRIGGER_THRESHOLD"]; ok {
+		json.Unmarshal(raw, &c.TriggerThreshold)
+	}
+	if raw, ok := m["TARGET_THRESHOLD"]; ok {
+		json.Unmarshal(raw, &c.TargetThreshold)
+	}
+	if raw, ok := m["MIN_KEEP_PER_STREAMER"]; ok {
+		json.Unmarshal(raw, &c.MinKeepPerStreamer)
+	}
+	if raw, ok := m["SAFE_AGE_MINUTES"]; ok {
+		json.Unmarshal(raw, &c.SafeAgeMinutes)
+	}
+	if raw, ok := m["GAP_MINUTES"]; ok {
+		json.Unmarshal(raw, &c.GapMinutes)
+	}
+	if raw, ok := m["MERGE_AGE_MINUTES"]; ok {
+		json.Unmarshal(raw, &c.MergeAgeMinutes)
+	}
+	if raw, ok := m["SAFE_MODE"]; ok {
+		json.Unmarshal(raw, &c.SafeMode)
+	}
+	if raw, ok := m["SAFE_DAYS"]; ok {
+		json.Unmarshal(raw, &c.SafeDays)
+	}
+	if raw, ok := m["MAX_DELETE_PER_RUN"]; ok {
+		json.Unmarshal(raw, &c.MaxDeletePerRun)
+	}
+	if raw, ok := m["BACKUP_START_HOUR"]; ok {
+		json.Unmarshal(raw, &c.BackupStartHour)
+	}
+	if raw, ok := m["BACKUP_START_MINUTE"]; ok {
+		json.Unmarshal(raw, &c.BackupStartMinute)
+	}
+	if raw, ok := m["BACKUP_END_HOUR"]; ok {
+		json.Unmarshal(raw, &c.BackupEndHour)
+	}
+	if raw, ok := m["BACKUP_END_MINUTE"]; ok {
+		json.Unmarshal(raw, &c.BackupEndMinute)
+	}
+	if raw, ok := m["WHITELIST_KEYWORDS"]; ok {
+		json.Unmarshal(raw, &c.WhitelistKeywords)
+	}
+	if raw, ok := m["PORT"]; ok {
+		json.Unmarshal(raw, &c.Port)
+	}
+}
+
 // ApplyFromMap 从 JSON 请求体的 map 中应用部分配置更新。
-// 只更新 map 中存在的字段，TARGET_DIR 会额外验证目录是否存在。
+//
+// Deprecated: 使用 ApplyFromJSON 替代，类型更安全。
 func (c *Config) ApplyFromMap(m map[string]interface{}) {
 	if v, ok := m["TARGET_DIR"].(string); ok {
 		if info, err := os.Stat(v); err != nil || !info.IsDir() {
@@ -408,37 +476,40 @@ func (c *Config) ApplyFromMap(m map[string]interface{}) {
 // 如果配置完全相同返回空字符串。
 func DiffDTO(old, new ConfigDTO) string {
 	var changes []string
-	if old.TargetDir != new.TargetDir {
-		changes = append(changes, fmt.Sprintf("目录: %s→%s", filepath.Base(old.TargetDir), filepath.Base(new.TargetDir)))
+
+	// 辅助函数：比较单个字段，不同时追加变更描述
+	addStr := func(label, a, b string) {
+		if a != b {
+			changes = append(changes, fmt.Sprintf("%s: %s→%s", label, a, b))
+		}
 	}
-	if old.TriggerThreshold != new.TriggerThreshold {
-		changes = append(changes, fmt.Sprintf("触发阈值: %.0f→%.0f", old.TriggerThreshold, new.TriggerThreshold))
+	addFloat := func(label string, a, b float64) {
+		if a != b {
+			changes = append(changes, fmt.Sprintf("%s: %.0f→%.0f", label, a, b))
+		}
 	}
-	if old.TargetThreshold != new.TargetThreshold {
-		changes = append(changes, fmt.Sprintf("目标阈值: %.0f→%.0f", old.TargetThreshold, new.TargetThreshold))
+	addInt := func(label string, a, b int) {
+		if a != b {
+			changes = append(changes, fmt.Sprintf("%s: %d→%d", label, a, b))
+		}
 	}
-	if old.MinKeepPerStreamer != new.MinKeepPerStreamer {
-		changes = append(changes, fmt.Sprintf("保底数量: %d→%d", old.MinKeepPerStreamer, new.MinKeepPerStreamer))
-	}
-	if old.SafeAgeMinutes != new.SafeAgeMinutes {
-		changes = append(changes, fmt.Sprintf("安全期: %d→%d分钟", old.SafeAgeMinutes, new.SafeAgeMinutes))
-	}
-	if old.GapMinutes != new.GapMinutes {
-		changes = append(changes, fmt.Sprintf("间隔: %d→%d分钟", old.GapMinutes, new.GapMinutes))
-	}
-	if old.MergeAgeMinutes != new.MergeAgeMinutes {
-		changes = append(changes, fmt.Sprintf("合并等待: %d→%d分钟", old.MergeAgeMinutes, new.MergeAgeMinutes))
-	}
-	if old.SafeMode != new.SafeMode {
-		changes = append(changes, fmt.Sprintf("安全模式: %s→%s", old.SafeMode, new.SafeMode))
-	}
-	if old.SafeDays != new.SafeDays {
-		changes = append(changes, fmt.Sprintf("安全期天数: %d→%d", old.SafeDays, new.SafeDays))
-	}
-	if old.MaxDeletePerRun != new.MaxDeletePerRun {
-		changes = append(changes, fmt.Sprintf("单次删除上限: %d→%d", old.MaxDeletePerRun, new.MaxDeletePerRun))
-	}
-	if old.BackupStartHour != new.BackupStartHour || old.BackupStartMinute != new.BackupStartMinute || old.BackupEndHour != new.BackupEndHour || old.BackupEndMinute != new.BackupEndMinute {
+
+	addStr("目录", filepath.Base(old.TargetDir), filepath.Base(new.TargetDir))
+	addFloat("触发阈值", old.TriggerThreshold, new.TriggerThreshold)
+	addFloat("目标阈值", old.TargetThreshold, new.TargetThreshold)
+	addInt("保底数量", old.MinKeepPerStreamer, new.MinKeepPerStreamer)
+	addInt("安全期", old.SafeAgeMinutes, new.SafeAgeMinutes)
+	addInt("间隔", old.GapMinutes, new.GapMinutes)
+	addInt("合并等待", old.MergeAgeMinutes, new.MergeAgeMinutes)
+	addStr("安全模式", old.SafeMode, new.SafeMode)
+	addInt("安全期天数", old.SafeDays, new.SafeDays)
+	addInt("单次删除上限", old.MaxDeletePerRun, new.MaxDeletePerRun)
+	addInt("端口", old.Port, new.Port)
+	addStr("日志目录", filepath.Base(old.LogDir), filepath.Base(new.LogDir))
+
+	// 复合字段特殊处理
+	if old.BackupStartHour != new.BackupStartHour || old.BackupStartMinute != new.BackupStartMinute ||
+		old.BackupEndHour != new.BackupEndHour || old.BackupEndMinute != new.BackupEndMinute {
 		changes = append(changes, fmt.Sprintf("静默时段: %d:%02d-%d:%02d→%d:%02d-%d:%02d",
 			old.BackupStartHour, old.BackupStartMinute, old.BackupEndHour, old.BackupEndMinute,
 			new.BackupStartHour, new.BackupStartMinute, new.BackupEndHour, new.BackupEndMinute))
@@ -447,12 +518,7 @@ func DiffDTO(old, new ConfigDTO) string {
 		changes = append(changes, fmt.Sprintf("白名单: [%s]→[%s]",
 			strings.Join(old.WhitelistKeywords, ","), strings.Join(new.WhitelistKeywords, ",")))
 	}
-	if old.Port != new.Port {
-		changes = append(changes, fmt.Sprintf("端口: %d→%d", old.Port, new.Port))
-	}
-	if old.LogDir != new.LogDir {
-		changes = append(changes, fmt.Sprintf("日志目录: %s→%s", filepath.Base(old.LogDir), filepath.Base(new.LogDir)))
-	}
+
 	if len(changes) == 0 {
 		return ""
 	}
@@ -472,24 +538,15 @@ func equalSlice(a, b []string) bool {
 }
 
 // ToDTOSnapshot 返回不含敏感字段的 DTO 快照。调用者必须持有读锁或写锁。
+// 通过 JSON 序列化/反序列化自动生成，排除 Password(json:"-")、SecretKey(json:"-")、
+// ConfigFile(json:"-")、SessionVersion(omitempty+零值)、mu(未导出)。
 func (c *Config) ToDTOSnapshot() ConfigDTO {
-	return ConfigDTO{
-		TargetDir:          c.TargetDir,
-		TriggerThreshold:   c.TriggerThreshold,
-		TargetThreshold:    c.TargetThreshold,
-		MinKeepPerStreamer: c.MinKeepPerStreamer,
-		SafeAgeMinutes:     c.SafeAgeMinutes,
-		GapMinutes:         c.GapMinutes,
-		MergeAgeMinutes:    c.MergeAgeMinutes,
-		WhitelistKeywords:  c.WhitelistKeywords,
-		SafeMode:           c.SafeMode,
-		SafeDays:           c.SafeDays,
-		MaxDeletePerRun:    c.MaxDeletePerRun,
-		BackupStartHour:    c.BackupStartHour,
-		BackupStartMinute:  c.BackupStartMinute,
-		BackupEndHour:      c.BackupEndHour,
-		BackupEndMinute:    c.BackupEndMinute,
-		Port:               c.Port,
-		LogDir:             c.LogDir,
+	data, err := json.Marshal(c)
+	if err != nil {
+		// 不应发生（marshal 本地 struct），降级为零值
+		return ConfigDTO{}
 	}
+	var dto ConfigDTO
+	json.Unmarshal(data, &dto)
+	return dto
 }
