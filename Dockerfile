@@ -1,5 +1,5 @@
 # 镜像源配置（默认国内源，海外构建传 --build-arg REGISTRY=docker.io 等）
-ARG REGISTRY=docker.1ms.run
+ARG REGISTRY=docker.xuanyuan.me
 ARG ALPINE_MIRROR=mirrors.aliyun.com
 ARG GO_PROXY=https://goproxy.cn,direct
 ARG NPM_REGISTRY=https://registry.npmmirror.com
