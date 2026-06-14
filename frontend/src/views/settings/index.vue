@@ -78,91 +78,24 @@
 
         <!-- Tab 3: Schedule -->
         <el-tab-pane label="定时任务" name="schedule">
-          <el-form label-width="144px" label-position="left" v-loading="scheduleLoading" class="settings-form">
-            <div class="section-divider">🔄 自动合并</div>
-            <el-form-item label="是否启用">
-              <el-switch v-model="scheduleForm.merge_enabled" />
-            </el-form-item>
-            <el-form-item label="执行间隔(分钟)">
-              <el-input-number v-model="scheduleForm.merge_interval" :min="10" :max="1440" />
-            </el-form-item>
-            <div class="section-divider">🧹 自动清理</div>
-            <el-form-item label="是否启用">
-              <el-switch v-model="scheduleForm.clean_enabled" />
-            </el-form-item>
-            <el-form-item label="执行间隔(分钟)">
-              <el-input-number v-model="scheduleForm.clean_interval" :min="10" :max="1440" />
-            </el-form-item>
-            <div class="section-divider">⏳ 备份窗口（暂停任务）</div>
-            <el-form-item label="开始时间">
-              <el-time-picker v-model="backupStart" format="HH:mm" value-format="HH:mm" style="width: 160px" />
-            </el-form-item>
-            <el-form-item label="结束时间">
-              <el-time-picker v-model="backupEnd" format="HH:mm" value-format="HH:mm" style="width: 160px" />
-            </el-form-item>
-            <div class="backup-hint">支持跨午夜，如 23:00 - 06:00</div>
-            <el-form-item>
-              <el-button type="primary" :loading="savingSchedule" style="width: 128px" @click="handleSaveSchedule">保存计划</el-button>
-            </el-form-item>
-            <div class="section-divider">🎮 手动触发</div>
-            <el-form-item>
-              <el-button :disabled="taskRunning" style="width: 148px" @click="triggerManualTask('merge')" class="ghost-trigger">
-                🔄 立即执行合并
-              </el-button>
-              <el-button :disabled="taskRunning" style="width: 148px" @click="triggerManualTask('clean')" class="ghost-trigger">
-                🧹 立即执行清理
-              </el-button>
-            </el-form-item>
-          </el-form>
+          <ScheduleTab
+            :form="scheduleForm"
+            :backup-start="backupStart"
+            :backup-end="backupEnd"
+            :saving="savingSchedule"
+            :loading="scheduleLoading"
+            :task-running="taskRunning"
+            @update:form="Object.assign(scheduleForm, $event)"
+            @update:backup-start="backupStart = $event"
+            @update:backup-end="backupEnd = $event"
+            @save="handleSaveSchedule"
+            @trigger="triggerManualTask"
+          />
         </el-tab-pane>
 
         <!-- Tab 4: Diagnostics -->
         <el-tab-pane label="系统诊断" name="diagnostics">
-          <div class="diag-table" v-loading="diagLoading">
-            <div class="diag-row">
-              <span class="diag-label">FFmpeg</span>
-              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.ffmpeg_ok ? 'dot-ok' : 'dot-err'" />{{ setupData?.ffmpeg_ok ? '正常' : '异常' }}<span class="diag-path">{{ setupData?.ffmpeg_path }}</span></span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">FFprobe</span>
-              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.ffprobe_ok ? 'dot-ok' : 'dot-err'" />{{ setupData?.ffprobe_ok ? '正常' : '异常' }}</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">目标目录存在</span>
-              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.target_dir_exists ? 'dot-ok' : 'dot-err'" />{{ setupData?.target_dir_exists ? '是' : '否' }}</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">目录可写</span>
-              <span class="diag-val"><span class="status-dot-sm" :class="setupData?.target_dir_writable ? 'dot-ok' : 'dot-err'" />{{ setupData?.target_dir_writable ? '是' : '否' }}</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">主播数</span>
-              <span class="mono-val">{{ setupData?.streamer_count || 0 }}</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">视频数</span>
-              <span class="mono-val">{{ setupData?.video_count || 0 }}</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">总大小</span>
-              <span class="mono-val">{{ setupData?.total_size_gb?.toFixed(2) }} GB</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">磁盘总容量</span>
-              <span class="mono-val">{{ setupData?.disk_total_gb?.toFixed(1) }} GB</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">磁盘剩余</span>
-              <span class="mono-val">{{ setupData?.disk_free_gb?.toFixed(1) }} GB</span>
-            </div>
-            <div class="diag-row diag-row-last">
-              <span class="diag-label">磁盘使用率</span>
-              <div class="diag-progress">
-                <el-progress :percentage="setupData?.disk_usage_pct || 0" :stroke-width="6" :format="() => ''" style="flex:1" />
-                <span class="mono-val diag-pct">{{ (setupData?.disk_usage_pct || 0).toFixed(1) }}%</span>
-              </div>
-            </div>
-          </div>
+          <DiagnosticsTab :data="setupData" :loading="diagLoading" />
         </el-tab-pane>
 
         <!-- Tab 5: AI Recommendation -->
@@ -281,53 +214,14 @@
     </el-card>
 
     <!-- Emergency Clean Dialog -->
-    <el-dialog
-      v-model="emergencyDialogVisible"
-      title="紧急清理"
-      width="440px"
-      class="emergency-dialog"
-      :close-on-click-modal="!emergencySSE.isRunning.value"
-      destroy-on-close
+    <EmergencyDialog
+      v-model:visible="emergencyDialogVisible"
+      v-model:target-pct="emergencyTargetPct"
+      :loading="emergencyLoading"
+      :sse="emergencySSE"
+      @confirm="handleEmergencyClean"
       @close="closeEmergencyDialog"
-    >
-      <div v-if="!emergencySSE.lines.value.length" class="emergency-form">
-        <div class="emergency-title-row">
-          <span class="emergency-dot"></span>
-          <span class="emergency-title">紧急磁盘清理</span>
-        </div>
-        <p class="emergency-desc">将临时降低磁盘使用率目标阈值，强制清理到指定百分比以下。清理结束后阈值自动恢复。</p>
-        <div class="emergency-input-row">
-          <span class="emergency-label">目标磁盘百分比</span>
-          <el-input-number v-model="emergencyTargetPct" :min="10" :max="99" :step="5" />
-          <span class="emergency-unit">%</span>
-        </div>
-      </div>
-      <pre v-else class="emergency-terminal" v-loading="emergencyLoading">{{ emergencySSE.lines.value.map(l => l.text).join('\n') }}</pre>
-      <template #footer>
-        <button
-          v-if="!emergencySSE.lines.value.length"
-          class="emergency-confirm"
-          :disabled="emergencyLoading"
-          @click="handleEmergencyClean"
-        >
-          确认紧急清理
-        </button>
-        <button
-          v-else-if="emergencySSE.isRunning.value"
-          class="emergency-confirm"
-          @click="emergencySSE.abort()"
-        >
-          中止
-        </button>
-        <button
-          v-else
-          class="btn-primary"
-          @click="closeEmergencyDialog"
-        >
-          关闭
-        </button>
-      </template>
-    </el-dialog>
+    />
   </div>
 </template>
 
@@ -341,6 +235,10 @@ import { setupCheck } from "@/api/setup";
 import { getCleanEstimate } from "@/api/task";
 import { useSSE } from "@/utils/sse";
 import type { ScheduleStatus, SetupCheck, CleanEstimate, ConfigRecommend, ConfigDTO } from "@/api/types";
+import DiagnosticsTab from "./tabs/DiagnosticsTab.vue";
+import ScheduleTab from "./tabs/ScheduleTab.vue";
+import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
+import EmergencyDialog from "./tabs/EmergencyDialog.vue";
 
 const activeTab = ref("general");
 const savingConfig = ref(false);
