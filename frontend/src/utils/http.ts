@@ -7,7 +7,7 @@ import { useAuthStore } from "@/store/modules/auth";
 const http: AxiosInstance = axios.create({
   baseURL: "/api",
   timeout: 15000,
-  withCredentials: true // send session cookie with every request
+  withCredentials: true, // send session cookie with every request
 });
 
 http.interceptors.response.use(
@@ -19,8 +19,7 @@ http.interceptors.response.use(
       return Promise.reject(error);
     }
     const data = error.response?.data;
-    const msg = typeof data === 'string' ? data
-      : data?.message || data?.error || error.message;
+    const msg = typeof data === "string" ? data : data?.message || data?.error || error.message;
     ElMessage.error(msg);
     return Promise.reject(error);
   }
