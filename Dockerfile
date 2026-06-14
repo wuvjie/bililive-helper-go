@@ -1,11 +1,10 @@
-# 镜像源配置（默认国内源，海外构建传 --build-arg REGISTRY=docker.io 等）
-ARG REGISTRY=docker.xuanyuan.me
+# 镜像源配置（海外构建传 --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org）
 ARG ALPINE_MIRROR=mirrors.aliyun.com
 ARG GO_PROXY=https://goproxy.cn,direct
 ARG NPM_REGISTRY=https://registry.npmmirror.com
 
 # Stage 1: Build frontend
-FROM ${REGISTRY}/library/node:20-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 ARG NPM_REGISTRY
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
@@ -14,7 +13,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Build Go binary
-FROM ${REGISTRY}/library/golang:1.26-alpine AS builder
+FROM golang:1.26-alpine AS builder
 ARG ALPINE_MIRROR
 ARG GO_PROXY
 
@@ -29,7 +28,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o bililive-helper-go ./cmd/server
 
 # Stage 3: Minimal runtime image with ffmpeg
-FROM ${REGISTRY}/library/alpine:3.19
+FROM alpine:3.19
 ARG ALPINE_MIRROR
 
 LABEL maintainer="wuvjie"
