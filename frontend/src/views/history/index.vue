@@ -149,7 +149,7 @@ function taskLabel(task: string) {
   return map[task] || task;
 }
 
-function formatDetail(row: HistoryRecord) {
+function formatDetail(row: HistoryRecord | Record<string, any>) {
   const parts = [];
   if (row.files_count) parts.push(`${row.files_count} 个文件`);
   if (row.merged_bytes) parts.push(`合并 ${formatBytes(row.merged_bytes)}`);
@@ -158,7 +158,7 @@ function formatDetail(row: HistoryRecord) {
   return parts.join(", ") || "-";
 }
 
-async function viewLog(row: HistoryRecord) {
+async function viewLog(row: HistoryRecord | Record<string, any>) {
   if (!row.log_id) return;
   // 预校验 log_id 格式：{type}_{YYYYMMDD}_{HHMMSS}_{4位hex}
   if (!/^[a-z]+_\d{8}_\d{6}_[0-9a-f]{4}$/.test(row.log_id)) {
@@ -194,7 +194,7 @@ async function handleExport() {
   }
 }
 
-function retryMerge(row: HistoryRecord) {
+function retryMerge(row: HistoryRecord | Record<string, any>) {
   if (!row.streamer) return;
   router.push({ path: "/tasks", query: { streamer: row.streamer } });
 }
