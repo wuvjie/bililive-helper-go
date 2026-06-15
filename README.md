@@ -83,7 +83,6 @@ cd frontend && npm run lint # 代码检查
 
 - [API 接口文档](docs/api.md) — 所有 REST 端点说明
 - [配置参考](docs/config.md) — 环境变量和 config.json 字段
-- [架构决策记录](docs/adr/) — 重要设计决策
 
 ## 常见问题
 
