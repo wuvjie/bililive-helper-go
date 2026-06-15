@@ -152,7 +152,7 @@ func classifyMergeFailure(folder, firstFile string) string {
 func (s *MergeService) Run(ctx context.Context, streamer string, onProgress ProgressFunc) (*MergeResult, string, error) {
 	start := time.Now()
 
-	setup, err := PrepareTask(s.config, s.logger, "merge_log", "合并", streamer, onProgress)
+	setup, err := PrepareTask(s.config, s.logger, "merge_log", "merge", "合并", streamer, onProgress)
 	if err != nil {
 		return nil, "", err
 	}
