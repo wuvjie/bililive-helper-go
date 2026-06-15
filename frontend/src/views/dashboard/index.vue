@@ -243,8 +243,6 @@ onActivated(async () => {
 .env-status { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; }
 .env-item { display: flex; align-items: center; gap: 5px; font-size: 12px; }
 .env-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.dot-ok { background: #448361; }
-.dot-err { background: #e03131; }
 .env-label { color: var(--stone); font-size: 11px; }
 .env-val { font-size: 11px; font-weight: 500; }
 .val-ok { color: #448361; }
@@ -315,9 +313,6 @@ onActivated(async () => {
 .sys-row-last { border-bottom: 1px solid #f1f1ef; }
 .sys-label { font-size: 13px; color: var(--ink); min-width: 72px; }
 .sys-val { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--steel); font-weight: 500; }
-.status-dot-sm { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.dot-ok { background: #448361; }
-.dot-err { background: #e03131; }
 
 /* Trend */
 .trend-body {

@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAppStore } from "@/store/modules/app";
 import { logout } from "@/api/auth";
@@ -99,7 +99,10 @@ const menuItems = [
 
 const activeMenu = computed(() => route.path);
 const currentRoute = computed(() => route);
-const isMobile = computed(() => window.innerWidth < 768);
+const isMobile = ref(window.innerWidth < 768);
+function onResize() { isMobile.value = window.innerWidth < 768; }
+onMounted(() => window.addEventListener("resize", onResize));
+onUnmounted(() => window.removeEventListener("resize", onResize));
 function toggleSidebar() { appStore.toggleSidebar(); }
 
 // Password change dialog
@@ -108,8 +111,10 @@ const pwSaving = ref(false);
 
 function refreshPage() { window.location.reload(); }
 function toggleFullscreen() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-  else document.exitFullscreen();
+  try {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  } catch { /* 浏览器拒绝或 iframe 内不支持 */ }
 }
 function handleCommand(cmd: string) {
   if (cmd === "logout") logout();
@@ -132,7 +137,11 @@ const showDiskBanner = computed(() => {
 });
 function dismissDiskBanner() { dismissedAlertLevel.value = diskAlertLevel.value; }
 function goToTasks() { router.push("/tasks"); }
+let lastDiskFetch = 0;
 async function fetchDiskStatus() {
+  const now = Date.now();
+  if (now - lastDiskFetch < 30_000) return; // 30 秒节流
+  lastDiskFetch = now;
   try {
     const data = await getStatusDetail();
     diskUsedPct.value = data.disk.usage_pct;

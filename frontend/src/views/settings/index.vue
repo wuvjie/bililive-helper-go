@@ -673,10 +673,6 @@ onActivated(async () => {
 .diag-label { font-size: 13px; color: var(--steel); width: 110px; flex-shrink: 0; white-space: nowrap; }
 .diag-val { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--charcoal); padding-right: 1px; }
 .diag-path { font-size: 11px; color: var(--stone); margin-left: 8px; font-family: var(--font-mono); }
-.mono-val { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
-.status-dot-sm { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.dot-ok { background: #448361; }
-.dot-err { background: #e03131; }
 .diag-progress { display: flex; align-items: center; gap: 12px; flex: 1; max-width: 280px; }
 .diag-pct { font-size: 12px; color: #448361; font-weight: 500; min-width: 44px; text-align: right; line-height: 1; }
 

@@ -263,6 +263,9 @@ async function handleClean() {
 // When SSE finishes (isRunning goes from true -> false), refresh data and show notification
 watch(() => sse.isRunning.value, async (running, wasRunning) => {
   if (wasRunning && !running) {
+    // SSE 完成后清空文件选择状态，避免 stale 引用
+    selectedFiles.value = [];
+    tableRef.value?.clearSelection();
     await Promise.allSettled([loadFiles(), loadSchedule()]);
     const lastLine = sse.lines.value.at(-1);
     if (lastLine) {
@@ -275,35 +278,25 @@ watch(() => sse.isRunning.value, async (running, wasRunning) => {
   }
 });
 
-onMounted(async () => {
+async function refreshData() {
   const [s, st] = await Promise.allSettled([getSchedule(), getStreamers()]);
   if (s.status === "fulfilled") schedule.value = s.value;
   if (st.status === "fulfilled") streamers.value = st.value;
 
   const queryStreamer = route.query.streamer as string;
-  if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
+  if (queryStreamer && streamers.value.some((s) => s.name === queryStreamer)) {
     selectedStreamer.value = queryStreamer;
     await loadFiles();
   }
-});
+}
+
+onMounted(refreshData);
 
 onUnmounted(() => {
   sse.abort();
 });
 
-// Refresh data when component is re-activated by keep-alive router-view
-onActivated(async () => {
-  const [s, st] = await Promise.allSettled([getSchedule(), getStreamers()]);
-  if (s.status === "fulfilled") schedule.value = s.value;
-  if (st.status === "fulfilled") streamers.value = st.value;
-
-  // 检查 query 参数，支持从主播管理页面跳转时自动选择主播
-  const queryStreamer = route.query.streamer as string;
-  if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
-    selectedStreamer.value = queryStreamer;
-    await loadFiles();
-  }
-});
+onActivated(refreshData);
 </script>
 
 <style scoped>
@@ -344,8 +337,6 @@ onActivated(async () => {
 .file-name { font-family: var(--font-mono); font-size: 12px; color: var(--charcoal); }
 
 /* Status dots */
-.status-dot-sm { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.dot-ok { background: #448361; }
 .dot-off { background: #d3d1cb; }
 
 /* Ops bar */
