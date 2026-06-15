@@ -74,6 +74,7 @@ func (w *DirWatcher) check() {
 
 	entries, err := os.ReadDir(root)
 	if err != nil {
+		w.logger.Error("DirWatcher 扫描录制目录失败（存储可能断开）", zap.String("path", root), zap.Error(err))
 		return
 	}
 

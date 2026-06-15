@@ -38,7 +38,10 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("初始化日志失败: %w", err)
 	}
 
-	cfg := config.Load()
+	cfg, warnings := config.Load()
+	for _, w := range warnings {
+		logger.Warn(w)
+	}
 
 	// 按依赖顺序创建服务
 	historyService := service.NewHistoryService(cfg, logger)

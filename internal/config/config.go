@@ -83,9 +83,11 @@ func DefaultConfig() Config {
 
 // Load 从配置文件和环境变量加载配置。
 // 加载顺序：默认值 -> config.json 文件 -> 环境变量覆盖。
+// 返回配置和非致命警告列表（调用方应通过 zap 记录）。
 // 首次运行时自动生成密码和密钥并持久化到凭据文件。
-func Load() *Config {
+func Load() (*Config, []string) {
 	cfg := defaultConfig
+	var warnings []string
 
 	// 优先从文件加载，然后用环境变量覆盖（环境变量始终优先）
 	// LOG_DIR 需要先确定，因为它决定了配置文件的位置
@@ -96,7 +98,7 @@ func Load() *Config {
 	cfg.ConfigFile = filepath.Join(cfgFileDir, "config.json")
 	if data, err := os.ReadFile(cfg.ConfigFile); err == nil {
 		if err := json.Unmarshal(data, &cfg); err != nil {
-			fmt.Printf("[WARN] 配置文件解析失败，使用默认配置: %v\n", err)
+			warnings = append(warnings, fmt.Sprintf("配置文件解析失败，使用默认配置: %v", err))
 		}
 	}
 
@@ -141,10 +143,10 @@ func Load() *Config {
 		fmt.Printf("═══════════════\n")
 		// 持久化自动生成的密码，使其在重启后仍然有效
 		if err := cfg.SaveCredential(); err != nil {
-			fmt.Printf("[WARN] 密码持久化失败: %v\n", err)
+			warnings = append(warnings, fmt.Sprintf("密码持久化失败: %v", err))
 		}
 	}
-	return &cfg
+	return &cfg, warnings
 }
 
 // Validate 校验配置字段的合法性。
@@ -329,15 +331,14 @@ func (c *Config) ApplyFromJSON(data []byte) {
 	// 先解析为 map 检查哪些字段存在，再逐个应用
 	var m map[string]json.RawMessage
 	if err := json.Unmarshal(data, &m); err != nil {
-		fmt.Printf("[WARN] 配置 JSON 解析失败: %v\n", err)
-		return
+		return // 解析失败，静默返回（调用方已有 Validate 兜底）
 	}
 
 	if raw, ok := m["TARGET_DIR"]; ok {
 		var v string
 		json.Unmarshal(raw, &v)
 		if info, err := os.Stat(v); err != nil || !info.IsDir() {
-			fmt.Printf("[WARN] TARGET_DIR 无效，已忽略: %s (err=%v)\n", v, err)
+			// TARGET_DIR 无效，跳过此字段（调用方 Validate 会捕获）
 		} else {
 			c.TargetDir = v
 		}
