@@ -43,7 +43,7 @@ func New() (*App, error) {
 	// 按依赖顺序创建服务
 	historyService := service.NewHistoryService(cfg, logger)
 	mergeService := service.NewMergeService(cfg, logger, historyService)
-	cleanService := service.NewCleanService(cfg, logger, historyService)
+	cleanService := service.NewCleanService(cfg, logger, historyService, mergeService) // mergeService 作为锁检查器
 	schedulerService := service.NewSchedulerService(cfg, logger, mergeService, cleanService, historyService)
 
 	// 检测 FFmpeg/FFprobe
