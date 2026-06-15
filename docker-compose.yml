@@ -47,3 +47,10 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    # Docker 网络（需提前创建：docker network create nas）
+    networks:
+      - nas
+
+networks:
+  nas:
+    external: true
