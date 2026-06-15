@@ -51,7 +51,7 @@
 
         <el-table-column prop="mtime" label="最新视频" width="140" align="right" header-align="right" sortable>
           <template #default="{ row }">
-            <span class="mono-val">{{ row.mtime ? formatRelativeTime(row.mtime) : '-' }}</span>
+            <span class="mono-val">{{ row.mtime ? formatRelativeTime(row.mtime, tick) : '-' }}</span>
           </template>
         </el-table-column>
 
@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated } from "vue";
+import { ref, computed, onMounted, onUnmounted, onActivated } from "vue";
 import { useRouter } from "vue-router";
 import { getStreamers } from "@/api/status";
 import { Search } from "@element-plus/icons-vue";
@@ -87,7 +87,13 @@ function goToTasks(name: string) {
   router.push({ path: "/tasks", query: { streamer: name } });
 }
 
-function formatRelativeTime(ts: number): string {
+// tick 每 60 秒更新一次，驱动相对时间重新计算
+const tick = ref(0);
+let tickTimer: ReturnType<typeof setInterval> | null = null;
+onMounted(() => { tickTimer = setInterval(() => { tick.value++; }, 60_000); });
+onUnmounted(() => { if (tickTimer) clearInterval(tickTimer); });
+
+function formatRelativeTime(ts: number, _tick?: number): string {
   const diff = Date.now() / 1000 - ts;
   if (diff < 0) return "刚刚";
   if (diff < 60) return "刚刚";
