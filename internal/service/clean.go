@@ -43,7 +43,7 @@ type CleanResult struct {
 func (s *CleanService) Run(ctx context.Context, streamer string, onProgress ProgressFunc) (*CleanResult, string, error) {
 	start := time.Now()
 
-	setup, err := PrepareTask(s.config, s.logger, "clean_log", "清理", streamer, onProgress)
+	setup, err := PrepareTask(s.config, s.logger, "clean_log", "clean", "清理", streamer, onProgress)
 	if err != nil {
 		return nil, "", err
 	}
