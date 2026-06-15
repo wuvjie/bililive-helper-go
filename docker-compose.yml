@@ -8,16 +8,14 @@ services:
       - "5689:5000"
     volumes:
       # 录像存储目录（bililive-go 的录制输出所在位置）
-      # 修改为你实际的 bililive-go 录像路径
-      - /path/to/recordings:/recordings
+      - /vol2:/vol2
       # 配置文件、日志、历史记录的持久化目录
-      - /path/to/data:/data
+      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go
     environment:
       # 录制视频根目录（含各主播子目录）
-      # 修改为 volumes 中录像目录的容器内路径
-      - TARGET_DIR=/recordings
+      - TARGET_DIR=/vol2/1000/video/bililive-go/抖音
       # 日志和配置文件存储目录
-      - LOG_DIR=/data
+      - LOG_DIR=/vol1/1000/docker/bililive-helper-go
       # 时区
       - TZ=Asia/Shanghai
       # --- 以下为可选配置，取消注释即可生效 ---
