@@ -32,7 +32,7 @@
               <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" class="compact-counter" />
             </el-form-item>
             <el-form-item label="白名单关键词">
-              <el-input v-model="config.WHITELIST_KEYWORDS" placeholder="关键词用英文逗号分隔" class="mono-input" style="max-width: 520px" />
+              <el-input :model-value="config.WHITELIST_KEYWORDS as unknown as string" @update:model-value="(config as Record<string, unknown>).WHITELIST_KEYWORDS = $event" placeholder="关键词用英文逗号分隔" class="mono-input" style="max-width: 520px" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" :loading="savingConfig" style="width: 128px" @click="handleSaveConfig">保存配置</el-button>
@@ -45,13 +45,13 @@
           <el-form label-width="144px" label-position="left" class="settings-form">
             <el-form-item label="触发清理阈值">
               <div class="slider-row">
-                <el-slider v-model="config.TRIGGER_THRESHOLD" :min="50" :max="99" :format-tooltip="(v: number) => v + '%'" class="slider-flex" @change="onTriggerChange" />
+                <el-slider v-model="config.TRIGGER_THRESHOLD" :min="50" :max="99" :format-tooltip="formatPercent" class="slider-flex" @change="onTriggerChange" />
                 <span class="slider-value">{{ config.TRIGGER_THRESHOLD }}%</span>
               </div>
             </el-form-item>
             <el-form-item label="目标清理阈值">
               <div class="slider-row">
-                <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="(v: number) => v + '%'" class="slider-flex" @change="onTargetChange" />
+                <el-slider v-model="config.TARGET_THRESHOLD" :min="30" :max="89" :format-tooltip="formatPercent" class="slider-flex" @change="onTargetChange" />
                 <span class="slider-value">{{ config.TARGET_THRESHOLD }}%</span>
               </div>
             </el-form-item>
@@ -240,6 +240,8 @@ import ScheduleTab from "./tabs/ScheduleTab.vue";
 import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
 import EmergencyDialog from "./tabs/EmergencyDialog.vue";
 
+const formatPercent = (v: number | number[]) => Number(v) + "%";
+
 const activeTab = ref("general");
 const savingConfig = ref(false);
 const savingSchedule = ref(false);
@@ -313,14 +315,16 @@ const recommendTable = computed(() => {
 });
 
 // Threshold cross-validation: trigger must always be > target
-function onTriggerChange(val: number) {
-  if (config.value.TARGET_THRESHOLD >= val) {
-    config.value.TARGET_THRESHOLD = val - 1;
+function onTriggerChange(val: number | number[]) {
+  const v = Number(val);
+  if (config.value.TARGET_THRESHOLD >= v) {
+    config.value.TARGET_THRESHOLD = v - 1;
   }
 }
-function onTargetChange(val: number) {
-  if (config.value.TRIGGER_THRESHOLD <= val) {
-    config.value.TRIGGER_THRESHOLD = val + 1;
+function onTargetChange(val: number | number[]) {
+  const v = Number(val);
+  if (config.value.TRIGGER_THRESHOLD <= v) {
+    config.value.TRIGGER_THRESHOLD = v + 1;
   }
 }
 
@@ -345,9 +349,9 @@ async function handleSaveConfig() {
   }
   savingConfig.value = true;
   try {
-    const payload = { ...config.value };
+    const payload: Record<string, unknown> = { ...config.value };
     if (typeof payload.WHITELIST_KEYWORDS === "string") {
-      payload.WHITELIST_KEYWORDS = payload.WHITELIST_KEYWORDS.split(",").map((s: string) => s.trim()).filter(Boolean);
+      payload.WHITELIST_KEYWORDS = (payload.WHITELIST_KEYWORDS as string).split(",").map((s: string) => s.trim()).filter(Boolean);
     }
     await saveConfig(payload);
     isDirty.value = false;

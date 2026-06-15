@@ -5,7 +5,7 @@ export function getSchedule() {
   return get<ScheduleStatus>("/schedule");
 }
 
-export function saveSchedule(data: ScheduleConfig) {
+export function saveSchedule(data: ScheduleConfig | Record<string, unknown>) {
   return post("/schedule", data);
 }
 

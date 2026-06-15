@@ -16,7 +16,7 @@
       <p class="emergency-desc">将临时降低磁盘使用率目标阈值，强制清理到指定百分比以下。清理结束后阈值自动恢复。</p>
       <div class="emergency-input-row">
         <span class="emergency-label">目标磁盘百分比</span>
-        <el-input-number :model-value="targetPct" :min="10" :max="99" :step="5" @update:model-value="$emit('update:targetPct', $event)" />
+        <el-input-number :model-value="targetPct" :min="10" :max="99" :step="5" @update:model-value="(v: number | undefined) => { if (v !== undefined) $emit('update:targetPct', v) }" />
         <span class="emergency-unit">%</span>
       </div>
     </div>

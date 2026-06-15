@@ -535,7 +535,6 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 	concatOutputPath := outputPath
 	if outputIsFLV {
 		concatOutputPath = strings.TrimSuffix(outputPath, ".flv") + ".mp4"
-		output = strings.TrimSuffix(output, ".flv") + ".mp4"
 	}
 
 	if err := ffmpeg.ConcatTS(ctx, tsFiles, concatOutputPath, onProgress); err != nil {

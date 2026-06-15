@@ -37,8 +37,5 @@ func NotifyWebhook(message string) {
 			return
 		}
 		defer resp.Body.Close()
-		if resp.StatusCode >= 400 {
-			// Webhook 返回错误状态码，静默忽略（fire-and-forget）
-		}
 	}()
 }
