@@ -17,17 +17,24 @@ import (
 	"go.uber.org/zap"
 )
 
+// StreamerLockChecker 检查指定主播是否有正在进行的合并任务。
+// 用于清理服务避免误删正在合并中的文件。
+type StreamerLockChecker interface {
+	IsStreamerLocked(name string) bool
+}
+
 // CleanService 提供智能清理功能。
 // 根据磁盘使用率阈值触发清理，支持白名单保护、安全期保护和每主播保底数量。
 type CleanService struct {
 	config  *config.Config
 	logger  *zap.Logger
 	history *HistoryService
+	locker  StreamerLockChecker // 可选，为 nil 时跳过锁检查
 }
 
 // NewCleanService 创建清理服务实例。
-func NewCleanService(config *config.Config, logger *zap.Logger, history *HistoryService) *CleanService {
-	return &CleanService{config: config, logger: logger, history: history}
+func NewCleanService(config *config.Config, logger *zap.Logger, history *HistoryService, locker StreamerLockChecker) *CleanService {
+	return &CleanService{config: config, logger: logger, history: history, locker: locker}
 }
 
 // CleanResult 保存清理操作的结果。
@@ -178,6 +185,11 @@ func (s *CleanService) collectCandidates(root, streamer string, cfg config.Confi
 	}
 	for _, dir := range dirs {
 		if streamer != "" && dir.Name != streamer {
+			continue
+		}
+		// 跳过正在合并的主播，避免误删合并中的文件
+		if s.locker != nil && s.locker.IsStreamerLocked(dir.Name) {
+			s.logger.Info("跳过正在合并的主播", zap.String("streamer", dir.Name))
 			continue
 		}
 		before := len(candidates)

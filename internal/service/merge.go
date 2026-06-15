@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"bililive-helper-go/internal/config"
@@ -45,38 +44,18 @@ type MergeService struct {
 
 // streamerLock 用于 per-streamer 粒度的合并锁，防止同一主播并发合并。
 type streamerLock struct {
-	mu        sync.Mutex
-	createdAt atomic.Int64 // Unix 时间戳，避免 time.Time 的 data race
+	mu sync.Mutex
 }
 
-const lockTimeout = 4 * time.Hour
-
 // tryLockStreamer 尝试获取指定主播的合并锁。
-// 如果锁被持有超过 lockTimeout（4 小时），尝试回收过期锁。
+// 锁被占用时直接返回 false，不强制回收。
+// 依赖 Context 超时（FFmpeg Run 已有 2 小时超时）自然终止长时间任务并释放锁。
 func (s *MergeService) tryLockStreamer(name string) (bool, *streamerLock) {
-	now := time.Now()
 	val, _ := s.streamerLocks.LoadOrStore(name, &streamerLock{})
 	sl := val.(*streamerLock)
 
 	if sl.mu.TryLock() {
-		sl.createdAt.Store(now.Unix())
 		return true, sl
-	}
-
-	// 安全网：锁持有超过超时时间后尝试回收。
-	// CompareAndDelete 避免销毁仍在合法持有锁的 goroutine 的锁
-	// — 如果 map 条目在 LoadOrStore 和 Delete 之间被替换，静默退让。
-	if now.Sub(time.Unix(sl.createdAt.Load(), 0)) > lockTimeout {
-		if s.streamerLocks.CompareAndDelete(name, sl) {
-			s.logger.Warn("回收过期主播锁", zap.String("streamer", name))
-			newVal, _ := s.streamerLocks.LoadOrStore(name, &streamerLock{})
-			newSl := newVal.(*streamerLock)
-			if newSl.mu.TryLock() {
-				newSl.createdAt.Store(now.Unix())
-				return true, newSl
-			}
-		}
-		return false, nil
 	}
 
 	return false, nil
@@ -86,6 +65,21 @@ func (s *MergeService) unlockStreamer(sl *streamerLock) {
 	if sl != nil {
 		sl.mu.Unlock()
 	}
+}
+
+// IsStreamerLocked 检查指定主播是否有正在进行的合并任务。
+// 实现 StreamerLockChecker 接口，供 CleanService 调用。
+func (s *MergeService) IsStreamerLocked(name string) bool {
+	val, ok := s.streamerLocks.Load(name)
+	if !ok {
+		return false
+	}
+	sl := val.(*streamerLock)
+	if sl.mu.TryLock() {
+		sl.mu.Unlock() // 成功获取说明锁未被持有，立即释放
+		return false
+	}
+	return true // TryLock 失败说明锁被其他 goroutine 持有
 }
 
 // NewMergeService 创建合并服务实例。
@@ -502,8 +496,8 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 
 	// 步骤 1：将每个输入文件转换为 TS 格式（已是 TS 的跳过）
 	var tsFiles []string
-	tmpDir := filepath.Join(folder, ".merge_tmp_"+time.Now().Format("20060102150405"))
-	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+	tmpDir, err := os.MkdirTemp(folder, ".merge_tmp_")
+	if err != nil {
 		onProgress(fmt.Sprintf("❌ 创建临时目录失败: %v", err))
 		return false
 	}
