@@ -65,6 +65,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	if err != nil {
 		return nil, setup.LogID, err
 	}
+	progress(fmt.Sprintf("▶ 开始 %s 清理 | 📊 磁盘 %.1f%% (剩余 %.0f GB)", setup.Tag, disk.UsedPct, float64(disk.Free)/oneGB))
 
 	if streamer == "" {
 		if disk.UsedPct < cfg.TriggerThreshold {
@@ -126,7 +127,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	progress("───────────────────────────")
 
-	duration := time.Since(start).Seconds()
+	duration := time.Since(start)
 
 	status := "success"
 	statusMsg := fmt.Sprintf("删除 %d 文件，释放 %s", deleted, utils.FormatSize(freed))
@@ -139,14 +140,18 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 		}
 	}
 
-	msg := fmt.Sprintf("✅ 完成: %s", statusMsg)
-	progress(msg)
+	progress("───────────────────────────")
+	progress("📊 结果摘要")
+	progress(fmt.Sprintf("  删除：%d 个文件", deleted))
+	progress(fmt.Sprintf("  释放：%s", utils.FormatSize(freed)))
+	progress(fmt.Sprintf("  耗时：%s", formatDuration(duration)))
 
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
-		progress(fmt.Sprintf("📊 当前磁盘 %.1f%%", diskAfter.UsedPct))
+		progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%", disk.UsedPct, diskAfter.UsedPct))
 	}
+	progress("───────────────────────────")
 
-	s.history.AddWithStats("clean", streamer, status, deleted, freed, 0, duration, statusMsg, setup.LogID)
+	s.history.AddWithStats("clean", streamer, status, deleted, freed, 0, duration.Seconds(), statusMsg, setup.LogID)
 
 	return &CleanResult{Deleted: deleted, Freed: freed}, setup.LogID, nil
 }
