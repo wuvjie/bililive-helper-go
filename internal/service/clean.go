@@ -59,8 +59,6 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	progress := setup.Progress
 	root := cfg.TargetDir
 
-	progress(fmt.Sprintf("▶ 开始 %s 清理", setup.Tag))
-
 	disk, err := utils.GetDiskUsage(root)
 	if err != nil {
 		return nil, setup.LogID, err
