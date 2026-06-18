@@ -123,8 +123,6 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	deleted, freed, truncated := s.deleteFiles(ctx, candidates, needToFree, cfg, progress)
 
-	progress("───────────────────────────")
-
 	duration := time.Since(start)
 
 	status := "success"
@@ -145,7 +143,12 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	progress(fmt.Sprintf("  耗时：%s", formatDuration(duration)))
 
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
-		progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%", disk.UsedPct, diskAfter.UsedPct))
+		freeChangeGB := float64(diskAfter.Free-disk.Free) / oneGB
+		if freeChangeGB > 0 {
+			progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（释放 %.1f GB）", disk.UsedPct, diskAfter.UsedPct, freeChangeGB))
+		} else {
+			progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%", disk.UsedPct, diskAfter.UsedPct))
+		}
 	}
 	progress("───────────────────────────")
 
