@@ -325,8 +325,8 @@ func (c *Config) Snapshot() Config {
 // 使用 JSON 反序列化直接更新 Config struct，类型安全，替代原来的 map[string]interface{} 模式。
 // TARGET_DIR 会额外验证目录是否存在。只更新 JSON 中存在的字段（零值字段不覆盖）。
 func (c *Config) ApplyFromJSON(data []byte) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	// 注意：此方法不加锁，调用方（如 Apply）已持有写锁。
+	// 请勿在未持有锁的情况下直接调用。
 
 	// 先解析为 map 检查哪些字段存在，再逐个应用
 	var m map[string]json.RawMessage
