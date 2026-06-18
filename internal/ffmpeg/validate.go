@@ -174,7 +174,8 @@ func isFatalFFmpegError(output string) bool {
 		"could not find codec",
 		"decoding error",
 		"error decoding",
-		" corrupt",
+		" corrupt",     // "file is corrupt"
+		"corrupt ",     // "corrupt file detected"
 		"file is truncated",
 		"moov atom not found",
 		"missing mandatory",

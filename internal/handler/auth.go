@@ -149,6 +149,7 @@ func (h *Handler) Health(c *gin.Context) {
 // 验证旧密码后更新配置文件、凭据文件和运行时哈希。
 // 递增 SessionVersion 使所有旧 Session 自动失效。
 func (h *Handler) ChangePassword(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024) // 1KB 限制
 	var req struct {
 		OldPassword string `json:"old_password" binding:"required"`
 		NewPassword string `json:"new_password" binding:"required"`

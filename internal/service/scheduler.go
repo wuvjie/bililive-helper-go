@@ -77,13 +77,24 @@ func (s *SchedulerService) Start() {
 	})
 }
 
-// Stop 停止调度器，等待所有正在运行的任务完成。
+// Stop 停止调度器，等待正在运行的任务完成（最多 30 秒）。
 func (s *SchedulerService) Stop() {
 	s.stopOnce.Do(func() {
 		s.cancel()
 		close(s.stopCh)
 	})
-	s.wg.Wait()
+	// 带超时的等待，避免长 FFmpeg 任务阻塞关闭
+	done := make(chan struct{})
+	go func() {
+		s.wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+		s.logger.Info("调度器已停止，所有任务已完成")
+	case <-time.After(30 * time.Second):
+		s.logger.Warn("调度器停止超时（30s），部分任务可能仍在运行")
+	}
 }
 
 func (s *SchedulerService) loop() {

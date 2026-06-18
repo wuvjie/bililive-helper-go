@@ -13,6 +13,7 @@ import (
 
 // runSSE 同步执行 fn 并通过 Server-Sent Events 流式传输进度消息。
 // 进度更新会合并 — 每次 tick/notify 只发送最新消息，避免消息积压。
+// 客户端断开时自动取消 fn 的 context，避免 goroutine 泄漏。
 func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Context, onProgress func(string)) string) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
@@ -29,8 +30,11 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 		}
 	}
 
+	// 创建可取消的 context，客户端断开时自动取消 fn
+	ctx, cancel := context.WithCancel(c.Request.Context())
+	defer cancel()
+
 	done := make(chan string, 1)
-	ctx := c.Request.Context()
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -47,6 +51,7 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 	for {
 		select {
 		case <-ctx.Done():
+			cancel() // 确保 fn 收到取消信号
 			return
 		case <-notify:
 			if v := latest.Load(); v != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ func (h *Handler) GetConfig(c *gin.Context) {
 // SaveConfig 保存配置更新（部分更新，只修改请求中包含的字段）。
 // 记录变更日志并异步写入历史记录。
 func (h *Handler) SaveConfig(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 64*1024) // 64KB 限制
 	var req map[string]interface{}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		failBadRequest(c, "参数错误")
@@ -371,6 +373,7 @@ func (h *Handler) ExportConfig(c *gin.Context) {
 
 // ImportConfig 从导入数据中恢复配置。
 func (h *Handler) ImportConfig(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024*1024) // 1MB 限制（含历史记录）
 	var data map[string]interface{}
 	if err := c.ShouldBindJSON(&data); err != nil {
 		failBadRequest(c, "参数错误")
