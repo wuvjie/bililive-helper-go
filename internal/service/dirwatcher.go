@@ -25,6 +25,7 @@ type DirWatcher struct {
 	interval  time.Duration        // 轮询间隔（默认 1 分钟）
 	debounce  time.Duration        // 防抖时间（默认 5 分钟）
 	stopCh    chan struct{}
+	stopOnce  sync.Once
 }
 
 // NewDirWatcher 创建目录监听器。
@@ -62,9 +63,11 @@ func (w *DirWatcher) Start() {
 	}
 }
 
-// Stop 停止目录监听。
+// Stop 停止目录监听。可安全多次调用。
 func (w *DirWatcher) Stop() {
-	close(w.stopCh)
+	w.stopOnce.Do(func() {
+		close(w.stopCh)
+	})
 }
 
 // check 扫描所有主播目录，检测修改时间变化。

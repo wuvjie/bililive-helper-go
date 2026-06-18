@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,12 +54,17 @@ func (h *Handler) RunMerge(c *gin.Context) {
 
 // ManualMerge 手动合并指定主播的指定文件列表（至少 2 个文件）。
 func (h *Handler) ManualMerge(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 32*1024) // 32KB 限制（最多 100 个文件名）
 	var req struct {
 		Streamer string   `json:"streamer" binding:"required"`
 		Files    []string `json:"files" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		failBadRequest(c, "参数错误")
+		return
+	}
+	if !utils.ValidateFilename(req.Streamer) {
+		failBadRequest(c, "主播名包含非法字符")
 		return
 	}
 	if len(req.Files) < 2 {
@@ -74,6 +80,7 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 
 // MergeRetry 重试之前失败的合并操作。
 func (h *Handler) MergeRetry(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 32*1024)
 	var req struct {
 		Streamer string   `json:"streamer" binding:"required"`
 		Files    []string `json:"files" binding:"required"`
