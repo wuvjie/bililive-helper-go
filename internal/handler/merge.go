@@ -89,6 +89,10 @@ func (h *Handler) MergeRetry(c *gin.Context) {
 		failBadRequest(c, "参数错误")
 		return
 	}
+	if !utils.ValidateFilename(req.Streamer) {
+		failBadRequest(c, "主播名包含非法字符")
+		return
+	}
 	if len(req.Files) > maxManualMergeFiles {
 		failBadRequest(c, fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles))
 		return
