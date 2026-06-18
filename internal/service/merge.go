@@ -36,12 +36,12 @@ const (
 // formatDuration 格式化耗时：>1h 显示 "1h23m"，>1m 显示 "2m3s"，否则显示 "45s"。
 func formatDuration(d time.Duration) string {
 	if d >= time.Hour {
-		return fmt.Sprintf("%.0fh%.0fm", d.Hours(), d.Minutes())
+		return fmt.Sprintf("%dh%dm", int(d.Hours()), int(d.Minutes())%60)
 	}
 	if d >= time.Minute {
-		return fmt.Sprintf("%.0fm%.0fs", d.Minutes(), d.Seconds())
+		return fmt.Sprintf("%dm%ds", int(d.Minutes()), int(d.Seconds())%60)
 	}
-	return fmt.Sprintf("%.0fs", d.Seconds())
+	return fmt.Sprintf("%ds", int(d.Seconds()))
 }
 
 // MergeService 提供录制文件合并功能。
@@ -328,11 +328,11 @@ func (s *MergeService) summarizeResults(ctx context.Context, root, streamer stri
 
 	// 磁盘变化
 	if diskStart != nil && diskEnd != nil {
-		freedGB := float64(diskStart.Free-diskEnd.Free) / oneGB
-		if freedGB > 0 {
-			onProgress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（释放 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, freedGB))
+		freeChangeGB := float64(diskEnd.Free-diskStart.Free) / oneGB
+		if freeChangeGB > 0 {
+			onProgress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（释放 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, freeChangeGB))
 		} else {
-			onProgress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%", diskStart.UsedPct, diskEnd.UsedPct))
+			onProgress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（占用 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, -freeChangeGB))
 		}
 	}
 
