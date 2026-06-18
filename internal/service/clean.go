@@ -143,11 +143,11 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	progress(fmt.Sprintf("  耗时：%s", formatDuration(duration)))
 
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
-		freeChangeGB := float64(diskAfter.Free-disk.Free) / oneGB
+		freeChangeGB := float64(int64(diskAfter.Free)-int64(disk.Free)) / oneGB
 		if freeChangeGB > 0 {
 			progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（释放 %.1f GB）", disk.UsedPct, diskAfter.UsedPct, freeChangeGB))
 		} else {
-			progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%", disk.UsedPct, diskAfter.UsedPct))
+			progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（占用 %.1f GB）", disk.UsedPct, diskAfter.UsedPct, -freeChangeGB))
 		}
 	}
 	progress("───────────────────────────")

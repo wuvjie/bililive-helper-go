@@ -328,7 +328,7 @@ func (s *MergeService) summarizeResults(ctx context.Context, root, streamer stri
 
 	// 磁盘变化
 	if diskStart != nil && diskEnd != nil {
-		freeChangeGB := float64(diskEnd.Free-diskStart.Free) / oneGB
+		freeChangeGB := float64(int64(diskEnd.Free)-int64(diskStart.Free)) / oneGB
 		if freeChangeGB > 0 {
 			onProgress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（释放 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, freeChangeGB))
 		} else {
