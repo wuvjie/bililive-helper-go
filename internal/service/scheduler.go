@@ -105,20 +105,39 @@ func (s *SchedulerService) loop() {
 	var lastDay string
 
 	for {
+		// 内层循环带 panic 恢复 — panic 后外层自动重启
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					s.logger.Error("调度器循环异常，正在恢复",
+						zap.Any("panic", r),
+						zap.String("hint", "将在下次 tick 重试"))
+				}
+			}()
+			for {
+				select {
+				case <-s.stopCh:
+					return
+				case <-ticker.C:
+					s.runDueTasks()
+
+					// 每日自动清理过期历史记录
+					today := time.Now().Format("2006-01-02")
+					if today != lastDay {
+						lastDay = today
+						go s.history.CleanupOldRecords()
+					}
+				case <-s.tickCh:
+					s.runDueTasks()
+				}
+			}
+		}()
+
+		// 如果 stopCh 已关闭，退出外层循环
 		select {
 		case <-s.stopCh:
 			return
-		case <-ticker.C:
-			s.runDueTasks()
-
-			// 每日自动清理过期历史记录
-			today := time.Now().Format("2006-01-02")
-			if today != lastDay {
-				lastDay = today
-				go s.history.CleanupOldRecords()
-			}
-		case <-s.tickCh:
-			s.runDueTasks()
+		default:
 		}
 	}
 }
@@ -134,6 +153,7 @@ func (s *SchedulerService) runDueTasks() {
 
 	// 静默时段内跳过所有任务
 	if cfg.IsBackupWindow() {
+		s.logger.Debug("静默时段，跳过任务检查")
 		return
 	}
 
@@ -144,6 +164,9 @@ func (s *SchedulerService) runDueTasks() {
 		}
 		if elapsed >= time.Duration(schedule.MergeInterval)*time.Minute {
 			if !s.running["merge"] {
+				s.logger.Info("▶ 调度触发 → 合并",
+					zap.Duration("elapsed", elapsed),
+					zap.Int("interval_min", schedule.MergeInterval))
 				s.running["merge"] = true
 				s.wg.Add(1)
 				go s.runTask("merge")
@@ -157,6 +180,9 @@ func (s *SchedulerService) runDueTasks() {
 		}
 		if elapsed >= time.Duration(schedule.CleanInterval)*time.Minute {
 			if !s.running["clean"] {
+				s.logger.Info("▶ 调度触发 → 清理",
+					zap.Duration("elapsed", elapsed),
+					zap.Int("interval_min", schedule.CleanInterval))
 				s.running["clean"] = true
 				s.wg.Add(1)
 				go s.runTask("clean")
@@ -186,6 +212,9 @@ func (s *SchedulerService) RunTask(task string) error {
 // runTask 执行调度任务并在完成后更新状态。
 func (s *SchedulerService) runTask(task string) {
 	defer func() {
+		if r := recover(); r != nil {
+			s.logger.Error("调度任务 panic", zap.String("task", task), zap.Any("panic", r))
+		}
 		s.mu.Lock()
 		s.running[task] = false
 		s.lastRun[task] = time.Now()
