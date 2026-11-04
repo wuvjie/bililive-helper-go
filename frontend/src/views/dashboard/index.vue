@@ -46,9 +46,12 @@
     </div>
 
     <div class="grid-2">
-      <!-- Disk Usage -->
+      <!-- 1. Disk Storage Status -->
       <div class="card">
-        <div class="card-title">💾 存储状态</div>
+        <div class="card-title">
+          <span>💾 存储状态</span>
+          <span class="card-title-sub">录制存储池</span>
+        </div>
         <div class="card-body">
           <div class="disk-top">
             <span class="disk-label">磁盘使用率</span>
@@ -62,12 +65,32 @@
             style="margin-bottom: 16px"
           />
           <div class="data-grid">
-            <div class="data-cell"><span class="data-label">总容量</span><span class="mono-val">{{ detail?.disk?.total_gb?.toFixed(1) }} GB</span></div>
-            <div class="data-cell"><span class="data-label">已用</span><span class="mono-val">{{ detail?.disk?.used_gb?.toFixed(1) }} GB</span></div>
-            <div class="data-cell"><span class="data-label">剩余</span><span class="mono-val">{{ detail?.disk?.free_gb?.toFixed(1) }} GB</span></div>
-            <div class="data-cell"><span class="data-label">待合并</span><span class="mono-val">{{ detail?.pending?.original_files || 0 }} 个文件</span></div>
+            <div class="data-cell">
+              <span class="data-label">总容量</span>
+              <span class="mono-val">{{ detail?.disk?.total_gb?.toFixed(1) }} GB</span>
+            </div>
+            <div class="data-cell">
+              <span class="data-label">已用</span>
+              <span class="mono-val">{{ detail?.disk?.used_gb?.toFixed(1) }} GB</span>
+            </div>
+            <div class="data-cell">
+              <span class="data-label">剩余</span>
+              <span class="mono-val">{{ detail?.disk?.free_gb?.toFixed(1) }} GB</span>
+            </div>
+            <div class="data-cell">
+              <span class="data-label">原始录像</span>
+              <el-tooltip
+                content="当前存储中的原始视频文件数。单场独立录像无需合并；多切片录像将在关播后自动无损合并。"
+                placement="top"
+              >
+                <span class="mono-val info-trigger">
+                  {{ detail?.pending?.original_files || 0 }} 个文件
+                  <span class="info-bubble">?</span>
+                </span>
+              </el-tooltip>
+            </div>
           </div>
-          <div v-if="stats?.daily_output_gb || stats?.days_until_full" class="disk-health-bar">
+          <div v-if="stats?.daily_output_gb || stats?.days_until_full" class="bottom-health-bar">
             <span class="health-pill">
               📈 近7天产出: <strong class="mono-val">{{ stats?.daily_output_gb?.toFixed(1) || 0 }}</strong> GB/天
             </span>
@@ -78,52 +101,89 @@
         </div>
       </div>
 
-      <!-- System Status -->
+      <!-- 2. Runtime & Automation Monitor -->
       <div class="card">
-        <div class="card-title">🖥️ 系统状态</div>
-        <div class="card-body sys-body">
-          <div class="sys-row">
-            <span class="sys-label">FFmpeg</span>
-            <span class="sys-val"><span class="status-dot-sm" :class="setup?.ffmpeg_ok ? 'dot-ok' : 'dot-err'" />{{ setup?.ffmpeg_ok ? '正常' : '异常' }}</span>
+        <div class="card-title">
+          <span>⚡ 运行监控</span>
+          <span class="monitor-mode-tag">
+            <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-idle'"></span>
+            {{ isTaskRunning ? '任务执行中' : '后台守护中' }}
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="runtime-top">
+            <span class="runtime-label">当前运行状态</span>
+            <div class="runtime-badge" :class="isTaskRunning ? 'badge-running' : 'badge-idle'">
+              <span>{{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并视频...' : '正在清理磁盘...') : '空闲待命中' }}</span>
+            </div>
           </div>
-          <div class="sys-row">
-            <span class="sys-label">FFprobe</span>
-            <span class="sys-val"><span class="status-dot-sm" :class="setup?.ffprobe_ok ? 'dot-ok' : 'dot-err'" />{{ setup?.ffprobe_ok ? '正常' : '异常' }}</span>
+          <div class="runtime-substrip">
+            <span class="substrip-text">
+              {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : '文件系统监听器 (DirWatcher) 持续盯盘，发现关播切片自动合并' }}
+            </span>
           </div>
-          <div class="sys-row">
-            <span class="sys-label">目标目录</span>
-            <span class="sys-val"><span class="status-dot-sm" :class="setup?.target_dir_exists ? 'dot-ok' : 'dot-err'" />{{ setup?.target_dir_exists ? '存在' : '不存在' }}</span>
+
+          <div class="data-grid">
+            <div class="data-cell">
+              <span class="data-label">自动合并</span>
+              <span class="mono-val">{{ detail?.schedule?.merge_enabled ? ('每 ' + (detail?.schedule?.merge_interval || 360) + ' 分钟') : '已暂停' }}</span>
+            </div>
+            <div class="data-cell">
+              <span class="data-label">自动清理</span>
+              <span class="mono-val">{{ detail?.schedule?.clean_enabled ? ('每 ' + (detail?.schedule?.clean_interval || 720) + ' 分钟') : '未开启' }}</span>
+            </div>
+            <div class="data-cell">
+              <span class="data-label">录制主播</span>
+              <span class="mono-val">{{ streamerCount }} 位</span>
+            </div>
+            <div class="data-cell">
+              <span class="data-label">收录视频</span>
+              <span class="mono-val">{{ videoCount }} 个</span>
+            </div>
           </div>
-          <div class="sys-row">
-            <span class="sys-label">主播数</span>
-            <span class="mono-val">{{ setup?.streamer_count || 0 }}</span>
-          </div>
-          <div class="sys-row sys-row-last">
-            <span class="sys-label">视频数</span>
-            <span class="mono-val">{{ setup?.video_count || 0 }}</span>
+
+          <div class="bottom-health-bar runtime-health-bar">
+            <span class="health-pill">
+              ⏱️ 下次合并: <strong class="mono-val">{{ formatNextTime(detail?.schedule?.merge?.next_run) }}</strong>
+            </span>
+            <span class="health-pill">
+              🧹 下次清理: <strong class="mono-val">{{ formatNextTime(detail?.schedule?.clean?.next_run) }}</strong>
+            </span>
+            <router-link to="/tasks" class="quick-tasks-btn">任务中心 ↗</router-link>
           </div>
         </div>
       </div>
     </div>
 
     <div class="grid-2">
-      <!-- Trend -->
+      <!-- 3. Trend -->
       <div class="card">
-        <div class="card-title">📊 近7天趋势</div>
+        <div class="card-title">
+          <span>📊 近7天趋势</span>
+          <span class="trend-sub-summary" v-if="hasTrendData">
+            累计合并 {{ totalMergeGB }} · 释放 {{ totalCleanGB }}
+          </span>
+        </div>
         <div class="card-body trend-body">
-          <div class="trend-chart">
+          <div v-if="hasTrendData" class="trend-chart">
             <div v-for="day in stats?.daily" :key="day.date" class="trend-col">
               <div class="trend-bars">
-                <el-tooltip :content="`合并 ${formatBytes(day.merge_bytes)}`" placement="top">
+                <el-tooltip :content="getMergeTooltip(day)" placement="top">
                   <div class="trend-bar bar-merge" :style="{ height: barHeight(day.merge_bytes) + 'px' }" />
                 </el-tooltip>
-                <el-tooltip :content="`释放 ${formatBytes(day.clean_bytes)}`" placement="top">
+                <el-tooltip :content="getCleanTooltip(day)" placement="top">
                   <div class="trend-bar bar-clean" :style="{ height: barHeight(day.clean_bytes) + 'px' }" />
                 </el-tooltip>
               </div>
               <span class="trend-date">{{ day.date.slice(5) }}</span>
             </div>
           </div>
+          <div v-else class="trend-empty">
+            <span class="trend-empty-icon">📊</span>
+            <span class="trend-empty-title">近 7 天暂无自动化处理数据</span>
+            <span class="trend-empty-desc">当录像分片合并或触发磁盘清理时，每日吞吐量将自动在此展现</span>
+          </div>
+
           <div class="trend-legend">
             <span><span class="legend-dot" style="background: #787774" />合并量</span>
             <span><span class="legend-dot" style="background: var(--success)" />释放量</span>
@@ -131,29 +191,36 @@
         </div>
       </div>
 
-      <!-- Recent -->
+      <!-- 4. Recent Operations -->
       <div class="card">
         <div class="card-title">
           <span>📋 最近操作</span>
-          <button class="view-all-btn" @click="$router.push('/history')">查看全部</button>
+          <button class="view-all-btn" @click="$router.push('/history')">查看全部 ↗</button>
         </div>
         <div class="card-body recent-body">
-          <div v-if="recentHistory.length === 0" class="recent-empty">暂无操作记录</div>
-          <div
-            v-for="row in recentHistory"
-            :key="row.id"
-            class="recent-row"
-          >
-            <div class="recent-left">
-              <span class="recent-icon" :class="row.status === 'fail' ? 'icon-error' : ''">
-                {{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}
-              </span>
-              <span class="recent-who">{{ row.streamer || '全局' }}</span>
-              <span class="recent-action">{{ row.detail || formatDetail(row) }}</span>
-            </div>
-            <div class="recent-right">
-              <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
-              <span class="recent-time">{{ formatShortTime(row.time) }}</span>
+          <div v-if="recentHistory.length === 0" class="recent-empty">
+            <span class="recent-empty-icon">📝</span>
+            <span class="recent-empty-title">暂无近期操作记录</span>
+            <span class="recent-empty-desc">后台自动执行或手动触发的任务记录将保存在此处</span>
+          </div>
+          <div v-else class="recent-list">
+            <div
+              v-for="row in recentHistory"
+              :key="row.id"
+              class="recent-row"
+            >
+              <div class="recent-left">
+                <span class="recent-icon" :class="row.status === 'fail' ? 'icon-error' : ''">
+                  {{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}
+                </span>
+                <span class="recent-who">{{ row.streamer || '全局' }}</span>
+                <span class="recent-action" :title="row.detail || formatDetail(row)">{{ row.detail || formatDetail(row) }}</span>
+              </div>
+              <div class="recent-right">
+                <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
+                <span v-else class="recent-success-dot" title="成功">●</span>
+                <span class="recent-time">{{ formatShortTime(row.time) }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -168,7 +235,7 @@ import { getStatusDetail, getStats } from "@/api/status";
 import { getHistory } from "@/api/history";
 import { setupCheck } from "@/api/setup";
 import { formatBytes } from "@/utils/format";
-import type { DetailResponse, StatsResponse, SetupCheck, HistoryRecord } from "@/api/types";
+import type { DetailResponse, StatsResponse, SetupCheck, HistoryRecord, DayStats } from "@/api/types";
 
 const detail = ref<DetailResponse>();
 const stats = ref<StatsResponse>();
@@ -195,21 +262,90 @@ const diskColor = computed(() => {
   return "#448361"; // Notion muted botanical green
 });
 
-const maxBytes = computed(() => {
-  if (!stats.value?.daily) return 1;
-  return Math.max(...stats.value.daily.map(d => Math.max(d.merge_bytes, d.clean_bytes)), 1);
+const isTaskRunning = computed(() => {
+  return Boolean(
+    detail.value?.schedule?.running ||
+    detail.value?.schedule?.merge?.is_running ||
+    detail.value?.schedule?.clean?.is_running
+  );
 });
 
-function barHeight(b: number): number { return Math.max(4, (b / maxBytes.value) * 100); }
+const streamerCount = computed(() => {
+  return setup.value?.streamer_count ?? detail.value?.streamers?.length ?? 0;
+});
+
+const videoCount = computed(() => {
+  return setup.value?.video_count ?? detail.value?.streamers?.reduce((acc, s) => acc + (s.files || 0), 0) ?? 0;
+});
+
+const hasTrendData = computed(() => {
+  if (!stats.value?.daily || stats.value.daily.length === 0) return false;
+  return stats.value.daily.some(d => (d.merge_bytes > 0 || d.clean_bytes > 0));
+});
+
+const totalMergeGB = computed(() => {
+  const bytes = stats.value?.daily?.reduce((acc, d) => acc + (d.merge_bytes || 0), 0) || 0;
+  return formatBytes(bytes);
+});
+
+const totalCleanGB = computed(() => {
+  const bytes = stats.value?.daily?.reduce((acc, d) => acc + (d.clean_bytes || 0), 0) || 0;
+  return formatBytes(bytes);
+});
+
+const maxBytes = computed(() => {
+  if (!stats.value?.daily) return 1;
+  return Math.max(...stats.value.daily.map(d => Math.max(d.merge_bytes || 0, d.clean_bytes || 0)), 1);
+});
+
+function barHeight(b: number): number {
+  if (!b || b <= 0) return 4;
+  return Math.max(6, Math.min(100, Math.round((b / maxBytes.value) * 100)));
+}
+
+function getMergeTooltip(day: DayStats): string {
+  if (!day.merge_bytes || day.merge_bytes <= 0) return `${day.date} 无合并任务`;
+  const count = day.merge_count ? `${day.merge_count} 次` : "";
+  return `合并 ${count} (${formatBytes(day.merge_bytes)})`;
+}
+
+function getCleanTooltip(day: DayStats): string {
+  if (!day.clean_bytes || day.clean_bytes <= 0) return `${day.date} 无清理操作`;
+  const count = day.clean_count ? `${day.clean_count} 次` : "";
+  return `释放 ${count} (${formatBytes(day.clean_bytes)})`;
+}
+
 function formatShortTime(t?: string): string {
   if (!t || t.length < 16) return "";
   return t.slice(11, 16); // "HH:mm"
 }
-function formatDetail(row: HistoryRecord) {
-  const p = [];
-  if (row.files_count) p.push(`${row.files_count}个文件`);
+
+function formatNextTime(ts?: number): string {
+  if (!ts || ts <= 0) return "未安排";
+  const date = new Date(ts * 1000);
+  const now = new Date();
+  const diffMinutes = Math.round((date.getTime() - now.getTime()) / 60000);
+  if (diffMinutes <= 0) return "即将执行";
+  if (diffMinutes < 60) return `${diffMinutes} 分钟后`;
+  const hours = String(date.getHours()).padStart(2, "0");
+  const mins = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${mins}`;
+}
+
+function formatDetail(row: HistoryRecord): string {
+  if (row.detail) return row.detail;
+  const p: string[] = [];
+  if (row.task === "merge") {
+    if (row.files_count) p.push(`合并 ${row.files_count} 个分片`);
+    if (row.merged_bytes) p.push(formatBytes(row.merged_bytes));
+  } else if (row.task === "clean") {
+    if (row.files_count) p.push(`清理 ${row.files_count} 个文件`);
+    if (row.freed_bytes) p.push(`释放 ${formatBytes(row.freed_bytes)}`);
+  } else {
+    if (row.files_count) p.push(`${row.files_count} 个文件`);
+  }
   if (row.duration) p.push(`${row.duration}s`);
-  return p.join(", ") || "—";
+  return p.join(" · ") || "已完成";
 }
 
 onMounted(async () => {
@@ -281,6 +417,7 @@ onActivated(async () => {
   background: var(--canvas); border: 1px solid var(--hairline);
   border-radius: var(--r-md); overflow: hidden;
   box-shadow: none;
+  display: flex; flex-direction: column;
 }
 
 .card-title {
@@ -288,7 +425,12 @@ onActivated(async () => {
   border-bottom: 1px solid var(--hairline);
   display: flex; justify-content: space-between; align-items: center;
 }
-.card-body { padding: 20px; }
+.card-title-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--stone);
+}
+.card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
 
 /* Disk */
 .disk-top { display: flex; justify-content: space-between; margin-bottom: 8px; }
@@ -302,72 +444,104 @@ onActivated(async () => {
   border: 1px solid var(--hairline); border-radius: var(--r-sm); overflow: hidden;
 }
 .data-cell {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 10px 14px;
   background: var(--canvas);
-  min-width: 0; /* Prevent content from stretching column */
+  min-width: 0;
 }
 .data-cell:nth-child(odd) { border-right: 1px solid var(--hairline); }
 .data-cell:nth-child(1), .data-cell:nth-child(2) { border-bottom: 1px solid var(--hairline); }
 .data-label { font-size: 13px; color: var(--steel); flex-shrink: 0; }
 
-/* System status — clean rows with dot indicators */
-.sys-body { display: flex; flex-direction: column; }
-.sys-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8.5px 0;
-  border-bottom: 1px solid #f1f1ef;
+.info-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: help;
 }
-.sys-row-last { border-bottom: 1px solid #f1f1ef; }
-.sys-label { font-size: 13px; color: var(--ink); min-width: 72px; }
-.sys-val { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--steel); font-weight: 500; }
-
-/* Trend */
-.trend-body {
-  display: flex; flex-direction: column;
-  justify-content: flex-end;
-  padding-top: 28px;
-  min-height: 220px;
+.info-bubble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface-hover);
+  color: var(--stone);
+  font-size: 10px;
+  font-weight: 600;
 }
-.trend-chart { display: flex; justify-content: space-around; align-items: flex-end; height: 120px; width: 100%; }
-.trend-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.trend-bars { display: flex; gap: 2px; align-items: flex-end; }
-.trend-bar { width: 10px; border-radius: 2px 2px 0 0; min-height: 4px; transition: height 0.3s; cursor: pointer; }
-.trend-bar:hover { opacity: 0.75; }
-.bar-merge { background: #787774; }
-.bar-clean { background: var(--success); }
-.trend-date { font-size: 12px; color: var(--stone); font-family: var(--font-mono); letter-spacing: 0.2px; }
-.trend-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; font-size: 13px; color: var(--steel); }
-.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
 
-/* Recent — single-line event flow */
-.view-all-btn {
-  background: transparent; border: none; padding: 2px 8px;
-  font-size: 13px; color: var(--steel); cursor: pointer;
-  border-radius: var(--r-sm); transition: all 0.15s; font-weight: 500;
+/* Runtime Monitor Card */
+.monitor-mode-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel);
 }
-.view-all-btn:hover { color: var(--ink); background: var(--highlight); }
-
-.recent-body { display: flex; flex-direction: column; gap: 2px; padding-bottom: 4px; }
-.recent-empty { color: var(--stone); font-size: 13px; text-align: center; padding: 40px 0; }
-.recent-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 8px; border-radius: var(--r-sm);
-  transition: background 0.1s;
+.status-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
 }
-.recent-row:hover { background: var(--highlight); }
-.recent-left { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
-.recent-icon { font-size: 14px; flex-shrink: 0; }
-.recent-icon.icon-error { filter: none; }
-.recent-who { color: #8a8a8a; flex-shrink: 0; min-width: 56px; }
-.recent-action { color: var(--charcoal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.recent-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.recent-fail { font-size: 12px; color: #d4433a; font-weight: 500; }
-.recent-time { font-family: var(--font-mono); font-size: 11px; color: #aeaeb2; min-width: 40px; text-align: right; }
+.dot-idle {
+  background: #448361;
+  box-shadow: 0 0 0 2px rgba(68, 131, 97, 0.2);
+}
+.dot-active {
+  background: #d9730d;
+  box-shadow: 0 0 0 3px rgba(217, 115, 13, 0.25);
+  animation: pulse 1.6s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 115, 13, 0.5); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(217, 115, 13, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 115, 13, 0); }
+}
 
-@media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
-@media (max-width: 600px) { .stat-grid { grid-template-columns: 1fr; } .dash-header { flex-direction: column; align-items: flex-start; gap: 8px; } }
-.disk-health-bar {
+.runtime-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.runtime-label {
+  font-size: 14px;
+  color: var(--slate);
+}
+.runtime-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.badge-idle {
+  background: #edf6f0;
+  color: #2b6a48;
+  border: 1px solid #d2ecd9;
+}
+.badge-running {
+  background: #fff6ed;
+  color: #b35600;
+  border: 1px solid #ffd8af;
+}
+
+.runtime-substrip {
+  margin-bottom: 14px;
+  min-height: 20px;
+}
+.substrip-text {
+  font-size: 12px;
+  color: var(--stone);
+  line-height: 1.4;
+}
+
+.bottom-health-bar {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -375,6 +549,9 @@ onActivated(async () => {
   padding-top: 12px;
   border-top: 1px dashed var(--hairline);
   flex-wrap: wrap;
+}
+.runtime-health-bar {
+  justify-content: space-between;
 }
 .health-pill {
   font-size: 12px;
@@ -388,5 +565,124 @@ onActivated(async () => {
   color: var(--warning);
   border-color: rgba(217, 115, 13, 0.3);
   background: #fff8f0;
+}
+.quick-tasks-btn {
+  font-size: 12px;
+  color: var(--steel);
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  transition: all 0.15s;
+  margin-left: auto;
+}
+.quick-tasks-btn:hover {
+  color: var(--ink);
+  background: var(--highlight);
+}
+
+/* Trend Card */
+.trend-sub-summary {
+  font-size: 12px;
+  color: var(--stone);
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+.trend-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
+  height: 200px;
+}
+.trend-chart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 110px;
+  width: 100%;
+}
+.trend-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.trend-bars { display: flex; gap: 2px; align-items: flex-end; }
+.trend-bar { width: 10px; border-radius: 2px 2px 0 0; min-height: 4px; transition: height 0.3s; cursor: pointer; }
+.trend-bar:hover { opacity: 0.75; }
+.bar-merge { background: #787774; }
+.bar-clean { background: var(--success); }
+.trend-date { font-size: 12px; color: var(--stone); font-family: var(--font-mono); letter-spacing: 0.2px; }
+
+.trend-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+  gap: 4px;
+}
+.trend-empty-icon { font-size: 22px; opacity: 0.6; }
+.trend-empty-title { font-size: 13px; font-weight: 500; color: var(--charcoal); }
+.trend-empty-desc { font-size: 12px; color: var(--stone); text-align: center; }
+
+.trend-legend { display: flex; gap: 16px; justify-content: center; margin-top: 8px; font-size: 13px; color: var(--steel); }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+
+/* Recent Operations */
+.view-all-btn {
+  background: transparent; border: none; padding: 2px 8px;
+  font-size: 13px; color: var(--steel); cursor: pointer;
+  border-radius: var(--r-sm); transition: all 0.15s; font-weight: 500;
+}
+.view-all-btn:hover { color: var(--ink); background: var(--highlight); }
+
+.recent-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  height: 200px;
+  overflow-y: auto;
+}
+.recent-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 4px;
+}
+.recent-empty-icon { font-size: 22px; opacity: 0.6; }
+.recent-empty-title { font-size: 13px; font-weight: 500; color: var(--charcoal); }
+.recent-empty-desc { font-size: 12px; color: var(--stone); text-align: center; }
+
+.recent-list { display: flex; flex-direction: column; gap: 3px; }
+.recent-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 8px; border-radius: var(--r-sm);
+  transition: background 0.1s;
+}
+.recent-row:hover { background: var(--highlight); }
+.recent-left { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
+.recent-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.recent-who { color: #8a8a8a; flex-shrink: 0; min-width: 52px; font-size: 12px; }
+.recent-action { color: var(--charcoal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.recent-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.recent-fail { font-size: 11px; color: #d4433a; font-weight: 600; background: #fff0f0; padding: 1px 5px; border-radius: 3px; }
+.recent-success-dot { font-size: 8px; color: #448361; }
+.recent-time { font-family: var(--font-mono); font-size: 11px; color: #aeaeb2; min-width: 38px; text-align: right; }
+
+@media (max-width: 1024px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .dash-header { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 </style>
