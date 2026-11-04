@@ -78,7 +78,7 @@
 
                   <el-form-item label="新录像免删保护">
                     <div class="safe-age-group">
-                      <el-select v-model="config.SAFE_MODE" class="compact-select" @change="onSafeModeChange" style="width: 100px">
+                      <el-select v-model="config.SAFE_MODE" class="compact-select" @change="onSafeModeChange" style="width: 92px; flex-shrink: 0;">
                         <el-option label="按小时" value="hours" />
                         <el-option label="按天" value="days" />
                       </el-select>
@@ -565,14 +565,19 @@ onMounted(() => {
 }
 
 .inline-unit-row {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .unit-text {
   font-size: 13px;
   color: var(--slate);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-block;
 }
 
 .slider-row {
@@ -596,8 +601,9 @@ onMounted(() => {
 .safe-age-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-height: 32px;
+  flex-wrap: nowrap;
 }
 
 .policy-actions {
@@ -792,5 +798,32 @@ onMounted(() => {
 }
 .toggle-link:hover {
   color: var(--ink, #333);
+}
+
+@media (max-width: 680px) {
+  .policy-pane {
+    padding: 0 4px 16px 8px;
+  }
+  .settings-form :deep(.el-form-item) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .settings-form :deep(.el-form-item__label) {
+    width: 100% !important;
+    margin-bottom: 6px;
+    height: auto;
+    line-height: 1.4;
+  }
+  .settings-form :deep(.el-form-item__content) {
+    width: 100%;
+  }
+  .safe-age-group {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .backup-grid {
+    grid-template-columns: 1fr;
+    padding: 8px 8px 16px 8px;
+  }
 }
 </style>

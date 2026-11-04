@@ -104,11 +104,16 @@
       <!-- 2. Runtime & Automation Monitor -->
       <div class="card">
         <div class="card-title">
-          <span>⚡ 调度与运行监控</span>
-          <span class="monitor-mode-tag">
-            <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-idle'"></span>
-            {{ isTaskRunning ? '任务执行中' : '自动调度生效中' }}
-          </span>
+          <div class="card-title-left">
+            <span>⚡ 调度与运行监控</span>
+            <span class="monitor-mode-tag">
+              <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-idle'"></span>
+              {{ isTaskRunning ? '任务执行中' : '自动调度生效中' }}
+            </span>
+          </div>
+          <router-link to="/tasks" class="card-header-link" title="前往任务中心查看流式终端与执行记录">
+            任务中心 ↗
+          </router-link>
         </div>
         <div class="card-body">
           <div class="runtime-top">
@@ -147,14 +152,13 @@
             </div>
           </div>
 
-          <div class="bottom-health-bar runtime-health-bar">
+          <div class="bottom-health-bar">
             <span class="health-pill">
               ⏱️ 下次合并: <strong class="mono-val">{{ formatNextTime(detail?.schedule?.merge?.next_run) }}</strong>
             </span>
             <span class="health-pill">
               🧹 下次清理: <strong class="mono-val">{{ formatNextTime(detail?.schedule?.clean?.next_run) }}</strong>
             </span>
-            <router-link to="/tasks" class="quick-tasks-btn">任务中心 ↗</router-link>
           </div>
         </div>
       </div>
@@ -560,6 +564,26 @@ onActivated(async () => {
   border-top: 1px dashed var(--hairline);
   flex-wrap: wrap;
 }
+
+.card-title-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-header-link {
+  font-size: 12px;
+  color: var(--steel);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  transition: all 0.15s;
+}
+.card-header-link:hover {
+  color: var(--ink);
+  background: var(--highlight);
+}
+
 .runtime-health-bar {
   justify-content: space-between;
 }
@@ -570,6 +594,9 @@ onActivated(async () => {
   border: 1px solid var(--hairline);
   padding: 3px 8px;
   border-radius: var(--r-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .health-pill-warn {
   color: var(--warning);

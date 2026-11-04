@@ -718,16 +718,21 @@ onActivated(async () => {
 .term-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 6px;
+  width: 124px;
+  height: 28px;
+  box-sizing: border-box;
   background: #1e1e1e;
   border: 1px solid #3c3c3c;
   color: #cccccc;
   font-size: 12px;
-  padding: 4px 10px;
+  padding: 0 8px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
   font-family: var(--font-mono);
+  white-space: nowrap;
 }
 .term-tab-btn:hover {
   background: #2a2d2e;
