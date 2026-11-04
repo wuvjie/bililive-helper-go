@@ -4,11 +4,12 @@ import router from "@/router";
 export interface SSELine {
   time: string;
   text: string;
-  type: "info" | "success" | "error";
+  type: "info" | "success" | "error" | "warn";
 }
 
 export function classifyLine(text: string): SSELine["type"] {
   if (/❌|错误|失败|error|failed|fatal/i.test(text)) return "error";
+  if (/⚠️|⚠|警告|warn|warning|注意|空间不足|跳过/i.test(text)) return "warn";
   if (/✅|完成|成功|success|done|finished/i.test(text)) return "success";
   return "info";
 }

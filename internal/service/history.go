@@ -214,10 +214,60 @@ func (s *HistoryService) cleanupRecords(records []model.HistoryRecord) []model.H
 	return cleaned
 }
 
-// CleanupOldRecords 执行历史记录清理（由调度器每日调用）。
+// CleanupOldLogFiles 清理磁盘上超过 30 天的操作日志文件（merge_log 和 clean_log）。
+// 同时限制单个日志目录下最多保留最新的 200 个文件，防止磁盘日志无序累积。
+func (s *HistoryService) CleanupOldLogFiles() {
+	if s.config == nil || s.config.LogDir == "" {
+		return
+	}
+	cutoff := time.Now().AddDate(0, 0, -30)
+	subdirs := []string{"merge_log", "clean_log"}
+
+	for _, sub := range subdirs {
+		dir := filepath.Join(s.config.LogDir, sub)
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+
+		type logFileInfo struct {
+			path    string
+			modTime time.Time
+		}
+		var files []logFileInfo
+
+		for _, e := range entries {
+			if e.IsDir() || !strings.HasPrefix(e.Name(), "op_") || !strings.HasSuffix(e.Name(), ".log") {
+				continue
+			}
+			info, err := e.Info()
+			if err != nil {
+				continue
+			}
+			fullPath := filepath.Join(dir, e.Name())
+			// 1. 删除超过 30 天的旧日志
+			if info.ModTime().Before(cutoff) {
+				_ = os.Remove(fullPath)
+				continue
+			}
+			files = append(files, logFileInfo{path: fullPath, modTime: info.ModTime()})
+		}
+
+		// 2. 如果文件数量过多（超过 200 个），保留最新的 200 个，删除多余的最旧日志
+		if len(files) > 200 {
+			sort.Slice(files, func(i, j int) bool {
+				return files[i].modTime.After(files[j].modTime) // 新的在前
+			})
+			for _, old := range files[200:] {
+				_ = os.Remove(old.path)
+			}
+		}
+	}
+}
+
+// CleanupOldRecords 执行历史记录和磁盘日志清理（由调度器每日调用）。
 func (s *HistoryService) CleanupOldRecords() {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	if !s.loaded {
 		s.doLoad()
 	}
@@ -226,4 +276,8 @@ func (s *HistoryService) CleanupOldRecords() {
 	if len(cleaned) != len(records) {
 		s.saveRecords(cleaned)
 	}
+	s.mu.Unlock()
+
+	// 清理磁盘上的旧日志文件
+	s.CleanupOldLogFiles()
 }

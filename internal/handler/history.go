@@ -76,9 +76,16 @@ func (h *Handler) GetLogContent(c *gin.Context) {
 		return
 	}
 
+	// 支持直接下载原始日志文件
+	if c.Query("raw") == "true" {
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s_%s.log\"", task, logID))
+		c.Data(200, "text/plain; charset=utf-8", content)
+		return
+	}
+
 	lines := strings.Split(string(content), "\n")
-	if len(lines) > 200 {
-		lines = lines[len(lines)-200:]
+	if len(lines) > 1000 {
+		lines = lines[len(lines)-1000:]
 	}
 	ok(c, gin.H{"content": strings.Join(lines, "\n")})
 }
