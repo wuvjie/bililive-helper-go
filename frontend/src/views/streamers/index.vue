@@ -101,6 +101,7 @@
           </template>
         </el-table-column>
       </el-table>
+      </div>
     </el-card>
 
     <!-- 主播规则配置弹窗 -->
