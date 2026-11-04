@@ -91,7 +91,7 @@ const errorCount = computed(() => props.lines.filter(l => l.type === "error").le
 const warnCount = computed(() => props.lines.filter(l => l.type === "warn").length);
 
 function isDivider(text: string): boolean {
-  return /^[─═=—-s]{3,}$/.test(text.trim());
+  return /^[─═=\-—\s]{3,}$/.test((text || "").trim());
 }
 
 async function handleCopy() {

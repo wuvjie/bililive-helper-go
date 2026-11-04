@@ -108,4 +108,19 @@ router.beforeEach(async (to, _from) => {
   }
 });
 
+router.onError((error, to) => {
+  const msg = (error?.message || "").toLowerCase();
+  if (
+    msg.includes("fetch dynamically imported module") ||
+    msg.includes("importing a module script failed") ||
+    msg.includes("error loading dynamically imported module")
+  ) {
+    if (to?.fullPath) {
+      window.location.href = to.fullPath;
+    } else {
+      window.location.reload();
+    }
+  }
+});
+
 export default router;

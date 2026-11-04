@@ -63,12 +63,18 @@ func (h *Handler) Stats(c *gin.Context) {
 	records := h.history.GetAllRecords()
 	now := time.Now()
 	today := now.Format("2006-01-02")
+	yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
 	month := now.Format("2006-01")
 
-	var todayMerge, todayClean, monthMerge, monthClean int
-	var todayMergeBytes, todayCleanBytes, monthMergeBytes, monthCleanBytes int64
+	var todayMerge, todayClean, yesterdayMerge, yesterdayClean, monthMerge, monthClean, totalClean int
+	var todayMergeBytes, todayCleanBytes, yesterdayMergeBytes, yesterdayCleanBytes, monthMergeBytes, monthCleanBytes, totalCleanBytes int64
 
 	for _, r := range records {
+		if r.Task == "clean" && r.Status == "success" {
+			totalClean++
+			totalCleanBytes += r.FreedBytes
+		}
+
 		if len(r.Time) < 10 {
 			continue
 		}
@@ -83,6 +89,16 @@ func (h *Handler) Stats(c *gin.Context) {
 			if r.Task == "clean" && r.Status == "success" {
 				todayClean++
 				todayCleanBytes += r.FreedBytes
+			}
+		}
+		if recordDay == yesterday {
+			if r.Task == "merge" && r.Status == "success" {
+				yesterdayMerge++
+				yesterdayMergeBytes += r.MergedBytes
+			}
+			if r.Task == "clean" && r.Status == "success" {
+				yesterdayClean++
+				yesterdayCleanBytes += r.FreedBytes
 			}
 		}
 		if recordMonth == month {
@@ -149,11 +165,21 @@ func (h *Handler) Stats(c *gin.Context) {
 			"clean_count": todayClean,
 			"clean_bytes": todayCleanBytes,
 		},
+		"yesterday": gin.H{
+			"merge_count": yesterdayMerge,
+			"merge_bytes": yesterdayMergeBytes,
+			"clean_count": yesterdayClean,
+			"clean_bytes": yesterdayCleanBytes,
+		},
 		"month": gin.H{
 			"merge_count": monthMerge,
 			"merge_bytes": monthMergeBytes,
 			"clean_count": monthClean,
 			"clean_bytes": monthCleanBytes,
+		},
+		"total": gin.H{
+			"clean_count": totalClean,
+			"clean_bytes": totalCleanBytes,
 		},
 		"daily":           dailyStats,
 		"daily_output_gb": float64(int(dailyOutputGB*10)) / 10,

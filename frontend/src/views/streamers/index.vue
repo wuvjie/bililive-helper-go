@@ -111,29 +111,29 @@
       </div>
     </el-card>
 
-    <!-- 主播规则配置弹窗 -->
+    <!-- 主播规则配置弹窗 (卡片式设置面板) -->
     <el-dialog
       v-model="ruleDialogVisible"
-      :title="`⚙️ ${currentStreamer} 的录像规则`"
-      width="520px"
+      :title="`⚙️ 主播个性化规则: ${currentStreamer}`"
+      width="560px"
       destroy-on-close
       class="rule-dialog"
     >
-      <el-form label-position="top" class="rule-form">
-        <!-- 视频时段裁剪设置 -->
-        <div class="rule-section">
-          <div class="section-header">
-            <div class="title-with-badge">
-              <span class="section-title">✂ 视频时段裁剪</span>
-              <span class="section-sub">无损流复制，零画质损失</span>
+      <div class="rule-dialog-body">
+        <!-- Card 1: 视频时段裁剪 -->
+        <div class="rule-setting-card">
+          <div class="setting-card-header">
+            <div class="header-title-box">
+              <span class="setting-card-title">✂ 自动视频时段裁剪</span>
+              <span class="setting-card-sub">无损流复制 · 零画质损失</span>
             </div>
             <el-switch v-model="formRule.trim_enabled" />
           </div>
-          <p class="section-desc">
-            启用后，每次直播合并转换完成后，系统将自动按指定起止时间截取（如去除开播暖场或只保留前半部分）。
+          <p class="setting-card-desc">
+            启用后，该主播分片合并转换完成后，系统将自动截取指定起止时段（如去除开播暖场或只保留前半场精选）。
           </p>
 
-          <template v-if="formRule.trim_enabled">
+          <div v-if="formRule.trim_enabled" class="trim-config-box">
             <div class="time-range-group">
               <div class="time-box">
                 <span class="time-label">开始时间</span>
@@ -142,52 +142,70 @@
               <span class="range-arrow">至</span>
               <div class="time-box">
                 <span class="time-label">结束时间</span>
-                <el-input v-model="formRule.trim_end" placeholder="00:30:00" class="mono-input" />
+                <el-input v-model="formRule.trim_end" placeholder="留空截到结束" class="mono-input" />
               </div>
-              <button type="button" class="quick-pill-btn" @click="fillQuick30">⚡ 填入前30分钟</button>
+            </div>
+            <div class="trim-quick-presets">
+              <span class="preset-label">快捷填入:</span>
+              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '00:30:00')">⚡ 前 30 分钟</button>
+              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '01:00:00')">⚡ 前 1 小时</button>
+              <button type="button" class="preset-pill preset-pill-clear" @click="fillTrimPreset('00:00:00', '')">✕ 清空结束</button>
             </div>
             <div class="form-tip">
-              * 结束时间留空表示截取到最后；如需保留前30分钟，设置为 <code>00:00:00</code> 至 <code>00:30:00</code> 即可。
+              * 结束时间留空表示截取到最后；时间格式为 <code>时:分:秒</code>（如 00:30:00）。
             </div>
-          </template>
+          </div>
         </div>
 
-        <el-divider style="margin: 18px 0" />
-
-        <!-- 存储与清理偏好 -->
-        <div class="rule-section">
-          <div class="section-header">
-            <span class="section-title">🛡️ 存储与清理保护</span>
+        <!-- Card 2: 存储与清理保护 -->
+        <div class="rule-setting-card">
+          <div class="setting-card-header">
+            <div class="header-title-box">
+              <span class="setting-card-title">🛡️ 存储与清理保护</span>
+              <span class="setting-card-sub">优先于系统全局清理策略</span>
+            </div>
           </div>
 
-          <el-form-item label="免清理免删保护">
-            <div class="switch-row">
+          <div class="rule-item-block">
+            <div class="rule-item-header">
+              <div class="rule-item-left">
+                <span class="rule-item-name">免清理免删保护</span>
+                <span class="rule-badge-pill" :class="formRule.protected ? 'pill-protected' : 'pill-default'">
+                  {{ formRule.protected ? '🔒 已豁免清理' : '遵循全局' }}
+                </span>
+              </div>
               <el-switch v-model="formRule.protected" />
-              <span class="switch-label">
-                {{ formRule.protected ? '🔒 已开启保护（最高优先级豁免，即使磁盘满也绝不删除该主播录像）' : '未开启（遵循全局磁盘清理策略）' }}
-              </span>
             </div>
             <div class="form-tip">
-              <strong>【最高优先级】</strong>开启后，后台磁盘自动清理任务将直接完全跳过该主播目录，绝不删除其名下的任何录播文件。
+              <strong>【最高优先级】</strong>开启后，后台自动磁盘清理任务将彻底跳过该主播目录，即使磁盘耗尽也绝不删除该主播的任何视频。
             </div>
-          </el-form-item>
+          </div>
 
-          <el-form-item label="个性化最少保留场次">
-            <div class="inline-unit-row">
-              <el-input-number
-                v-model="formRule.min_keep"
-                :min="0"
-                :max="100"
-                class="compact-counter"
-              />
-              <span class="unit-lbl">场</span>
+          <div class="rule-item-block rule-item-border">
+            <div class="rule-item-header">
+              <div class="rule-item-left">
+                <span class="rule-item-name">个性化最少保留场次</span>
+                <span class="rule-badge-sub">
+                  {{ formRule.min_keep > 0 ? `至少保留最新的 ${formRule.min_keep} 场` : '继承全局预设 (3 场)' }}
+                </span>
+              </div>
+              <div class="inline-unit-row">
+                <el-input-number
+                  v-model="formRule.min_keep"
+                  :min="0"
+                  :max="50"
+                  class="compact-counter"
+                  style="width: 110px;"
+                />
+                <span class="unit-lbl">场</span>
+              </div>
             </div>
             <div class="form-tip">
-              <strong>【覆盖全局】</strong>设为 0 时遵循系统全局设置；设为大于 0 则优先覆盖全局，无论磁盘多么紧张，始终保底保留该主播最新的 N 场录像。
+              <strong>【覆盖全局】</strong>设为 0 时遵循全局策略；设为大于 0 则优先覆盖全局，无论空间多么紧张始终保底保留该主播最新的 N 场录播。
             </div>
-          </el-form-item>
+          </div>
         </div>
-      </el-form>
+      </div>
 
       <template #footer>
         <div class="dialog-footer">
@@ -222,11 +240,14 @@
                 <span class="mono-val">{{ row.size_str }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="is_merged" label="状态" width="80" align="center">
+            <el-table-column prop="is_merged" label="状态" width="105" align="center" sortable>
               <template #default="{ row }">
-                <span class="status-dot-text" :class="row.is_merged ? 'dot-merged' : 'dot-pending'">
-                  {{ row.is_merged ? '合并版' : '分段' }}
-                </span>
+                <el-tooltip :content="row.is_merged ? '已通过系统合并处理的完整录播视频' : '录播工具生成的原始录像文件（待合并或独立单场录像）'" placement="top">
+                  <span class="file-status-badge" :class="row.is_merged ? 'status-merged' : 'status-raw'">
+                    <span class="badge-dot"></span>
+                    {{ row.is_merged ? '已合并' : '原始录像' }}
+                  </span>
+                </el-tooltip>
               </template>
             </el-table-column>
             <el-table-column label="操作" width="80" align="center">
@@ -429,9 +450,13 @@ onActivated(() => loadData());
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
 }
 :deep(.streamer-table) {
-  min-width: 820px;
+  min-width: 880px;
+}
+:deep(.drawer-table) {
+  min-width: 580px;
 }
 .card-header {
   display: flex;
@@ -528,6 +553,7 @@ onActivated(() => loadData());
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  padding-right: 8px;
 }
 .action-sep {
   color: var(--hairline-strong);
@@ -833,4 +859,39 @@ onActivated(() => loadData());
     flex: 1;
   }
 }
+
+.file-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.file-status-badge .badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-merged {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.status-merged .badge-dot {
+  background: #22c55e;
+}
+.status-raw {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+.status-raw .badge-dot {
+  background: #94a3b8;
+}
+
 </style>

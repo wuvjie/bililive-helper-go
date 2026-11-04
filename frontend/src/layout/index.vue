@@ -273,8 +273,10 @@ router.afterEach(() => fetchDiskStatus());
   transition: padding 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.el-menu--collapse {
-    width: 100% !important;
+    width: 64px !important;
     padding: 6px 0 !important;
+    margin: 0 auto !important;
+    --el-menu-base-level-padding: 0px !important;
 
     .el-menu-item {
       padding: 0 !important;
@@ -284,10 +286,23 @@ router.afterEach(() => fetchDiskStatus());
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
+      text-align: center !important;
+
+      .el-menu-tooltip__trigger {
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
 
       .el-icon {
         margin: 0 !important;
+        padding: 0 !important;
         font-size: 18px !important;
+        width: 18px !important;
+        height: 18px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
