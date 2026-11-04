@@ -21,23 +21,20 @@
                 </div>
                 <div class="section-body">
                   <el-form-item label="录制存储目录">
-                    <div class="dir-input-wrapper">
-                      <el-input
-                        v-model="config.TARGET_DIR"
-                        placeholder="/path/to/recordings"
-                        class="mono-input"
-                        style="max-width: 440px"
-                        :disabled="isContainerMode"
-                      />
-                      <el-tag v-if="isContainerMode" size="small" type="info" class="dir-mode-tag">
-                        📦 容器挂载
-                      </el-tag>
-                    </div>
-                    <div class="field-hint" v-if="isContainerMode">
-                      当前运行在容器环境中，内部固定为 <code>/recordings</code>。实际录制目录由宿主机卷挂载映射（<code>-v &lt;宿主机实际路径&gt;:/recordings</code>）决定。如需修改，请调整 Docker / WSL 启动命令中的挂载路径。
-                    </div>
-                    <div class="field-hint" v-else>
-                      录播软件写入分段视频的根目录，系统将自动按子文件夹扫描主播。
+                    <div class="dir-display-card">
+                      <div class="dir-path-value">
+                        <span class="folder-emoji">📂</span>
+                        <code class="mono-path">{{ config.TARGET_DIR || '/recordings' }}</code>
+                        <el-tag v-if="isContainerMode" size="small" type="info" class="dir-mode-tag">
+                          📦 容器内部挂载
+                        </el-tag>
+                      </div>
+                      <div class="field-hint" v-if="isContainerMode">
+                        当前运行在容器环境中，服务内部固定读取 <code>/recordings</code>。实际录制目录由宿主机启动时的卷挂载（<code>-v &lt;宿主机实际路径&gt;:/recordings</code>）决定。如需更换目录，请在启动命令中修改宿主机挂载路径。
+                      </div>
+                      <div class="field-hint" v-else>
+                        录播软件写入分段视频的根目录，系统将自动按子文件夹扫描主播。
+                      </div>
                     </div>
                   </el-form-item>
 
@@ -557,11 +554,31 @@ onMounted(() => {
   align-items: flex-start;
 }
 
-.dir-input-wrapper {
+.dir-display-card {
+  width: 100%;
+  max-width: 600px;
+}
+
+.dir-path-value {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  padding: 8px 14px;
+}
+
+.folder-emoji {
+  font-size: 16px;
+}
+
+.mono-path {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--charcoal);
+  flex: 1;
 }
 
 .dir-mode-tag {
