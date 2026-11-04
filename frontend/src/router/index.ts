@@ -48,7 +48,7 @@ const routes: RouteRecordRaw[] = [
         path: "settings",
         name: "Settings",
         component: () => import("@/views/settings/index.vue"),
-        meta: { title: "全局设置", icon: "Setting" },
+        meta: { title: "系统设置", icon: "Setting" },
       },
     ],
   },

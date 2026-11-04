@@ -6,7 +6,7 @@
           <div class="header-left">
             <div class="card-title-group">
               <span class="title-icon">👤</span>
-              <span class="title-text">主播录播管理</span>
+              <span class="title-text">主播管理</span>
             </div>
             <span class="streamer-total-stat">
               共 <strong>{{ streamers.length }}</strong> 位主播 · <strong>{{ totalFiles }}</strong> 个录像 · <strong>{{ totalSizeGB }}</strong> GB
@@ -250,11 +250,16 @@
                 </el-tooltip>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="80" align="center">
+            <el-table-column label="操作" width="130" align="center">
               <template #default="{ row }">
-                <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
-                  ▶ 播放
-                </button>
+                <div class="drawer-file-actions">
+                  <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
+                    ▶ 播放
+                  </button>
+                  <button class="play-btn-sm btn-del-video" @click="handleDeleteFile(row)" title="从磁盘永久删除该录像文件">
+                    🗑️ 删除
+                  </button>
+                </div>
               </template>
             </el-table-column>
             <template #empty>

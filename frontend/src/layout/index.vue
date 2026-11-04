@@ -193,7 +193,7 @@ function refreshPage() {
 }
 function handleCommand(cmd: string) {
   if (cmd === "logout") logout();
-  if (cmd === "change-password") pwDialogVisible.value = true;
+  if (cmd === "change-password") router.push({ path: "/settings", query: { tab: "security" } });
 }
 
 // Disk usage alert
