@@ -1,284 +1,439 @@
 <template>
   <div class="tasks">
-    <!-- Schedule Status -->
+    <!-- 1. Top Section: 调度状态与全局控制 -->
     <div class="schedule-grid">
+      <!-- Card 1: 自动合并 -->
       <div class="card">
         <div class="card-title card-title-flex">
-          <span>🔄 自动合并</span>
-          <button class="card-action-btn" :disabled="sse.isRunning.value" @click="handleRunTask('merge')">立即合并</button>
+          <div class="title-left">
+            <span class="title-icon">🔄</span>
+            <span class="title-text">自动分片合并</span>
+          </div>
+          <span class="badge-status" :class="schedule?.merge?.enabled ? 'badge-on' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.merge?.enabled ? 'dot-ok' : 'dot-off'" />
+            {{ schedule?.merge?.enabled ? '定时计划中' : '已暂停' }}
+          </span>
         </div>
         <div class="card-body sched-body">
           <div class="sched-row">
-            <span class="sched-label">状态</span>
-            <span class="sched-val"><span class="status-dot-sm" :class="schedule?.merge?.enabled ? 'dot-ok' : 'dot-off'" />{{ schedule?.merge?.enabled ? '已启用' : '已禁用' }}</span>
-          </div>
-          <div class="sched-row">
-            <span class="sched-label">间隔</span>
-            <span class="mono-val">{{ schedule?.merge?.interval }} <span class="unit-lbl">分钟</span></span>
+            <span class="sched-label">调度周期</span>
+            <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} <span class="unit-lbl">分钟</span></span>
           </div>
           <div class="sched-row">
             <span class="sched-label">上次运行</span>
-            <span class="mono-val-sm">{{ formatTime(schedule?.merge?.last_run) }}</span>
+            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
           </div>
-          <div class="sched-row sched-row-last">
-            <span class="sched-label">下次运行</span>
-            <span class="mono-val-sm">{{ formatTime(schedule?.merge?.next_run) }}</span>
+          <div class="sched-row">
+            <span class="sched-label">下次预计</span>
+            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.next_run) }}</span>
+          </div>
+          <div class="sched-action-row">
+            <button
+              class="btn-task-action btn-merge-action"
+              :disabled="sse.isRunning.value"
+              @click="handleRunGlobal('merge')"
+            >
+              <span class="btn-icon">⚡</span>
+              <span>立即全局合并</span>
+            </button>
           </div>
         </div>
       </div>
+
+      <!-- Card 2: 自动清理 -->
       <div class="card">
         <div class="card-title card-title-flex">
-          <span>🧹 自动清理</span>
-          <button class="card-action-btn" :disabled="sse.isRunning.value" @click="handleRunTask('clean')">立即清理</button>
+          <div class="title-left">
+            <span class="title-icon">🧹</span>
+            <span class="title-text">自动磁盘清理</span>
+          </div>
+          <span class="badge-status" :class="schedule?.clean?.enabled ? 'badge-on' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.clean?.enabled ? 'dot-ok' : 'dot-off'" />
+            {{ schedule?.clean?.enabled ? '巡检保护中' : '未开启' }}
+          </span>
         </div>
         <div class="card-body sched-body">
           <div class="sched-row">
-            <span class="sched-label">状态</span>
-            <span class="sched-val"><span class="status-dot-sm" :class="schedule?.clean?.enabled ? 'dot-ok' : 'dot-off'" />{{ schedule?.clean?.enabled ? '已启用' : '已禁用' }}</span>
-          </div>
-          <div class="sched-row">
-            <span class="sched-label">间隔</span>
-            <span class="mono-val">{{ schedule?.clean?.interval }} <span class="unit-lbl">分钟</span></span>
+            <span class="sched-label">巡检周期</span>
+            <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} <span class="unit-lbl">分钟</span></span>
           </div>
           <div class="sched-row">
             <span class="sched-label">上次运行</span>
-            <span class="mono-val-sm">{{ formatTime(schedule?.clean?.last_run) }}</span>
+            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
           </div>
-          <div class="sched-row sched-row-last">
-            <span class="sched-label">下次运行</span>
-            <span class="mono-val-sm">{{ formatTime(schedule?.clean?.next_run) }}</span>
+          <div class="sched-row">
+            <span class="sched-label">下次预计</span>
+            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.next_run) }}</span>
+          </div>
+          <div class="sched-action-row">
+            <button
+              class="btn-task-action btn-clean-action"
+              :disabled="sse.isRunning.value"
+              @click="handleRunGlobal('clean')"
+            >
+              <span class="btn-icon">🧹</span>
+              <span>立即全局清理</span>
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Manual Operations -->
-    <div class="card">
-      <div class="card-title">🎮 手动操作</div>
-      <div class="card-body">
-        <div class="ops-bar">
+    <!-- 2. Middle Section: 定向主播快捷快跑 -->
+    <div class="card targeted-card">
+      <div class="targeted-bar">
+        <div class="targeted-left">
+          <span class="targeted-label">🎯 定向主播快跑:</span>
           <el-select
             v-model="selectedStreamer"
-            placeholder="选择主播"
+            placeholder="选择特定主播..."
             filterable
-            size="small"
-            style="width: 220px"
-            @change="loadFiles"
+            clearable
+            class="targeted-select"
           >
             <el-option
               v-for="s in streamers"
               :key="s.name"
-              :label="`${s.name} (${s.files}个文件, ${s.size_gb?.toFixed(2)}GB)`"
+              :label="`${s.name} (${s.files} 个录像 · ${s.size_gb?.toFixed(1)} GB)`"
               :value="s.name"
             />
           </el-select>
-          <span class="ops-divider"></span>
-          <button class="ops-action" :disabled="!selectedStreamer" @click="selectAllUnmerged">
-            <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            全选未合并
-          </button>
-          <button
-            class="ops-action ops-merge"
-            :class="{ 'ops-merge-active': selectedFiles.length >= 2 }"
-            :disabled="selectedFiles.length < 2 || sse.isRunning.value"
-            @click="handleMerge"
-          >
-            <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-            合并
-            <span v-if="selectedFiles.length >= 2" class="ops-badge">{{ selectedFiles.length }}</span>
-          </button>
-          <button
-            class="ops-action ops-clean"
-            :disabled="!selectedStreamer || sse.isRunning.value"
-            @click="handleClean"
-          >
-            <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            清理
-          </button>
+          <div class="targeted-buttons">
+            <button
+              class="btn-targeted btn-targeted-merge"
+              :disabled="!selectedStreamer || sse.isRunning.value"
+              @click="handleTargetedMerge"
+            >
+              合并该主播
+            </button>
+            <button
+              class="btn-targeted btn-targeted-clean"
+              :disabled="!selectedStreamer || sse.isRunning.value"
+              @click="handleTargetedClean"
+            >
+              清理该主播旧录像
+            </button>
+          </div>
         </div>
-
-        <el-table
-          v-if="files.length > 0"
-          ref="tableRef"
-          :data="files"
-          size="small"
-          max-height="300"
-          :default-sort="{ prop: 'mtime', order: 'descending' }"
-          @selection-change="handleSelectionChange"
-          class="mt-12"
-        >
-          <el-table-column type="selection" width="45" :selectable="() => true" />
-          <el-table-column prop="name" label="文件名" min-width="300" show-overflow-tooltip sortable>
-            <template #default="{ row }">
-              <span class="file-name">{{ row.name }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="size" label="大小" width="100" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
-            <template #default="{ row }">
-              <span class="mono-val">{{ row.size_str }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="mtime" label="修改时间" width="170" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => a.mtime - b.mtime">
-            <template #default="{ row }">
-              <span class="mono-val-sm">{{ formatTime(row.mtime) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="is_merged" label="状态" width="100" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => Number(a.is_merged) - Number(b.is_merged)">
-            <template #default="{ row }">
-              <span class="status-dot-text" :class="row.is_merged ? 'dot-merged' : 'dot-pending'">
-                {{ row.is_merged ? '已合并' : '未合并' }}
-              </span>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div class="targeted-right">
+          <router-link
+            :to="selectedStreamer ? ('/streamers?streamer=' + encodeURIComponent(selectedStreamer)) : '/streamers'"
+            class="link-to-streamers"
+          >
+            前往主播管理查看切片详情 ↗
+          </router-link>
+        </div>
       </div>
     </div>
 
-    <!-- Terminal Output -->
-    <ReTerminal
-      :lines="sse.lines.value"
-      height="400px"
-      @clear="sse.clear"
-    />
-    <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value" class="retry-bar">
-      <button class="ops-action ops-retry" @click="sse.retryLast()">
-        <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-        重新连接
-      </button>
+    <!-- 3. Bottom Section: 智能控制台与日志查看 (双模智能终端) -->
+    <div class="terminal-container-card">
+      <!-- Terminal Tab Switcher -->
+      <div class="terminal-ctrl-bar">
+        <div class="terminal-tabs">
+          <button
+            class="term-tab-btn"
+            :class="{ active: activeLogTab === 'live' }"
+            @click="activeLogTab = 'live'"
+          >
+            <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }"></span>
+            实时终端
+            <span v-if="sse.isRunning.value" class="tab-tag-live">运行中</span>
+          </button>
+          <button
+            class="term-tab-btn"
+            :class="{ active: activeLogTab === 'recent_merge' }"
+            @click="switchRecentTab('merge')"
+          >
+            <span>📋</span> 最近合并日志
+          </button>
+          <button
+            class="term-tab-btn"
+            :class="{ active: activeLogTab === 'recent_clean' }"
+            @click="switchRecentTab('clean')"
+          >
+            <span>🧹</span> 最近清理日志
+          </button>
+
+          <!-- History dropdown selection -->
+          <div class="history-select-wrap" v-if="historyOptions.length > 0">
+            <el-select
+              v-model="selectedHistoryId"
+              placeholder="📜 历史任务回显..."
+              size="small"
+              class="history-quick-select"
+              @change="onHistorySelect"
+            >
+              <el-option
+                v-for="h in historyOptions"
+                :key="h.id"
+                :label="`[${h.task === 'merge' ? '合并' : '清理'}] ${h.streamer || '全局'} (${formatShortTime(h.time)})`"
+                :value="h.log_id || ''"
+              />
+            </el-select>
+          </div>
+        </div>
+
+        <div class="terminal-meta-right">
+          <span v-if="logLoading" class="meta-status meta-loading">
+            ⏳ 读取日志中...
+          </span>
+          <span v-else-if="activeLogTab === 'live' && sse.isRunning.value" class="meta-status meta-live">
+            ⚡ 正在接收流式输出
+          </span>
+          <span v-else-if="activeLogTab !== 'live' && activeLogMeta" class="meta-status meta-archive" :title="activeLogMeta">
+            📌 {{ activeLogMeta }}
+          </span>
+        </div>
+      </div>
+
+      <!-- ReTerminal Component -->
+      <ReTerminal
+        :lines="displayedLines"
+        :title="currentTerminalTitle"
+        :empty-text="currentEmptyText"
+        height="460px"
+        @clear="handleClear"
+      />
+
+      <!-- Reconnect bar if SSE errored -->
+      <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value && activeLogTab === 'live'" class="retry-bar">
+        <button class="ops-action ops-retry" @click="sse.retryLast()">
+          <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          重新连接
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUnmounted, onActivated } from "vue";
+import { ref, computed, watch, onMounted, onActivated } from "vue";
 import { useRoute } from "vue-router";
-import { ElMessage, ElMessageBox, type TableInstance } from "element-plus";
-import { getStreamers, getStreamerFiles } from "@/api/status";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { getStreamers } from "@/api/status";
 import { getSchedule } from "@/api/schedule";
-import { useSSE } from "@/utils/sse";
+import { getHistory, getLogContent } from "@/api/history";
+import { useSSE, classifyLine, type SSELine } from "@/utils/sse";
 import { formatTime } from "@/utils/format";
 import ReTerminal from "@/components/ReTerminal/index.vue";
-import type { ScheduleStatus, StreamerInfo, StreamerFile } from "@/api/types";
+import type { ScheduleStatus, StreamerInfo, HistoryRecord } from "@/api/types";
 
 const route = useRoute();
 const schedule = ref<ScheduleStatus>();
 const streamers = ref<StreamerInfo[]>([]);
 const selectedStreamer = ref("");
-const files = ref<StreamerFile[]>([]);
-const selectedFiles = ref<StreamerFile[]>([]);
-const tableRef = ref<TableInstance>();
 const sse = useSSE();
 
-async function loadSchedule() {
-  try {
-    schedule.value = await getSchedule();
-  } catch {
-    // silently ignore
+// Log tabs: 'live' | 'recent_merge' | 'recent_clean' | 'history'
+const activeLogTab = ref<"live" | "recent_merge" | "recent_clean" | "history">("live");
+const historicalLines = ref<SSELine[]>([]);
+const historyOptions = ref<HistoryRecord[]>([]);
+const selectedHistoryId = ref<string>("");
+const logLoading = ref(false);
+const activeLogMeta = ref("");
+
+// Displayed lines depending on active tab
+const displayedLines = computed(() => {
+  if (activeLogTab.value === "live") {
+    return sse.lines.value;
   }
+  return historicalLines.value;
+});
+
+const currentTerminalTitle = computed(() => {
+  if (activeLogTab.value === "live") {
+    return sse.isRunning.value ? "📺 实时运行终端（流式输出中...）" : "📺 实时运行终端（已完成）";
+  }
+  if (activeLogTab.value === "recent_merge") {
+    return "📋 最近一次合并任务完整日志";
+  }
+  if (activeLogTab.value === "recent_clean") {
+    return "🧹 最近一次清理任务完整日志";
+  }
+  return "📜 历史任务归档日志";
+});
+
+const currentEmptyText = computed(() => {
+  if (activeLogTab.value === "live") {
+    return "等待前台任务触发输出...";
+  }
+  if (logLoading.value) {
+    return "正在从后台载入任务日志...";
+  }
+  return "该任务暂无关联的详细日志内容";
+});
+
+function formatDisplayTime(ts?: number): string {
+  if (!ts || ts <= 0) return "未安排 / 待定";
+  return formatTime(ts);
 }
 
-async function loadFiles() {
-  if (!selectedStreamer.value) {
-    files.value = [];
-    return;
-  }
-  try {
-    files.value = await getStreamerFiles(selectedStreamer.value);
-  } catch {
-    files.value = [];
-    ElMessage.error("加载文件列表失败");
-  }
+function formatShortTime(t?: string): string {
+  if (!t || t.length < 16) return "";
+  return t.slice(5, 16); // "MM-DD HH:mm"
 }
 
-function handleSelectionChange(rows: StreamerFile[]) {
-  selectedFiles.value = rows;
-}
+// Parse backend op_*.log string into SSELine[]
+function parseRawLog(content: string): SSELine[] {
+  if (!content) return [];
+  const rawLines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+  const result: SSELine[] = [];
+  const timestampRegex = /^\[(\d{4}-\d{2}-\d{2}\s+)?(\d{2}:\d{2}:\d{2})\]\s*(.*)$/;
 
-function selectAllUnmerged() {
-  if (!tableRef.value) return;
-  tableRef.value.clearSelection();
-  nextTick(() => {
-    let count = 0;
-    files.value.forEach(row => {
-      if (!row.is_merged) {
-        tableRef.value!.toggleRowSelection(row, true);
-        count++;
-      }
-    });
-    if (count === 0) {
-      ElMessage.info("没有未合并的文件");
-    }
-  });
-}
-
-async function handleMerge() {
-  if (selectedFiles.value.length < 2) {
-    ElMessage.warning("至少选择2个文件");
-    return;
-  }
-  try {
-    await ElMessageBox.confirm(
-      `即将合并 ${selectedFiles.value.length} 个文件，是否继续？`,
-      "确认合并",
-      { type: "warning", confirmButtonText: "确认合并", cancelButtonText: "取消" }
-    );
-  } catch {
-    return; // User cancelled
-  }
-
-  // 刷新文件列表，检查选中的文件是否还在（可能被自动合并处理）
-  const selectedNames = new Set(selectedFiles.value.map(f => f.name));
-  await loadFiles();
-  const stillValid = files.value.filter(f => selectedNames.has(f.name));
-  if (stillValid.length < selectedFiles.value.length) {
-    ElMessage.warning("部分文件已不存在，请刷新文件列表重新选择");
-    selectedFiles.value = [];
-    tableRef.value?.clearSelection();
-    return;
-  }
-
-  sse.startSSE("/api/merge/manual", {
-    streamer: selectedStreamer.value,
-    files: stillValid.map(f => f.name)
-  });
-}
-
-async function handleRunTask(task: "merge" | "clean") {
-  if (task === "merge") {
-    sse.startSSE("/api/merge", {});
-  } else {
-    sse.startSSE("/api/clean", {});
-  }
-}
-
-async function handleClean() {
-  try {
-    if (selectedStreamer.value) {
-      await ElMessageBox.confirm(
-        `即将清理主播「${selectedStreamer.value}」的已合并及过期录像，确认执行？`,
-        "清理确认",
-        { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
-      );
+  for (const line of rawLines) {
+    const match = line.match(timestampRegex);
+    if (match) {
+      result.push({
+        time: match[2],
+        text: match[3],
+        type: classifyLine(match[3]),
+      });
     } else {
+      result.push({
+        time: "",
+        text: line,
+        type: classifyLine(line),
+      });
+    }
+  }
+  return result;
+}
+
+// Fetch historical log by type or logId
+async function fetchAndShowLog(taskType: "merge" | "clean" | "any", specificLogId?: string) {
+  logLoading.value = true;
+  try {
+    let targetRecord: HistoryRecord | undefined;
+    if (specificLogId) {
+      targetRecord = historyOptions.value.find(h => h.log_id === specificLogId);
+    } else {
+      const res = await getHistory({
+        page: 1,
+        per_page: 15,
+        task: taskType === "any" ? undefined : taskType
+      });
+      const items = res.items || [];
+      targetRecord = items.find(h => h.log_id && (taskType === "any" ? true : h.task === taskType));
+    }
+
+    if (!targetRecord || !targetRecord.log_id) {
+      historicalLines.value = [
+        {
+          time: new Date().toLocaleTimeString("zh-CN"),
+          text: `[系统提示] 暂无 ${taskType === "merge" ? "合并" : taskType === "clean" ? "清理" : "后台"} 操作记录`,
+          type: "info"
+        }
+      ];
+      activeLogMeta.value = "暂无后台日志";
+      return;
+    }
+
+    const logRes = await getLogContent(targetRecord.task, targetRecord.log_id);
+    historicalLines.value = parseRawLog(logRes.content || "");
+    const taskName = targetRecord.task === "merge" ? "自动合并" : "自动清理";
+    const statusText = targetRecord.status === "success" ? "成功" : "失败";
+    activeLogMeta.value = `[${taskName}] ${targetRecord.streamer || "全局"} · ${targetRecord.time} (${statusText})`;
+  } catch (err: any) {
+    historicalLines.value = [
+      {
+        time: new Date().toLocaleTimeString("zh-CN"),
+        text: `读取日志失败: ${err?.message || err}`,
+        type: "error"
+      }
+    ];
+    activeLogMeta.value = "日志读取失败";
+  } finally {
+    logLoading.value = false;
+  }
+}
+
+async function switchRecentTab(task: "merge" | "clean") {
+  activeLogTab.value = task === "merge" ? "recent_merge" : "recent_clean";
+  await fetchAndShowLog(task);
+}
+
+async function onHistorySelect(logId: string) {
+  if (!logId) return;
+  activeLogTab.value = "history";
+  await fetchAndShowLog("any", logId);
+}
+
+function handleClear() {
+  if (activeLogTab.value === "live") {
+    sse.clear();
+  } else {
+    historicalLines.value = [];
+  }
+}
+
+// 1. 全局合并
+async function handleRunGlobal(task: "merge" | "clean") {
+  try {
+    if (task === "clean") {
       await ElMessageBox.confirm(
-        "即将根据系统配置的阈值执行全局磁盘清理，确认执行？",
+        "即将根据系统配置的阈值执行全局磁盘清理，是否确认？",
         "全局清理确认",
         { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
       );
     }
+    activeLogTab.value = "live";
+    sse.startSSE(task === "merge" ? "/api/merge" : "/api/clean", {});
+  } catch {
+    // User cancelled
+  }
+}
+
+// 2. 定向主播合并
+async function handleTargetedMerge() {
+  if (!selectedStreamer.value) return;
+  activeLogTab.value = "live";
+  sse.startSSE("/api/merge", { streamer: selectedStreamer.value });
+}
+
+// 3. 定向主播清理
+async function handleTargetedClean() {
+  if (!selectedStreamer.value) return;
+  try {
+    await ElMessageBox.confirm(
+      `即将清理主播「${selectedStreamer.value}」的已合并及过期录像，确认执行？`,
+      "清理确认",
+      { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
+    );
+    activeLogTab.value = "live";
     sse.startSSE("/api/clean", { streamer: selectedStreamer.value });
   } catch {
     // User cancelled
   }
 }
 
-// When SSE finishes (isRunning goes from true -> false), refresh data and show notification
+// Refresh schedules and history list
+async function loadBaseData() {
+  try {
+    const [sc, st, hist] = await Promise.allSettled([
+      getSchedule(),
+      getStreamers(),
+      getHistory({ page: 1, per_page: 8 })
+    ]);
+    if (sc.status === "fulfilled") schedule.value = sc.value;
+    if (st.status === "fulfilled") streamers.value = st.value;
+    if (hist.status === "fulfilled") {
+      historyOptions.value = (hist.value.items || []).filter(h => !!h.log_id);
+    }
+
+    const queryStreamer = route.query.streamer as string;
+    if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
+      selectedStreamer.value = queryStreamer;
+    }
+  } catch {
+    // ignore
+  }
+}
+
+// Watch SSE running state to refresh when done
 watch(() => sse.isRunning.value, async (running, wasRunning) => {
   if (wasRunning && !running) {
-    // SSE 完成后清空文件选择状态，避免 stale 引用
-    selectedFiles.value = [];
-    tableRef.value?.clearSelection();
-    await Promise.allSettled([loadFiles(), loadSchedule()]);
+    await loadBaseData();
     const lastLine = sse.lines.value.at(-1);
     if (lastLine) {
       if (/✅/.test(lastLine.text)) {
@@ -290,142 +445,417 @@ watch(() => sse.isRunning.value, async (running, wasRunning) => {
   }
 });
 
-async function refreshData() {
-  const [s, st] = await Promise.allSettled([getSchedule(), getStreamers()]);
-  if (s.status === "fulfilled") schedule.value = s.value;
-  if (st.status === "fulfilled") streamers.value = st.value;
-
-  const queryStreamer = route.query.streamer as string;
-  if (queryStreamer && streamers.value.some((s) => s.name === queryStreamer)) {
-    selectedStreamer.value = queryStreamer;
-    await loadFiles();
+onMounted(async () => {
+  await loadBaseData();
+  // If no live task is running, automatically load the most recent task log
+  if (!sse.isRunning.value) {
+    activeLogTab.value = "recent_merge";
+    await fetchAndShowLog("merge");
   }
-}
-
-onMounted(refreshData);
-
-onUnmounted(() => {
-  sse.abort();
 });
 
-onActivated(refreshData);
+onActivated(async () => {
+  await loadBaseData();
+});
 </script>
 
 <style scoped>
-.tasks { display: flex; flex-direction: column; gap: 16px; }
-.mt-12 { margin-top: 12px; }
+.tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-/* Schedule grid */
-.schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* Schedule Grid */
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
 .card {
-  background: var(--canvas); border: 1px solid var(--hairline);
-  border-radius: var(--r-md); overflow: hidden;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  overflow: hidden;
   box-shadow: none;
 }
+
 .card-title {
-  padding: 14px 20px; font-size: 14px; font-weight: 600; color: var(--ink);
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
   border-bottom: 1px solid var(--hairline);
 }
-.card-body { padding: 20px; }
 
-/* Schedule rows */
-.sched-body { display: flex; flex-direction: column; }
-.sched-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f1ef;
-  font-size: 13px;
-}
-.sched-row-last { border-bottom: none; }
-.sched-label { color: var(--steel); min-width: 64px; }
-.sched-val {
-  display: flex; align-items: center; gap: 8px;
-  color: var(--steel); font-weight: 500;
-  width: 160px; text-align: left;
-}
-.mono-val { font-family: var(--font-mono); font-size: 13px; color: var(--ink); width: 160px; text-align: left; }
-.mono-val-sm { font-family: var(--font-mono); font-size: 12px; color: var(--slate); width: 160px; text-align: left; }
-.unit-lbl { font-size: 12px; color: var(--stone); margin-left: 4px; }
-.file-name { font-family: var(--font-mono); font-size: 12px; color: var(--charcoal); }
-
-/* Status dots */
-.dot-off { background: #d3d1cb; }
-
-/* Ops bar */
-.ops-bar {
-  display: flex; gap: 4px; flex-wrap: wrap; align-items: center;
-}
-.ops-divider { width: 1px; height: 14px; background: var(--hairline); flex-shrink: 0; margin: 0 4px; }
-.ops-icon { width: 14px; height: 14px; flex-shrink: 0; }
-/* Ghost text action buttons — no border, no background */
-.ops-action {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: transparent; border: none; padding: 0;
-  font-size: 13px; font-weight: 500; color: var(--steel);
-  cursor: pointer; transition: color 0.15s;
-}
-.ops-action:hover:not(:disabled) { color: var(--ink); }
-.ops-action:disabled { color: #c7c7cc; cursor: not-allowed; }
-/* Merge button — accent when files selected */
-.ops-merge { color: #c7c7cc; }
-.ops-merge-active { color: var(--ink) !important; font-weight: 600 !important; }
-.ops-badge {
-  display: inline-block; padding: 0 5px; margin-left: 4px;
-  font-size: 11px; font-weight: 600; font-family: var(--font-mono);
-  color: var(--ink); background: var(--highlight);
-  border-radius: var(--r-xs); line-height: 1.6;
-}
-/* Clean button — hover turns red */
-.ops-clean:hover:not(:disabled) { color: #c4554d !important; }
-
-/* Retry bar — shown below terminal when SSE fails */
-.retry-bar {
-  display: flex; justify-content: flex-end; padding: 8px 0;
-}
-.ops-retry {
-  color: #d9730d;
-}
-.ops-retry:hover:not(:disabled) { color: #b85c00 !important; }
-
-/* Status dot text in table */
-.status-dot-text {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 12px; font-weight: 500; background: transparent;
-}
-.status-dot-text::before {
-  content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px;
-}
-.dot-merged { color: #2b593f; }
-.dot-merged::before { background: #448361; }
-.dot-pending { color: #9a6c00; }
-.dot-pending::before { background: #d9730d; }
-
-@media (max-width: 768px) {
-  .schedule-grid { grid-template-columns: 1fr; }
-}
 .card-title-flex {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.card-action-btn {
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  color: var(--charcoal);
-  border-radius: var(--r-sm);
-  padding: 3px 8px;
-  font-size: 11px;
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title-icon {
+  font-size: 15px;
+}
+
+.title-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 500;
+}
+.badge-on {
+  background: #edf6f0;
+  color: #2b6a48;
+  border: 1px solid #d2ecd9;
+}
+.badge-off {
+  background: #f4f4f4;
+  color: #888;
+  border: 1px solid #e0e0e0;
+}
+
+.sched-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sched-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+.sched-label {
+  color: var(--steel);
+}
+.mono-val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--ink);
+}
+.mono-val-sm {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--slate);
+}
+.unit-lbl {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--stone);
+}
+
+.sched-action-row {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--hairline);
+}
+
+.btn-task-action {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
 }
-.card-action-btn:hover:not(:disabled) {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-.card-action-btn:disabled {
+.btn-task-action:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-merge-action {
+  background: #edf6f0;
+  color: #2b6a48;
+  border-color: #c7e6d0;
+}
+.btn-merge-action:not(:disabled):hover {
+  background: #d8eedf;
+  border-color: #aed9ba;
+}
+
+.btn-clean-action {
+  background: #fff8f0;
+  color: #b35600;
+  border-color: #ffd8af;
+}
+.btn-clean-action:not(:disabled):hover {
+  background: #ffeedb;
+  border-color: #ffc485;
+}
+
+/* Targeted Streamer Operations */
+.targeted-card {
+  padding: 12px 18px;
+}
+
+.targeted-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.targeted-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.targeted-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--charcoal);
+  white-space: nowrap;
+}
+
+.targeted-select {
+  width: 260px;
+}
+
+.targeted-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-targeted {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  color: var(--charcoal);
+  transition: all 0.15s ease;
+}
+.btn-targeted:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-targeted-merge:not(:disabled):hover {
+  background: #edf6f0;
+  color: #2b6a48;
+  border-color: #c7e6d0;
+}
+.btn-targeted-clean:not(:disabled):hover {
+  background: #fff8f0;
+  color: #b35600;
+  border-color: #ffd8af;
+}
+
+.targeted-right {
+  margin-left: auto;
+}
+
+.link-to-streamers {
+  font-size: 12px;
+  color: var(--steel);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  transition: all 0.15s;
+}
+.link-to-streamers:hover {
+  color: var(--ink);
+  background: var(--highlight);
+}
+
+/* Terminal Card */
+.terminal-container-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-ctrl-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #252526;
+  border-bottom: 1px solid #333;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.terminal-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.term-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  color: #cccccc;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-mono);
+}
+.term-tab-btn:hover {
+  background: #2a2d2e;
+  color: #ffffff;
+  border-color: #555;
+}
+.term-tab-btn.active {
+  background: #37373d;
+  color: #ffffff;
+  border-color: #007fd4;
+  font-weight: 500;
+}
+
+.tab-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-live {
+  background: #448361;
+}
+.pulse-dot {
+  background: #d9730d;
+  animation: pulse-dot 1.2s infinite;
+}
+@keyframes pulse-dot {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(217, 115, 13, 0.7); }
+  70% { transform: scale(1.2); box-shadow: 0 0 0 5px rgba(217, 115, 13, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(217, 115, 13, 0); }
+}
+
+.tab-tag-live {
+  font-size: 10px;
+  background: #d9730d;
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin-left: 2px;
+}
+
+.history-select-wrap {
+  margin-left: 6px;
+}
+.history-quick-select {
+  width: 210px;
+}
+.history-quick-select :deep(.el-input__wrapper) {
+  background: #1e1e1e;
+  box-shadow: 0 0 0 1px #3c3c3c inset;
+}
+.history-quick-select :deep(.el-input__inner) {
+  color: #ccc;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.terminal-meta-right {
+  display: flex;
+  align-items: center;
+}
+
+.meta-status {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta-loading {
+  color: #d7ba7d;
+}
+.meta-live {
+  color: #4ec9b0;
+  font-weight: 500;
+}
+.meta-archive {
+  color: #9cdcfe;
+}
+
+.retry-bar {
+  background: #1f1f1f;
+  padding: 6px 12px;
+  border-top: 1px solid #2e2e2e;
+}
+.ops-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid #444;
+  color: #ccc;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ops-action:hover {
+  border-color: #666;
+  color: #fff;
+}
+.ops-icon {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 900px) {
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+  .targeted-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .targeted-select {
+    width: 100%;
+  }
+  .terminal-ctrl-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .history-quick-select {
+    width: 100%;
+  }
+  .history-select-wrap {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 </style>

@@ -25,11 +25,14 @@
     <el-form-item>
       <el-button type="primary" :loading="saving" style="width: 128px" @click="emit('save')">保存计划</el-button>
     </el-form-item>
-    <div class="section-divider">🎮 手动触发</div>
-    <el-form-item>
-      <el-button :disabled="taskRunning" style="width: 148px" @click="emit('trigger', 'merge')" class="ghost-trigger"> 🔄 立即执行合并 </el-button>
-      <el-button :disabled="taskRunning" style="width: 148px" @click="emit('trigger', 'clean')" class="ghost-trigger"> 🧹 立即执行清理 </el-button>
-    </el-form-item>
+    <div class="section-divider">⚡ 即时执行与终端</div>
+    <div class="schedule-guide-card">
+      <span class="guide-icon">💡</span>
+      <div class="guide-text">
+        需要立即手动触发全库合并、清理或针对特定主播执行任务，并实时查看流式终端输出？请前往
+        <router-link to="/tasks" class="guide-link">任务中心 ↗</router-link>
+      </div>
+    </div>
   </el-form>
 </template>
 
@@ -47,7 +50,7 @@ defineProps<{
   backupEnd: string;
   saving: boolean;
   loading: boolean;
-  taskRunning: boolean;
+  taskRunning?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -55,7 +58,7 @@ const emit = defineEmits<{
   "update:backupStart": [value: string];
   "update:backupEnd": [value: string];
   save: [];
-  trigger: [task: "merge" | "clean"];
+  trigger?: [task: "merge" | "clean"];
 }>();
 </script>
 
@@ -63,9 +66,9 @@ const emit = defineEmits<{
 .section-divider {
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: var(--charcoal, #333);
   padding: 16px 0 8px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--hairline, #f0f0f0);
   margin-bottom: 8px;
 }
 .section-divider:first-child {
@@ -76,14 +79,33 @@ const emit = defineEmits<{
   font-size: 12px;
   margin: -4px 0 8px 144px;
 }
-.ghost-trigger {
-  background: transparent;
-  border: 1px solid #dcdfe6;
-  color: #606266;
+.schedule-guide-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface, #fafafa);
+  border: 1px dashed var(--hairline, #e0e0e0);
+  border-radius: var(--r-sm, 6px);
+  padding: 12px 16px;
+  margin-top: 4px;
+  margin-bottom: 12px;
 }
-.ghost-trigger:hover {
-  border-color: #409eff;
-  color: #409eff;
+.guide-icon {
+  font-size: 16px;
+}
+.guide-text {
+  font-size: 13px;
+  color: var(--slate, #666);
+  line-height: 1.5;
+}
+.guide-link {
+  color: #448361;
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+.guide-link:hover {
+  text-decoration: underline;
 }
 .settings-form :deep(.el-form-item__label) {
   color: #666;

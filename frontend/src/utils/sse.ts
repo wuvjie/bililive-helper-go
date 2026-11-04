@@ -7,7 +7,7 @@ export interface SSELine {
   type: "info" | "success" | "error";
 }
 
-function classifyLine(text: string): SSELine["type"] {
+export function classifyLine(text: string): SSELine["type"] {
   if (/❌|错误|失败|error|failed|fatal/i.test(text)) return "error";
   if (/✅|完成|成功|success|done|finished/i.test(text)) return "success";
   return "info";
