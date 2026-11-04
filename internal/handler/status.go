@@ -386,3 +386,41 @@ func (h *Handler) PlayStreamerVideo(c *gin.Context) {
 	c.Header("Content-Disposition", "inline; filename="+filepath.Base(file))
 	http.ServeFile(c.Writer, c.Request, fullPath)
 }
+// DeleteStreamerFile 删除指定主播的单个录像文件（防路径穿越 + 记录释放空间历史）。
+func (h *Handler) DeleteStreamerFile(c *gin.Context) {
+	streamer := c.Param("name")
+	file := c.Query("file")
+	if !utils.ValidateFilename(streamer) || !utils.ValidateFilename(file) {
+		failBadRequest(c, "参数包含非法字符")
+		return
+	}
+	if !utils.IsVideoFile(file) {
+		failBadRequest(c, "仅支持删除视频文件")
+		return
+	}
+
+	cfg := h.config.Snapshot()
+	fullPath := filepath.Join(cfg.TargetDir, streamer, file)
+	info, err := os.Stat(fullPath)
+	if err != nil || info.IsDir() {
+		failNotFound(c, "待删除的视频文件不存在")
+		return
+	}
+
+	fileSize := info.Size()
+	if err := os.Remove(fullPath); err != nil {
+		h.logger.Error("删除视频文件失败", zap.String("path", fullPath), zap.Error(err))
+		fail(c, http.StatusInternalServerError, "删除文件失败: "+err.Error())
+		return
+	}
+
+	// 记录到操作历史，并计入 clean 任务以计入累计释放磁盘空间
+	detail := fmt.Sprintf("手动删除视频: %s (%s)", file, utils.FormatSize(fileSize))
+	h.history.AddWithStats("clean", streamer, "success", 1, fileSize, 0, 0, detail, "")
+
+	ok(c, gin.H{
+		"deleted":     file,
+		"freed_bytes": fileSize,
+		"freed_str":   utils.FormatSize(fileSize),
+	})
+}

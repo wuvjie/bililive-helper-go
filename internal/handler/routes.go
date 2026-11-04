@@ -74,6 +74,7 @@ func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) func() {
 			// 主播
 			auth.GET("/streamers", h.GetStreamers)
 			auth.GET("/streamers/:name/files", h.GetStreamerFiles)
+			auth.DELETE("/streamers/:name/files", h.DeleteStreamerFile)
 			auth.GET("/streamers/:name/play", h.PlayStreamerVideo)
 			auth.GET("/streamers/:name/rule", h.GetStreamerRule)
 			auth.POST("/streamers/:name/rule", h.SaveStreamerRule)
@@ -85,6 +86,8 @@ func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) func() {
 
 			// 历史
 			auth.GET("/history", h.GetHistory)
+			auth.DELETE("/history/:id", h.DeleteHistory)
+			auth.POST("/history/clear", h.ClearHistory)
 			auth.GET("/history/export", h.ExportHistory)
 			auth.GET("/logs/content/:task", h.GetLogContent)
 

@@ -1,4 +1,4 @@
-import { get, post } from "@/utils/http";
+import { get, post, del } from "@/utils/http";
 import type { DetailResponse, StatsResponse, StreamerInfo, StreamerFile, StreamerRule } from "./types";
 
 export function getStatusDetail() {
@@ -27,4 +27,10 @@ export function saveStreamerRule(name: string, rule: StreamerRule) {
 
 export function getVideoPlayUrl(streamer: string, file: string) {
   return `/api/streamers/${encodeURIComponent(streamer)}/play?file=${encodeURIComponent(file)}`;
+}
+export function deleteStreamerFile(name: string, file: string) {
+  return del<{ deleted: string; freed_bytes: number; freed_str: string }>(
+    `/streamers/${encodeURIComponent(name)}/files`,
+    { file }
+  );
 }

@@ -296,9 +296,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, onActivated } from "vue";
 import { useRouter } from "vue-router";
-import { getStreamers, getStreamerFiles, saveStreamerRule, getVideoPlayUrl } from "@/api/status";
+import { getStreamers, getStreamerFiles, saveStreamerRule, getVideoPlayUrl, deleteStreamerFile } from "@/api/status";
 import { Search } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import type { StreamerInfo, StreamerFile, StreamerRule } from "@/api/types";
 
 const router = useRouter();
@@ -894,4 +894,193 @@ onActivated(() => loadData());
   background: #94a3b8;
 }
 
+
+/* Modern Rule Dialog Styling */
+:deep(.rule-dialog) {
+  border-radius: var(--r-md, 8px);
+  overflow: hidden;
+}
+:deep(.rule-dialog .el-dialog__body) {
+  padding: 16px 20px 20px !important;
+}
+.rule-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rule-setting-card {
+  background: var(--surface, #fcfcfc);
+  border: 1px solid var(--hairline, #e2e8f0);
+  border-radius: var(--r-md, 8px);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.15s ease;
+}
+.setting-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.header-title-box {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.setting-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink, #1e293b);
+}
+.setting-card-sub {
+  font-size: 11px;
+  color: var(--steel, #64748b);
+}
+.setting-card-desc {
+  font-size: 12px;
+  color: var(--slate, #475569);
+  line-height: 1.5;
+  margin: 0 0 10px 0;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 8px 10px;
+  border-radius: var(--r-sm, 4px);
+  border-left: 3px solid #3b82f6;
+}
+.trim-config-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid var(--hairline, #e2e8f0);
+  border-radius: var(--r-sm, 6px);
+  padding: 12px;
+  margin-top: 6px;
+}
+.time-range-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.time-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.time-label {
+  font-size: 11px;
+  color: var(--steel, #64748b);
+  font-weight: 500;
+}
+.range-arrow {
+  color: var(--stone, #94a3b8);
+  font-size: 12px;
+  padding: 0 4px;
+  margin-top: 18px;
+}
+.trim-quick-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0;
+}
+.preset-label {
+  font-size: 11px;
+  color: var(--steel, #64748b);
+  font-weight: 500;
+}
+.preset-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid var(--hairline-strong, #cbd5e1);
+  color: var(--charcoal, #334155);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.preset-pill:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+  transform: translateY(-1px);
+}
+.preset-pill-clear {
+  color: var(--steel, #64748b);
+}
+.preset-pill-clear:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #dc2626;
+}
+.rule-item-block {
+  background: #ffffff;
+  border: 1px solid var(--hairline, #e2e8f0);
+  border-radius: var(--r-sm, 6px);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.rule-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rule-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rule-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink, #1e293b);
+}
+.rule-badge-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+.pill-protected {
+  background: #eef8f1;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.pill-default {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+.rule-badge-sub {
+  font-size: 11px;
+  color: var(--steel, #64748b);
+}
+
+/* Drawer File Actions */
+.drawer-file-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-del-video {
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+}
+.btn-del-video:hover {
+  background: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  color: #b91c1c !important;
+}
 </style>
