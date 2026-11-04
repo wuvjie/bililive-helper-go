@@ -50,8 +50,10 @@
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/streamers` | 主播列表（文件数、磁盘占用、最新视频时间） |
+| GET | `/api/streamers` | 主播列表（文件数、磁盘占用、最新视频时间、规则信息） |
 | GET | `/api/streamers/:name/files` | 指定主播的文件列表 |
+| GET | `/api/streamers/:name/rule` | 获取指定主播的录像规则（裁剪与免删） |
+| POST | `/api/streamers/:name/rule` | 保存指定主播的录像规则 |
 
 ## 任务执行（SSE 流式输出）
 

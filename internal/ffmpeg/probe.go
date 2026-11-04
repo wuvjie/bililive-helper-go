@@ -50,3 +50,19 @@ func ProbeHealth(ctx context.Context, path string) bool {
 	}
 	return len(strings.TrimSpace(string(out))) > 0
 }
+
+// HasAudioStream 检查视频文件是否包含有效的音频流。
+func HasAudioStream(ctx context.Context, path string) bool {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ffprobe", "-v", "error",
+		"-select_streams", "a:0",
+		"-show_entries", "stream=codec_name",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		path)
+	out, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	return len(strings.TrimSpace(string(out))) > 0
+}

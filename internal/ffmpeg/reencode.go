@@ -36,21 +36,32 @@ func Reencode(ctx context.Context, files []string, folder, output string, onProg
 		args = append(args, "-i", filepath.ToSlash(filepath.Join(folder, f)))
 	}
 
-	// filter_complex: [0:v][0:a][1:v][1:a]...concat=n=N:v=1:a=1[outv][outa]
-	// TODO: 当前假定所有输入均为 1 视频流 + 1 音频流。遇纯音频/纯视频录制会报错，
-	//       需 ffprobe 预检流信息后动态生成 filter_complex。
+	// 预检输入文件是否包含音频流，动态组装 filter_complex（兼容纯视频录制）
+	hasAudio := HasAudioStream(ctx, filepath.Join(folder, files[0]))
 	n := len(files)
 	var filterParts []string
-	for i := 0; i < n; i++ {
-		filterParts = append(filterParts, fmt.Sprintf("[%d:v:0][%d:a:0]", i, i))
+	var filter string
+	if hasAudio {
+		for i := 0; i < n; i++ {
+			filterParts = append(filterParts, fmt.Sprintf("[%d:v:0][%d:a:0]", i, i))
+		}
+		filter = fmt.Sprintf("%sconcat=n=%d:v=1:a=1[outv][outa]", strings.Join(filterParts, ""), n)
+		args = append(args,
+			"-filter_complex", filter,
+			"-map", "[outv]", "-map", "[outa]",
+			"-c:v", videoEncoder,
+		)
+	} else {
+		for i := 0; i < n; i++ {
+			filterParts = append(filterParts, fmt.Sprintf("[%d:v:0]", i))
+		}
+		filter = fmt.Sprintf("%sconcat=n=%d:v=1:a=0[outv]", strings.Join(filterParts, ""), n)
+		args = append(args,
+			"-filter_complex", filter,
+			"-map", "[outv]",
+			"-c:v", videoEncoder,
+		)
 	}
-	filter := fmt.Sprintf("%sconcat=n=%d:v=1:a=1[outv][outa]", strings.Join(filterParts, ""), n)
-
-	args = append(args,
-		"-filter_complex", filter,
-		"-map", "[outv]", "-map", "[outa]",
-		"-c:v", videoEncoder,
-	)
 
 	if videoEncoder == "h264_rkmpp" {
 		args = append(args,
@@ -71,8 +82,10 @@ func Reencode(ctx context.Context, files []string, folder, output string, onProg
 		)
 	}
 
+	if hasAudio {
+		args = append(args, "-c:a", "aac", "-b:a", "128k")
+	}
 	args = append(args,
-		"-c:a", "aac", "-b:a", "128k",
 		"-y", "-loglevel", "error",
 		output)
 
