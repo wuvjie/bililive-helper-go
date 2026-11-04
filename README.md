@@ -29,7 +29,7 @@
 
 ## 部署运行
 
-本工具支持 **Docker Compose**、**原生 Docker (`docker run`)** 以及 **Windows WSL Container (`wslc`)** 三种部署方式。
+本工具支持 **Docker Compose**、**原生 Docker CLI (`docker run`)** 以及 **Windows WSL Container (`wslc`)** 三种部署方式。
 
 无论哪种部署方式，容器内部均采用统一的标准固定路径（实现宿主机与容器的彻底解耦）：
 - `/recordings`：录制视频根目录（宿主机挂载 bililive-go 录制输出目录）
@@ -106,7 +106,8 @@ docker compose down           # 停止并移除容器
     --build-arg REGISTRY=docker.m.daocloud.io \
     --build-arg ALPINE_MIRROR=mirrors.aliyun.com \
     --build-arg GO_PROXY=https://goproxy.cn,direct \
-    --build-arg NPM_REGISTRY=https://registry.npmmirror.com .
+    --build-arg NPM_REGISTRY=https://registry.npmmirror.com \
+    .
   ```
 
 #### 2. 运行容器 (`docker run`)
@@ -121,8 +122,6 @@ docker run -d \
   -e TARGET_DIR=/recordings \
   -e LOG_DIR=/data \
   -e TZ=Asia/Shanghai \
-  --log-opt max-size=10m \
-  --log-opt max-file=3 \
   bililive-helper-go
 ```
 
@@ -131,7 +130,7 @@ docker run -d \
 > - `-v /path/to/data:/data`：将宿主机数据持久化目录映射到容器 `/data`。
 > - `-p 5689:5000`：宿主机对外暴露 5689 端口（容器内监听 5000）。
 > - `-e TARGET_DIR=/recordings -e LOG_DIR=/data`：确保应用程序使用挂载的标准目录。
-> - *资源限制（可选）*：默认不限制硬件资源；如需限制可按需追加 `--cpus="2.0" --memory="4g"`。
+> - *可选参数*：若需限制硬件占用或日志体积，可按需追加 `--cpus="2.0" --memory="4g"` 或 `--log-opt max-size=10m --log-opt max-file=3`。
 
 #### 3. 运维维护
 ```bash
@@ -158,7 +157,8 @@ docker stop bililive-helper-go       # 停止容器
     --build-arg REGISTRY=docker.m.daocloud.io `
     --build-arg ALPINE_MIRROR=mirrors.aliyun.com `
     --build-arg GO_PROXY=https://goproxy.cn,direct `
-    --build-arg NPM_REGISTRY=https://registry.npmmirror.com .
+    --build-arg NPM_REGISTRY=https://registry.npmmirror.com `
+    .
   ```
 
 #### 2. 运行容器 (`wslc run`)
@@ -178,7 +178,7 @@ wslc run -d `
 > **Windows 路径挂载特别说明**：
 > - 宿主机路径既支持 Windows 原生盘符路径（如 `D:\video\recordings:/recordings`），也支持 WSL 挂载路径（如 `/mnt/d/video/recordings:/recordings`）。
 > - 容器内部始终使用通用的 `/recordings` 和 `/data`，彻底解耦本地路径与容器业务逻辑。
-> - *资源限制（可选）*：默认不限制硬件资源；如需限制可按需追加 `--cpus="2.0" --memory="4g"`。
+> - *可选参数*：若需限制硬件占用或日志体积，可按需追加 `--cpus="2.0" --memory="4g"` 或 `--log-opt max-size=10m --log-opt max-file=3`。
 
 #### 3. 运维维护
 ```powershell
@@ -231,7 +231,7 @@ cd frontend && npm run lint # 代码检查
 
 ## 常见问题
 
-**ffmpeg 未安装** → Docker 镜像已内置 FFmpeg；若本地宿主机运行请通过包管理器安装。
+**ffmpeg 未安装** → Docker 镜像已内置 FFmpeg；若本地宿主机运行请通过系统包管理器安装。
 
 **忘记密码** → 删除宿主机数据目录中的 `.credentials.json`（即 `{DATA_DIR}/.credentials.json`）后重启容器，系统将重新进入初始化向导。
 
