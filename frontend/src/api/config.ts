@@ -1,5 +1,5 @@
 import { get, post } from "@/utils/http";
-import type { ConfigDTO, ConfigRecommend } from "./types";
+import type { ConfigDTO } from "./types";
 
 export function getConfig() {
   return get<ConfigDTO>("/config");
@@ -7,10 +7,6 @@ export function getConfig() {
 
 export function saveConfig(data: Partial<ConfigDTO>) {
   return post("/config", data);
-}
-
-export function getConfigRecommend() {
-  return get<ConfigRecommend>("/config/recommend", undefined, { timeout: 60000 });
 }
 
 export function getConfigExport() {

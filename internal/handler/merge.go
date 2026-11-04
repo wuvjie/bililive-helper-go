@@ -78,28 +78,6 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 	h.runManualMergeSSE(c, req.Streamer, req.Files, "手动合并")
 }
 
-// MergeRetry 重试之前失败的合并操作。
-func (h *Handler) MergeRetry(c *gin.Context) {
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 32*1024)
-	var req struct {
-		Streamer string   `json:"streamer" binding:"required"`
-		Files    []string `json:"files" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		failBadRequest(c, "参数错误")
-		return
-	}
-	if !utils.ValidateFilename(req.Streamer) {
-		failBadRequest(c, "主播名包含非法字符")
-		return
-	}
-	if len(req.Files) > maxManualMergeFiles {
-		failBadRequest(c, fmt.Sprintf("文件数量超限（最多%d个）", maxManualMergeFiles))
-		return
-	}
-	h.runManualMergeSSE(c, req.Streamer, req.Files, "重试")
-}
-
 func (h *Handler) runManualMergeSSE(c *gin.Context, streamer string, files []string, label string) {
 	h.runSSE(c, "merge", func(ctx context.Context, onProgress func(string)) string {
 		logID, err := h.merge.ManualMerge(ctx, streamer, files, onProgress)
@@ -250,92 +228,6 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 	}()
 	ok(c, gin.H{"status": "success", "schedule": h.scheduler.GetStatus()})
 }
-
-// CleanEstimate 预估可清理的文件数量和大小（不含白名单和已合并文件）。
-func (h *Handler) CleanEstimate(c *gin.Context) {
-	cfg := h.config.ToDTO()
-	root := cfg.TargetDir
-	dirs, err := fsutil.ScanStreamerDirs(root)
-	if err != nil {
-		failNotFound(c, "目录不存在")
-		return
-	}
-
-	var totalSize int64
-	count := 0
-	wl := cfg.WhitelistKeywords
-	for _, dir := range dirs {
-		for _, fe := range dir.Files {
-			if fe.IsDir() {
-				continue
-			}
-			name := fe.Name()
-			if !utils.IsVideoFile(name) {
-				continue
-			}
-			if utils.IsMergedFile(name) {
-				continue
-			}
-			if utils.ContainsAny(name, wl) || utils.ContainsAny(dir.Name, wl) {
-				continue
-			}
-			info, err := fe.Info()
-			if err == nil {
-				totalSize += info.Size()
-				count++
-			}
-		}
-	}
-
-	ok(c, gin.H{
-		"file_count":    count,
-		"total_size_gb": float64(int(float64(totalSize)/1073741824*100)) / 100,
-	})
-}
-
-// EmergencyClean 紧急清理，可临时覆盖目标阈值，通过 SSE 流式返回进度。
-func (h *Handler) EmergencyClean(c *gin.Context) {
-	var req struct {
-		TargetPct float64 `json:"target_pct"`
-		Confirm   bool    `json:"confirm"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil || !req.Confirm {
-		failBadRequest(c, "请勾选确认选项后再执行紧急清理")
-		return
-	}
-
-	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
-		// 临时覆盖目标阈值（紧急清理结束后自动恢复原值）
-		// 使用 Apply 保证原子性，defer 确保恢复
-		if req.TargetPct >= 10 && req.TargetPct < 100 {
-			originalTarget := h.config.Snapshot().TargetThreshold
-			if err := h.config.Apply(func() error {
-				h.config.TargetThreshold = req.TargetPct
-				return nil
-			}); err != nil {
-				return fmt.Sprintf("❌ 设置目标阈值失败: %s", err.Error())
-			}
-			defer func() {
-				if err := h.config.Apply(func() error {
-					h.config.TargetThreshold = originalTarget
-					return nil
-				}); err != nil {
-					h.logger.Error("紧急清理后恢复目标阈值失败", zap.Error(err))
-				}
-			}()
-		}
-		result, logID, err := h.clean.Run(ctx, "", onProgress)
-		if err != nil {
-			return fmt.Sprintf("❌ 错误: %s", err.Error())
-		}
-		_ = logID // logID 已在 clean.Run 内部写入 history
-		if result.Deleted > 0 {
-			return fmt.Sprintf("✅ 完成: 删除 %d 文件，释放 %s", result.Deleted, utils.FormatSize(result.Freed))
-		}
-		return "ℹ 无需清理"
-	})
-}
-
 
 // SetupCheck 执行系统诊断检查：FFmpeg 可用性、目录权限、磁盘空间、文件统计。
 func (h *Handler) SetupCheck(c *gin.Context) {

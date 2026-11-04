@@ -67,6 +67,14 @@
             <div class="data-cell"><span class="data-label">剩余</span><span class="mono-val">{{ detail?.disk?.free_gb?.toFixed(1) }} GB</span></div>
             <div class="data-cell"><span class="data-label">待合并</span><span class="mono-val">{{ detail?.pending?.original_files || 0 }} 个文件</span></div>
           </div>
+          <div v-if="stats?.daily_output_gb || stats?.days_until_full" class="disk-health-bar">
+            <span class="health-pill">
+              📈 近7天产出: <strong class="mono-val">{{ stats?.daily_output_gb?.toFixed(1) || 0 }}</strong> GB/天
+            </span>
+            <span class="health-pill" :class="{ 'health-pill-warn': (stats?.days_until_full || 999) < 7 }">
+              ⏳ 余量预估: <strong class="mono-val">{{ (stats?.days_until_full && stats?.days_until_full > 0) ? stats.days_until_full.toFixed(0) + ' 天' : '充足' }}</strong>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -359,4 +367,26 @@ onActivated(async () => {
 
 @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .stat-grid { grid-template-columns: 1fr; } .dash-header { flex-direction: column; align-items: flex-start; gap: 8px; } }
+.disk-health-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--hairline);
+  flex-wrap: wrap;
+}
+.health-pill {
+  font-size: 12px;
+  color: var(--slate);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+}
+.health-pill-warn {
+  color: var(--warning);
+  border-color: rgba(217, 115, 13, 0.3);
+  background: #fff8f0;
+}
 </style>

@@ -1,11 +1,13 @@
 export interface StreamerRule {
-  trim_enabled: boolean;
-  trim_mode: "head" | "range";
-  duration_minutes: number;
-  start_time: string;
-  end_time: string;
-  min_keep: number;
   protected: boolean;
+  min_keep: number;
+  trim_enabled: boolean;
+  trim_start: string;
+  trim_end: string;
+  trim_mode?: "head" | "range";
+  duration_minutes?: number;
+  start_time?: string;
+  end_time?: string;
 }
 
 export interface StreamerInfo {
@@ -49,6 +51,8 @@ export interface StatsResponse {
   today: Omit<DayStats, "date">;
   month: Omit<DayStats, "date">;
   daily: DayStats[];
+  daily_output_gb?: number;
+  days_until_full?: number;
 }
 
 export interface TaskStatus {

@@ -129,6 +129,19 @@ func (h *Handler) Stats(c *gin.Context) {
 		}
 	}
 
+	var past7MergeBytes int64
+	for _, d := range dailyStats {
+		past7MergeBytes += d.MergeBytes
+	}
+	dailyOutputGB := float64(past7MergeBytes) / 1073741824 / 7.0
+
+	daysUntilFull := 0.0
+	cfg := h.config.Snapshot()
+	if disk, err := utils.GetDiskUsage(cfg.TargetDir); err == nil && dailyOutputGB > 0 {
+		freeGB := float64(disk.Free) / 1073741824
+		daysUntilFull = freeGB / dailyOutputGB
+	}
+
 	ok(c, gin.H{
 		"today": gin.H{
 			"merge_count": todayMerge,
@@ -142,7 +155,9 @@ func (h *Handler) Stats(c *gin.Context) {
 			"clean_count": monthClean,
 			"clean_bytes": monthCleanBytes,
 		},
-		"daily": dailyStats,
+		"daily":           dailyStats,
+		"daily_output_gb": float64(int(dailyOutputGB*10)) / 10,
+		"days_until_full": float64(int(daysUntilFull)),
 	})
 }
 
@@ -319,4 +334,29 @@ func (h *Handler) SaveStreamerRule(c *gin.Context) {
 	}
 	h.history.Add("config", name, "success", "更新主播录像规则", "")
 	ok(c, gin.H{"streamer": name, "rule": rule})
+}
+
+// PlayStreamerVideo 支持 HTTP Range 流式点播播放录播视频（带防路径穿越校验）。
+func (h *Handler) PlayStreamerVideo(c *gin.Context) {
+	streamer := c.Param("name")
+	file := c.Query("file")
+	if !utils.ValidateFilename(streamer) || !utils.ValidateFilename(file) {
+		failBadRequest(c, "参数包含非法字符")
+		return
+	}
+	if !utils.IsVideoFile(file) {
+		failBadRequest(c, "仅支持视频点播")
+		return
+	}
+
+	cfg := h.config.Snapshot()
+	fullPath := filepath.Join(cfg.TargetDir, streamer, file)
+	info, err := os.Stat(fullPath)
+	if err != nil || info.IsDir() {
+		failNotFound(c, "视频文件不存在")
+		return
+	}
+
+	c.Header("Content-Disposition", "inline; filename="+filepath.Base(file))
+	http.ServeFile(c.Writer, c.Request, fullPath)
 }

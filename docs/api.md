@@ -1,22 +1,17 @@
 # API 接口文档
 
-所有 `/api/*` 路由（除公开接口外）均需登录认证。认证方式支持 Session Cookie 和 Bearer Token。
-
-## 公开接口
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/login` | 用户登录（JSON: `{password}`） |
-| GET | `/api/health` | 健康检查 |
-| GET | `/api/setup/status` | 查询是否为首次运行 |
-| POST | `/api/setup/init` | 首次初始化（设置密码） |
+所有 `/api/*` 路由均需认证（首次启动未初始化密码除外）。
 
 ## 认证
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/auth/check` | 检查登录状态 |
-| POST | `/api/auth/change-password` | 修改密码 |
+| POST | `/api/login` | 登录，成功后在 Cookie 中设置 session token |
+| POST | `/api/logout` | 登出，清除 session Cookie |
+| GET | `/api/auth/check` | 检查当前 session 是否有效 |
+| POST | `/api/auth/change-password` | 修改登录密码 |
+| GET | `/api/setup/status` | 检查是否首次启动（未设置密码） |
+| POST | `/api/setup/init` | 首次启动设置初始密码 |
 
 ## 系统状态
 
@@ -24,7 +19,7 @@
 |------|------|------|
 | GET | `/api/status` | 简要状态（磁盘使用率、主播数） |
 | GET | `/api/status/detail` | 详细状态（磁盘、待合并文件、调度状态） |
-| GET | `/api/stats` | 统计数据（今日/本月合并清理、7 天趋势） |
+| GET | `/api/stats` | 统计数据（今日/本月合并清理、7 天趋势、日均产出与余量预估） |
 | GET | `/api/setup/check` | 系统诊断（FFmpeg、目录权限、磁盘空间） |
 
 ## 配置管理
@@ -33,10 +28,9 @@
 |------|------|------|
 | GET | `/api/config` | 获取当前配置（不含敏感字段） |
 | POST | `/api/config` | 保存配置（部分更新） |
-| GET | `/api/config/recommend` | 智能推荐配置（基于磁盘和内容分析） |
 | GET | `/api/config/defaults` | 获取默认配置值 |
-| GET | `/api/config/export` | 导出完整配置（含调度、历史） |
-| POST | `/api/config/import` | 导入配置 |
+| GET | `/api/config/export` | 导出纯净配置备份（含全局策略、调度参数、主播规则） |
+| POST | `/api/config/import` | 导入配置并覆盖恢复 |
 
 ## 定时调度
 
@@ -52,8 +46,9 @@
 |------|------|------|
 | GET | `/api/streamers` | 主播列表（文件数、磁盘占用、最新视频时间、规则信息） |
 | GET | `/api/streamers/:name/files` | 指定主播的文件列表 |
-| GET | `/api/streamers/:name/rule` | 获取指定主播的录像规则（裁剪与免删） |
-| POST | `/api/streamers/:name/rule` | 保存指定主播的录像规则 |
+| GET | `/api/streamers/:name/play` | 在线视频点播预览（支持 HTTP Range 拖动播放） |
+| GET | `/api/streamers/:name/rule` | 获取指定主播的个性化规则（起止裁剪与免删保护） |
+| POST | `/api/streamers/:name/rule` | 保存指定主播的个性化规则 |
 
 ## 任务执行（SSE 流式输出）
 
@@ -61,10 +56,7 @@
 |------|------|------|
 | POST | `/api/merge` | 执行合并（可指定主播） |
 | POST | `/api/merge/manual` | 手动合并指定文件 |
-| POST | `/api/merge/retry` | 重试合并 |
 | POST | `/api/clean` | 执行清理（可指定主播） |
-| GET | `/api/clean/estimate` | 预估可清理文件数和大小 |
-| POST | `/api/clean/emergency` | 紧急清理 |
 
 ## 历史与日志
 

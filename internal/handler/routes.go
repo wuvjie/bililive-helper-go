@@ -62,7 +62,6 @@ func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) func() {
 			// 配置
 			auth.GET("/config", h.GetConfig)
 			auth.POST("/config", h.SaveConfig)
-			auth.GET("/config/recommend", h.RecommendConfig)
 			auth.GET("/config/defaults", h.DefaultConfig)
 			auth.GET("/config/export", h.ExportConfig)
 			auth.POST("/config/import", h.ImportConfig)
@@ -75,16 +74,14 @@ func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) func() {
 			// 主播
 			auth.GET("/streamers", h.GetStreamers)
 			auth.GET("/streamers/:name/files", h.GetStreamerFiles)
+			auth.GET("/streamers/:name/play", h.PlayStreamerVideo)
 			auth.GET("/streamers/:name/rule", h.GetStreamerRule)
 			auth.POST("/streamers/:name/rule", h.SaveStreamerRule)
 
 			// 任务
 			auth.POST("/merge", h.RunMerge)
 			auth.POST("/merge/manual", h.ManualMerge)
-			auth.POST("/merge/retry", h.MergeRetry)
 			auth.POST("/clean", h.RunClean)
-			auth.GET("/clean/estimate", h.CleanEstimate)
-			auth.POST("/clean/emergency", h.EmergencyClean)
 
 			// 历史
 			auth.GET("/history", h.GetHistory)
