@@ -454,6 +454,12 @@ onMounted(async () => {
   }
 });
 
+watch(() => route.query.streamer, (val) => {
+  if (val && typeof val === "string") {
+    selectedStreamer.value = val;
+  }
+});
+
 onActivated(async () => {
   await loadBaseData();
 });

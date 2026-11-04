@@ -25,7 +25,7 @@ import { changePassword } from "@/api/auth";
 defineProps<{ visible: boolean }>();
 const emit = defineEmits<{ "update:visible": [value: boolean] }>();
 
-const form = reactive({ old_password: "", new_password: "" });
+const form = reactive({ old_password: "", new_password: "", confirm_password: "" });
 const saving = defineModel<boolean>("saving", { default: false });
 
 async function handleSubmit() {
@@ -44,6 +44,7 @@ async function handleSubmit() {
     emit("update:visible", false);
     form.old_password = "";
     form.new_password = "";
+    form.confirm_password = "";
   } catch {
     /* handled by interceptor */
   } finally {

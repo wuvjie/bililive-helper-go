@@ -95,8 +95,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
-import { onBeforeRouteLeave } from "vue-router";
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
+import { useRoute, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
 import { getSchedule, saveSchedule } from "@/api/schedule";
@@ -110,7 +110,8 @@ import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
 import BackupTab from "./tabs/BackupTab.vue";
 import SecurityTab from "./tabs/SecurityTab.vue";
 
-const activeTab = ref("policy");
+const route = useRoute();
+const activeTab = ref(typeof route.query.tab === "string" ? route.query.tab : "policy");
 const savingConfig = ref(false);
 const savingSchedule = ref(false);
 const configLoading = ref(false);
