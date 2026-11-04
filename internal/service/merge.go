@@ -763,7 +763,7 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 	// 时长预检：若从头截取且设置了结束时间，检查视频时长是否本就小于结束时间
 	if (start == "0" || start == "00:00:00") && end != "" {
 		if endSec, err := ffmpeg.ParseTimeSeconds(end); err == nil && endSec > 0 {
-			if dur, err := s.ffmpeg.ProbeDuration(ctx, videoPath); err == nil && dur > 0 && dur <= endSec {
+			if dur, err := ffmpeg.ProbeDuration(ctx, videoPath); err == nil && dur > 0 && dur <= endSec {
 				if opLog != nil {
 					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 截取上限 (%s)，保留原视频", streamerName, dur, end))
 				}
@@ -784,7 +784,7 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 	trimmedTmp := videoPath + ".trim.mp4"
 	defer utils.SafeUnlink(trimmedTmp)
 
-	err := s.ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, start, end)
+	err := ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, start, end)
 	if err != nil {
 		if opLog != nil {
 			opLog.Log(fmt.Sprintf("⚠ [%s] 视频裁剪未生效或失败: %v，已安全保留原完整视频", streamerName, err))
