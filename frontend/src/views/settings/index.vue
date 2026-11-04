@@ -208,6 +208,10 @@ async function loadConfigData() {
   configLoading.value = true;
   try {
     const c = await getConfig();
+    // 兼容历史配置：若从旧环境加载出的单次删除上限仍为旧版默认的 10，自动升级为标准推荐值 50
+    if (c.MAX_DELETE_PER_RUN === 10 || !c.MAX_DELETE_PER_RUN) {
+      c.MAX_DELETE_PER_RUN = 50;
+    }
     config.value = c;
     initialPolicySnapshot.value = serializePolicyConfig(c);
   } finally {
