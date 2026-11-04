@@ -97,7 +97,7 @@
                 @click="handleDeleteRecord(row)"
                 title="删除此条记录"
               >
-                ✕
+                删除
               </button>
             </div>
           </template>
@@ -247,6 +247,56 @@ let streamerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 function onStreamerSearch() {
   if (streamerDebounceTimer) clearTimeout(streamerDebounceTimer);
   streamerDebounceTimer = setTimeout(() => loadHistory(1), 300);
+}
+
+async function handleDeleteRecord(row: HistoryRecord) {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除 ${row.time} 的 [${taskLabel(row.task)}] 操作记录吗？\n（注：仅清除日志记录，绝不影响主播实际录像视频）`,
+      "确认删除记录",
+      {
+        confirmButtonText: "确认删除",
+        cancelButtonText: "取消",
+        confirmButtonClass: "el-button--danger",
+        type: "warning"
+      }
+    );
+  } catch {
+    return;
+  }
+
+  try {
+    await deleteHistory(row.id);
+    ElMessage.success("已删除该条操作记录");
+    await loadHistory(currentPage.value);
+  } catch {
+    // Handled by HTTP interceptor
+  }
+}
+
+async function handleClearHistory() {
+  try {
+    await ElMessageBox.confirm(
+      "确定要清空全部操作历史记录与关联日志吗？\n\n【安全声明】该操作仅清除后台任务记录和日志文本，绝不影响、修改或删除任何主播的录像视频文件！",
+      "清空全部操作日志",
+      {
+        confirmButtonText: "确认清空",
+        cancelButtonText: "取消",
+        confirmButtonClass: "el-button--danger",
+        type: "warning"
+      }
+    );
+  } catch {
+    return;
+  }
+
+  try {
+    await clearHistory();
+    ElMessage.success("已清空全部历史操作记录");
+    await loadHistory(1);
+  } catch {
+    // Handled by HTTP interceptor
+  }
 }
 
 async function loadHistory(page: number) {
