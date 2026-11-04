@@ -1,8 +1,9 @@
 # 镜像源配置（默认国内源，海外构建传 --build-arg REGISTRY= --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org）
-ARG REGISTRY=docker.1panel.live
-ARG ALPINE_MIRROR=mirrors.aliyun.com
-ARG GO_PROXY=https://goproxy.cn,direct
-ARG NPM_REGISTRY=https://registry.npmmirror.com
+# 镜像源配置（默认使用官方通用标准源，国内构建可通过 --build-arg 传入加速镜像源）
+ARG REGISTRY=docker.io
+ARG ALPINE_MIRROR=dl-cdn.alpinelinux.org
+ARG GO_PROXY=https://proxy.golang.org,direct
+ARG NPM_REGISTRY=https://registry.npmjs.org
 
 # Stage 1: Build frontend
 FROM ${REGISTRY}/library/node:20-alpine AS frontend-builder

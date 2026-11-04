@@ -14,7 +14,7 @@
 |----|------|
 | 后端 | Go 1.26、Gin 1.12、Zap |
 | 前端 | Vue 3.5、TypeScript 6、Element Plus 2.14、Vite 8 |
-| 视频 | FFmpeg（stream-copy 无损 + h264_rkmpp 硬件加速） |
+| 视频 | FFmpeg（stream-copy 无损拼接 + 自动硬件编码 fallback） |
 | 部署 | Docker Compose、Docker CLI (`docker run`)、WSL Container (`wslc`) |
 
 ## 功能
@@ -57,27 +57,27 @@ cp .env.example .env
 在 `.env` 中填入您宿主机的实际路径（`.env` 已加入 `.gitignore`，保护您的宿主机隐私信息不被提交）：
 ```env
 # 录制视频根目录（宿主机实际路径）
-RECORDINGS_DIR=/volume1/video/recordings
+RECORDINGS_DIR=/path/to/recordings
 
 # 配置文件与日志数据持久化目录（宿主机实际路径）
-DATA_DIR=/volume1/docker/bililive-helper-go
+DATA_DIR=/path/to/data
 
 # Web 访问端口（默认 5689）
 PORT=5689
 ```
 
 #### 2. 构建镜像
-- **国内网络（默认加速源）**：
+- **标准构建（默认使用官方标准源）**：
   ```bash
   docker compose build
   ```
-- **海外 VPS / 直连官方源**：
+- **国内网络加速构建（若直连下载较慢）**：
   ```bash
   docker compose build \
-    --build-arg REGISTRY=docker.io \
-    --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org \
-    --build-arg GO_PROXY=https://proxy.golang.org,direct \
-    --build-arg NPM_REGISTRY=https://registry.npmjs.org
+    --build-arg REGISTRY=docker.m.daocloud.io \
+    --build-arg ALPINE_MIRROR=mirrors.aliyun.com \
+    --build-arg GO_PROXY=https://goproxy.cn,direct \
+    --build-arg NPM_REGISTRY=https://registry.npmmirror.com
   ```
 
 #### 3. 启动与管理
@@ -96,17 +96,17 @@ docker compose down           # 停止并移除容器
 
 #### 1. 构建镜像 (`docker build`)
 在项目根目录下执行：
-- **国内网络（默认加速源）**：
+- **标准构建（默认官方源）**：
   ```bash
   docker build -t bililive-helper-go .
   ```
-- **海外 VPS / 直连官方源**：
+- **国内网络加速构建**：
   ```bash
   docker build -t bililive-helper-go \
-    --build-arg REGISTRY=docker.io \
-    --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org \
-    --build-arg GO_PROXY=https://proxy.golang.org,direct \
-    --build-arg NPM_REGISTRY=https://registry.npmjs.org .
+    --build-arg REGISTRY=docker.m.daocloud.io \
+    --build-arg ALPINE_MIRROR=mirrors.aliyun.com \
+    --build-arg GO_PROXY=https://goproxy.cn,direct \
+    --build-arg NPM_REGISTRY=https://registry.npmmirror.com .
   ```
 
 #### 2. 运行容器 (`docker run`)
@@ -116,8 +116,8 @@ docker run -d \
   --name bililive-helper-go \
   --restart always \
   -p 5689:5000 \
-  -v /volume1/video/recordings:/recordings \
-  -v /volume1/docker/bililive-helper-go:/data \
+  -v /path/to/recordings:/recordings \
+  -v /path/to/data:/data \
   -e TARGET_DIR=/recordings \
   -e LOG_DIR=/data \
   -e TZ=Asia/Shanghai \
@@ -127,8 +127,8 @@ docker run -d \
 ```
 
 > **参数说明**：
-> - `-v /volume1/video/recordings:/recordings`：将宿主机 bililive-go 录制根目录映射到容器 `/recordings`。
-> - `-v /volume1/docker/bililive-helper-go:/data`：将宿主机配置、凭据与日志持久化目录映射到容器 `/data`。
+> - `-v /path/to/recordings:/recordings`：将宿主机录像根目录（如 `/path/to/recordings` 或 NAS 的 `/volume1/...`）映射到容器 `/recordings`。
+> - `-v /path/to/data:/data`：将宿主机数据持久化目录映射到容器 `/data`。
 > - `-p 5689:5000`：宿主机对外暴露 5689 端口（容器内监听 5000）。
 > - `-e TARGET_DIR=/recordings -e LOG_DIR=/data`：确保应用程序使用挂载的标准目录。
 > - *资源限制（可选）*：默认不限制硬件资源；如需限制可按需追加 `--cpus="2.0" --memory="4g"`。
@@ -148,17 +148,17 @@ docker stop bililive-helper-go       # 停止容器
 
 #### 1. 构建镜像 (`wslc build`)
 在 PowerShell 中进入项目目录执行：
-- **国内网络（默认加速源）**：
+- **标准构建（默认官方源）**：
   ```powershell
   wslc build -t bililive-helper-go .
   ```
-- **海外 / 直连官方源**：
+- **国内网络加速构建**：
   ```powershell
   wslc build -t bililive-helper-go `
-    --build-arg REGISTRY=docker.io `
-    --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org `
-    --build-arg GO_PROXY=https://proxy.golang.org,direct `
-    --build-arg NPM_REGISTRY=https://registry.npmjs.org .
+    --build-arg REGISTRY=docker.m.daocloud.io `
+    --build-arg ALPINE_MIRROR=mirrors.aliyun.com `
+    --build-arg GO_PROXY=https://goproxy.cn,direct `
+    --build-arg NPM_REGISTRY=https://registry.npmmirror.com .
   ```
 
 #### 2. 运行容器 (`wslc run`)
@@ -235,7 +235,7 @@ cd frontend && npm run lint # 代码检查
 
 **忘记密码** → 删除宿主机数据目录中的 `.credentials.json`（即 `{DATA_DIR}/.credentials.json`）后重启容器，系统将重新进入初始化向导。
 
-**磁盘超阈值未触发清理** → 检查是否在静默时段（默认 04:00~12:00）、视频是否在安全期保护范围内，或该主播是否开启了「一键免删」。
+**磁盘超阈值未触发清理** → 检查是否开启了静默时段（默认关闭）、视频是否处于安全保护期，或该主播是否开启了「一键免删」。
 
 **合并失败 "磁盘空间不足"** → TS 合并管线峰值需约 3 倍源文件大小空间，建议保证录制目录预留充足剩余容量。
 

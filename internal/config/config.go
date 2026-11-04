@@ -73,9 +73,9 @@ var (
 		SafeMode:           "hours",
 		SafeDays:           1,
 		MaxDeletePerRun:    10,
-		BackupStartHour:    4,
+		BackupStartHour:    0,
 		BackupStartMinute:  0,
-		BackupEndHour:      12,
+		BackupEndHour:      0,
 		BackupEndMinute:    0,
 		Port:               5000,
 		Password:           "",  // 首次运行时自动生成（如未设置）
