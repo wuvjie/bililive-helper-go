@@ -78,13 +78,13 @@
               <span class="mono-val">{{ detail?.disk?.free_gb?.toFixed(1) }} GB</span>
             </div>
             <div class="data-cell">
-              <span class="data-label">原始录像</span>
+              <span class="data-label">录播库占用</span>
               <el-tooltip
-                content="当前存储中的原始视频文件数。单场独立录像无需合并；多切片录像将在关播后自动无损合并。"
+                content="当前已录制的视频文件所占用的磁盘物理空间总和"
                 placement="top"
               >
                 <span class="mono-val info-trigger">
-                  {{ detail?.pending?.original_files || 0 }} 个文件
+                  {{ totalRecordingsGB }} GB
                   <span class="info-bubble">?</span>
                 </span>
               </el-tooltip>
@@ -104,22 +104,22 @@
       <!-- 2. Runtime & Automation Monitor -->
       <div class="card">
         <div class="card-title">
-          <span>⚡ 运行监控</span>
+          <span>⚡ 调度与运行监控</span>
           <span class="monitor-mode-tag">
             <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-idle'"></span>
-            {{ isTaskRunning ? '任务执行中' : '后台守护中' }}
+            {{ isTaskRunning ? '任务执行中' : '自动调度生效中' }}
           </span>
         </div>
         <div class="card-body">
           <div class="runtime-top">
-            <span class="runtime-label">当前运行状态</span>
+            <span class="runtime-label">当前任务状态</span>
             <div class="runtime-badge" :class="isTaskRunning ? 'badge-running' : 'badge-idle'">
               <span>{{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并视频...' : '正在清理磁盘...') : '空闲待命中' }}</span>
             </div>
           </div>
           <div class="runtime-substrip">
             <span class="substrip-text">
-              {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : '文件系统监听器 (DirWatcher) 持续盯盘，发现关播切片自动合并' }}
+              {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : '定时调度器与目录监听器持续常驻，主播关播分片将自动静置后合并' }}
             </span>
           </div>
 
@@ -137,8 +137,13 @@
               <span class="mono-val">{{ streamerCount }} 位</span>
             </div>
             <div class="data-cell">
-              <span class="data-label">收录视频</span>
-              <span class="mono-val">{{ videoCount }} 个</span>
+              <span class="data-label">视频总数</span>
+              <el-tooltip content="全部主播录像文件总数（含未合并分段切片与已合并成品）" placement="top">
+                <span class="mono-val info-trigger">
+                  {{ videoCount }} 个
+                  <span class="info-bubble">?</span>
+                </span>
+              </el-tooltip>
             </div>
           </div>
 
@@ -260,6 +265,11 @@ const diskColor = computed(() => {
   const pct = detail.value?.disk?.usage_pct || 0;
   if (pct >= 90) return "#d9730d"; // Notion warm amber for critical
   return "#448361"; // Notion muted botanical green
+});
+
+const totalRecordingsGB = computed(() => {
+  const sum = detail.value?.streamers?.reduce((acc, s) => acc + (s.size_gb || 0), 0) || 0;
+  return sum.toFixed(1);
 });
 
 const isTaskRunning = computed(() => {

@@ -460,11 +460,16 @@ router.afterEach(() => fetchDiskStatus());
     height: 100vh;
     transform: translateX(-100%);
     box-shadow: none;
+    z-index: 200 !important;
 
     &.mobile-open {
       transform: translateX(0);
-      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
     }
+  }
+
+  .sidebar-overlay {
+    z-index: 150 !important;
   }
 
   .sidebar-collapsed .layout-sidebar {
