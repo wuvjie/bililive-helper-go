@@ -69,10 +69,9 @@
             </svg>
           </button>
 
-          <el-breadcrumb separator="/" class="nav-breadcrumb">
-            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item v-if="currentRoute.meta.title">{{ currentRoute.meta.title }}</el-breadcrumb-item>
-          </el-breadcrumb>
+          <div class="nav-current-title">
+            <span class="nav-page-name">{{ currentRoute.meta.title || '系统概览' }}</span>
+          </div>
         </div>
         <div class="navbar-right">
           <el-tooltip content="刷新数据" placement="bottom">
@@ -402,6 +401,16 @@ router.afterEach(() => fetchDiskStatus());
     width: 17px;
     height: 17px;
   }
+}
+
+.nav-current-title {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  user-select: none;
 }
 
 .nav-breadcrumb {
