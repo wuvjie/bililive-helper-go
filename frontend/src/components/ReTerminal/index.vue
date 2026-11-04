@@ -1,7 +1,11 @@
 <template>
   <div class="re-terminal" :style="{ height: height || '400px' }">
     <div class="terminal-header">
-      <span class="terminal-title">📺 任务输出</span>
+      <div class="terminal-header-left">
+        <slot name="title">
+          <span class="terminal-title">{{ title || "📺 任务输出" }}</span>
+        </slot>
+      </div>
       <div class="terminal-header-actions">
         <button
           class="terminal-scroll-toggle"
@@ -14,7 +18,7 @@
       </div>
     </div>
     <div class="terminal-body" ref="bodyRef">
-      <div v-if="lines.length === 0" class="terminal-empty">等待任务输出 ...</div>
+      <div v-if="lines.length === 0" class="terminal-empty">{{ emptyText || "等待任务输出 ..." }}</div>
       <div
         v-for="(line, i) in lines"
         :key="i"
@@ -35,6 +39,8 @@ import type { SSELine } from "@/utils/sse";
 const props = defineProps<{
   lines: SSELine[];
   height?: string;
+  title?: string;
+  emptyText?: string;
 }>();
 
 defineEmits<{
@@ -94,6 +100,12 @@ onUnmounted(() => {
   align-items: center;
   flex-shrink: 0;
   border-bottom: 1px solid #2e2e2e;
+}
+
+.terminal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .terminal-title {
