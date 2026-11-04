@@ -70,7 +70,9 @@ func (h *Handler) Stats(c *gin.Context) {
 	var todayMergeBytes, todayCleanBytes, yesterdayMergeBytes, yesterdayCleanBytes, monthMergeBytes, monthCleanBytes, totalCleanBytes int64
 
 	for _, r := range records {
-		if r.Task == "clean" && r.Status == "success" {
+		// 有效清理：状态成功且实际产生了磁盘释放（排除未达水位无文件删除的空跑扫描）
+		isEffectiveClean := r.Task == "clean" && r.Status == "success" && (r.FreedBytes > 0 || r.FilesCount > 0)
+		if isEffectiveClean {
 			totalClean++
 			totalCleanBytes += r.FreedBytes
 		}
@@ -81,32 +83,35 @@ func (h *Handler) Stats(c *gin.Context) {
 		recordDay := r.Time[:10]
 		recordMonth := r.Time[:7]
 
+		// 有效合并：状态成功/部分成功且实际发生了分片合并或产出体积（排除无待合并文件的空跑扫描）
+		isEffectiveMerge := r.Task == "merge" && (r.Status == "success" || r.Status == "partial") && (r.MergedBytes > 0 || r.FilesCount > 0)
+
 		if recordDay == today {
-			if r.Task == "merge" && r.Status == "success" {
+			if isEffectiveMerge {
 				todayMerge++
 				todayMergeBytes += r.MergedBytes
 			}
-			if r.Task == "clean" && r.Status == "success" {
+			if isEffectiveClean {
 				todayClean++
 				todayCleanBytes += r.FreedBytes
 			}
 		}
 		if recordDay == yesterday {
-			if r.Task == "merge" && r.Status == "success" {
+			if isEffectiveMerge {
 				yesterdayMerge++
 				yesterdayMergeBytes += r.MergedBytes
 			}
-			if r.Task == "clean" && r.Status == "success" {
+			if isEffectiveClean {
 				yesterdayClean++
 				yesterdayCleanBytes += r.FreedBytes
 			}
 		}
 		if recordMonth == month {
-			if r.Task == "merge" && r.Status == "success" {
+			if isEffectiveMerge {
 				monthMerge++
 				monthMergeBytes += r.MergedBytes
 			}
-			if r.Task == "clean" && r.Status == "success" {
+			if isEffectiveClean {
 				monthClean++
 				monthCleanBytes += r.FreedBytes
 			}
@@ -131,13 +136,16 @@ func (h *Handler) Stats(c *gin.Context) {
 			continue
 		}
 		recordDay := r.Time[:10]
+		isEffectiveMerge := r.Task == "merge" && (r.Status == "success" || r.Status == "partial") && (r.MergedBytes > 0 || r.FilesCount > 0)
+		isEffectiveClean := r.Task == "clean" && r.Status == "success" && (r.FreedBytes > 0 || r.FilesCount > 0)
+
 		for i := range dailyStats {
-			if dailyStats[i].Date == recordDay && r.Status == "success" {
-				if r.Task == "merge" {
+			if dailyStats[i].Date == recordDay {
+				if isEffectiveMerge {
 					dailyStats[i].MergeCount++
 					dailyStats[i].MergeBytes += r.MergedBytes
 				}
-				if r.Task == "clean" {
+				if isEffectiveClean {
 					dailyStats[i].CleanCount++
 					dailyStats[i].CleanBytes += r.FreedBytes
 				}

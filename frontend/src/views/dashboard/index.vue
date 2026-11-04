@@ -25,22 +25,22 @@
     <div class="stat-grid">
       <div class="stat-card stat-peach">
         <span class="stat-label">今日合并</span>
-        <span class="stat-value">{{ stats?.today?.merge_count || 0 }}</span>
+        <span class="stat-value">{{ stats?.today?.merge_count || 0 }}<span class="stat-unit">次</span></span>
         <span class="stat-sub" :class="{ 'stat-empty': !stats?.today?.merge_bytes }">{{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}</span>
       </div>
       <div class="stat-card stat-mint">
         <span class="stat-label">昨日合并</span>
-        <span class="stat-value">{{ yesterdayStats.count }}</span>
+        <span class="stat-value">{{ yesterdayStats.count }}<span class="stat-unit">次</span></span>
         <span class="stat-sub" :class="{ 'stat-empty': !yesterdayStats.bytes }">{{ yesterdayStats.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}</span>
       </div>
       <div class="stat-card stat-sky">
         <span class="stat-label">本月合并</span>
-        <span class="stat-value">{{ stats?.month?.merge_count || 0 }}</span>
+        <span class="stat-value">{{ stats?.month?.merge_count || 0 }}<span class="stat-unit">次</span></span>
         <span class="stat-sub" :class="{ 'stat-empty': !stats?.month?.merge_bytes }">{{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}</span>
       </div>
       <div class="stat-card stat-lavender">
         <span class="stat-label">累计释放空间</span>
-        <span class="stat-value">{{ totalFreedStats.count }}</span>
+        <span class="stat-value">{{ totalFreedStats.count }}<span class="stat-unit">次</span></span>
         <span class="stat-sub" :class="{ 'stat-empty': !totalFreedStats.bytes }">{{ totalFreedStats.bytes ? formatBytes(totalFreedStats.bytes) : '0.00 GB' }}</span>
       </div>
     </div>
@@ -463,6 +463,13 @@ onActivated(async () => {
 .stat-lavender { background: var(--tint-lavender); border: 1px solid #d0c8e8; }
 
 .stat-label { font-size: 13px; color: var(--slate); margin-bottom: 4px; }
+.stat-unit {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--steel, #64748b);
+  margin-left: 2px;
+}
+
 .stat-value { font-size: 32px; font-weight: 600; color: var(--ink); line-height: 1; letter-spacing: -0.5px; font-family: var(--font-mono); height: 36px; display: flex; align-items: flex-end; }
 .stat-sub { font-size: 13px; color: var(--steel); margin-top: 2px; font-family: var(--font-mono); }
 .stat-empty { color: #c7c7cc; opacity: 0.4; }
