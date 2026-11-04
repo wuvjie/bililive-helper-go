@@ -207,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
@@ -253,14 +253,59 @@ async function handleCopyConfig() {
 const importJson = ref("");
 const importFileRef = ref<HTMLInputElement | null>(null);
 
-const isDirty = ref(false);
-let suppressDirty = false;
+const initialPolicySnapshot = ref("");
+const initialScheduleSnapshot = ref("");
 
-watch(config, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true, flush: 'sync' });
-watch(scheduleForm, () => { if (!suppressDirty) isDirty.value = true; }, { deep: true, flush: 'sync' });
+function normalizeWhitelist(wl: unknown): string {
+  if (!wl) return "";
+  if (Array.isArray(wl)) {
+    return wl.map((s: string) => String(s).trim()).filter(Boolean).sort().join(",");
+  }
+  if (typeof wl === "string") {
+    return wl.split(/[,，]/).map((s: string) => s.trim()).filter(Boolean).sort().join(",");
+  }
+  return String(wl);
+}
+
+function serializePolicyConfig(c: ConfigDTO): string {
+  if (!c || Object.keys(c).length === 0) return "";
+  return JSON.stringify({
+    gap: Number(c.GAP_MINUTES || 30),
+    mergeAge: Number(c.MERGE_AGE_MINUTES || 30),
+    trigger: Number(c.TRIGGER_THRESHOLD || 80),
+    target: Number(c.TARGET_THRESHOLD || 60),
+    safeMode: c.SAFE_MODE || "hours",
+    safeAgeMinutes: Number(c.SAFE_AGE_MINUTES || 120),
+    safeDays: Number(c.SAFE_DAYS || 1),
+    minKeep: Number(c.MIN_KEEP_PER_STREAMER || 3),
+    maxDelete: Number(c.MAX_DELETE_PER_RUN || 50),
+    whitelist: normalizeWhitelist(c.WHITELIST_KEYWORDS)
+  });
+}
+
+function serializeScheduleConfig(form: ScheduleForm, start: string, end: string): string {
+  return JSON.stringify({
+    merge_enabled: Boolean(form.merge_enabled),
+    clean_enabled: Boolean(form.clean_enabled),
+    merge_interval: Number(form.merge_interval || 360),
+    clean_interval: Number(form.clean_interval || 720),
+    start: start || "",
+    end: end || ""
+  });
+}
+
+function isFormDirty(): boolean {
+  if (initialPolicySnapshot.value && serializePolicyConfig(config.value) !== initialPolicySnapshot.value) {
+    return true;
+  }
+  if (initialScheduleSnapshot.value && serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value) !== initialScheduleSnapshot.value) {
+    return true;
+  }
+  return false;
+}
 
 onBeforeRouteLeave(async (_to, _from, next) => {
-  if (!isDirty.value) { next(); return; }
+  if (!isFormDirty()) { next(); return; }
   try {
     await ElMessageBox.confirm("您有未保存的配置变更，确定要离开吗？", "未保存的变更", {
       confirmButtonText: "离开",
@@ -315,11 +360,9 @@ function onTargetChange(val: number) {
 async function loadConfigData() {
   configLoading.value = true;
   try {
-    suppressDirty = true;
     const c = await getConfig();
     config.value = c;
-    suppressDirty = false;
-    isDirty.value = false;
+    initialPolicySnapshot.value = serializePolicyConfig(c);
   } finally {
     configLoading.value = false;
   }
@@ -328,20 +371,22 @@ async function loadConfigData() {
 async function loadScheduleData() {
   scheduleLoading.value = true;
   try {
-    suppressDirty = true;
     const s: ScheduleStatus = await getSchedule();
     scheduleForm.merge_enabled = s.merge.enabled;
     scheduleForm.clean_enabled = s.clean.enabled;
     scheduleForm.merge_interval = s.merge.interval;
     scheduleForm.clean_interval = s.clean.interval;
+    let start = "";
+    let end = "";
     if (s.backup_start_hour !== undefined && s.backup_start_minute !== undefined) {
-      backupStart.value = `${String(s.backup_start_hour).padStart(2, '0')}:${String(s.backup_start_minute).padStart(2, '0')}`;
+      start = `${String(s.backup_start_hour).padStart(2, '0')}:${String(s.backup_start_minute).padStart(2, '0')}`;
     }
     if (s.backup_end_hour !== undefined && s.backup_end_minute !== undefined) {
-      backupEnd.value = `${String(s.backup_end_hour).padStart(2, '0')}:${String(s.backup_end_minute).padStart(2, '0')}`;
+      end = `${String(s.backup_end_hour).padStart(2, '0')}:${String(s.backup_end_minute).padStart(2, '0')}`;
     }
-    suppressDirty = false;
-    isDirty.value = false;
+    backupStart.value = start;
+    backupEnd.value = end;
+    initialScheduleSnapshot.value = serializeScheduleConfig(scheduleForm, start, end);
   } finally {
     scheduleLoading.value = false;
   }
@@ -364,8 +409,7 @@ async function handleSaveConfig() {
     }
     await saveConfig(payload);
     ElMessage.success("全局策略已成功保存");
-    suppressDirty = true;
-    isDirty.value = false;
+    initialPolicySnapshot.value = serializePolicyConfig(config.value);
     await loadConfigData();
   } finally {
     savingConfig.value = false;
@@ -393,8 +437,7 @@ async function handleSaveSchedule() {
     }
     await saveSchedule(payload);
     ElMessage.success("任务调度设置已保存");
-    suppressDirty = true;
-    isDirty.value = false;
+    initialScheduleSnapshot.value = serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value);
   } finally {
     savingSchedule.value = false;
   }
