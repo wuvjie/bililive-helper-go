@@ -29,6 +29,7 @@ type App struct {
 	server    *http.Server
 	scheduler *service.SchedulerService
 	logger    *zap.Logger
+	cleanup   func()
 }
 
 // New 初始化所有服务并返回 App 实例。
@@ -67,7 +68,7 @@ func New() (*App, error) {
 
 	// 创建 Handler 并注册路由
 	h := handler.NewHandler(cfg, logger, mergeService, cleanService, historyService, schedulerService)
-	r := setupRouter(cfg, h)
+	r, cleanup := setupRouter(cfg, h)
 
 	port := cfg.Port
 	if port == 0 {
@@ -99,6 +100,7 @@ func New() (*App, error) {
 		},
 		scheduler: schedulerService,
 		logger:    logger,
+		cleanup:   cleanup,
 	}, nil
 }
 
@@ -129,6 +131,9 @@ func (a *App) Run() error {
 
 // Shutdown 优雅关闭所有服务。
 func (a *App) Shutdown() error {
+	if a.cleanup != nil {
+		a.cleanup()
+	}
 	a.scheduler.Stop()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -144,7 +149,7 @@ func (a *App) Shutdown() error {
 }
 
 // setupRouter 配置 gin 路由、中间件和 session。
-func setupRouter(cfg *config.Config, h *handler.Handler) *gin.Engine {
+func setupRouter(cfg *config.Config, h *handler.Handler) (*gin.Engine, func()) {
 	r := gin.Default()
 
 	if err := r.SetTrustedProxies([]string{"127.0.0.1", "::1"}); err != nil {
@@ -166,7 +171,7 @@ func setupRouter(cfg *config.Config, h *handler.Handler) *gin.Engine {
 	r.LoadHTMLFiles("templates/login.html")
 
 	// 注册所有路由（从 routes.go 集中管理）
-	handler.RegisterRoutes(r, h, cfg)
+	cleanup := handler.RegisterRoutes(r, h, cfg)
 
-	return r
+	return r, cleanup
 }

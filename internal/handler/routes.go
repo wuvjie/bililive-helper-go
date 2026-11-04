@@ -13,7 +13,9 @@ import (
 
 // RegisterRoutes 注册所有路由到 gin.Engine。
 // 包括公开接口、需认证的 API 接口、静态文件和 Vue Router fallback。
-func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) {
+// 返回清理函数（应用停机时释放后台资源）。
+func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) func() {
+	var stopRateLimiter func()
 	// 静态文件
 	r.Static("/assets", "./templates/assets")
 
@@ -44,9 +46,9 @@ func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) {
 		// 需要认证的接口
 		auth := api.Group("")
 		auth.Use(middleware.AuthRequired(cfg))
-		rateLimiter, stopRateLimiter := middleware.RateLimiter(60)
+		rateLimiter, stop := middleware.RateLimiter(60)
+		stopRateLimiter = stop
 		auth.Use(rateLimiter)
-		defer stopRateLimiter()
 		{
 			// 认证
 			auth.GET("/auth/check", func(c *gin.Context) { ok(c, gin.H{"ok": true}) })
@@ -89,6 +91,12 @@ func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) {
 
 			// 诊断
 			auth.GET("/setup/check", h.SetupCheck)
+		}
+	}
+
+	return func() {
+		if stopRateLimiter != nil {
+			stopRateLimiter()
 		}
 	}
 }

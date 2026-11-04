@@ -186,8 +186,12 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			}
 			totalSize += info.Size()
 			totalCount++
-			if info.ModTime().After(latest) {
-				latest = info.ModTime()
+			fileTime := info.ModTime()
+			if _, dt, ok := utils.ParseFilename(name); ok {
+				fileTime = dt
+			}
+			if fileTime.After(latest) {
+				latest = fileTime
 			}
 			if !utils.IsMergedFile(name) {
 				pendSize += info.Size()
@@ -254,11 +258,15 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 		if err != nil || info == nil {
 			continue
 		}
+		fileTime := info.ModTime()
+		if _, dt, ok := utils.ParseFilename(name); ok {
+			fileTime = dt
+		}
 		files = append(files, gin.H{
 			"name":      name,
 			"size":      info.Size(),
 			"size_str":  utils.FormatSize(info.Size()),
-			"mtime":     info.ModTime().Unix(),
+			"mtime":     fileTime.Unix(),
 			"is_merged": utils.IsMergedFile(name),
 		})
 	}
