@@ -66,6 +66,9 @@ func New() (*App, error) {
 
 	schedulerService.Start()
 
+	// 启动时后台异步执行一次历史记录与过期日志清理
+	go historyService.CleanupOldRecords()
+
 	// 创建 Handler 并注册路由
 	h := handler.NewHandler(cfg, logger, mergeService, cleanService, historyService, schedulerService)
 	r, cleanup := setupRouter(cfg, h)

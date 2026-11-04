@@ -108,23 +108,50 @@
       </div>
     </el-card>
 
-    <!-- Log Viewer Dialog (Dark Terminal Style) -->
+    <!-- Log Viewer Dialog (Dark Terminal Style with Line Numbers and Search) -->
     <el-dialog
       v-model="logDialogVisible"
       :title="`📋 操作日志: ${activeLogTitle}`"
-      width="780px"
-      top="6vh"
+      width="820px"
+      top="5vh"
       destroy-on-close
       class="terminal-modal-dialog"
     >
       <div class="log-modal-body" v-loading="logLoading">
         <div class="log-modal-bar">
-          <span class="log-meta-tag">{{ activeLogMeta }}</span>
-          <button class="btn-copy-log" @click="copyLogContent">
-            📋 复制全部日志
-          </button>
+          <div class="log-bar-left">
+            <span class="log-meta-tag">{{ activeLogMeta }}</span>
+            <span class="log-lines-count">{{ formattedLogLines.length }} 行</span>
+          </div>
+          <div class="log-modal-actions">
+            <input
+              v-model="logFilter"
+              placeholder="🔍 过滤本日志..."
+              class="log-filter-box"
+            />
+            <button class="btn-copy-log" @click="downloadRawLog" title="下载完整原始日志 (.log)">
+              📥 下载
+            </button>
+            <button class="btn-copy-log" @click="copyLogContent" title="复制全部内容到剪贴板">
+              📋 复制
+            </button>
+          </div>
         </div>
-        <pre class="terminal-dark-code">{{ logContent }}</pre>
+
+        <div class="log-terminal-lines">
+          <div v-if="filteredLogLines.length === 0" class="log-empty-lines">
+            {{ logFilter ? '未匹配到包含搜索词的日志行' : '日志内容为空' }}
+          </div>
+          <div
+            v-for="(line, idx) in filteredLogLines"
+            :key="idx"
+            class="log-code-row"
+            :class="line.typeClass"
+          >
+            <span class="log-line-num">{{ idx + 1 }}</span>
+            <span class="log-line-text">{{ line.text }}</span>
+          </div>
+        </div>
       </div>
     </el-dialog>
   </div>
@@ -134,7 +161,7 @@
 import { ref, onMounted, onActivated } from "vue";
 import router from "@/router";
 import { ElMessage } from "element-plus";
-import { getHistory, exportHistory, getLogContent } from "@/api/history";
+import { getHistory, exportHistory, getLogContent, getRawLogDownloadUrl } from "@/api/history";
 import { copyToClipboard } from "@/utils/clipboard";
 import { formatBytes } from "@/utils/format";
 import type { HistoryRecord } from "@/api/types";
@@ -152,6 +179,46 @@ const logContent = ref("");
 const logLoading = ref(false);
 const activeLogTitle = ref("");
 const activeLogMeta = ref("");
+const activeLogTask = ref("");
+const activeLogId = ref("");
+const logFilter = ref("");
+
+interface FormattedLogLine {
+  text: string;
+  typeClass: string;
+}
+
+const formattedLogLines = computed<FormattedLogLine[]>(() => {
+  if (!logContent.value) return [];
+  const rawLines = logContent.value.split("\n");
+  return rawLines.map(line => {
+    let typeClass = "line-info";
+    if (/❌|错误|失败|error|failed|fatal/i.test(line)) {
+      typeClass = "line-error";
+    } else if (/⚠️|⚠|警告|warn|warning|注意|跳过|空间不足/i.test(line)) {
+      typeClass = "line-warn";
+    } else if (/✅|完成|成功|success|done/i.test(line)) {
+      typeClass = "line-success";
+    } else if (/^[─═=—\-\s]{3,}$/.test(line.trim())) {
+      typeClass = "line-divider";
+    } else if (/📊 结果摘要|▶ 开始/i.test(line)) {
+      typeClass = "line-header";
+    }
+    return { text: line, typeClass };
+  });
+});
+
+const filteredLogLines = computed(() => {
+  if (!logFilter.value.trim()) return formattedLogLines.value;
+  const q = logFilter.value.toLowerCase();
+  return formattedLogLines.value.filter(l => l.text.toLowerCase().includes(q));
+});
+
+function downloadRawLog() {
+  if (!activeLogTask.value || !activeLogId.value) return;
+  const url = getRawLogDownloadUrl(activeLogTask.value, activeLogId.value);
+  window.open(url, "_blank");
+}
 
 async function copyLogContent() {
   if (!logContent.value) return;
@@ -472,17 +539,82 @@ onActivated(() => loadHistory(currentPage.value));
   color: #fff;
   border-color: #555;
 }
-.terminal-dark-code {
-  margin: 0;
-  padding: 14px 16px;
-  background: #191919;
+.log-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.log-lines-count {
+  font-size: 11px;
+  color: #888;
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+}
+.log-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.log-filter-box {
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
   color: #d4d4d4;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  outline: none;
+  font-family: var(--font-mono);
+  width: 120px;
+  transition: all 0.15s ease;
+}
+.log-filter-box:focus {
+  border-color: #007fd4;
+  width: 150px;
+}
+.log-terminal-lines {
+  background: #191919;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 10px 0;
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.7;
-  max-height: 480px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
 }
+.log-empty-lines {
+  text-align: center;
+  padding: 36px 0;
+  color: #666;
+  font-size: 12px;
+}
+.log-code-row {
+  display: flex;
+  line-height: 1.7;
+  padding: 1px 12px;
+  transition: background 0.1s;
+}
+.log-code-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.log-line-num {
+  width: 44px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 14px;
+  color: #4a4a4a;
+  user-select: none;
+  font-size: 11px;
+}
+.log-line-text {
+  flex: 1;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+.line-info .log-line-text { color: #cccccc; }
+.line-success .log-line-text { color: #6a9955; font-weight: 500; }
+.line-warn .log-line-text { color: #d7ba7d; }
+.line-error .log-line-text { color: #f44747; font-weight: 500; }
+.line-divider .log-line-text { opacity: 0.35; }
+.line-header .log-line-text { color: #4ec9b0; font-weight: 600; }
 </style>

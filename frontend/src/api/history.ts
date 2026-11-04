@@ -12,3 +12,7 @@ export function exportHistory() {
 export function getLogContent(task: string, logId: string) {
   return get<{ content: string }>(`/logs/content/${task}`, { log_id: logId });
 }
+
+export function getRawLogDownloadUrl(task: string, logId: string): string {
+  return `/api/logs/content/${encodeURIComponent(task)}?log_id=${encodeURIComponent(logId)}&raw=true`;
+}
