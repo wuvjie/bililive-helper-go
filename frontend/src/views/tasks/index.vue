@@ -83,7 +83,7 @@
     <div class="card targeted-card">
       <div class="targeted-bar">
         <div class="targeted-left">
-          <span class="targeted-label">🎯 定向主播快跑:</span>
+          <span class="targeted-label">🎯 定向主播快捷任务:</span>
           <el-select
             v-model="selectedStreamer"
             placeholder="选择特定主播..."

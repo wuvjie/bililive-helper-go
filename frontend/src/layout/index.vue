@@ -10,7 +10,7 @@
     >
       <div class="sidebar-logo">
         <span v-if="isMobile || appStore.sidebar.opened" class="logo-text">Bililive Helper Go</span>
-        <span v-else class="logo-text-mini">BH</span>
+        <span v-else class="logo-text-mini">BHG</span>
       </div>
 
       <el-scrollbar class="sidebar-scrollbar">
@@ -147,7 +147,7 @@ const menuItems = [
   { path: "/streamers", title: "主播管理", icon: User },
   { path: "/tasks", title: "任务中心", icon: VideoPlay },
   { path: "/history", title: "操作日志", icon: Document },
-  { path: "/settings", title: "全局设置", icon: Setting }
+  { path: "/settings", title: "系统设置", icon: Setting }
 ];
 
 const activeMenu = computed(() => route.path);
@@ -247,7 +247,10 @@ router.afterEach(() => fetchDiskStatus());
     }
     .sidebar-bottom-toggle {
       justify-content: center;
-      padding: 12px 0;
+      padding: 0;
+      .toggle-icon-box {
+        margin: 0 auto;
+      }
     }
   }
 }
@@ -265,7 +268,33 @@ router.afterEach(() => fetchDiskStatus());
 }
 
 :deep(.el-menu) {
-  border-right: none; padding: 6px 12px;
+  border-right: none;
+  padding: 6px 12px;
+  transition: padding 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.el-menu--collapse {
+    width: 100% !important;
+    padding: 6px 0 !important;
+
+    .el-menu-item {
+      padding: 0 !important;
+      margin: 0 auto 4px auto !important;
+      width: 44px !important;
+      height: 44px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+
+      .el-icon {
+        margin: 0 !important;
+        font-size: 18px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+    }
+  }
+
   .el-menu-item {
     border-radius: var(--r-sm); margin-bottom: 2px;
     font-size: 14px; color: var(--steel);
