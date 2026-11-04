@@ -1,28 +1,48 @@
 # 配置参考
 
+## 目录挂载规范（Docker / WSL 部署）
+
+为了彻底解耦宿主机环境与容器配置，容器内部采用固定标准路径：
+
+| 容器内路径 | 说明 | 宿主机推荐挂载路径 |
+|------------|------|-------------------|
+| `/recordings` | 视频录制根目录（包含各主播子目录） | `bililive-go` 的录制输出根目录 |
+| `/data` | 持久化数据目录（配置文件、日志、会话凭据） | 宿主机的专用数据目录（如 `/docker/bililive-helper-go`） |
+
+在宿主机使用 Docker Compose 时，通过根目录下的 `.env` 文件配置映射：
+```env
+RECORDINGS_DIR=/volume1/video/recordings
+DATA_DIR=/volume1/docker/bililive-helper-go
+PORT=5689
+```
+
+---
+
 ## 环境变量
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
+| `TARGET_DIR` | 录制视频目录（容器内映射目录） | `/recordings` |
+| `LOG_DIR` | 日志和配置存储目录（容器内映射目录） | `/data` |
+| `TZ` | 时区 | `Asia/Shanghai` |
+| `PORT` | 内部服务监听端口 | `5000` |
 | `PASSWORD` | 登录密码（可选，优先通过初始化向导设置） | 首次启动自动生成 |
 | `SECRET_KEY` | Session 签名密钥 | 首次启动自动生成 |
-| `TARGET_DIR` | 录制视频目录 | `/vol2/1000/video/bililive-go/抖音` |
-| `LOG_DIR` | 日志和配置存储目录 | `/vol1/1000/docker/bililive-helper-go` |
-| `TZ` | 时区 | `Asia/Shanghai` |
 | `COOKIE_SECURE` | Session cookie Secure 标志（HTTPS 时设为 true） | `false` |
-| `WEBHOOK_URL` | 任务完成通知（Bark/Slack/飞书等） | 空 |
-| `API_TOKEN` | API Token（Bearer 认证） | 空 |
-| `PORT` | 监听端口 | `5000` |
+| `WEBHOOK_URL` | 任务完成通知（Bark/Slack/飞书等兼容 Webhook） | 空 |
+| `API_TOKEN` | API Token（第三方程序 Bearer 认证） | 空 |
+
+---
 
 ## config.json
 
-位于 `{LOG_DIR}/config.json`，首次初始化时自动生成。环境变量优先于配置文件。
+位于 `{LOG_DIR}/config.json`（即宿主机挂载的 `DATA_DIR` 目录下），首次初始化时自动生成。环境变量优先级高于配置文件。
 
-`PASSWORD` 和 `SECRET_KEY` 不写入 config.json，密码单独存储在 `{LOG_DIR}/.credentials.json`（权限 0600）。
+> 注：`PASSWORD` 和 `SECRET_KEY` 不写入 `config.json`，密码单独加密存储在 `{LOG_DIR}/.credentials.json`（文件权限 0600）。
 
 | 字段 | 类型 | 说明 | 默认值 |
 |------|------|------|--------|
-| `TARGET_DIR` | string | 录制视频目录 | `/vol2/1000/video/bililive-go/抖音` |
+| `TARGET_DIR` | string | 录制视频目录 | `/recordings` |
 | `TRIGGER_THRESHOLD` | float | 清理触发阈值（磁盘使用率 %） | 80 |
 | `TARGET_THRESHOLD` | float | 清理目标阈值（磁盘使用率 %） | 60 |
 | `MIN_KEEP_PER_STREAMER` | int | 每主播最少保留文件数 | 3 |

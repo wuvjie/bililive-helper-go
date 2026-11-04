@@ -4,29 +4,29 @@ services:
     image: bililive-helper-go
     container_name: bililive-helper-go
     ports:
-      # 宿主机端口:容器端口，访问 http://IP:5689
-      - "5689:5000"
+      # 宿主机端口:容器端口，默认访问 http://IP:5689
+      - "${PORT:-5689}:5000"
     volumes:
-      # 录像存储目录（bililive-go 的录制输出所在位置）
-      - /vol2:/vol2
-      # 配置文件、日志、历史记录的持久化目录
-      - /vol1/1000/docker/bililive-helper-go:/vol1/1000/docker/bililive-helper-go
+      # 录像存储目录（即 bililive-go 录制输出目录挂载至容器 /recordings）
+      - ${RECORDINGS_DIR:-./recordings}:/recordings
+      # 配置文件、日志、历史记录持久化目录挂载至容器 /data
+      - ${DATA_DIR:-./data}:/data
     environment:
-      # 录制视频根目录（含各主播子目录）
-      - TARGET_DIR=/vol2/1000/video/bililive-go/抖音
-      # 日志和配置文件存储目录
-      - LOG_DIR=/vol1/1000/docker/bililive-helper-go
+      # 录制视频根目录（容器内固定路径）
+      - TARGET_DIR=/recordings
+      # 日志和配置文件存储目录（容器内固定路径）
+      - LOG_DIR=/data
       # 时区
-      - TZ=Asia/Shanghai
-      # --- 以下为可选配置，取消注释即可生效 ---
-      # 登录密码（不设则首次启动时通过网页向导设置）
-      # - PASSWORD=your_password
+      - TZ=${TZ:-Asia/Shanghai}
+      # --- 以下为可选配置，取消注释或在 .env 中设置即可生效 ---
+      # 登录密码（不设则首次启动时通过网页初始化向导设置）
+      # - PASSWORD=${PASSWORD:-}
       # 使用 HTTPS 反向代理时设为 true
-      # - COOKIE_SECURE=true
+      # - COOKIE_SECURE=${COOKIE_SECURE:-false}
       # 任务完成通知（支持 Bark/Slack/飞书等兼容 Webhook）
-      # - WEBHOOK_URL=https://your-webhook
+      # - WEBHOOK_URL=${WEBHOOK_URL:-}
       # API Token（用于外部程序通过 Bearer 认证调用接口）
-      # - API_TOKEN=your_api_token
+      # - API_TOKEN=${API_TOKEN:-}
     # 健康检查
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:5000/api/health"]
@@ -39,18 +39,18 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '3.0'    # CPU 上限（建议留 1 核给录制进程）
-          memory: 4G     # 内存上限（建议留一半给录制进程）
+          cpus: '${CPU_LIMIT:-3.0}'    # CPU 上限（建议留 1 核给录制进程）
+          memory: ${MEM_LIMIT:-4G}     # 内存上限（建议留一半给录制进程）
     # 日志轮转
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    # Docker 网络（需提前创建：docker network create nas）
-    networks:
-      - nas
+    # 自定义网络（若需与同一主机上的 bililive-go 容器通信，可解开注释加入已有网络）
+    # networks:
+    #   - nas
 
-networks:
-  nas:
-    external: true
+# networks:
+#   nas:
+#     external: true
