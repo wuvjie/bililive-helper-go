@@ -83,8 +83,8 @@
                         <el-option label="按天" value="days" />
                       </el-select>
                       <div v-if="config.SAFE_MODE === 'hours'" class="inline-unit-row">
-                        <el-input-number v-model="config.SAFE_AGE_MINUTES" :min="10" :max="1440" class="compact-counter" />
-                        <span class="unit-text">分钟</span>
+                        <el-input-number v-model="safeAgeHours" :min="1" :max="168" class="compact-counter" />
+                        <span class="unit-text">小时</span>
                       </div>
                       <div v-if="config.SAFE_MODE === 'days'" class="inline-unit-row">
                         <el-input-number v-model="config.SAFE_DAYS" :min="1" :max="365" class="compact-counter" />
@@ -102,20 +102,13 @@
                     <div class="field-hint">每个主播至少保留最近的场次数，无论磁盘空间多么紧张也不会被全删。</div>
                   </el-form-item>
 
-                  <div class="advanced-section-fold">
-                    <span class="fold-toggle-btn" @click="showAdvancedClean = !showAdvancedClean">
-                      {{ showAdvancedClean ? '▾ 收起高级安全参数' : '▸ 展开高级参数 (单次最大删除数)' }}
-                    </span>
-                    <div v-if="showAdvancedClean" class="fold-inner-content">
-                      <el-form-item label="单次最大删除数">
-                        <div class="inline-unit-row">
-                          <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" class="compact-counter" />
-                          <span class="unit-text">个</span>
-                        </div>
-                        <div class="field-hint">限制单次清理任务允许删除的文件上限，避免引起磁盘长时间高负荷 I/O 抖动（默认 50 个）。</div>
-                      </el-form-item>
+                  <el-form-item label="单次最大删除数">
+                    <div class="inline-unit-row">
+                      <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" class="compact-counter" />
+                      <span class="unit-text">个</span>
                     </div>
-                  </div>
+                    <div class="field-hint">限制单次清理任务允许删除的文件上限，避免引起磁盘长时间高负荷 I/O 抖动（默认 50 个）。</div>
+                  </el-form-item>
 
                   <el-form-item label="白名单关键词">
                     <el-input
@@ -148,12 +141,10 @@
             :backup-end="backupEnd"
             :saving="savingSchedule"
             :loading="scheduleLoading"
-            :task-running="taskRunning"
             @update:form="Object.assign(scheduleForm, $event)"
             @update:backup-start="backupStart = $event"
             @update:backup-end="backupEnd = $event"
             @save="handleSaveSchedule"
-            @trigger="triggerManualTask"
           />
         </el-tab-pane>
 
@@ -169,8 +160,8 @@
               <p class="backup-desc">将系统当前的阈值策略、定时调度参数以及各主播的个性化截取与保护规则导出为 JSON 备份文件。</p>
               <div class="backup-spacer"></div>
               <div class="backup-action-group">
-                <button class="btn-primary btn-action-half" @click="handleExport">📥 下载配置文件 (.json)</button>
-                <button class="btn-secondary btn-action-half" @click="handleCopyConfig">📋 复制配置代码</button>
+                <button class="btn-action-half btn-export" @click="handleExport">📥 下载配置文件 (.json)</button>
+                <button class="btn-action-half btn-copy" @click="handleCopyConfig">📋 复制配置代码</button>
               </div>
             </div>
 
@@ -220,7 +211,7 @@ import { ref, reactive, computed, watch, onMounted } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
-import { getSchedule, saveSchedule, runTask } from "@/api/schedule";
+import { getSchedule, saveSchedule } from "@/api/schedule";
 import type { ScheduleStatus, ConfigDTO } from "@/api/types";
 import ScheduleTab from "./tabs/ScheduleTab.vue";
 import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
@@ -245,7 +236,6 @@ const backupStart = ref("");
 const backupEnd = ref("");
 
 const exportJson = ref("");
-const showAdvancedClean = ref(false);
 const selectedImportFileName = ref("");
 const showManualPaste = ref(false);
 
@@ -262,7 +252,6 @@ async function handleCopyConfig() {
 
 const importJson = ref("");
 const importFileRef = ref<HTMLInputElement | null>(null);
-const taskRunning = ref(false);
 
 const isDirty = ref(false);
 let suppressDirty = false;
@@ -281,6 +270,16 @@ onBeforeRouteLeave(async (_to, _from, next) => {
     next();
   } catch {
     next(false);
+  }
+});
+
+const safeAgeHours = computed({
+  get: () => {
+    const mins = config.value.SAFE_AGE_MINUTES ?? 120;
+    return Math.max(1, Math.round(mins / 60));
+  },
+  set: (val: number) => {
+    config.value.SAFE_AGE_MINUTES = (val || 1) * 60;
   }
 });
 
@@ -401,25 +400,7 @@ async function handleSaveSchedule() {
   }
 }
 
-async function triggerManualTask(task: "merge" | "clean") {
-  const label = task === "merge" ? "合并" : "清理";
-  try {
-    await ElMessageBox.confirm(
-      `即将手动触发 ${label} 任务，是否继续？`,
-      `确认执行${label}`,
-      { confirmButtonText: "执行", cancelButtonText: "取消", type: "warning" }
-    );
-  } catch {
-    return;
-  }
-  taskRunning.value = true;
-  try {
-    await runTask(task);
-    ElMessage.success(`${label}任务已触发`);
-  } finally {
-    taskRunning.value = false;
-  }
-}
+
 
 async function handleExport() {
   try {
@@ -615,7 +596,8 @@ onMounted(() => {
 .safe-age-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-height: 32px;
 }
 
 .policy-actions {
@@ -738,47 +720,44 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-.advanced-section-fold {
-  margin: 4px 0 12px;
-}
-.fold-toggle-btn {
-  font-size: 12px;
-  color: var(--steel, #888);
-  cursor: pointer;
-  user-select: none;
-}
-.fold-toggle-btn:hover {
-  color: var(--ink, #333);
-}
-.fold-inner-content {
-  margin-top: 10px;
-  padding: 10px 14px;
-  background: var(--canvas, #fff);
-  border: 1px dashed var(--hairline, #eee);
-  border-radius: var(--r-sm, 4px);
-}
+
 
 .backup-action-group {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-top: 16px;
 }
 .btn-action-half {
   flex: 1;
-  padding: 8px 12px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--r-md, 6px);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
-.btn-secondary {
+.btn-action-half.btn-export {
+  background: var(--primary);
+  color: var(--on-primary);
+  border: 1px solid var(--primary);
+}
+.btn-action-half.btn-export:hover {
+  background: var(--primary-pressed);
+  border-color: var(--primary-pressed);
+}
+.btn-action-half.btn-copy {
   background: var(--surface, #fafafa);
   border: 1px solid var(--hairline, #dcdfe6);
   color: var(--charcoal, #333);
-  border-radius: var(--r-sm, 4px);
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.15s ease;
 }
-.btn-secondary:hover {
+.btn-action-half.btn-copy:hover {
   background: var(--highlight, #f0f0f0);
+  border-color: var(--steel, #aaa);
 }
 .import-file-box {
   display: flex;

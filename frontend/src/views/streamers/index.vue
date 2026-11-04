@@ -152,8 +152,11 @@
             <div class="switch-row">
               <el-switch v-model="formRule.protected" />
               <span class="switch-label">
-                {{ formRule.protected ? '🔒 已开启保护（磁盘即使超标也绝不自动删除该主播录像）' : '未开启（遵循全局磁盘清理策略）' }}
+                {{ formRule.protected ? '🔒 已开启保护（最高优先级豁免，即使磁盘满也绝不删除该主播录像）' : '未开启（遵循全局磁盘清理策略）' }}
               </span>
+            </div>
+            <div class="form-tip">
+              <strong>【最高优先级】</strong>开启后，后台磁盘自动清理任务将直接完全跳过该主播目录，绝不删除其名下的任何录播文件。
             </div>
           </el-form-item>
 
@@ -167,7 +170,9 @@
               />
               <span class="unit-lbl">场</span>
             </div>
-            <span class="form-tip">设为 0 表示遵循全局“每主播最少保留”设置，大于 0 则覆盖全局设置。</span>
+            <div class="form-tip">
+              <strong>【覆盖全局】</strong>设为 0 时遵循系统全局设置；设为大于 0 则优先覆盖全局，无论磁盘多么紧张，始终保底保留该主播最新的 N 场录像。
+            </div>
           </el-form-item>
         </div>
       </el-form>
@@ -405,7 +410,11 @@ onActivated(() => loadData());
   align-items: center;
 }
 .card-title {
+  display: inline-flex;
+  align-items: center;
   font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
   color: var(--ink);
 }
 .header-right {
@@ -658,13 +667,18 @@ onActivated(() => loadData());
   flex-wrap: wrap;
 }
 .streamer-total-stat {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  line-height: 1;
   font-size: 12px;
   color: var(--steel, #888);
   background: var(--surface, #fafafa);
   border: 1px solid var(--hairline, #eee);
-  padding: 2px 8px;
+  padding: 0 8px;
   border-radius: var(--r-sm, 4px);
   font-family: var(--font-mono);
+  box-sizing: border-box;
 }
 .streamer-total-stat strong {
   color: var(--ink, #333);
