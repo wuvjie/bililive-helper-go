@@ -1,0 +1,609 @@
+<template>
+  <div class="policy-tab">
+    <el-form label-width="160px" label-position="left" class="settings-form">
+      <!-- Section 1: 录制与合并规则 -->
+      <div class="form-section-card">
+        <div class="section-title">
+          <span class="section-icon">📁</span>
+          <span>录制与合并规则</span>
+        </div>
+        <div class="section-body">
+          <el-form-item label="断流重连容差">
+            <div class="inline-unit-row">
+              <el-input-number
+                :model-value="config.GAP_MINUTES"
+                :min="1"
+                :max="120"
+                class="compact-counter"
+                @update:model-value="updateField('GAP_MINUTES', Number($event))"
+              />
+              <span class="unit-text">分钟</span>
+            </div>
+            <div class="field-hint">同一主播在此时间差内断流重连，将被判定为同一场直播并自动合并为整段视频。</div>
+          </el-form-item>
+
+          <el-form-item label="完播静置等待">
+            <div class="inline-unit-row">
+              <el-input-number
+                :model-value="config.MERGE_AGE_MINUTES"
+                :min="5"
+                :max="1440"
+                class="compact-counter"
+                @update:model-value="updateField('MERGE_AGE_MINUTES', Number($event))"
+              />
+              <span class="unit-text">分钟</span>
+            </div>
+            <div class="field-hint">录制文件生成并静置满此时间后才允许合并，确保主播已彻底关播且文件写入完毕，防止误读活动切片。</div>
+          </el-form-item>
+        </div>
+      </div>
+
+      <!-- Section 2: 存储清理策略 -->
+      <div class="form-section-card">
+        <div class="section-title">
+          <span class="section-icon">🧹</span>
+          <span>磁盘自动清理策略</span>
+        </div>
+        <div class="section-body">
+          <el-form-item label="触发清理阈值">
+            <div class="slider-row">
+              <el-slider
+                :model-value="config.TRIGGER_THRESHOLD"
+                :min="50"
+                :max="99"
+                :format-tooltip="formatPercent"
+                class="slider-flex"
+                @update:model-value="onTriggerChange"
+              />
+              <span class="slider-value mono-val">{{ config.TRIGGER_THRESHOLD }}%</span>
+            </div>
+            <div class="field-hint">磁盘使用率达到此警戒水位时，定时清理任务将正式启动。</div>
+          </el-form-item>
+
+          <el-form-item label="目标清理阈值">
+            <div class="slider-row">
+              <el-slider
+                :model-value="config.TARGET_THRESHOLD"
+                :min="30"
+                :max="89"
+                :format-tooltip="formatPercent"
+                class="slider-flex"
+                @update:model-value="onTargetChange"
+              />
+              <span class="slider-value mono-val">{{ config.TARGET_THRESHOLD }}%</span>
+            </div>
+            <div class="field-hint">清理时将从最旧录播开始删除，直至磁盘使用率降至此目标水位。</div>
+          </el-form-item>
+
+          <!-- 动态空间释放模拟条 (Buffer Zone Live Simulator) -->
+          <div class="buffer-zone-card">
+            <div class="buffer-zone-header">
+              <div class="buffer-header-left">
+                <span class="buffer-icon">🎯</span>
+                <span class="buffer-title">空间释放缓冲区间</span>
+              </div>
+              <span class="buffer-val-pill">
+                {{ bufferPct }}% 冲程深度
+                <template v-if="bufferGB">（单次预计释放约 {{ bufferGB }} GB）</template>
+              </span>
+            </div>
+            <div class="buffer-visual-track">
+              <div class="track-fill-safe" :style="{ width: config.TARGET_THRESHOLD + '%' }" title="目标安全基础水位"></div>
+              <div class="track-fill-buffer" :style="{ width: bufferPct + '%' }" title="每次清理释放的空间缓冲"></div>
+            </div>
+            <div class="buffer-scale-labels">
+              <span>目标保底: <strong class="mono-val">{{ config.TARGET_THRESHOLD }}%</strong></span>
+              <span class="buffer-scale-mid">⚡ 释放冲程: <strong class="mono-val">{{ bufferPct }}%</strong></span>
+              <span>触发上限: <strong class="mono-val">{{ config.TRIGGER_THRESHOLD }}%</strong></span>
+            </div>
+          </div>
+
+          <el-form-item label="新录像免删保护">
+            <div class="safe-age-group">
+              <el-select
+                :model-value="config.SAFE_MODE"
+                class="compact-select"
+                style="width: 92px; flex-shrink: 0;"
+                @update:model-value="onSafeModeChange"
+              >
+                <el-option label="按小时" value="hours" />
+                <el-option label="按天" value="days" />
+              </el-select>
+              <div v-if="config.SAFE_MODE === 'hours'" class="inline-unit-row">
+                <el-input-number
+                  :model-value="safeAgeHours"
+                  :min="1"
+                  :max="168"
+                  class="compact-counter"
+                  @update:model-value="updateField('SAFE_AGE_MINUTES', (Number($event) || 1) * 60)"
+                />
+                <span class="unit-text">小时</span>
+              </div>
+              <div v-if="config.SAFE_MODE === 'days'" class="inline-unit-row">
+                <el-input-number
+                  :model-value="config.SAFE_DAYS"
+                  :min="1"
+                  :max="365"
+                  class="compact-counter"
+                  @update:model-value="updateField('SAFE_DAYS', Number($event))"
+                />
+                <span class="unit-text">天</span>
+              </div>
+            </div>
+            <div class="field-hint">在此保护期内生成的最新录像享有免删保护，即使磁盘水位达到警戒线，清理任务也绝不会删除保护期内的文件。</div>
+          </el-form-item>
+
+          <el-form-item label="每主播最少保留">
+            <div class="inline-unit-row">
+              <el-input-number
+                :model-value="config.MIN_KEEP_PER_STREAMER"
+                :min="1"
+                :max="50"
+                class="compact-counter"
+                @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
+              />
+              <span class="unit-text">场</span>
+            </div>
+            <div class="field-hint">每个主播至少保留最近的场次数，无论磁盘空间多么紧张也不会被全删。</div>
+          </el-form-item>
+
+          <el-form-item label="单次最大删除数">
+            <div class="inline-unit-row">
+              <el-input-number
+                :model-value="config.MAX_DELETE_PER_RUN"
+                :min="1"
+                :max="1000"
+                class="compact-counter"
+                @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
+              />
+              <span class="unit-text">个</span>
+            </div>
+            <div class="field-hint">限制单次清理任务允许删除的文件上限，避免引起磁盘长时间高负荷 I/O 抖动（默认 50 个）。</div>
+          </el-form-item>
+
+          <!-- 白名单关键词 Tag 交互 -->
+          <el-form-item label="免清理白名单">
+            <div class="whitelist-tag-group">
+              <div class="tags-container">
+                <el-tag
+                  v-for="(tag, idx) in tagList"
+                  :key="tag"
+                  closable
+                  effect="plain"
+                  class="keyword-tag"
+                  @close="removeTag(idx)"
+                >
+                  {{ tag }}
+                </el-tag>
+                <div class="add-tag-inline">
+                  <el-input
+                    v-if="inputTagVisible"
+                    ref="tagInputRef"
+                    v-model="inputTagValue"
+                    size="small"
+                    class="tag-inline-input"
+                    placeholder="按回车添加"
+                    @keyup.enter="handleTagConfirm"
+                    @blur="handleTagConfirm"
+                  />
+                  <el-button v-else size="small" class="btn-add-tag" @click="showTagInput">
+                    + 添加关键词
+                  </el-button>
+                </div>
+              </div>
+              <div class="quick-tags-row">
+                <span class="quick-label">常用快捷添加:</span>
+                <button
+                  v-for="p in ['留存', '纪念', '高能', '生日', '勿删', '精选']"
+                  :key="p"
+                  type="button"
+                  class="quick-preset-pill"
+                  :disabled="tagList.includes(p)"
+                  @click="addTag(p)"
+                >
+                  + {{ p }}
+                </button>
+              </div>
+            </div>
+            <div class="field-hint">包含任一白名单关键词的视频文件名或主播目录，将永远受保护不被清理。</div>
+          </el-form-item>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="policy-actions">
+        <el-button type="primary" :loading="saving" class="btn-save-policy" @click="emit('save')">
+          保存全局策略
+        </el-button>
+        <el-button class="btn-reset-policy" @click="emit('reset-defaults')">
+          🔄 恢复推荐预设
+        </el-button>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, nextTick } from "vue";
+import type { ConfigDTO } from "@/api/types";
+
+const props = defineProps<{
+  config: ConfigDTO;
+  saving: boolean;
+  totalDiskGb?: number;
+}>();
+
+const emit = defineEmits<{
+  "update:config": [val: ConfigDTO];
+  save: [];
+  "reset-defaults": [];
+}>();
+
+const formatPercent = (v: number | number[]) => Number(v) + "%";
+
+function updateField<K extends keyof ConfigDTO>(field: K, val: ConfigDTO[K]) {
+  emit("update:config", {
+    ...props.config,
+    [field]: val
+  });
+}
+
+function onTriggerChange(val: number) {
+  const currentTarget = props.config.TARGET_THRESHOLD || 60;
+  let newTarget = currentTarget;
+  if (val <= currentTarget) {
+    newTarget = Math.max(30, val - 10);
+  }
+  emit("update:config", {
+    ...props.config,
+    TRIGGER_THRESHOLD: val,
+    TARGET_THRESHOLD: newTarget
+  });
+}
+
+function onTargetChange(val: number) {
+  const currentTrigger = props.config.TRIGGER_THRESHOLD || 80;
+  let newTrigger = currentTrigger;
+  if (val >= currentTrigger) {
+    newTrigger = Math.min(99, val + 10);
+  }
+  emit("update:config", {
+    ...props.config,
+    TARGET_THRESHOLD: val,
+    TRIGGER_THRESHOLD: newTrigger
+  });
+}
+
+function onSafeModeChange(val: string) {
+  const patch: Partial<ConfigDTO> = { SAFE_MODE: val };
+  if (val === "hours" && !props.config.SAFE_AGE_MINUTES) patch.SAFE_AGE_MINUTES = 120;
+  if (val === "days" && !props.config.SAFE_DAYS) patch.SAFE_DAYS = 1;
+  emit("update:config", { ...props.config, ...patch });
+}
+
+const safeAgeHours = computed(() => {
+  const mins = props.config.SAFE_AGE_MINUTES ?? 120;
+  return Math.max(1, Math.round(mins / 60));
+});
+
+// Buffer calculations
+const bufferPct = computed(() => {
+  const trig = Number(props.config.TRIGGER_THRESHOLD || 80);
+  const targ = Number(props.config.TARGET_THRESHOLD || 60);
+  return Math.max(0, trig - targ);
+});
+
+const bufferGB = computed(() => {
+  if (!props.totalDiskGb || props.totalDiskGb <= 0) return null;
+  return ((props.totalDiskGb * bufferPct.value) / 100).toFixed(1);
+});
+
+// Whitelist Tag list
+const tagList = computed(() => {
+  const raw = props.config.WHITELIST_KEYWORDS;
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  return String(raw).split(/[,，]/).map(s => s.trim()).filter(Boolean);
+});
+
+const inputTagVisible = ref(false);
+const inputTagValue = ref("");
+const tagInputRef = ref<HTMLInputElement | null>(null);
+
+function showTagInput() {
+  inputTagVisible.value = true;
+  nextTick(() => {
+    tagInputRef.value?.focus();
+  });
+}
+
+function handleTagConfirm() {
+  const val = inputTagValue.value.trim();
+  if (val && !tagList.value.includes(val)) {
+    const nextList = [...tagList.value, val];
+    emit("update:config", { ...props.config, WHITELIST_KEYWORDS: nextList });
+  }
+  inputTagVisible.value = false;
+  inputTagValue.value = "";
+}
+
+function removeTag(index: number) {
+  const nextList = tagList.value.filter((_, i) => i !== index);
+  emit("update:config", { ...props.config, WHITELIST_KEYWORDS: nextList });
+}
+
+function addTag(keyword: string) {
+  if (!tagList.value.includes(keyword)) {
+    const nextList = [...tagList.value, keyword];
+    emit("update:config", { ...props.config, WHITELIST_KEYWORDS: nextList });
+  }
+}
+</script>
+
+<style scoped>
+.policy-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-section-card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 16px;
+}
+
+.section-icon {
+  font-size: 16px;
+}
+
+.section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-form :deep(.el-form-item) {
+  margin-bottom: 16px;
+}
+
+.settings-form :deep(.el-form-item__label) {
+  color: var(--charcoal, #333);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.field-hint {
+  width: 100%;
+  font-size: 12px;
+  color: var(--steel);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.inline-unit-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.unit-text {
+  font-size: 13px;
+  color: var(--slate);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.slider-flex {
+  flex: 1;
+}
+
+.slider-value {
+  min-width: 44px;
+  text-align: right;
+  font-size: 14px;
+}
+
+.safe-age-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  flex-wrap: nowrap;
+}
+
+/* Buffer Zone Card */
+.buffer-zone-card {
+  background: var(--canvas, #fff);
+  border: 1px solid var(--hairline, #eee);
+  border-radius: var(--r-sm, 6px);
+  padding: 12px 16px;
+  margin: -4px 0 16px 0;
+  max-width: 520px;
+}
+.buffer-zone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.buffer-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.buffer-icon {
+  font-size: 14px;
+}
+.buffer-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--charcoal, #333);
+}
+.buffer-val-pill {
+  font-size: 11px;
+  color: #448361;
+  background: #edf6f0;
+  border: 1px solid rgba(68, 131, 97, 0.25);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+.buffer-visual-track {
+  display: flex;
+  height: 8px;
+  background: var(--surface-hover, #f0f0f0);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.track-fill-safe {
+  background: #448361;
+  opacity: 0.8;
+  transition: width 0.2s ease;
+}
+.track-fill-buffer {
+  background: #d9730d;
+  opacity: 0.85;
+  transition: width 0.2s ease;
+}
+.buffer-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--steel, #888);
+}
+.buffer-scale-mid {
+  color: #d9730d;
+}
+
+/* Whitelist Tag Group */
+.whitelist-tag-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 520px;
+}
+.tags-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 36px;
+  background: var(--canvas, #fff);
+  border: 1px solid var(--hairline, #dcdfe6);
+  border-radius: var(--r-sm, 4px);
+  padding: 4px 8px;
+}
+.keyword-tag {
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--surface, #fafafa);
+  border-color: var(--hairline-strong, #ddd);
+  color: var(--charcoal, #333);
+}
+.tag-inline-input {
+  width: 110px;
+}
+.btn-add-tag {
+  border-style: dashed;
+  font-size: 12px;
+  color: var(--steel, #666);
+}
+.quick-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.quick-label {
+  font-size: 11px;
+  color: var(--steel, #888);
+}
+.quick-preset-pill {
+  background: var(--surface, #fafafa);
+  border: 1px dashed var(--hairline, #ddd);
+  color: var(--slate, #555);
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.quick-preset-pill:hover:not(:disabled) {
+  border-color: #448361;
+  color: #448361;
+  background: #edf6f0;
+}
+.quick-preset-pill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.policy-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+.btn-save-policy {
+  padding: 10px 28px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.btn-reset-policy {
+  padding: 10px 18px;
+  font-size: 13px;
+  border-radius: var(--r-md);
+}
+
+@media (max-width: 680px) {
+  .settings-form :deep(.el-form-item) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .settings-form :deep(.el-form-item__label) {
+    width: 100% !important;
+    margin-bottom: 6px;
+    height: auto;
+    line-height: 1.4;
+  }
+  .settings-form :deep(.el-form-item__content) {
+    width: 100%;
+  }
+  .safe-age-group {
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+</style>
