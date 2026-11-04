@@ -22,6 +22,9 @@ type Executor interface {
 
 	// ProbeHealth 通过 ffprobe 检查视频文件是否有有效的编码流。
 	ProbeHealth(ctx context.Context, path string) bool
+
+	// TrimVideo 按时间参数裁剪视频并输出到指定路径（stream-copy）。
+	TrimVideo(ctx context.Context, input, output, startTime, durationOrEnd string, isEnd bool) error
 }
 
 // DefaultExecutor 是 Executor 的默认实现，直接调用包级函数。
@@ -49,4 +52,8 @@ func (d *DefaultExecutor) ProbeDuration(ctx context.Context, path string) (float
 
 func (d *DefaultExecutor) ProbeHealth(ctx context.Context, path string) bool {
 	return ProbeHealth(ctx, path)
+}
+
+func (d *DefaultExecutor) TrimVideo(ctx context.Context, input, output, startTime, durationOrEnd string, isEnd bool) error {
+	return TrimVideo(ctx, input, output, startTime, durationOrEnd, isEnd)
 }

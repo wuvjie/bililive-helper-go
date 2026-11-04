@@ -156,3 +156,65 @@ func TestCollectStreamerCandidates_ReturnsValue(t *testing.T) {
 		t.Errorf("期望 2 个候选，得到 %d", len(result))
 	}
 }
+
+func TestCollectCandidates_RespectsStreamerRuleProtected(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = dir
+	cfg.MinKeepPerStreamer = 1
+	cfg.SafeAgeMinutes = 0
+	cfg.SafeMode = "hours"
+	cfg.StreamerRules = map[string]config.StreamerRule{
+		"vip_streamer": {
+			Protected: true,
+		},
+	}
+
+	streamerDir := filepath.Join(dir, "vip_streamer")
+	os.MkdirAll(streamerDir, 0755)
+	os.WriteFile(filepath.Join(streamerDir, "video1.mp4"), make([]byte, 1000), 0644)
+	os.WriteFile(filepath.Join(streamerDir, "video2.mp4"), make([]byte, 1000), 0644)
+	os.WriteFile(filepath.Join(streamerDir, "video3.mp4"), make([]byte, 1000), 0644)
+
+	svc := &CleanService{
+		config: &cfg,
+		logger: zap.NewNop(),
+	}
+
+	result := svc.collectStreamerCandidates(streamerDir, "vip_streamer", cfg)
+	if len(result) != 0 {
+		t.Errorf("免删保护的主播应返回 0 个候选，得到 %d", len(result))
+	}
+}
+
+func TestCollectCandidates_RespectsStreamerRuleMinKeep(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = dir
+	cfg.MinKeepPerStreamer = 1 // 全局默认只保留 1 个
+	cfg.SafeAgeMinutes = 0
+	cfg.SafeMode = "hours"
+	cfg.StreamerRules = map[string]config.StreamerRule{
+		"streamer_custom_keep": {
+			MinKeep: 3, // 个性化设置保底 3 个
+		},
+	}
+
+	streamerDir := filepath.Join(dir, "streamer_custom_keep")
+	os.MkdirAll(streamerDir, 0755)
+	os.WriteFile(filepath.Join(streamerDir, "video1.mp4"), make([]byte, 1000), 0644)
+	os.WriteFile(filepath.Join(streamerDir, "video2.mp4"), make([]byte, 1000), 0644)
+	os.WriteFile(filepath.Join(streamerDir, "video3.mp4"), make([]byte, 1000), 0644)
+	os.WriteFile(filepath.Join(streamerDir, "video4.mp4"), make([]byte, 1000), 0644)
+
+	svc := &CleanService{
+		config: &cfg,
+		logger: zap.NewNop(),
+	}
+
+	result := svc.collectStreamerCandidates(streamerDir, "streamer_custom_keep", cfg)
+	// 4 个文件 - 3 个保底 = 1 个候选
+	if len(result) != 1 {
+		t.Errorf("期望自定义保底后产生 1 个候选，得到 %d", len(result))
+	}
+}

@@ -47,3 +47,12 @@ func AtomicSave(path string, data []byte, perm os.FileMode) error {
 
 	return nil
 }
+
+// ReplaceFile 安全地用 src 文件替换 dst 文件，兼容跨平台（Windows 下若目标存在需先清理）。
+func ReplaceFile(src, dst string) error {
+	if err := os.Rename(src, dst); err == nil {
+		return nil
+	}
+	_ = os.Remove(dst)
+	return os.Rename(src, dst)
+}

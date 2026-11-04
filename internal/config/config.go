@@ -16,6 +16,17 @@ import (
 	"bililive-helper-go/internal/utils"
 )
 
+// StreamerRule 定义单个主播的个性化后处理与清理规则。
+type StreamerRule struct {
+	TrimEnabled     bool   `json:"trim_enabled"`
+	TrimMode        string `json:"trim_mode"`        // "head" (保留前N分钟) 或 "range" (指定时间段)
+	DurationMinutes int    `json:"duration_minutes"` // head 模式保留时长（分钟）
+	StartTime       string `json:"start_time"`       // range 模式开始时间（如 "00:05:00"）
+	EndTime         string `json:"end_time"`         // range 模式结束时间（如 "00:45:00"）
+	MinKeep         int    `json:"min_keep"`         // 个性化最少保留数（0 表示使用全局设置）
+	Protected       bool   `json:"protected"`        // 一键免删保护
+}
+
 // Config 是应用程序的核心配置结构体。
 // 字段通过 JSON 序列化持久化到 config.json，Password 和 SecretKey 使用 json:"-" 排除。
 type Config struct {
@@ -41,6 +52,7 @@ type Config struct {
 	LogDir             string   `json:"LOG_DIR"`
 	ConfigFile         string   `json:"-"`
 	SessionVersion     int      `json:"SESSION_VERSION,omitempty"` // 改密时递增，使旧 Session 失效
+	StreamerRules      map[string]StreamerRule `json:"STREAMER_RULES,omitempty"`
 }
 
 var (
@@ -303,6 +315,7 @@ type ConfigDTO struct {
 	BackupEndMinute    int      `json:"BACKUP_END_MINUTE"`
 	Port               int      `json:"PORT"`
 	LogDir             string   `json:"LOG_DIR"`
+	StreamerRules      map[string]StreamerRule `json:"STREAMER_RULES,omitempty"`
 }
 
 // ToDTO 返回不含敏感字段的配置副本（线程安全）。
@@ -318,6 +331,12 @@ func (c *Config) Snapshot() Config {
 	defer c.mu.RUnlock()
 	snap := *c
 	snap.WhitelistKeywords = append([]string(nil), c.WhitelistKeywords...)
+	if c.StreamerRules != nil {
+		snap.StreamerRules = make(map[string]StreamerRule, len(c.StreamerRules))
+		for k, v := range c.StreamerRules {
+			snap.StreamerRules[k] = v
+		}
+	}
 	return snap
 }
 
@@ -388,6 +407,12 @@ func (c *Config) ApplyFromJSON(data []byte) {
 	if raw, ok := m["PORT"]; ok {
 		json.Unmarshal(raw, &c.Port)
 	}
+	if raw, ok := m["STREAMER_RULES"]; ok {
+		var rules map[string]StreamerRule
+		if err := json.Unmarshal(raw, &rules); err == nil {
+			c.StreamerRules = rules
+		}
+	}
 }
 
 // DiffDTO 比较两个 ConfigDTO 快照，返回人类可读的变更摘要。
@@ -453,6 +478,32 @@ func equalSlice(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+// GetStreamerRule 获取指定主播的规则（线程安全）。
+func (c *Config) GetStreamerRule(streamer string) (StreamerRule, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.StreamerRules == nil {
+		return StreamerRule{}, false
+	}
+	rule, ok := c.StreamerRules[streamer]
+	return rule, ok
+}
+
+// SetStreamerRule 设置或更新指定主播的规则并持久化（线程安全）。
+func (c *Config) SetStreamerRule(streamer string, rule StreamerRule) error {
+	c.mu.Lock()
+	if c.StreamerRules == nil {
+		c.StreamerRules = make(map[string]StreamerRule)
+	}
+	c.StreamerRules[streamer] = rule
+	data, err := json.MarshalIndent(c, "", "  ")
+	c.mu.Unlock()
+	if err != nil {
+		return fmt.Errorf("序列化配置失败: %w", err)
+	}
+	return fsutil.AtomicSave(c.ConfigFile, data, 0600)
 }
 
 // ToDTOSnapshot 返回不含敏感字段的 DTO 快照。调用者必须持有读锁或写锁。

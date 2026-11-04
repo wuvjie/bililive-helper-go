@@ -1,9 +1,21 @@
+export interface StreamerRule {
+  trim_enabled: boolean;
+  trim_mode: "head" | "range";
+  duration_minutes: number;
+  start_time: string;
+  end_time: string;
+  min_keep: number;
+  protected: boolean;
+}
+
 export interface StreamerInfo {
   name: string;
   files: number;
   size_bytes: number;
   size_gb: number;
   mtime: number;
+  rule?: StreamerRule;
+  has_rule?: boolean;
 }
 
 export interface DiskInfo {

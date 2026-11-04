@@ -2,15 +2,18 @@ package handler
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"time"
 
+	"bililive-helper-go/internal/config"
 	"bililive-helper-go/internal/fsutil"
 	"bililive-helper-go/internal/utils"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // Status 返回简要系统状态：磁盘使用率、主播数量、总容量。
@@ -218,12 +221,20 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 		if !si.latestTime.IsZero() {
 			mtime = si.latestTime.Unix()
 		}
+		var rule config.StreamerRule
+		hasRule := false
+		if r, ok := h.config.GetStreamerRule(si.name); ok {
+			rule = r
+			hasRule = true
+		}
 		streamers = append(streamers, gin.H{
 			"name":       si.name,
 			"files":      si.count,
 			"size_bytes": si.size,
 			"size_gb":    float64(int(float64(si.size)/1073741824*100)) / 100,
 			"mtime":      mtime,
+			"rule":       rule,
+			"has_rule":   hasRule,
 		})
 	}
 
@@ -271,4 +282,41 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 		})
 	}
 	ok(c, files)
+}
+
+// GetStreamerRule 返回指定主播的录像规则。
+func (h *Handler) GetStreamerRule(c *gin.Context) {
+	name := c.Param("name")
+	if !utils.ValidateFilename(name) {
+		failBadRequest(c, "主播名包含非法字符")
+		return
+	}
+	rule, exists := h.config.GetStreamerRule(name)
+	ok(c, gin.H{
+		"streamer": name,
+		"rule":     rule,
+		"exists":   exists,
+	})
+}
+
+// SaveStreamerRule 保存或更新指定主播的录像规则。
+func (h *Handler) SaveStreamerRule(c *gin.Context) {
+	name := c.Param("name")
+	if !utils.ValidateFilename(name) {
+		failBadRequest(c, "主播名包含非法字符")
+		return
+	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 8192)
+	var rule config.StreamerRule
+	if err := c.ShouldBindJSON(&rule); err != nil {
+		failBadRequest(c, "请求格式错误: "+err.Error())
+		return
+	}
+	if err := h.config.SetStreamerRule(name, rule); err != nil {
+		h.logger.Error("保存主播规则失败", zap.String("streamer", name), zap.Error(err))
+		fail(c, http.StatusInternalServerError, "保存主播规则失败")
+		return
+	}
+	h.history.Add("config", name, "success", "更新主播录像规则", "")
+	ok(c, gin.H{"streamer": name, "rule": rule})
 }

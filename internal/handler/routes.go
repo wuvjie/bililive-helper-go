@@ -75,6 +75,8 @@ func RegisterRoutes(r *gin.Engine, h *Handler, cfg *config.Config) func() {
 			// 主播
 			auth.GET("/streamers", h.GetStreamers)
 			auth.GET("/streamers/:name/files", h.GetStreamerFiles)
+			auth.GET("/streamers/:name/rule", h.GetStreamerRule)
+			auth.POST("/streamers/:name/rule", h.SaveStreamerRule)
 
 			// 任务
 			auth.POST("/merge", h.RunMerge)
