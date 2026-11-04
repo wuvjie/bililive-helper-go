@@ -14,11 +14,10 @@
             show-password
             :prefix-icon="Lock"
             class="login-input"
-            @keyup.enter="handleLogin"
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="loading" class="login-btn" @click="handleLogin">
+          <el-button type="primary" :loading="loading" native-type="submit" class="login-btn">
             进入控制台
           </el-button>
         </el-form-item>
@@ -43,16 +42,21 @@ const form = reactive({ password: "" });
 const rules = { password: [{ required: true, message: "请输入密码", trigger: "blur" }] };
 
 async function handleLogin() {
-  const valid = await formRef.value?.validate().catch(() => false);
-  if (!valid) return;
+  if (loading.value) return;
   loading.value = true;
   try {
+    const valid = await formRef.value?.validate().catch(() => false);
+    if (!valid) {
+      loading.value = false;
+      return;
+    }
     await login(form.password);
     auth.markAuthenticated();
     ElMessage.success("登录成功");
     router.push("/");
-  } catch { /* handled */ }
-  finally { loading.value = false; }
+  } catch {
+    loading.value = false;
+  }
 }
 </script>
 

@@ -25,7 +25,7 @@
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="loading" class="setup-btn" @click="handleSubmit">
+          <el-button type="primary" :loading="loading" native-type="submit" class="setup-btn">
             开始使用
           </el-button>
         </el-form-item>
@@ -78,17 +78,19 @@ onMounted(async () => {
 });
 
 async function handleSubmit() {
-  const valid = await formRef.value?.validate().catch(() => false);
-  if (!valid) return;
+  if (loading.value) return;
   loading.value = true;
   try {
+    const valid = await formRef.value?.validate().catch(() => false);
+    if (!valid) {
+      loading.value = false;
+      return;
+    }
     await setupInit({ password: form.password });
     auth.markAuthenticated();
     ElMessage.success("配置完成");
     router.push("/");
   } catch {
-    // Error handled by interceptor
-  } finally {
     loading.value = false;
   }
 }
