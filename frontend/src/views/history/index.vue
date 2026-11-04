@@ -160,8 +160,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onActivated } from "vue";
 import router from "@/router";
-import { ElMessage } from "element-plus";
-import { getHistory, exportHistory, getLogContent, getRawLogDownloadUrl } from "@/api/history";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { getHistory, exportHistory, getLogContent, getRawLogDownloadUrl, deleteHistory, clearHistory } from "@/api/history";
 import { copyToClipboard } from "@/utils/clipboard";
 import { formatBytes } from "@/utils/format";
 import type { HistoryRecord } from "@/api/types";
@@ -618,4 +618,113 @@ onActivated(() => loadHistory(currentPage.value));
 .line-error .log-line-text { color: #f44747; font-weight: 500; }
 .line-divider .log-line-text { opacity: 0.35; }
 .line-header .log-line-text { color: #4ec9b0; font-weight: 600; }
+
+.row-actions-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.del-log-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--steel, #94a3b8);
+  border-radius: var(--r-sm, 4px);
+  padding: 2px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+.del-log-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+.text-action-danger {
+  color: #dc2626 !important;
+}
+.text-action-danger:hover {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+/* Stable Log Modal Bar (No awkward wrapping when focused) */
+.log-modal-bar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 8px 14px !important;
+  background: #252526 !important;
+  border-bottom: 1px solid #333 !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+}
+.log-bar-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+.log-meta-tag {
+  color: #9cdcfe !important;
+  font-size: 12px !important;
+  font-family: var(--font-mono) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-width: 0 !important;
+}
+.log-modal-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+.log-filter-box {
+  background: #1e1e1e !important;
+  border: 1px solid #3c3c3c !important;
+  color: #d4d4d4 !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  outline: none !important;
+  font-family: var(--font-mono) !important;
+  width: 125px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease !important;
+}
+.log-filter-box:focus {
+  border-color: #007fd4 !important;
+}
+
+@media (max-width: 640px) {
+  :deep(.terminal-modal-dialog) {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 10px auto !important;
+  }
+  .log-modal-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+  .log-bar-left {
+    justify-content: space-between !important;
+  }
+  .log-modal-actions {
+    display: flex !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+  .log-filter-box {
+    flex: 1 !important;
+    width: auto !important;
+  }
+  .btn-copy-log {
+    flex-shrink: 0 !important;
+  }
+}
 </style>

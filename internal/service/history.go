@@ -282,3 +282,44 @@ func (s *HistoryService) CleanupOldRecords() {
 	// 清理磁盘上的旧日志文件
 	s.CleanupOldLogFiles()
 }
+// DeleteRecord 删除单条历史记录并清理关联的日志文件。
+func (s *HistoryService) DeleteRecord(id string) error {
+	s.ensureLoadedSafe()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var newCache []model.HistoryRecord
+	var deletedRecord *model.HistoryRecord
+	for _, r := range s.cache {
+		if r.ID == id {
+			recordCopy := r
+			deletedRecord = &recordCopy
+		} else {
+			newCache = append(newCache, r)
+		}
+	}
+	if deletedRecord == nil {
+		return fmt.Errorf("未找到 ID 为 %s 的记录", id)
+	}
+
+	s.cache = newCache
+	s.saveRecords(newCache)
+
+	// 清理对应的日志文件
+	if deletedRecord.LogID != "" && deletedRecord.Task != "" && s.config != nil && s.config.LogDir != "" {
+		logFile := filepath.Join(s.config.LogDir, deletedRecord.Task+"_log", "op_"+deletedRecord.LogID+".log")
+		_ = os.Remove(logFile)
+	}
+	return nil
+}
+
+// ClearAllRecords 清空全部历史记录。
+func (s *HistoryService) ClearAllRecords() error {
+	s.ensureLoadedSafe()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.cache = []model.HistoryRecord{}
+	s.saveRecords(s.cache)
+	return nil
+}

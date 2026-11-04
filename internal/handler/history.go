@@ -89,3 +89,25 @@ func (h *Handler) GetLogContent(c *gin.Context) {
 	}
 	ok(c, gin.H{"content": strings.Join(lines, "\n")})
 }
+// DeleteHistory 删除指定 ID 的操作历史记录。
+func (h *Handler) DeleteHistory(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		failBadRequest(c, "缺少记录 ID")
+		return
+	}
+	if err := h.history.DeleteRecord(id); err != nil {
+		fail(c, 500, err.Error())
+		return
+	}
+	ok(c, gin.H{"deleted": id})
+}
+
+// ClearHistory 清空全部操作历史记录。
+func (h *Handler) ClearHistory(c *gin.Context) {
+	if err := h.history.ClearAllRecords(); err != nil {
+		fail(c, 500, err.Error())
+		return
+	}
+	ok(c, gin.H{"cleared": true})
+}
