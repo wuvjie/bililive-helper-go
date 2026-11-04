@@ -29,7 +29,7 @@
         </el-tab-pane>
 
         <!-- Tab 2: 任务调度 -->
-        <el-tab-pane label="定时任务" name="schedule">
+        <el-tab-pane label="定时调度" name="schedule">
           <div v-loading="scheduleLoading" class="tab-pane-wrap">
             <ScheduleTab
               :form="scheduleForm"

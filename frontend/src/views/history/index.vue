@@ -5,15 +5,23 @@
         <div class="card-header">
           <span>📋 操作日志</span>
           <div class="header-actions">
-            <el-select v-model="filterTask" placeholder="全部类型" clearable size="small" style="width: 112px" @change="loadHistory(1)">
-              <el-option label="合并" value="merge" />
-              <el-option label="清理" value="clean" />
-              <el-option label="配置" value="config" />
-              <el-option label="调度" value="schedule" />
+            <el-select
+              v-model="filterTask"
+              placeholder="全部任务类型"
+              clearable
+              size="small"
+              style="width: 128px"
+              @change="loadHistory(1)"
+            >
+              <el-option label="全部任务" value="" />
+              <el-option label="🔗 分片合并" value="merge" />
+              <el-option label="🧹 磁盘清理" value="clean" />
+              <el-option label="⚙️ 配置变更" value="config" />
+              <el-option label="⏱️ 调度事件" value="schedule" />
             </el-select>
             <el-input
               v-model="filterStreamer"
-              placeholder="搜索主播名"
+              placeholder="搜索主播名..."
               clearable
               size="small"
               style="width: 140px"

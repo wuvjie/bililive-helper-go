@@ -385,6 +385,13 @@ function addTag(keyword: string) {
   margin-top: 6px;
 }
 
+.compact-counter {
+  width: 120px;
+}
+.compact-select {
+  width: 96px;
+  flex-shrink: 0;
+}
 .inline-unit-row {
   display: inline-flex;
   align-items: center;
@@ -406,7 +413,7 @@ function addTag(keyword: string) {
   align-items: center;
   gap: 16px;
   width: 100%;
-  max-width: 480px;
+  box-sizing: border-box;
 }
 
 .slider-flex {
@@ -432,9 +439,10 @@ function addTag(keyword: string) {
   background: var(--canvas, #fff);
   border: 1px solid var(--hairline, #eee);
   border-radius: var(--r-sm, 6px);
-  padding: 12px 16px;
+  padding: 14px 18px;
   margin: -4px 0 16px 0;
-  max-width: 520px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .buffer-zone-header {
   display: flex;
