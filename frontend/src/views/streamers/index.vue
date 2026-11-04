@@ -3,7 +3,12 @@
     <el-card shadow="hover">
       <template #header>
         <div class="card-header">
-          <span class="card-title">👤 主播录播管理</span>
+          <div class="header-left">
+            <span class="card-title">👤 主播录播管理</span>
+            <span class="streamer-total-stat">
+              共 <strong>{{ streamers.length }}</strong> 位主播 · <strong>{{ totalFiles }}</strong> 个录像 · <strong>{{ totalSizeGB }}</strong> GB
+            </span>
+          </div>
           <div class="header-right">
             <el-input
               v-model="searchQuery"
@@ -13,9 +18,10 @@
               size="small"
               style="width: 200px"
             />
-            <el-button type="text" class="goto-tasks-btn" @click="$router.push('/tasks')">
-              去任务中心操作 <span class="arrow-ico">→</span>
-            </el-button>
+            <button class="header-refresh-btn" @click="loadData" title="刷新列表">
+              <svg class="refresh-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              刷新
+            </button>
           </div>
         </div>
       </template>
@@ -43,6 +49,11 @@
         </el-table-column>
 
         <el-table-column prop="files" label="录制文件数" width="130" align="right" header-align="right" sortable :sort-orders="['descending', 'ascending']">
+          <template #header>
+            <el-tooltip content="该主播名下的视频总数（含未合并分段与已合并成品）" placement="top">
+              <span class="col-header-tip">录制文件数 ⓘ</span>
+            </el-tooltip>
+          </template>
           <template #default="{ row }">
             <div class="data-block">
               <span class="mono-val">{{ row.files }}</span><span class="unit-lbl">个</span>
@@ -69,7 +80,10 @@
           :sort-method="sortMtime"
         >
           <template #default="{ row }">
-            <span class="mono-val">{{ row.mtime ? formatRelativeTime(row.mtime, tick) : '-' }}</span>
+            <el-tooltip v-if="row.mtime" :content="formatExactTime(row.mtime)" placement="top">
+              <span class="mono-val cursor-help">{{ formatRelativeTime(row.mtime, tick) }}</span>
+            </el-tooltip>
+            <span v-else class="mono-val">-</span>
           </template>
         </el-table-column>
 
@@ -176,7 +190,7 @@
       <div v-loading="drawerLoading" class="drawer-content">
         <div class="drawer-header-bar">
           <span class="drawer-sub">共 {{ drawerFiles.length }} 个录像文件</span>
-          <el-button size="small" @click="goToTasks(drawerStreamer)">前往任务中心合并/清理 →</el-button>
+          <button class="drawer-action-btn" @click="goToTasks(drawerStreamer)">针对该主播执行任务 ↗</button>
         </div>
 
         <el-table :data="drawerFiles" size="small" max-height="650" class="drawer-table">
@@ -244,6 +258,15 @@ const router = useRouter();
 const streamers = ref<StreamerInfo[]>([]);
 const loading = ref(true);
 const searchQuery = ref("");
+
+const totalFiles = computed(() => streamers.value.reduce((acc, s) => acc + (s.files || 0), 0));
+const totalSizeGB = computed(() => (streamers.value.reduce((acc, s) => acc + (s.size_gb || 0), 0)).toFixed(1));
+
+function formatExactTime(ts: number): string {
+  const d = new Date(ts * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
 
 const filteredStreamers = computed(() => {
   if (!searchQuery.value) return streamers.value;
@@ -626,5 +649,66 @@ onActivated(() => loadData());
   width: 100%;
   max-height: 540px;
   outline: none;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.streamer-total-stat {
+  font-size: 12px;
+  color: var(--steel, #888);
+  background: var(--surface, #fafafa);
+  border: 1px solid var(--hairline, #eee);
+  padding: 2px 8px;
+  border-radius: var(--r-sm, 4px);
+  font-family: var(--font-mono);
+}
+.streamer-total-stat strong {
+  color: var(--ink, #333);
+}
+.header-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--hairline, #dcdfe6);
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--slate, #606266);
+  border-radius: var(--r-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.header-refresh-btn:hover {
+  background: var(--highlight, #f5f7fa);
+  color: var(--ink, #333);
+}
+.refresh-ico {
+  width: 13px;
+  height: 13px;
+}
+.col-header-tip {
+  cursor: help;
+  border-bottom: 1px dashed var(--hairline);
+}
+.cursor-help {
+  cursor: help;
+}
+.drawer-action-btn {
+  background: #edf6f0;
+  border: 1px solid #c7e6d0;
+  color: #2b6a48;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.drawer-action-btn:hover {
+  background: #d8eedf;
 }
 </style>

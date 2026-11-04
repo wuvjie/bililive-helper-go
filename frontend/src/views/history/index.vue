@@ -91,9 +91,24 @@
       </div>
     </el-card>
 
-    <!-- Log Viewer Dialog -->
-    <el-dialog v-model="logDialogVisible" title="日志查看" width="70%" top="5vh" destroy-on-close>
-      <pre class="log-content" v-loading="logLoading">{{ logContent }}</pre>
+    <!-- Log Viewer Dialog (Dark Terminal Style) -->
+    <el-dialog
+      v-model="logDialogVisible"
+      :title="`📋 操作日志: ${activeLogTitle}`"
+      width="780px"
+      top="6vh"
+      destroy-on-close
+      class="terminal-modal-dialog"
+    >
+      <div class="log-modal-body" v-loading="logLoading">
+        <div class="log-modal-bar">
+          <span class="log-meta-tag">{{ activeLogMeta }}</span>
+          <button class="btn-copy-log" @click="copyLogContent">
+            📋 复制全部日志
+          </button>
+        </div>
+        <pre class="terminal-dark-code">{{ logContent }}</pre>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -117,6 +132,19 @@ const filterStreamer = ref("");
 const logDialogVisible = ref(false);
 const logContent = ref("");
 const logLoading = ref(false);
+const activeLogTitle = ref("");
+const activeLogMeta = ref("");
+
+async function copyLogContent() {
+  if (!logContent.value) return;
+  try {
+    await navigator.clipboard.writeText(logContent.value);
+    ElMessage.success("已复制完整日志到剪贴板");
+  } catch {
+    ElMessage.error("复制失败，请手动选择复制");
+  }
+}
+
 
 let loadSeq = 0;
 let streamerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -150,27 +178,36 @@ function taskLabel(task: string) {
 }
 
 function formatDetail(row: HistoryRecord | Record<string, any>) {
+  if (row.detail) return row.detail;
   const parts = [];
-  if (row.files_count) parts.push(`${row.files_count} 个文件`);
-  if (row.merged_bytes) parts.push(`合并 ${formatBytes(row.merged_bytes)}`);
-  if (row.freed_bytes) parts.push(`释放 ${formatBytes(row.freed_bytes)}`);
+  if (row.task === "merge") {
+    if (row.files_count) parts.push(`合并 ${row.files_count} 个分片`);
+    if (row.merged_bytes) parts.push(formatBytes(row.merged_bytes));
+  } else if (row.task === "clean") {
+    if (row.files_count) parts.push(`清理 ${row.files_count} 个文件`);
+    if (row.freed_bytes) parts.push(`释放 ${formatBytes(row.freed_bytes)}`);
+  } else {
+    if (row.files_count) parts.push(`${row.files_count} 个文件`);
+  }
   if (row.duration) parts.push(`耗时 ${row.duration}s`);
-  return parts.join(", ") || "-";
+  return parts.join(" · ") || "-";
 }
 
 async function viewLog(row: HistoryRecord | Record<string, any>) {
   if (!row.log_id) return;
-  // 预校验 log_id 格式：{type}_{YYYYMMDD}_{HHMMSS}_{4位hex}
   if (!/^[a-z]+_\d{8}_\d{6}_[0-9a-f]{4}$/.test(row.log_id)) {
     ElMessage.warning("该记录的日志格式不兼容，请刷新页面");
     return;
   }
+  const taskName = row.task === 'merge' ? '分片合并' : '磁盘清理';
+  activeLogTitle.value = `${taskName} · ${row.streamer || '全局'}`;
+  activeLogMeta.value = `任务 ID: ${row.log_id} · ${row.time} (${row.status === 'success' ? '成功' : '失败'})`;
   logDialogVisible.value = true;
   logContent.value = "";
   logLoading.value = true;
   try {
     const res = await getLogContent(row.task, row.log_id);
-    logContent.value = res.content;
+    logContent.value = res.content || "暂无日志文本";
   } catch {
     logContent.value = "日志加载失败";
   } finally {
@@ -314,5 +351,72 @@ onActivated(() => loadHistory(currentPage.value));
 }
 .history :deep(.el-dialog__body) {
   padding: 0;
+}
+
+.status-pill-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.pill-success {
+  background: #edf6f0;
+  color: #2b6a48;
+  border: 1px solid #d2ecd9;
+}
+.pill-fail {
+  background: #fff0f0;
+  color: #d4433a;
+  border: 1px solid #ffdcdc;
+}
+
+.log-modal-body {
+  background: #191919;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.log-modal-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: #252526;
+  border-bottom: 1px solid #333;
+}
+.log-meta-tag {
+  color: #9cdcfe;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+.btn-copy-log {
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  color: #ccc;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-copy-log:hover {
+  background: #2a2d2e;
+  color: #fff;
+  border-color: #555;
+}
+.terminal-dark-code {
+  margin: 0;
+  padding: 14px 16px;
+  background: #191919;
+  color: #d4d4d4;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  max-height: 480px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 </style>
