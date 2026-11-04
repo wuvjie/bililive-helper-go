@@ -165,7 +165,6 @@ docker stop bililive-helper-go       # 停止容器
 ```powershell
 wslc run -d `
   --name bililive-helper-go `
-  --restart always `
   -p 5689:5000 `
   -v D:\video\recordings:/recordings `
   -v D:\docker\bililive-helper-go:/data `
@@ -175,16 +174,17 @@ wslc run -d `
   bililive-helper-go
 ```
 
-> **Windows 路径挂载特别说明**：
-> - 宿主机路径既支持 Windows 原生盘符路径（如 `D:\video\recordings:/recordings`），也支持 WSL 挂载路径（如 `/mnt/d/video/recordings:/recordings`）。
-> - 容器内部始终使用通用的 `/recordings` 和 `/data`，彻底解耦本地路径与容器业务逻辑。
-> - *可选参数*：若需限制硬件占用或日志体积，可按需追加 `--cpus="2.0" --memory="4g"` 或 `--log-opt max-size=10m --log-opt max-file=3`。
+> **说明与参数特性**：
+> - **路径映射**：宿主机路径既支持 Windows 原生盘符路径（如 `D:\video\recordings:/recordings`），也支持 WSL 挂载路径（如 `/mnt/d/video/recordings:/recordings`）。容器内部始终固定使用 `/recordings` 和 `/data`。
+> - **重启策略**：`wslc` 暂不支持 `--restart` 选项；容器停止后可随时使用 `wslc start bililive-helper-go` 快速拉起。
+> - **资源限制（可选）**：若需限制硬件占用，可追加 `--cpus="2.0" -m="4g"`。
 
 #### 3. 运维维护
 ```powershell
 wslc logs -f bililive-helper-go     # 查看实时日志
 wslc restart bililive-helper-go    # 重启容器
 wslc stop bililive-helper-go       # 停止容器
+wslc start bililive-helper-go      # 启动已停止的容器
 ```
 
 ---
