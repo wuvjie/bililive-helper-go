@@ -88,6 +88,7 @@
           </template>
         </el-table-column>
       </el-table>
+      </div>
 
       <div class="pagination" v-if="totalPages > 1">
         <el-pagination
