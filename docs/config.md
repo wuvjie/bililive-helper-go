@@ -39,3 +39,4 @@
 | `BACKUP_END_MINUTE` | int | 静默时段结束分钟 | 0 |
 | `PORT` | int | 监听端口 | 5000 |
 | `SESSION_VERSION` | int | Session 版本号（改密时自动递增） | 0 |
+| `STREAMER_RULES` | object | 主播个性化规则（时段裁剪、独立保底数、免删保护） | `{}` |
