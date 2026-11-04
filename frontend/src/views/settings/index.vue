@@ -102,13 +102,20 @@
                     <div class="field-hint">每个主播至少保留最近的场次数，无论磁盘空间多么紧张也不会被全删。</div>
                   </el-form-item>
 
-                  <el-form-item label="单次最大删除数">
-                    <div class="inline-unit-row">
-                      <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" class="compact-counter" />
-                      <span class="unit-text">个</span>
+                  <div class="advanced-section-fold">
+                    <span class="fold-toggle-btn" @click="showAdvancedClean = !showAdvancedClean">
+                      {{ showAdvancedClean ? '▾ 收起高级安全参数' : '▸ 展开高级参数 (单次最大删除数)' }}
+                    </span>
+                    <div v-if="showAdvancedClean" class="fold-inner-content">
+                      <el-form-item label="单次最大删除数">
+                        <div class="inline-unit-row">
+                          <el-input-number v-model="config.MAX_DELETE_PER_RUN" :min="1" :max="1000" class="compact-counter" />
+                          <span class="unit-text">个</span>
+                        </div>
+                        <div class="field-hint">限制单次清理任务允许删除的文件上限，避免引起磁盘长时间高负荷 I/O 抖动（默认 50 个）。</div>
+                      </el-form-item>
                     </div>
-                    <div class="field-hint">限制单次清理任务允许删除的文件上限，避免引起磁盘长时间高负荷 I/O 抖动。</div>
-                  </el-form-item>
+                  </div>
 
                   <el-form-item label="白名单关键词">
                     <el-input
@@ -159,12 +166,12 @@
                 <span class="backup-icon">📤</span>
                 <span class="backup-title">导出配置备份</span>
               </div>
-              <p class="backup-desc">将系统当前的存储路径、阈值策略、调度参数以及各主播的个性化截取与保护规则导出为纯净的 JSON 备份文件。</p>
+              <p class="backup-desc">将系统当前的阈值策略、定时调度参数以及各主播的个性化截取与保护规则导出为 JSON 备份文件。</p>
               <div class="backup-spacer"></div>
-              <div class="backup-card-footer">
-                <button class="btn-primary btn-full" @click="handleExport">生成并导出 JSON</button>
+              <div class="backup-action-group">
+                <button class="btn-primary btn-action-half" @click="handleExport">📥 下载配置文件 (.json)</button>
+                <button class="btn-secondary btn-action-half" @click="handleCopyConfig">📋 复制配置代码</button>
               </div>
-              <textarea v-if="exportJson" class="backup-preview" readonly :value="exportJson" />
             </div>
 
             <!-- Import card -->
@@ -173,7 +180,7 @@
                 <span class="backup-icon">📥</span>
                 <span class="backup-title">导入配置恢复</span>
               </div>
-              <p class="backup-desc">在下方粘贴合法的配置 JSON 字符串，或选择备份文件导入。导入成功后将自动应用并覆盖现有设置。</p>
+              <p class="backup-desc">选择之前导出的 JSON 备份文件，导入并校验通过后将自动覆盖应用现有设置。</p>
               <input
                 ref="importFileRef"
                 type="file"
@@ -181,14 +188,24 @@
                 style="display: none"
                 @change="handleFileSelect"
               />
-              <button class="btn-ghost-file" @click="importFileRef?.click()">📂 选择 JSON 文件</button>
-              <textarea
-                class="backup-textarea"
-                v-model="importJson"
-                placeholder="或在此粘贴配置 JSON 字符串..."
-              />
+              <div class="import-file-box" @click="importFileRef?.click()">
+                <span class="import-file-icon">📂</span>
+                <span class="import-file-text">{{ selectedImportFileName || '点击选择本地 JSON 备份文件...' }}</span>
+              </div>
+              <div class="import-manual-toggle">
+                <span class="toggle-link" @click="showManualPaste = !showManualPaste">
+                  {{ showManualPaste ? '▾ 收起手动粘贴' : '▸ 或手动粘贴 JSON 代码' }}
+                </span>
+                <textarea
+                  v-if="showManualPaste"
+                  class="backup-textarea"
+                  v-model="importJson"
+                  placeholder="在此直接粘贴配置 JSON 字符串..."
+                />
+              </div>
+              <div class="backup-spacer"></div>
               <div class="backup-card-footer">
-                <button class="btn-primary btn-full" @click="handleImport">导入恢复配置</button>
+                <button class="btn-primary btn-full" :disabled="!selectedImportFileName && !importJson" @click="handleImport">导入并应用配置</button>
               </div>
             </div>
           </div>
@@ -228,6 +245,21 @@ const backupStart = ref("");
 const backupEnd = ref("");
 
 const exportJson = ref("");
+const showAdvancedClean = ref(false);
+const selectedImportFileName = ref("");
+const showManualPaste = ref(false);
+
+async function handleCopyConfig() {
+  try {
+    const res = await getConfigExport();
+    const jsonStr = JSON.stringify(res, null, 2);
+    await navigator.clipboard.writeText(jsonStr);
+    ElMessage.success("已复制配置 JSON 到剪贴板");
+  } catch {
+    ElMessage.error("复制配置失败");
+  }
+}
+
 const importJson = ref("");
 const importFileRef = ref<HTMLInputElement | null>(null);
 const taskRunning = ref(false);
@@ -704,5 +736,82 @@ onMounted(() => {
   resize: vertical;
   margin-top: 14px;
   box-sizing: border-box;
+}
+
+.advanced-section-fold {
+  margin: 4px 0 12px;
+}
+.fold-toggle-btn {
+  font-size: 12px;
+  color: var(--steel, #888);
+  cursor: pointer;
+  user-select: none;
+}
+.fold-toggle-btn:hover {
+  color: var(--ink, #333);
+}
+.fold-inner-content {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--canvas, #fff);
+  border: 1px dashed var(--hairline, #eee);
+  border-radius: var(--r-sm, 4px);
+}
+
+.backup-action-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.btn-action-half {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.btn-secondary {
+  background: var(--surface, #fafafa);
+  border: 1px solid var(--hairline, #dcdfe6);
+  color: var(--charcoal, #333);
+  border-radius: var(--r-sm, 4px);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.btn-secondary:hover {
+  background: var(--highlight, #f0f0f0);
+}
+.import-file-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--canvas, #fff);
+  border: 1px dashed var(--hairline, #dcdfe6);
+  padding: 12px 16px;
+  border-radius: var(--r-sm, 4px);
+  cursor: pointer;
+  margin: 12px 0 8px;
+  transition: border-color 0.15s;
+}
+.import-file-box:hover {
+  border-color: #409eff;
+}
+.import-file-icon {
+  font-size: 18px;
+}
+.import-file-text {
+  font-size: 13px;
+  color: var(--slate, #606266);
+}
+.import-manual-toggle {
+  margin: 6px 0 12px;
+}
+.toggle-link {
+  font-size: 12px;
+  color: var(--steel, #888);
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-link:hover {
+  color: var(--ink, #333);
 }
 </style>

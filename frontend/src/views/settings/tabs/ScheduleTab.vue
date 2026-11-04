@@ -14,14 +14,14 @@
     <el-form-item label="执行间隔(分钟)">
       <el-input-number :model-value="form.clean_interval" :min="10" :max="1440" @update:model-value="emit('update:form', { ...form, clean_interval: Number($event) })" />
     </el-form-item>
-    <div class="section-divider">⏳ 备份窗口（暂停任务）</div>
+    <div class="section-divider">🌙 静默避让时段（免打扰）</div>
     <el-form-item label="开始时间">
       <el-time-picker :model-value="backupStart" format="HH:mm" value-format="HH:mm" style="width: 160px" @update:model-value="emit('update:backupStart', $event ?? '')" />
     </el-form-item>
     <el-form-item label="结束时间">
       <el-time-picker :model-value="backupEnd" format="HH:mm" value-format="HH:mm" style="width: 160px" @update:model-value="emit('update:backupEnd', $event ?? '')" />
     </el-form-item>
-    <div class="backup-hint">支持跨午夜，如 23:00 - 06:00</div>
+    <div class="backup-hint">在此时间段内暂停自动合并与清理任务，避免夜间或高峰期高 CPU 占用，支持跨午夜（如 23:00 - 06:00）</div>
     <el-form-item>
       <el-button type="primary" :loading="saving" style="width: 128px" @click="emit('save')">保存计划</el-button>
     </el-form-item>

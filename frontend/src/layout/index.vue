@@ -75,22 +75,28 @@
           </el-breadcrumb>
         </div>
         <div class="navbar-right">
-          <el-tooltip content="刷新" placement="bottom">
-            <el-icon class="nav-icon" @click="refreshPage"><Refresh /></el-icon>
-          </el-tooltip>
-          <el-tooltip content="全屏" placement="bottom">
-            <el-icon class="nav-icon" @click="toggleFullscreen"><FullScreen /></el-icon>
+          <el-tooltip content="刷新数据" placement="bottom">
+            <button class="nav-btn-icon" :class="{ spinning: isRefreshing }" @click="refreshPage">
+              <svg class="nav-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
           </el-tooltip>
           <span class="nav-divider"></span>
           <el-dropdown trigger="click" @command="handleCommand" placement="bottom-end">
-            <span class="user-info">
-              <span class="user-avatar">A</span>
-              <span class="user-name">Admin</span>
-            </span>
+            <div class="user-pill-btn">
+              <span class="user-pill-dot"></span>
+              <span class="user-pill-name">管理员</span>
+              <span class="user-ver-badge">v2.0</span>
+            </div>
             <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="change-password">修改密码</el-dropdown-item>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+              <el-dropdown-menu class="nav-dropdown-menu">
+                <el-dropdown-item command="change-password">
+                  <span>🔑 修改管理密码</span>
+                </el-dropdown-item>
+                <el-dropdown-item command="logout" divided>
+                  <span style="color: #d4433a;">🚪 退出系统</span>
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -173,12 +179,12 @@ function handleMenuSelect() {
 const pwDialogVisible = ref(false);
 const pwSaving = ref(false);
 
-function refreshPage() { window.location.reload(); }
-function toggleFullscreen() {
-  try {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-    else document.exitFullscreen();
-  } catch { /* 浏览器拒绝或 iframe 内不支持 */ }
+const isRefreshing = ref(false);
+function refreshPage() {
+  isRefreshing.value = true;
+  setTimeout(() => {
+    window.location.reload();
+  }, 250);
 }
 function handleCommand(cmd: string) {
   if (cmd === "logout") logout();
@@ -356,17 +362,73 @@ router.afterEach(() => fetchDiskStatus());
 .nav-icon { font-size: 17px; cursor: pointer; color: var(--steel); &:hover { color: var(--ink); } }
 .nav-divider { width: 1px; height: 14px; background: var(--hairline); flex-shrink: 0; }
 
-.user-info {
-  display: flex; align-items: center; gap: 8px; cursor: pointer;
-  .user-avatar {
-    width: 20px; height: 20px;
-    background: var(--primary); color: var(--on-primary);
-    font-size: 11px; font-weight: 700; font-family: var(--font-mono);
-    display: flex; align-items: center; justify-content: center;
-    border-radius: var(--r-xs); flex-shrink: 0;
+.nav-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--steel);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--highlight);
+    color: var(--ink);
+    border-color: var(--hairline);
   }
-  .user-name { font-size: 13px; color: var(--steel); font-weight: 500; transition: color 0.15s; }
-  &:hover .user-name { color: var(--ink); }
+
+  &.spinning .nav-svg-ico {
+    animation: rotate-spin 0.6s linear infinite;
+  }
+}
+@keyframes rotate-spin {
+  100% { transform: rotate(360deg); }
+}
+.nav-svg-ico {
+  width: 15px;
+  height: 15px;
+}
+
+.user-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 10px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+
+  &:hover {
+    background: var(--highlight);
+    border-color: var(--faint);
+  }
+}
+.user-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #448361;
+}
+.user-pill-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--charcoal);
+}
+.user-ver-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--steel);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 
 .layout-content { flex: 1; overflow-y: auto; padding: 24px; padding-bottom: 48px; }
