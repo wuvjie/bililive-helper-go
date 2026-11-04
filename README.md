@@ -121,8 +121,6 @@ docker run -d \
   -e TARGET_DIR=/recordings \
   -e LOG_DIR=/data \
   -e TZ=Asia/Shanghai \
-  --cpus="3.0" \
-  --memory="4g" \
   --log-opt max-size=10m \
   --log-opt max-file=3 \
   bililive-helper-go
@@ -133,6 +131,7 @@ docker run -d \
 > - `-v /volume1/docker/bililive-helper-go:/data`：将宿主机配置、凭据与日志持久化目录映射到容器 `/data`。
 > - `-p 5689:5000`：宿主机对外暴露 5689 端口（容器内监听 5000）。
 > - `-e TARGET_DIR=/recordings -e LOG_DIR=/data`：确保应用程序使用挂载的标准目录。
+> - *资源限制（可选）*：默认不限制硬件资源；如需限制可按需追加 `--cpus="2.0" --memory="4g"`。
 
 #### 3. 运维维护
 ```bash
@@ -173,14 +172,13 @@ wslc run -d `
   -e TARGET_DIR=/recordings `
   -e LOG_DIR=/data `
   -e TZ=Asia/Shanghai `
-  --cpus="3.0" `
-  --memory="4g" `
   bililive-helper-go
 ```
 
 > **Windows 路径挂载特别说明**：
 > - 宿主机路径既支持 Windows 原生盘符路径（如 `D:\video\recordings:/recordings`），也支持 WSL 挂载路径（如 `/mnt/d/video/recordings:/recordings`）。
 > - 容器内部始终使用通用的 `/recordings` 和 `/data`，彻底解耦本地路径与容器业务逻辑。
+> - *资源限制（可选）*：默认不限制硬件资源；如需限制可按需追加 `--cpus="2.0" --memory="4g"`。
 
 #### 3. 运维维护
 ```powershell

@@ -35,12 +35,12 @@ services:
       retries: 3
       start_period: 10s
     restart: always
-    # 资源限制（防止占用过多系统资源影响录制）
-    deploy:
-      resources:
-        limits:
-          cpus: '${CPU_LIMIT:-3.0}'    # CPU 上限（建议留 1 核给录制进程）
-          memory: ${MEM_LIMIT:-4G}     # 内存上限（建议留一半给录制进程）
+    # 资源限制（可选：若宿主机资源紧张，可解开注释按需限制）
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '${CPU_LIMIT:-2.0}'
+    #       memory: ${MEM_LIMIT:-4G}
     # 日志轮转
     logging:
       driver: "json-file"
