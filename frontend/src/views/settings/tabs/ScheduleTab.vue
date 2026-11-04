@@ -5,14 +5,14 @@
       <el-switch :model-value="form.merge_enabled" @update:model-value="emit('update:form', { ...form, merge_enabled: !!$event })" />
     </el-form-item>
     <el-form-item label="执行间隔(分钟)">
-      <el-input-number :model-value="form.merge_interval" :min="10" :max="1440" @update:model-value="emit('update:form', { ...form, merge_interval: Number($event) })" />
+      <el-input-number :model-value="form.merge_interval" :min="10" :max="1440" :step="15" @update:model-value="emit('update:form', { ...form, merge_interval: Number($event) })" />
     </el-form-item>
     <div class="section-divider">🧹 自动清理</div>
     <el-form-item label="是否启用">
       <el-switch :model-value="form.clean_enabled" @update:model-value="emit('update:form', { ...form, clean_enabled: !!$event })" />
     </el-form-item>
     <el-form-item label="执行间隔(分钟)">
-      <el-input-number :model-value="form.clean_interval" :min="10" :max="1440" @update:model-value="emit('update:form', { ...form, clean_interval: Number($event) })" />
+      <el-input-number :model-value="form.clean_interval" :min="10" :max="1440" :step="30" @update:model-value="emit('update:form', { ...form, clean_interval: Number($event) })" />
     </el-form-item>
     <div class="section-divider">🌙 静默避让时段（免打扰）</div>
     <el-form-item label="开始时间">

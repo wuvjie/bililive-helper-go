@@ -12,9 +12,7 @@
             <div class="inline-unit-row">
               <el-input-number
                 :model-value="config.GAP_MINUTES"
-                :min="1"
-                :max="120"
-                class="compact-counter"
+                :min="1" :max="120" :step="5" class="compact-counter"
                 @update:model-value="updateField('GAP_MINUTES', Number($event))"
               />
               <span class="unit-text">分钟</span>
@@ -26,9 +24,7 @@
             <div class="inline-unit-row">
               <el-input-number
                 :model-value="config.MERGE_AGE_MINUTES"
-                :min="5"
-                :max="1440"
-                class="compact-counter"
+                :min="5" :max="1440" :step="5" class="compact-counter"
                 @update:model-value="updateField('MERGE_AGE_MINUTES', Number($event))"
               />
               <span class="unit-text">分钟</span>
@@ -112,9 +108,7 @@
               <div v-if="config.SAFE_MODE === 'hours'" class="inline-unit-row">
                 <el-input-number
                   :model-value="safeAgeHours"
-                  :min="1"
-                  :max="168"
-                  class="compact-counter"
+                  :min="1" :max="168" :step="1" class="compact-counter"
                   @update:model-value="updateField('SAFE_AGE_MINUTES', (Number($event) || 1) * 60)"
                 />
                 <span class="unit-text">小时</span>
@@ -137,9 +131,7 @@
             <div class="inline-unit-row">
               <el-input-number
                 :model-value="config.MIN_KEEP_PER_STREAMER"
-                :min="1"
-                :max="50"
-                class="compact-counter"
+                :min="1" :max="50" :step="1" class="compact-counter"
                 @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
               />
               <span class="unit-text">场</span>
@@ -151,9 +143,7 @@
             <div class="inline-unit-row">
               <el-input-number
                 :model-value="config.MAX_DELETE_PER_RUN || 50"
-                :min="1"
-                :max="1000"
-                class="compact-counter"
+                :min="5" :max="500" :step="10" class="compact-counter"
                 @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
               />
               <span class="unit-text">个</span>

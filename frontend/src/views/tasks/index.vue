@@ -645,7 +645,12 @@ onActivated(async () => {
 }
 
 .btn-targeted {
-  padding: 6px 12px;
+  width: 140px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   font-size: 12px;
   font-weight: 500;
   border-radius: var(--r-sm);
@@ -654,6 +659,7 @@ onActivated(async () => {
   border: 1px solid var(--hairline);
   color: var(--charcoal);
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 .btn-targeted:disabled {
   opacity: 0.4;
@@ -689,12 +695,22 @@ onActivated(async () => {
 
 /* Terminal Card */
 .terminal-container-card {
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-md);
+  background: #1e1e1e;
+  border: 1px solid #333333;
+  border-radius: var(--r-md, 8px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+.terminal-container-card :deep(.re-terminal) {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.terminal-container-card :deep(.terminal-body) {
+  border-bottom-left-radius: var(--r-md, 8px);
+  border-bottom-right-radius: var(--r-md, 8px);
 }
 
 .terminal-ctrl-bar {

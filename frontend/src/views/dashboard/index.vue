@@ -50,7 +50,6 @@
       <div class="card">
         <div class="card-title">
           <span>💾 存储状态</span>
-          <span class="card-title-sub">录制存储池</span>
         </div>
         <div class="card-body">
           <div class="disk-top">
@@ -78,16 +77,13 @@
               <span class="mono-val">{{ detail?.disk?.free_gb?.toFixed(1) }} GB</span>
             </div>
             <div class="data-cell">
-              <span class="data-label">录播库占用</span>
-              <el-tooltip
-                content="当前已录制的视频文件所占用的磁盘物理空间总和"
-                placement="top"
-              >
-                <span class="mono-val info-trigger">
-                  {{ totalRecordingsGB }} GB
-                  <span class="info-bubble">?</span>
-                </span>
-              </el-tooltip>
+              <span class="data-label">
+                录播库占用
+                <el-tooltip content="当前已录制的视频文件所占用的磁盘物理空间总和" placement="top">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </span>
+              <span class="mono-val">{{ totalRecordingsGB }} GB</span>
             </div>
           </div>
           <div v-if="stats?.daily_output_gb || stats?.days_until_full" class="bottom-health-bar">
@@ -142,13 +138,13 @@
               <span class="mono-val">{{ streamerCount }} 位</span>
             </div>
             <div class="data-cell">
-              <span class="data-label">视频总数</span>
-              <el-tooltip content="全部主播录像文件总数（含未合并分段切片与已合并成品）" placement="top">
-                <span class="mono-val info-trigger">
-                  {{ videoCount }} 个
-                  <span class="info-bubble">?</span>
-                </span>
-              </el-tooltip>
+              <span class="data-label">
+                视频总数
+                <el-tooltip content="全部主播录像文件总数（含未合并分段切片与已合并成品）" placement="top">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </span>
+              <span class="mono-val">{{ videoCount }} 个</span>
             </div>
           </div>
 
@@ -465,7 +461,36 @@ onActivated(async () => {
 }
 .data-cell:nth-child(odd) { border-right: 1px solid var(--hairline); }
 .data-cell:nth-child(1), .data-cell:nth-child(2) { border-bottom: 1px solid var(--hairline); }
-.data-label { font-size: 13px; color: var(--steel); flex-shrink: 0; }
+.data-label {
+  font-size: 13px;
+  color: var(--steel);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.label-help-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--steel);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  cursor: help;
+  line-height: 1;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--charcoal);
+    border-color: var(--steel);
+    background: var(--highlight);
+  }
+}
 
 .info-trigger {
   display: inline-flex;
@@ -558,45 +583,27 @@ onActivated(async () => {
 .bottom-health-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px dashed var(--hairline);
-  flex-wrap: wrap;
-}
-
-.card-title-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.card-header-link {
-  font-size: 12px;
-  color: var(--steel);
-  font-weight: 500;
-  text-decoration: none;
-  padding: 2px 6px;
-  border-radius: var(--r-sm);
-  transition: all 0.15s;
-}
-.card-header-link:hover {
-  color: var(--ink);
-  background: var(--highlight);
-}
-
-.runtime-health-bar {
-  justify-content: space-between;
+  width: 100%;
 }
 .health-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  box-sizing: border-box;
   font-size: 12px;
   color: var(--slate);
   background: var(--surface);
   border: 1px solid var(--hairline);
-  padding: 3px 8px;
+  padding: 0 10px;
   border-radius: var(--r-sm);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  white-space: nowrap;
 }
 .health-pill-warn {
   color: var(--warning);
@@ -721,5 +728,35 @@ onActivated(async () => {
 @media (max-width: 600px) {
   .stat-grid { grid-template-columns: 1fr; }
   .dash-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+@media (max-width: 640px) {
+  .data-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .data-cell {
+    padding: 8px 10px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 3px !important;
+  }
+  .data-label {
+    font-size: 11px !important;
+    color: var(--steel) !important;
+  }
+  .data-cell .mono-val {
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+  .bottom-health-bar {
+    gap: 6px !important;
+  }
+  .health-pill {
+    font-size: 11px !important;
+    padding: 0 6px !important;
+    min-width: 0 !important;
+  }
 }
 </style>
