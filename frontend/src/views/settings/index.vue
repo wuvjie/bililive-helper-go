@@ -21,29 +21,40 @@
                 </div>
                 <div class="section-body">
                   <el-form-item label="录制存储目录">
-                    <el-input
-                      v-model="config.TARGET_DIR"
-                      placeholder="/path/to/recordings"
-                      class="mono-input"
-                      style="max-width: 520px"
-                    />
-                    <div class="field-hint">录播软件写入分段视频的根目录，系统将自动按子文件夹扫描主播。</div>
+                    <div class="dir-input-wrapper">
+                      <el-input
+                        v-model="config.TARGET_DIR"
+                        placeholder="/path/to/recordings"
+                        class="mono-input"
+                        style="max-width: 440px"
+                        :disabled="isContainerMode"
+                      />
+                      <el-tag v-if="isContainerMode" size="small" type="info" class="dir-mode-tag">
+                        📦 容器挂载
+                      </el-tag>
+                    </div>
+                    <div class="field-hint" v-if="isContainerMode">
+                      当前运行在容器环境中，内部固定为 <code>/recordings</code>。实际录制目录由宿主机卷挂载映射（<code>-v &lt;宿主机实际路径&gt;:/recordings</code>）决定。如需修改，请调整 Docker / WSL 启动命令中的挂载路径。
+                    </div>
+                    <div class="field-hint" v-else>
+                      录播软件写入分段视频的根目录，系统将自动按子文件夹扫描主播。
+                    </div>
                   </el-form-item>
 
-                  <el-form-item label="分片间隔容差">
+                  <el-form-item label="断流重连容差">
                     <div class="inline-unit-row">
                       <el-input-number v-model="config.GAP_MINUTES" :min="1" :max="120" class="compact-counter" />
                       <span class="unit-text">分钟</span>
                     </div>
-                    <div class="field-hint">同一主播两次录像在此时间差内断流重连，将被视作同一场直播并自动合并。</div>
+                    <div class="field-hint">同一主播在此时间差内断流重连，将被判定为同一场直播并自动合并为整段视频。</div>
                   </el-form-item>
 
-                  <el-form-item label="合并保护期">
+                  <el-form-item label="完播静置等待">
                     <div class="inline-unit-row">
                       <el-input-number v-model="config.MERGE_AGE_MINUTES" :min="5" :max="1440" class="compact-counter" />
                       <span class="unit-text">分钟</span>
                     </div>
-                    <div class="field-hint">录制文件生成并静置满此时间后才允许触发合并，防止误读正在写入的活动切片。</div>
+                    <div class="field-hint">录制文件生成并静置满此时间后才允许合并，确保主播已彻底关播且文件写入完毕，防止误读活动切片。</div>
                   </el-form-item>
                 </div>
               </div>
@@ -85,7 +96,7 @@
                     <div class="field-hint">清理时将从最旧录播开始删除，直至磁盘使用率降至此目标水位。</div>
                   </el-form-item>
 
-                  <el-form-item label="清理安全保护期">
+                  <el-form-item label="新录像免删保护">
                     <div class="safe-age-group">
                       <el-select v-model="config.SAFE_MODE" class="compact-select" @change="onSafeModeChange" style="width: 100px">
                         <el-option label="按小时" value="hours" />
@@ -100,7 +111,7 @@
                         <span class="unit-text">天</span>
                       </div>
                     </div>
-                    <div class="field-hint">在此保护期内生成的最新录像享有“免死金牌”，绝对不会被自动清理删除。</div>
+                    <div class="field-hint">在此保护期内生成的最新录像享有免删保护，即使磁盘水位达到警戒线，清理任务也绝不会删除保护期内的文件。</div>
                   </el-form-item>
 
                   <el-form-item label="每主播最少保留">
@@ -226,6 +237,10 @@ const configLoading = ref(false);
 const scheduleLoading = ref(false);
 
 const config = ref<ConfigDTO>({} as ConfigDTO);
+
+const isContainerMode = computed(() => {
+  return config.value.TARGET_DIR === '/recordings' || config.value.TARGET_DIR?.startsWith('/recordings');
+});
 const scheduleForm = reactive<ScheduleForm>({
   merge_enabled: true,
   clean_enabled: true,
@@ -536,11 +551,37 @@ onMounted(() => {
   gap: 14px;
 }
 
+.settings-form :deep(.el-form-item__content) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dir-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.dir-mode-tag {
+  font-weight: 500;
+}
+
 .field-hint {
+  width: 100%;
   font-size: 12px;
   color: var(--steel);
-  line-height: 1.4;
-  margin-top: 4px;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.field-hint code {
+  background: var(--surface-hover);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 .inline-unit-row {
