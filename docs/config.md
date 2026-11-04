@@ -12,15 +12,15 @@
 ### 1. Docker Compose 挂载配置
 在宿主机根目录下的 `.env` 文件中配置映射：
 ```env
-RECORDINGS_DIR=/volume1/video/recordings
-DATA_DIR=/volume1/docker/bililive-helper-go
+RECORDINGS_DIR=/path/to/recordings
+DATA_DIR=/path/to/data
 PORT=5689
 ```
 
 ### 2. Docker CLI (`docker run`) 挂载参数
 ```bash
--v /volume1/video/recordings:/recordings \
--v /volume1/docker/bililive-helper-go:/data \
+-v /path/to/recordings:/recordings \
+-v /path/to/data:/data \
 -e TARGET_DIR=/recordings \
 -e LOG_DIR=/data
 ```
@@ -70,9 +70,9 @@ PORT=5689
 | `SAFE_MODE` | string | 安全期模式：`hours` 或 `days` | `hours` |
 | `SAFE_DAYS` | int | 安全期天数（仅 days 模式） | 1 |
 | `MAX_DELETE_PER_RUN` | int | 单次清理最大删除数 | 10 |
-| `BACKUP_START_HOUR` | int | 静默时段开始小时 | 4 |
+| `BACKUP_START_HOUR` | int | 静默时段开始小时（起止均为 0 表示默认关闭） | 0 |
 | `BACKUP_START_MINUTE` | int | 静默时段开始分钟 | 0 |
-| `BACKUP_END_HOUR` | int | 静默时段结束小时 | 12 |
+| `BACKUP_END_HOUR` | int | 静默时段结束小时（起止均为 0 表示默认关闭） | 0 |
 | `BACKUP_END_MINUTE` | int | 静默时段结束分钟 | 0 |
 | `PORT` | int | 监听端口 | 5000 |
 | `SESSION_VERSION` | int | Session 版本号（改密时自动递增） | 0 |
