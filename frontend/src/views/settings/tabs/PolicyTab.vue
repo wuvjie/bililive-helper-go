@@ -150,7 +150,7 @@
           <el-form-item label="单次最大删除数">
             <div class="inline-unit-row">
               <el-input-number
-                :model-value="config.MAX_DELETE_PER_RUN"
+                :model-value="config.MAX_DELETE_PER_RUN || 50"
                 :min="1"
                 :max="1000"
                 class="compact-counter"

@@ -118,6 +118,11 @@ func Load() (*Config, []string) {
 		}
 	}
 
+	// 历史配置平滑迁移：旧版默认曾初始化为 10，自动无缝升级为官方标准默认值 50
+	if cfg.MaxDeletePerRun <= 10 {
+		cfg.MaxDeletePerRun = 50
+	}
+
 	// 环境变量覆盖文件值
 	if v := os.Getenv("TARGET_DIR"); v != "" {
 		cfg.TargetDir = v
