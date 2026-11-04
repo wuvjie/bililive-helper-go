@@ -33,7 +33,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="files" label="录制文件数" width="150" align="right" header-align="right" sortable>
+        <el-table-column prop="files" label="录制文件数" width="150" align="right" header-align="right" sortable :sort-orders="['descending', 'ascending']">
           <template #default="{ row }">
             <div class="data-block">
               <span class="mono-val">{{ row.files }}</span><span class="unit-lbl">个</span>
@@ -41,7 +41,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="size_gb" label="磁盘占用" width="150" align="right" header-align="right" sortable>
+        <el-table-column prop="size_gb" label="磁盘占用" width="150" align="right" header-align="right" sortable :sort-orders="['descending', 'ascending']">
           <template #default="{ row }">
             <div class="data-block">
               <span class="mono-val">{{ row.size_gb?.toFixed(2) }}</span><span class="unit-lbl">GB</span>
@@ -49,7 +49,16 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="mtime" label="最新视频" width="140" align="right" header-align="right" sortable>
+        <el-table-column
+          prop="mtime"
+          label="最新视频"
+          width="140"
+          align="right"
+          header-align="right"
+          sortable
+          :sort-orders="['descending', 'ascending']"
+          :sort-method="sortMtime"
+        >
           <template #default="{ row }">
             <span class="mono-val">{{ row.mtime ? formatRelativeTime(row.mtime, tick) : '-' }}</span>
           </template>
@@ -85,6 +94,10 @@ const filteredStreamers = computed(() => {
 
 function goToTasks(name: string) {
   router.push({ path: "/tasks", query: { streamer: name } });
+}
+
+function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
+  return (a.mtime || 0) - (b.mtime || 0);
 }
 
 // tick 每 60 秒更新一次，驱动相对时间重新计算
@@ -180,7 +193,9 @@ onActivated(async () => {
 
 /* Header right-aligned columns — flex right flow, sort arrow pushed to end */
 :deep(.helper-clean-table) th.el-table__cell.is-right .cell {
-  display: inline-flex !important;
+  display: flex !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   align-items: center !important;
   justify-content: flex-end !important;
   padding-right: 0 !important;
