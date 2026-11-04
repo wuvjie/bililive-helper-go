@@ -1,19 +1,36 @@
 # 配置参考
 
-## 目录挂载规范（Docker / WSL 部署）
+## 目录挂载规范（Docker Compose / Docker CLI / WSL 部署）
 
 为了彻底解耦宿主机环境与容器配置，容器内部采用固定标准路径：
 
 | 容器内路径 | 说明 | 宿主机推荐挂载路径 |
 |------------|------|-------------------|
 | `/recordings` | 视频录制根目录（包含各主播子目录） | `bililive-go` 的录制输出根目录 |
-| `/data` | 持久化数据目录（配置文件、日志、会话凭据） | 宿主机的专用数据目录（如 `/docker/bililive-helper-go`） |
+| `/data` | 持久化数据目录（配置文件、日志、会话凭据） | 宿主机的专用数据目录（如 `/docker/bililive-helper-go` 或 `D:\docker\bililive-helper-go`） |
 
-在宿主机使用 Docker Compose 时，通过根目录下的 `.env` 文件配置映射：
+### 1. Docker Compose 挂载配置
+在宿主机根目录下的 `.env` 文件中配置映射：
 ```env
 RECORDINGS_DIR=/volume1/video/recordings
 DATA_DIR=/volume1/docker/bililive-helper-go
 PORT=5689
+```
+
+### 2. Docker CLI (`docker run`) 挂载参数
+```bash
+-v /volume1/video/recordings:/recordings \
+-v /volume1/docker/bililive-helper-go:/data \
+-e TARGET_DIR=/recordings \
+-e LOG_DIR=/data
+```
+
+### 3. WSL Container (`wslc run`) 挂载参数
+```powershell
+-v D:\video\recordings:/recordings `
+-v D:\docker\bililive-helper-go:/data `
+-e TARGET_DIR=/recordings `
+-e LOG_DIR=/data
 ```
 
 ---
