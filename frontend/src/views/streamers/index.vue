@@ -100,6 +100,13 @@
             </div>
           </template>
         </el-table-column>
+        <template #empty>
+          <div class="streamer-empty-box">
+            <span class="empty-emoji">👤</span>
+            <span class="empty-title">未发现匹配的主播</span>
+            <span class="empty-desc">请确认搜索关键词或检查录像存储目录中是否存在主播子文件夹</span>
+          </div>
+        </template>
       </el-table>
       </div>
     </el-card>
@@ -203,32 +210,41 @@
           <button class="drawer-action-btn" @click="goToTasks(drawerStreamer)">针对该主播执行任务 ↗</button>
         </div>
 
-        <el-table :data="drawerFiles" size="small" max-height="650" class="drawer-table">
-          <el-table-column prop="name" label="文件名" min-width="280" show-overflow-tooltip sortable>
-            <template #default="{ row }">
-              <span class="drawer-file-name">{{ row.name }}</span>
+        <div class="table-responsive-wrapper">
+          <el-table :data="drawerFiles" size="small" max-height="650" class="drawer-table">
+            <el-table-column prop="name" label="文件名" min-width="280" show-overflow-tooltip sortable>
+              <template #default="{ row }">
+                <span class="drawer-file-name">{{ row.name }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="size" label="大小" width="90" align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
+              <template #default="{ row }">
+                <span class="mono-val">{{ row.size_str }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="is_merged" label="状态" width="80" align="center">
+              <template #default="{ row }">
+                <span class="status-dot-text" :class="row.is_merged ? 'dot-merged' : 'dot-pending'">
+                  {{ row.is_merged ? '合并版' : '分段' }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80" align="center">
+              <template #default="{ row }">
+                <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
+                  ▶ 播放
+                </button>
+              </template>
+            </el-table-column>
+            <template #empty>
+              <div class="drawer-empty-box">
+                <span class="empty-emoji">🎬</span>
+                <span class="empty-title">暂无录像文件</span>
+                <span class="empty-desc">该主播录像目录暂未生成切片或录像文件</span>
+              </div>
             </template>
-          </el-table-column>
-          <el-table-column prop="size" label="大小" width="90" align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
-            <template #default="{ row }">
-              <span class="mono-val">{{ row.size_str }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="is_merged" label="状态" width="80" align="center">
-            <template #default="{ row }">
-              <span class="status-dot-text" :class="row.is_merged ? 'dot-merged' : 'dot-pending'">
-                {{ row.is_merged ? '合并版' : '分段' }}
-              </span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="80" align="center">
-            <template #default="{ row }">
-              <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
-                ▶ 播放
-              </button>
-            </template>
-          </el-table-column>
-        </el-table>
+          </el-table>
+        </div>
       </div>
     </el-drawer>
 
@@ -754,7 +770,47 @@ onActivated(() => loadData());
   background: #d8eedf;
 }
 
+.streamer-empty-box, .drawer-empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  gap: 6px;
+}
+.empty-emoji {
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.empty-desc {
+  font-size: 12px;
+  color: var(--steel);
+}
+
 @media (max-width: 768px) {
+  :deep(.rule-dialog) {
+    width: 94% !important;
+    max-width: 94% !important;
+    margin: 16px auto !important;
+  }
+  :deep(.player-dialog) {
+    width: 96% !important;
+    max-width: 96% !important;
+    margin: 10px auto !important;
+  }
+  :deep(.el-drawer) {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .player-wrap {
+    min-height: 220px !important;
+  }
   .card-header {
     flex-direction: column;
     align-items: stretch;

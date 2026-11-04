@@ -215,6 +215,19 @@ const emit = defineEmits<{
 }
 
 @media (max-width: 640px) {
+  .settings-form :deep(.el-form-item) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .settings-form :deep(.el-form-item__label) {
+    width: 100% !important;
+    margin-bottom: 6px;
+    height: auto;
+    line-height: 1.4;
+  }
+  .settings-form :deep(.el-form-item__content) {
+    width: 100%;
+  }
   .time-picker-box {
     width: 100% !important;
   }

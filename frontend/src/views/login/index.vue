@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <div class="login-card">
-      <div class="login-logo">BH</div>
+      <div class="login-logo">BHG</div>
       <h1 class="login-title">Bililive Helper Go</h1>
       <p class="login-sub">直播录制管理系统</p>
       <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleLogin" class="login-form">
@@ -69,7 +69,7 @@ async function handleLogin() {
 }
 
 .login-card {
-  width: 380px; background: var(--canvas);
+  width: 100%; max-width: 380px; margin: 0 16px; box-sizing: border-box; background: var(--canvas);
   border: 1px solid var(--hairline);
   border-radius: 12px;
   padding: 40px;

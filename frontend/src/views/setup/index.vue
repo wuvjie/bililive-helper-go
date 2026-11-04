@@ -1,7 +1,7 @@
 <template>
   <div class="setup-container">
     <div class="setup-card">
-      <div class="setup-logo">BH</div>
+      <div class="setup-logo">BHG</div>
       <h1 class="setup-title">Bililive Helper Go</h1>
       <p class="setup-sub">首次启动，请设置登录密码</p>
 
@@ -105,7 +105,7 @@ async function handleSubmit() {
 }
 
 .setup-card {
-  width: 360px; background: var(--canvas);
+  width: 100%; max-width: 360px; margin: 0 16px; box-sizing: border-box; background: var(--canvas);
   border: 1px solid var(--hairline);
   border-radius: 12px;
   padding: 40px;

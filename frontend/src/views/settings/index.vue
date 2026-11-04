@@ -353,8 +353,7 @@ async function handleCopyConfig() {
   try {
     const res = await getConfigExport();
     const jsonStr = JSON.stringify(res, null, 2);
-    await navigator.clipboard.writeText(jsonStr);
-    ElMessage.success("已复制配置 JSON 到剪贴板");
+    await copyToClipboard(jsonStr, "已复制配置 JSON 到剪贴板");
   } catch {
     ElMessage.error("复制配置失败");
   }

@@ -114,7 +114,7 @@ async function handleSubmit() {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 680px;
+  width: 100%;
 }
 .form-section-card {
   background: var(--surface);
@@ -193,5 +193,24 @@ async function handleSubmit() {
   padding: 1px 5px;
   border-radius: 4px;
   font-family: var(--font-mono);
+}
+
+@media (max-width: 680px) {
+  .security-form :deep(.el-form-item) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .security-form :deep(.el-form-item__label) {
+    width: 100% !important;
+    margin-bottom: 6px;
+    height: auto;
+    line-height: 1.4;
+  }
+  .security-form :deep(.el-form-item__content) {
+    width: 100%;
+  }
+  .security-input {
+    max-width: 100% !important;
+  }
 }
 </style>

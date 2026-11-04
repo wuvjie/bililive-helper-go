@@ -507,7 +507,7 @@ function addTag(keyword: string) {
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  max-width: 520px;
+  box-sizing: border-box;
 }
 .tags-container {
   display: flex;

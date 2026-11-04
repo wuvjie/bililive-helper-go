@@ -726,7 +726,7 @@ onActivated(async () => {
   .grid-2 { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
-  .stat-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .dash-header { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
