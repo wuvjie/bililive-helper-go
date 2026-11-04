@@ -29,6 +29,7 @@
         </div>
       </template>
 
+      <div class="table-responsive-wrapper">
       <el-table
         :data="filteredStreamers"
         v-loading="loading"
@@ -407,6 +408,14 @@ onActivated(() => loadData());
 </script>
 
 <style scoped>
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+:deep(.streamer-table) {
+  min-width: 820px;
+}
 .card-header {
   display: flex;
   justify-content: space-between;

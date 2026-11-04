@@ -33,6 +33,7 @@
         </div>
       </template>
 
+      <div class="table-responsive-wrapper">
       <el-table :data="history" v-loading="loading" class="history-table">
         <el-table-column prop="time" label="时间" width="180" sortable>
           <template #default="{ row }">
@@ -243,6 +244,14 @@ onActivated(() => loadHistory(currentPage.value));
 </script>
 
 <style scoped>
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+:deep(.history-table) {
+  min-width: 780px;
+}
 .card-header {
   display: flex;
   justify-content: space-between;

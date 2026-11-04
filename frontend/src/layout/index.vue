@@ -84,14 +84,20 @@
           </el-tooltip>
           <span class="nav-divider"></span>
           <el-dropdown trigger="click" @command="handleCommand" placement="bottom-end">
-            <div class="user-pill-btn">
+            <div class="user-pill-btn" title="当前登录身份：管理员">
               <span class="user-pill-dot"></span>
               <span class="user-pill-name">管理员</span>
-              <span class="user-ver-badge">v2.0</span>
+              <svg class="user-pill-arrow" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
             </div>
             <template #dropdown>
               <el-dropdown-menu class="nav-dropdown-menu">
-                <el-dropdown-item command="change-password">
+                <div class="user-dropdown-header">
+                  <div class="user-dropdown-title">系统管理员</div>
+                  <div class="user-dropdown-sub">版本 v2.0.0 (Release)</div>
+                </div>
+                <el-dropdown-item command="change-password" divided>
                   <span>🔑 修改管理密码</span>
                 </el-dropdown-item>
                 <el-dropdown-item command="logout" divided>
@@ -421,14 +427,27 @@ router.afterEach(() => fetchDiskStatus());
   font-weight: 500;
   color: var(--charcoal);
 }
-.user-ver-badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
+.user-pill-arrow {
+  width: 12px;
+  height: 12px;
   color: var(--steel);
-  background: var(--canvas);
-  border: 1px solid var(--hairline);
-  padding: 1px 4px;
-  border-radius: 4px;
+  transition: transform 0.15s ease;
+}
+.user-dropdown-header {
+  padding: 8px 14px 6px;
+  min-width: 150px;
+}
+.user-dropdown-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--charcoal);
+  line-height: 1.4;
+}
+.user-dropdown-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  margin-top: 2px;
 }
 
 .layout-content { flex: 1; overflow-y: auto; padding: 24px; padding-bottom: 48px; }
