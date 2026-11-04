@@ -243,7 +243,7 @@ func (h *Handler) SetupInit(c *gin.Context) {
 		return
 	}
 
-	// 目录来自环境变量（docker-compose），使用运行时值而非默认值
+	// 目录来自环境变量（如 Docker / Compose / WSL 容器传入），使用运行时值而非默认值
 	cfg := config.DefaultConfig()
 	cfg.TargetDir = h.config.TargetDir // 使用运行时的 TARGET_DIR（来自环境变量）
 	cfg.LogDir = h.config.LogDir       // 使用运行时的 LOG_DIR（来自环境变量）
