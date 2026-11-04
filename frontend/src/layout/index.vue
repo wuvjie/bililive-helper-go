@@ -1,16 +1,25 @@
 <template>
   <div class="layout-container" :class="{ 'sidebar-collapsed': !appStore.sidebar.opened }">
-    <aside class="layout-sidebar" :class="{ collapsed: !appStore.sidebar.opened }">
+    <!-- 侧边栏 -->
+    <aside
+      class="layout-sidebar"
+      :class="{
+        collapsed: !isMobile && !appStore.sidebar.opened,
+        'mobile-open': isMobile && mobileOpen
+      }"
+    >
       <div class="sidebar-logo">
-        <span v-if="appStore.sidebar.opened" class="logo-text">Bililive Helper Go</span>
+        <span v-if="isMobile || appStore.sidebar.opened" class="logo-text">Bililive Helper Go</span>
         <span v-else class="logo-text-mini">BH</span>
       </div>
-      <el-scrollbar>
+
+      <el-scrollbar class="sidebar-scrollbar">
         <el-menu
           :default-active="activeMenu"
-          :collapse="!appStore.sidebar.opened"
+          :collapse="!isMobile && !appStore.sidebar.opened"
           :collapse-transition="false"
           router
+          @select="handleMenuSelect"
         >
           <el-menu-item v-for="item in menuItems" :key="item.path" :index="item.path">
             <el-icon><component :is="item.icon" /></el-icon>
@@ -18,17 +27,49 @@
           </el-menu-item>
         </el-menu>
       </el-scrollbar>
+
+      <!-- 侧边栏底部折叠切换小开关 (三条横线图标) -->
+      <div
+        class="sidebar-bottom-toggle"
+        @click="handleToggleCollapse"
+        :title="(!isMobile && !appStore.sidebar.opened) ? '展开侧边栏' : '收起侧边栏'"
+      >
+        <div class="toggle-icon-box">
+          <svg class="hamburger-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+          </svg>
+        </div>
+        <span v-if="isMobile || appStore.sidebar.opened" class="toggle-text">收起侧栏</span>
+      </div>
     </aside>
 
-    <div class="sidebar-overlay" v-if="isMobile && appStore.sidebar.opened" @click="toggleSidebar"></div>
+    <!-- 移动端暗色遮罩层 -->
+    <div
+      class="sidebar-overlay"
+      v-if="isMobile && mobileOpen"
+      @click="mobileOpen = false"
+    ></div>
 
     <div class="layout-main">
       <header class="layout-navbar">
         <div class="navbar-left">
-          <el-icon class="collapse-btn" @click="appStore.toggleSidebar">
-            <component :is="appStore.sidebar.opened ? 'Fold' : 'Expand'" />
-          </el-icon>
-          <el-breadcrumb separator="/">
+          <!-- 导航汉堡按钮：电脑端与移动端均可切换，移动端显眼直观 -->
+          <button
+            class="nav-hamburger-btn"
+            @click="handleToggleCollapse"
+            title="菜单导航"
+            :class="{ active: isMobile ? mobileOpen : appStore.sidebar.opened }"
+          >
+            <svg class="hamburger-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="18" x2="20" y2="18"></line>
+            </svg>
+          </button>
+
+          <el-breadcrumb separator="/" class="nav-breadcrumb">
             <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-if="currentRoute.meta.title">{{ currentRoute.meta.title }}</el-breadcrumb-item>
           </el-breadcrumb>
@@ -81,7 +122,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAppStore } from "@/store/modules/app";
 import { logout } from "@/api/auth";
 import { getStatusDetail } from "@/api/status";
-import { Monitor, User, VideoPlay, Document, Setting, Fold, Expand, Refresh, FullScreen } from "@element-plus/icons-vue";
+import { Monitor, User, VideoPlay, Document, Setting, Refresh, FullScreen } from "@element-plus/icons-vue";
 import PasswordDialog from "./components/PasswordDialog.vue";
 import DiskAlert from "./components/DiskAlert.vue";
 
@@ -99,11 +140,34 @@ const menuItems = [
 
 const activeMenu = computed(() => route.path);
 const currentRoute = computed(() => route);
-const isMobile = ref(window.innerWidth < 768);
-function onResize() { isMobile.value = window.innerWidth < 768; }
+
+const isMobile = ref(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+const mobileOpen = ref(false);
+
+function onResize() {
+  const mobile = window.innerWidth < 768;
+  isMobile.value = mobile;
+  if (!mobile) {
+    mobileOpen.value = false;
+  }
+}
+
 onMounted(() => window.addEventListener("resize", onResize));
 onUnmounted(() => window.removeEventListener("resize", onResize));
-function toggleSidebar() { appStore.toggleSidebar(); }
+
+function handleToggleCollapse() {
+  if (isMobile.value) {
+    mobileOpen.value = !mobileOpen.value;
+  } else {
+    appStore.toggleSidebar();
+  }
+}
+
+function handleMenuSelect() {
+  if (isMobile.value) {
+    mobileOpen.value = false;
+  }
+}
 
 // Password change dialog
 const pwDialogVisible = ref(false);
@@ -159,28 +223,85 @@ router.afterEach(() => fetchDiskStatus());
   width: 240px;
   background: var(--surface);
   border-right: 1px solid var(--hairline);
-  transition: width 0.15s ease;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
-  &.collapsed { width: 52px; }
+  z-index: 20;
+
+  &.collapsed {
+    width: 64px;
+    .sidebar-logo {
+      justify-content: center;
+      padding: 0;
+    }
+    .sidebar-bottom-toggle {
+      justify-content: center;
+      padding: 12px 0;
+    }
+  }
 }
 
 .sidebar-logo {
   height: 52px;
   display: flex; align-items: center; padding: 0 16px;
   border-bottom: 1px solid var(--hairline); flex-shrink: 0;
-  .logo-text { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; }
-  .logo-text-mini { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .logo-text { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; white-space: nowrap; }
+  .logo-text-mini { font-size: 16px; font-weight: 700; color: var(--ink); }
+}
+
+.sidebar-scrollbar {
+  flex: 1;
 }
 
 :deep(.el-menu) {
-  border-right: none; padding: 6px 16px;
+  border-right: none; padding: 6px 12px;
   .el-menu-item {
-    border-radius: var(--r-sm); margin-bottom: 1px;
+    border-radius: var(--r-sm); margin-bottom: 2px;
     font-size: 14px; color: var(--steel);
-    padding: 0 12px;
+    padding: 0 14px;
     transition: background 0.1s, color 0.1s;
     &:hover { background: var(--highlight); color: var(--charcoal); }
     &.is-active { background: var(--highlight); color: var(--ink); font-weight: 500; }
+  }
+}
+
+/* 侧边栏底部折叠切换条 */
+.sidebar-bottom-toggle {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  border-top: 1px solid var(--hairline);
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--steel);
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--highlight);
+    color: var(--ink);
+  }
+
+  .toggle-icon-box {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-xs);
+  }
+
+  .hamburger-svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-text {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
   }
 }
 
@@ -195,7 +316,43 @@ router.afterEach(() => fetchDiskStatus());
   .navbar-left, .navbar-right { display: flex; align-items: center; gap: 8px; }
 }
 
-.collapse-btn { font-size: 18px; cursor: pointer; color: var(--steel); &:hover { color: var(--ink); } }
+/* 顶部汉堡按钮 */
+.nav-hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-right: 6px;
+
+  &:hover {
+    background: var(--highlight);
+    color: var(--ink);
+    border-color: var(--faint);
+  }
+
+  &.active {
+    background: var(--highlight);
+    color: var(--primary);
+  }
+
+  .hamburger-svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.nav-breadcrumb {
+  display: flex;
+  align-items: center;
+}
+
 .nav-icon { font-size: 17px; cursor: pointer; color: var(--steel); &:hover { color: var(--ink); } }
 .nav-divider { width: 1px; height: 14px; background: var(--hairline); flex-shrink: 0; }
 
@@ -214,49 +371,51 @@ router.afterEach(() => fetchDiskStatus());
 
 .layout-content { flex: 1; overflow-y: auto; padding: 24px; padding-bottom: 48px; }
 
-/* Disk usage alert banner */
-.disk-alert-banner {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 20px; flex-shrink: 0; cursor: pointer;
-  transition: background 0.15s; user-select: none;
-  border-bottom: 1px solid var(--hairline);
+/* 移动端遮罩层 */
+.sidebar-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
 }
-.disk-alert-banner.warning {
-  background: color-mix(in srgb, #e6a23c 14%, transparent);
-  color: #b88230;
-}
-.disk-alert-banner.warning:hover { background: color-mix(in srgb, #e6a23c 22%, transparent); }
-.disk-alert-banner.critical {
-  background: color-mix(in srgb, #f56c6c 14%, transparent);
-  color: #c45656;
-}
-.disk-alert-banner.critical:hover { background: color-mix(in srgb, #f56c6c 22%, transparent); }
-.disk-alert-text { font-size: 13px; font-weight: 500; line-height: 1.4; }
-.disk-alert-close {
-  display: flex; align-items: center; justify-content: center;
-  border: none; background: transparent; cursor: pointer;
-  padding: 2px; margin-left: 12px; border-radius: 50%;
-  transition: background 0.15s; color: inherit; flex-shrink: 0;
-}
-.disk-alert-close:hover { background: rgba(0,0,0,0.08); }
-.disk-alert-close .el-icon { font-size: 15px; }
 
-/* Password dialog footer — right-aligned buttons */
-.pw-footer { display: flex; justify-content: flex-end; gap: 8px; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* Sidebar overlay for mobile */
-.sidebar-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 99;
-}
-
 @media (max-width: 768px) {
-  .layout-sidebar { position: fixed; z-index: 100; height: 100vh; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
-  .sidebar-collapsed .layout-sidebar { display: none; }
-  .layout-content { padding: 12px; padding-bottom: 36px; }
+  .layout-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 250px !important;
+    height: 100vh;
+    transform: translateX(-100%);
+    box-shadow: none;
+
+    &.mobile-open {
+      transform: translateX(0);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .sidebar-collapsed .layout-sidebar {
+    display: flex;
+  }
+
+  .layout-content {
+    padding: 14px;
+    padding-bottom: 36px;
+  }
+
+  .nav-breadcrumb {
+    font-size: 12px;
+  }
 }
 </style>
