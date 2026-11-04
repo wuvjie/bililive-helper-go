@@ -416,6 +416,10 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 		}
 	}
 
+	// 执行可能配置的主播视频裁剪规则
+	streamerName := filepath.Base(filepath.Dir(flvPath))
+	s.applyStreamerTrim(ctx, streamerName, mp4Path, flvMtime, onProgress, opLog)
+
 	// 删除原始文件（带重试）
 	if err := utils.SafeUnlink(flvPath); err != nil {
 		opLog.Log(fmt.Sprintf("⚠ 删除原始文件失败: %v", err))
@@ -453,6 +457,10 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 			opLog.Log(fmt.Sprintf("⚠ 设置时间戳失败 %s: %v", filepath.Base(outputPath), err))
 		}
 	}
+
+	// 执行可能配置的主播视频裁剪规则
+	streamerName := filepath.Base(folder)
+	s.applyStreamerTrim(ctx, streamerName, outputPath, latestSrcMtime, onProgress, opLog)
 
 	if info, err := os.Stat(outputPath); err != nil {
 		opLog.Log("✅ 重编码完成 (大小未知)")
@@ -628,6 +636,10 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		}
 	}
 
+	// 执行可能配置的主播视频裁剪规则
+	streamerName := filepath.Base(folder)
+	s.applyStreamerTrim(ctx, streamerName, concatOutputPath, latestSrcMtime, onProgress, opLog)
+
 	// doMerge 负责输出完成消息（谁干活谁汇报）
 	if info, err := os.Stat(concatOutputPath); err == nil {
 		onProgress(fmt.Sprintf("✅ → %s (%s)", filepath.Base(concatOutputPath), utils.FormatSize(info.Size())))
@@ -727,6 +739,72 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	}
 
 	return opLog.LogID(), fmt.Errorf("合并失败")
+}
+
+// applyStreamerTrim 检查并执行针对指定主播的视频时段裁剪规则。
+// 若成功裁剪，将原子替换原视频并恢复时间戳；若失败或未启用，安全保留原视频。
+func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, videoPath string, originalMtime time.Time, onProgress ProgressFunc, opLog *OpLogger) bool {
+	rule, ok := s.config.GetStreamerRule(streamerName)
+	if !ok || !rule.TrimEnabled {
+		return false
+	}
+
+	trimmedTmp := videoPath + ".trim.mp4"
+	defer utils.SafeUnlink(trimmedTmp)
+
+	var err error
+	var trimDesc string
+	if rule.TrimMode == "range" {
+		start := rule.StartTime
+		if start == "" {
+			start = "00:00:00"
+		}
+		end := rule.EndTime
+		if end == "" {
+			return false
+		}
+		trimDesc = fmt.Sprintf("时段 [%s - %s]", start, end)
+		onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪: %s", streamerName, trimDesc))
+		err = ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, start, end, true)
+	} else {
+		// 默认或 head 模式：保留前 N 分钟
+		mins := rule.DurationMinutes
+		if mins <= 0 {
+			mins = 30 // 默认 30 分钟
+		}
+		durationStr := fmt.Sprintf("%02d:%02d:00", mins/60, mins%60)
+		trimDesc = fmt.Sprintf("前 %d 分钟", mins)
+		onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪: %s", streamerName, trimDesc))
+		err = ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, "00:00:00", durationStr, false)
+	}
+
+	if err != nil {
+		if opLog != nil {
+			opLog.Log(fmt.Sprintf("⚠ [%s] 视频裁剪未生效或失败: %v，已安全保留原完整视频", streamerName, err))
+		}
+		onProgress(fmt.Sprintf("[%s] ⚠ 裁剪未生效（可能视频时长短于设定时段），已保留原完整视频", streamerName))
+		return false
+	}
+
+	// 裁剪成功：替换原文件
+	if err := fsutil.ReplaceFile(trimmedTmp, videoPath); err != nil {
+		if opLog != nil {
+			opLog.Log(fmt.Sprintf("❌ [%s] 替换裁剪文件失败: %v", streamerName, err))
+		}
+		return false
+	}
+
+	// 恢复时间戳
+	if !originalMtime.IsZero() {
+		_ = os.Chtimes(videoPath, originalMtime, originalMtime)
+	}
+
+	if info, err := os.Stat(videoPath); err == nil {
+		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s，大小: %s）", streamerName, trimDesc, utils.FormatSize(info.Size())))
+	} else {
+		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s）", streamerName, trimDesc))
+	}
+	return true
 }
 
 // SortByFilename 按文件名中的日期时间升序排列文件列表。

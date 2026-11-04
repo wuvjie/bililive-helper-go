@@ -27,9 +27,20 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="name" label="主播名称" min-width="200" show-overflow-tooltip sortable>
+        <el-table-column prop="name" label="主播名称" min-width="220" show-overflow-tooltip sortable>
           <template #default="{ row }">
-            <span class="streamer-name">{{ row.name }}</span>
+            <div class="streamer-name-cell">
+              <span class="streamer-name">{{ row.name }}</span>
+              <el-tag v-if="row.rule?.trim_enabled" size="small" type="success" effect="plain" class="rule-badge">
+                {{ row.rule.trim_mode === 'range' ? `时段 ${row.rule.start_time || '0'}-${row.rule.end_time}` : `前 ${row.rule.duration_minutes || 30}m` }}
+              </el-tag>
+              <el-tag v-if="row.rule?.protected" size="small" type="warning" effect="plain" class="rule-badge">
+                免删保护
+              </el-tag>
+              <el-tag v-else-if="row.rule?.min_keep > 0" size="small" type="info" effect="plain" class="rule-badge">
+                留存≥{{ row.rule.min_keep }}
+              </el-tag>
+            </div>
           </template>
         </el-table-column>
 
@@ -64,22 +75,117 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="100" align="right" header-align="right">
+        <el-table-column label="操作" width="160" align="right" header-align="right">
           <template #default="{ row }">
-            <button class="ghost-action" @click="goToTasks(row.name)">管理文件</button>
+            <div class="action-btn-group">
+              <button class="ghost-action" @click="openRuleDialog(row)">⚙️ 规则</button>
+              <span class="action-sep">|</span>
+              <button class="ghost-action" @click="goToTasks(row.name)">管理文件</button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
+
+    <!-- 主播规则配置弹窗 -->
+    <el-dialog
+      v-model="ruleDialogVisible"
+      :title="`⚙️ ${currentStreamer} 的录像规则`"
+      width="480px"
+      destroy-on-close
+      class="rule-dialog"
+    >
+      <el-form label-position="top" class="rule-form">
+        <!-- 视频裁剪设置 -->
+        <div class="rule-section">
+          <div class="section-header">
+            <span class="section-title">✂ 视频时段裁剪</span>
+            <el-switch v-model="formRule.trim_enabled" />
+          </div>
+          <p class="section-desc">
+            合并或转换完成后，仅保留指定时段的视频（采用无损流复制，秒级完成且画质无损）。
+          </p>
+
+          <template v-if="formRule.trim_enabled">
+            <el-form-item label="裁剪模式">
+              <el-radio-group v-model="formRule.trim_mode">
+                <el-radio value="head">仅保留开头部分</el-radio>
+                <el-radio value="range">自定义时间区间</el-radio>
+              </el-radio-group>
+            </el-form-item>
+
+            <el-form-item v-if="formRule.trim_mode === 'head'" label="保留时长（分钟）">
+              <el-input-number
+                v-model="formRule.duration_minutes"
+                :min="1"
+                :max="720"
+                style="width: 160px"
+              />
+              <span class="form-tip">例如设为 30，则每场录像只保留前 30 分钟</span>
+            </el-form-item>
+
+            <template v-else>
+              <el-row :gutter="12">
+                <el-col :span="12">
+                  <el-form-item label="起始时间 (HH:MM:SS)">
+                    <el-input v-model="formRule.start_time" placeholder="00:00:00" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="结束时间 (HH:MM:SS)">
+                    <el-input v-model="formRule.end_time" placeholder="00:45:00" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <span class="form-tip">指定视频内部的时间点，如从 00:05:00 到 00:35:00</span>
+            </template>
+          </template>
+        </div>
+
+        <el-divider style="margin: 16px 0" />
+
+        <!-- 存储与清理个性化设置 -->
+        <div class="rule-section">
+          <div class="section-header">
+            <span class="section-title">🛡️ 存储与清理偏好</span>
+          </div>
+
+          <el-form-item label="免清理保护">
+            <div class="switch-row">
+              <el-switch v-model="formRule.protected" />
+              <span class="switch-label">{{ formRule.protected ? '已开启免删保护（磁盘超阈值时绝不自动清理此主播）' : '未开启（遵循全局清理规则）' }}</span>
+            </div>
+          </el-form-item>
+
+          <el-form-item label="独立保底保留数（场次）">
+            <el-input-number
+              v-model="formRule.min_keep"
+              :min="0"
+              :max="100"
+              style="width: 160px"
+            />
+            <span class="form-tip">设为 0 表示遵循全局“每主播最少保留”设置</span>
+          </el-form-item>
+        </div>
+      </el-form>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="ruleDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="savingRule" @click="handleSaveRule">保存规则</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, onActivated } from "vue";
 import { useRouter } from "vue-router";
-import { getStreamers } from "@/api/status";
+import { getStreamers, saveStreamerRule } from "@/api/status";
 import { Search } from "@element-plus/icons-vue";
-import type { StreamerInfo } from "@/api/types";
+import { ElMessage } from "element-plus";
+import type { StreamerInfo, StreamerRule } from "@/api/types";
 
 const router = useRouter();
 const streamers = ref<StreamerInfo[]>([]);
@@ -98,6 +204,63 @@ function goToTasks(name: string) {
 
 function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
   return (a.mtime || 0) - (b.mtime || 0);
+}
+
+const ruleDialogVisible = ref(false);
+const currentStreamer = ref("");
+const savingRule = ref(false);
+const formRule = ref<StreamerRule>({
+  trim_enabled: false,
+  trim_mode: "head",
+  duration_minutes: 30,
+  start_time: "00:00:00",
+  end_time: "00:30:00",
+  min_keep: 0,
+  protected: false,
+});
+
+function openRuleDialog(row: StreamerInfo) {
+  currentStreamer.value = row.name;
+  if (row.rule) {
+    formRule.value = {
+      trim_enabled: !!row.rule.trim_enabled,
+      trim_mode: row.rule.trim_mode || "head",
+      duration_minutes: row.rule.duration_minutes || 30,
+      start_time: row.rule.start_time || "00:00:00",
+      end_time: row.rule.end_time || "00:30:00",
+      min_keep: row.rule.min_keep || 0,
+      protected: !!row.rule.protected,
+    };
+  } else {
+    formRule.value = {
+      trim_enabled: false,
+      trim_mode: "head",
+      duration_minutes: 30,
+      start_time: "00:00:00",
+      end_time: "00:30:00",
+      min_keep: 0,
+      protected: false,
+    };
+  }
+  ruleDialogVisible.value = true;
+}
+
+async function handleSaveRule() {
+  savingRule.value = true;
+  try {
+    await saveStreamerRule(currentStreamer.value, formRule.value);
+    ElMessage.success("主播规则已保存");
+    ruleDialogVisible.value = false;
+    const target = streamers.value.find(s => s.name === currentStreamer.value);
+    if (target) {
+      target.rule = { ...formRule.value };
+      target.has_rule = true;
+    }
+  } catch (err: any) {
+    ElMessage.error(err.message || "保存规则失败");
+  } finally {
+    savingRule.value = false;
+  }
 }
 
 // tick 每 60 秒更新一次，驱动相对时间重新计算
@@ -165,6 +328,63 @@ onActivated(async () => {
 .streamer-name {
   font-weight: 500;
   color: var(--ink);
+}
+.streamer-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.rule-badge {
+  font-size: 11px !important;
+  height: 20px !important;
+  padding: 0 4px !important;
+  border-radius: 3px !important;
+}
+.action-btn-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.action-sep {
+  color: var(--line, #e2e2e2);
+  font-size: 12px;
+}
+.rule-section {
+  padding: 4px 0;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.section-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+.section-desc {
+  font-size: 12px;
+  color: var(--stone);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+.form-tip {
+  display: block;
+  font-size: 12px;
+  color: var(--stone);
+  margin-top: 4px;
+}
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.switch-label {
+  font-size: 12px;
+  color: var(--stone);
 }
 .idx-num { font-family: var(--font-mono); font-size: 13px; color: var(--stone); }
 

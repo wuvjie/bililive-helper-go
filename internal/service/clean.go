@@ -232,6 +232,14 @@ func (s *CleanService) countVideos(folder string) int {
 // 返回值替代原 *[]candidateFile 指针传参模式，数据流更清晰。
 func (s *CleanService) collectStreamerCandidates(folder, streamerName string, cfg config.Config) []candidateFile {
 	minKeep := cfg.MinKeepPerStreamer
+	if rule, ok := cfg.StreamerRules[streamerName]; ok {
+		if rule.Protected {
+			return nil // 免清理保护生效
+		}
+		if rule.MinKeep > 0 {
+			minKeep = rule.MinKeep
+		}
+	}
 	wl := cfg.WhitelistKeywords
 
 	var videos []candidateFile

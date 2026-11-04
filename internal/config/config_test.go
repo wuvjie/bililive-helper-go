@@ -181,6 +181,55 @@ func TestValidate_NegativeFields(t *testing.T) {
 	}
 }
 
+func TestConfig_StreamerRules_Snapshot(t *testing.T) {
+	cfg := validConfig()
+	cfg.StreamerRules = map[string]StreamerRule{
+		"streamer_a": {
+			TrimEnabled:     true,
+			TrimMode:        "head",
+			DurationMinutes: 45,
+			Protected:       true,
+		},
+	}
+
+	snap := cfg.Snapshot()
+	rule, ok := snap.GetStreamerRule("streamer_a")
+	if !ok || !rule.TrimEnabled || rule.DurationMinutes != 45 || !rule.Protected {
+		t.Errorf("快照未正确复制主播规则: %+v", rule)
+	}
+
+	// 验证深拷贝隔离
+	cfg.StreamerRules["streamer_a"] = StreamerRule{DurationMinutes: 10}
+	ruleAfter, _ := snap.GetStreamerRule("streamer_a")
+	if ruleAfter.DurationMinutes != 45 {
+		t.Errorf("快照应隔离底层修改，期望 45，得到 %d", ruleAfter.DurationMinutes)
+	}
+}
+
+func TestConfig_StreamerRules_ApplyFromJSON(t *testing.T) {
+	cfg := validConfig()
+	jsonData := []byte(`{
+		"STREAMER_RULES": {
+			"streamer_b": {
+				"trim_enabled": true,
+				"trim_mode": "range",
+				"start_time": "00:05:00",
+				"end_time": "00:35:00",
+				"min_keep": 5
+			}
+		}
+	}`)
+
+	cfg.ApplyFromJSON(jsonData)
+	rule, ok := cfg.GetStreamerRule("streamer_b")
+	if !ok {
+		t.Fatalf("应成功加载 streamer_b 规则")
+	}
+	if !rule.TrimEnabled || rule.TrimMode != "range" || rule.StartTime != "00:05:00" || rule.MinKeep != 5 {
+		t.Errorf("解析结果与预期不符: %+v", rule)
+	}
+}
+
 // validConfig 返回一个能通过 Validate 的合法配置
 func validConfig() *Config {
 	return &Config{
