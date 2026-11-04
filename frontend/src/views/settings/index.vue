@@ -101,6 +101,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
 import { getSchedule, saveSchedule } from "@/api/schedule";
 import { getStatusDetail } from "@/api/status";
+import { copyToClipboard } from "@/utils/clipboard";
 import type { ScheduleStatus, ConfigDTO } from "@/api/types";
 
 import PolicyTab from "./tabs/PolicyTab.vue";

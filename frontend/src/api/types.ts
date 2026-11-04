@@ -49,7 +49,12 @@ export interface DayStats {
 
 export interface StatsResponse {
   today: Omit<DayStats, "date">;
+  yesterday?: Omit<DayStats, "date">;
   month: Omit<DayStats, "date">;
+  total?: {
+    clean_count: number;
+    clean_bytes: number;
+  };
   daily: DayStats[];
   daily_output_gb?: number;
   days_until_full?: number;

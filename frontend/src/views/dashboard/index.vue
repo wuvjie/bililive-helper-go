@@ -21,27 +21,27 @@
       </div>
     </div>
 
-    <!-- Stat Cards with pastel tints -->
+    <!-- Stat Cards with pastel tints (方案 A: 今日合并 · 昨日合并 · 本月合并 · 累计释放) -->
     <div class="stat-grid">
       <div class="stat-card stat-peach">
         <span class="stat-label">今日合并</span>
-        <span class="stat-value">{{ stats?.today.merge_count || 0 }}</span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.today.merge_bytes }">{{ stats?.today.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}</span>
+        <span class="stat-value">{{ stats?.today?.merge_count || 0 }}</span>
+        <span class="stat-sub" :class="{ 'stat-empty': !stats?.today?.merge_bytes }">{{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}</span>
       </div>
       <div class="stat-card stat-mint">
-        <span class="stat-label">今日清理</span>
-        <span class="stat-value">{{ stats?.today.clean_count || 0 }}</span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.today.clean_bytes }">{{ stats?.today.clean_bytes ? formatBytes(stats.today.clean_bytes) : '0.00 GB' }}</span>
+        <span class="stat-label">昨日合并</span>
+        <span class="stat-value">{{ yesterdayStats.count }}</span>
+        <span class="stat-sub" :class="{ 'stat-empty': !yesterdayStats.bytes }">{{ yesterdayStats.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}</span>
       </div>
       <div class="stat-card stat-sky">
         <span class="stat-label">本月合并</span>
-        <span class="stat-value">{{ stats?.month.merge_count || 0 }}</span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.month.merge_bytes }">{{ stats?.month.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}</span>
+        <span class="stat-value">{{ stats?.month?.merge_count || 0 }}</span>
+        <span class="stat-sub" :class="{ 'stat-empty': !stats?.month?.merge_bytes }">{{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}</span>
       </div>
       <div class="stat-card stat-lavender">
-        <span class="stat-label">本月清理</span>
-        <span class="stat-value">{{ stats?.month.clean_count || 0 }}</span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.month.clean_bytes }">{{ stats?.month.clean_bytes ? formatBytes(stats.month.clean_bytes) : '0.00 GB' }}</span>
+        <span class="stat-label">累计释放空间</span>
+        <span class="stat-value">{{ totalFreedStats.count }}</span>
+        <span class="stat-sub" :class="{ 'stat-empty': !totalFreedStats.bytes }">{{ totalFreedStats.bytes ? formatBytes(totalFreedStats.bytes) : '0.00 GB' }}</span>
       </div>
     </div>
 
@@ -101,13 +101,13 @@
       <div class="card">
         <div class="card-title">
           <div class="card-title-left">
-            <span>⚡ 调度与运行监控</span>
+            <span class="card-title-main">⚡ 调度与运行监控</span>
             <span class="monitor-mode-tag">
               <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-idle'"></span>
               {{ isTaskRunning ? '任务执行中' : '自动调度生效中' }}
             </span>
           </div>
-          <router-link to="/tasks" class="card-header-link" title="前往任务中心查看流式终端与执行记录">
+          <router-link to="/tasks" class="card-header-action" title="前往任务中心查看流式终端与执行记录">
             任务中心 ↗
           </router-link>
         </div>
@@ -199,8 +199,10 @@
       <!-- 4. Recent Operations -->
       <div class="card">
         <div class="card-title">
-          <span>📋 最近操作</span>
-          <button class="view-all-btn" @click="$router.push('/history')">查看全部 ↗</button>
+          <span class="card-title-main">📋 最近操作</span>
+          <router-link to="/history" class="card-header-action" title="前往操作日志查看全部记录">
+            查看全部 ↗
+          </router-link>
         </div>
         <div class="card-body recent-body">
           <div v-if="recentHistory.length === 0" class="recent-empty">
@@ -214,17 +216,22 @@
               :key="row.id"
               class="recent-row"
             >
-              <div class="recent-left">
-                <span class="recent-icon" :class="row.status === 'fail' ? 'icon-error' : ''">
-                  {{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}
-                </span>
-                <span class="recent-who">{{ row.streamer || '全局' }}</span>
-                <span class="recent-action" :title="row.detail || formatDetail(row)">{{ row.detail || formatDetail(row) }}</span>
+              <div class="recent-top-line">
+                <div class="recent-left">
+                  <span class="recent-icon" :class="row.status === 'fail' ? 'icon-error' : ''">
+                    {{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}
+                  </span>
+                  <span class="recent-who">{{ row.streamer || '全局' }}</span>
+                  <span class="recent-action desktop-action" :title="row.detail || formatDetail(row)">{{ row.detail || formatDetail(row) }}</span>
+                </div>
+                <div class="recent-right">
+                  <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
+                  <span v-else class="recent-success-dot" title="成功">●</span>
+                  <span class="recent-time">{{ formatShortTime(row.time) }}</span>
+                </div>
               </div>
-              <div class="recent-right">
-                <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
-                <span v-else class="recent-success-dot" title="成功">●</span>
-                <span class="recent-time">{{ formatShortTime(row.time) }}</span>
+              <div class="recent-action mobile-action" :title="row.detail || formatDetail(row)">
+                {{ row.detail || formatDetail(row) }}
               </div>
             </div>
           </div>
@@ -243,6 +250,46 @@ import { formatBytes } from "@/utils/format";
 import type { DetailResponse, StatsResponse, SetupCheck, HistoryRecord, DayStats } from "@/api/types";
 
 const detail = ref<DetailResponse>();
+const yesterdayStats = computed(() => {
+  if (stats.value?.yesterday) {
+    return {
+      count: stats.value.yesterday.merge_count || 0,
+      bytes: stats.value.yesterday.merge_bytes || 0
+    };
+  }
+  const daily = stats.value?.daily;
+  if (daily && daily.length >= 2) {
+    const yDay = daily[daily.length - 2];
+    return {
+      count: yDay?.merge_count || 0,
+      bytes: yDay?.merge_bytes || 0
+    };
+  }
+  return { count: 0, bytes: 0 };
+});
+
+const totalFreedStats = computed(() => {
+  if (stats.value?.total?.clean_bytes !== undefined) {
+    return {
+      count: stats.value.total.clean_count || 0,
+      bytes: stats.value.total.clean_bytes || 0
+    };
+  }
+  const daily = stats.value?.daily;
+  if (daily && daily.length > 0) {
+    const sumBytes = daily.reduce((acc, d) => acc + (d.clean_bytes || 0), 0);
+    const sumCount = daily.reduce((acc, d) => acc + (d.clean_count || 0), 0);
+    return {
+      count: Math.max(stats.value?.month?.clean_count || 0, sumCount),
+      bytes: Math.max(stats.value?.month?.clean_bytes || 0, sumBytes)
+    };
+  }
+  return {
+    count: stats.value?.month?.clean_count || 0,
+    bytes: stats.value?.month?.clean_bytes || 0
+  };
+});
+
 const stats = ref<StatsResponse>();
 const setup = ref<SetupCheck>();
 const recentHistory = ref<HistoryRecord[]>([]);
@@ -511,19 +558,54 @@ onActivated(async () => {
   font-weight: 600;
 }
 
-/* Runtime Monitor Card */
+/* Title Header & Runtime Monitor Card */
+.card-title-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.card-title-main {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.card-header-action {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel);
+  text-decoration: none;
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+.card-header-action:hover {
+  color: var(--ink);
+  background: var(--highlight);
+}
 .monitor-mode-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--steel);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
 }
 .status-pulse-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  flex-shrink: 0;
   display: inline-block;
 }
 .dot-idle {
@@ -696,6 +778,20 @@ onActivated(async () => {
 .recent-empty-desc { font-size: 12px; color: var(--stone); text-align: center; }
 
 .recent-list { display: flex; flex-direction: column; gap: 3px; }
+
+.recent-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.desktop-action {
+  display: inline;
+}
+.mobile-action {
+  display: none;
+}
+
 .recent-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 7px 8px; border-radius: var(--r-sm);

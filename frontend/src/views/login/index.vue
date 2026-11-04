@@ -52,7 +52,12 @@ async function handleLogin() {
     }
     await login(form.password);
     auth.markAuthenticated();
-    ElMessage.success("登录成功");
+    ElMessage.closeAll();
+    ElMessage({
+      message: "登录成功",
+      type: "success",
+      grouping: true
+    });
     router.push("/");
   } catch {
     loading.value = false;

@@ -434,7 +434,7 @@ async function loadBaseData() {
 watch(() => sse.isRunning.value, async (running, wasRunning) => {
   if (wasRunning && !running) {
     await loadBaseData();
-    const lastLine = sse.lines.value.at(-1);
+    const lastLine = sse.lines.value.length ? sse.lines.value[sse.lines.value.length - 1] : undefined;
     if (lastLine) {
       if (/✅/.test(lastLine.text)) {
         ElMessage.success(lastLine.text);

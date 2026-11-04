@@ -585,7 +585,24 @@ function addTag(keyword: string) {
   border-radius: var(--r-md);
 }
 
-@media (max-width: 680px) {
+@media (max-width: 768px) {
+  .policy-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+    padding-top: 12px;
+  }
+  .btn-save-policy,
+  .btn-reset-policy {
+    width: 100% !important;
+    height: 42px;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 0 !important;
+  }
   .settings-form :deep(.el-form-item) {
     flex-direction: column;
     align-items: flex-start;

@@ -327,9 +327,10 @@ onActivated(() => loadHistory(currentPage.value));
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
 }
 :deep(.history-table) {
-  min-width: 780px;
+  min-width: 860px;
 }
 .card-header {
   display: flex;
