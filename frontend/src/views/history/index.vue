@@ -87,6 +87,13 @@
             </button>
           </template>
         </el-table-column>
+        <template #empty>
+          <div class="history-empty-box">
+            <span class="empty-emoji">📋</span>
+            <span class="empty-title">暂无操作日志</span>
+            <span class="empty-desc">未找到符合当前类型或主播筛选条件的历史记录</span>
+          </div>
+        </template>
       </el-table>
       </div>
 
@@ -128,6 +135,7 @@ import { ref, onMounted, onActivated } from "vue";
 import router from "@/router";
 import { ElMessage } from "element-plus";
 import { getHistory, exportHistory, getLogContent } from "@/api/history";
+import { copyToClipboard } from "@/utils/clipboard";
 import { formatBytes } from "@/utils/format";
 import type { HistoryRecord } from "@/api/types";
 
@@ -147,12 +155,7 @@ const activeLogMeta = ref("");
 
 async function copyLogContent() {
   if (!logContent.value) return;
-  try {
-    await navigator.clipboard.writeText(logContent.value);
-    ElMessage.success("已复制完整日志到剪贴板");
-  } catch {
-    ElMessage.error("复制失败，请手动选择复制");
-  }
+  await copyToClipboard(logContent.value, "已复制完整日志到剪贴板");
 }
 
 
@@ -315,30 +318,75 @@ onActivated(() => loadHistory(currentPage.value));
 .dot-fail { color: var(--slate); }
 .dot-fail::before { background: #e03131; }
 
-/* View log button — default invisible, hover appears */
+/* View log button — visible as subtle steel link, darkens on hover */
 .log-view-btn {
   background: transparent; border: none; padding: 2px 6px;
-  font-size: 13px; color: transparent; cursor: pointer;
+  font-size: 13px; color: var(--steel); cursor: pointer;
   border-radius: var(--r-xs); transition: all 0.15s;
 }
-.history-table :deep(.el-table__row:hover) .log-view-btn {
-  color: var(--ink);
-}
 .log-view-btn:hover {
+  color: var(--ink);
   text-decoration: underline;
 }
 
 /* Retry button — visible on failed merge rows */
 .retry-btn {
   background: transparent; border: none; padding: 2px 6px;
-  font-size: 13px; color: transparent; cursor: pointer;
+  font-size: 13px; color: #d9730d; cursor: pointer;
   border-radius: var(--r-xs); transition: all 0.15s;
-}
-.history-table :deep(.el-table__row:hover) .retry-btn {
-  color: #d9730d;
 }
 .retry-btn:hover {
   text-decoration: underline;
+}
+
+.history-empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  gap: 6px;
+}
+.empty-emoji {
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.empty-desc {
+  font-size: 12px;
+  color: var(--steel);
+}
+
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-right: 0;
+  }
+  .header-actions :deep(.el-select) {
+    flex: 1;
+    min-width: 120px;
+  }
+  .header-actions :deep(.el-input) {
+    flex: 1;
+    min-width: 130px;
+  }
+  :deep(.terminal-modal-dialog) {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 16px auto !important;
+  }
 }
 
 /* Log viewer dialog */

@@ -856,6 +856,18 @@ onActivated(async () => {
   height: 14px;
 }
 
+@media (max-width: 640px) {
+  .targeted-buttons {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .btn-targeted {
+    flex: 1;
+    width: 100%;
+  }
+}
+
 @media (max-width: 900px) {
   .schedule-grid {
     grid-template-columns: 1fr;
