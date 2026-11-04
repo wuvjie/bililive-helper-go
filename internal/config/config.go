@@ -18,13 +18,17 @@ import (
 
 // StreamerRule 定义单个主播的个性化后处理与清理规则。
 type StreamerRule struct {
-	TrimEnabled     bool   `json:"trim_enabled"`
-	TrimMode        string `json:"trim_mode"`        // "head" (保留前N分钟) 或 "range" (指定时间段)
-	DurationMinutes int    `json:"duration_minutes"` // head 模式保留时长（分钟）
-	StartTime       string `json:"start_time"`       // range 模式开始时间（如 "00:05:00"）
-	EndTime         string `json:"end_time"`         // range 模式结束时间（如 "00:45:00"）
-	MinKeep         int    `json:"min_keep"`         // 个性化最少保留数（0 表示使用全局设置）
-	Protected       bool   `json:"protected"`        // 一键免删保护
+	Protected   bool   `json:"protected"`    // 一键免删保护
+	MinKeep     int    `json:"min_keep"`     // 个性化最少保留数（0 表示使用全局设置）
+	TrimEnabled bool   `json:"trim_enabled"` // 是否启用视频截取
+	TrimStart   string `json:"trim_start"`   // 截取开始时间（如 "00:00:00"）
+	TrimEnd     string `json:"trim_end"`     // 截取结束时间（如 "00:30:00"，空表示截到最后）
+
+	// 向后兼容旧字段
+	TrimMode        string `json:"trim_mode,omitempty"`
+	DurationMinutes int    `json:"duration_minutes,omitempty"`
+	StartTime       string `json:"start_time,omitempty"`
+	EndTime         string `json:"end_time,omitempty"`
 }
 
 // Config 是应用程序的核心配置结构体。
@@ -480,7 +484,7 @@ func equalSlice(a, b []string) bool {
 	return true
 }
 
-// GetStreamerRule 获取指定主播的规则（线程安全）。
+// GetStreamerRule 获取指定主播的规则（线程安全，兼容旧字段并自动标准化）。
 func (c *Config) GetStreamerRule(streamer string) (StreamerRule, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -488,7 +492,22 @@ func (c *Config) GetStreamerRule(streamer string) (StreamerRule, bool) {
 		return StreamerRule{}, false
 	}
 	rule, ok := c.StreamerRules[streamer]
-	return rule, ok
+	if !ok {
+		return StreamerRule{}, false
+	}
+	if rule.TrimStart == "" && rule.StartTime != "" {
+		rule.TrimStart = rule.StartTime
+	}
+	if rule.TrimEnd == "" && rule.EndTime != "" {
+		rule.TrimEnd = rule.EndTime
+	}
+	if rule.TrimEnd == "" && rule.TrimMode == "head" && rule.DurationMinutes > 0 {
+		rule.TrimEnd = fmt.Sprintf("00:%02d:00", rule.DurationMinutes)
+	}
+	if rule.TrimEnabled && rule.TrimStart == "" {
+		rule.TrimStart = "00:00:00"
+	}
+	return rule, true
 }
 
 // SetStreamerRule 设置或更新指定主播的规则并持久化（线程安全）。
@@ -497,6 +516,13 @@ func (c *Config) SetStreamerRule(streamer string, rule StreamerRule) error {
 	if c.StreamerRules == nil {
 		c.StreamerRules = make(map[string]StreamerRule)
 	}
+	if rule.TrimStart == "" && rule.TrimEnabled {
+		rule.TrimStart = "00:00:00"
+	}
+	rule.TrimMode = ""
+	rule.DurationMinutes = 0
+	rule.StartTime = ""
+	rule.EndTime = ""
 	c.StreamerRules[streamer] = rule
 	data, err := json.MarshalIndent(c, "", "  ")
 	c.mu.Unlock()

@@ -24,3 +24,7 @@ export function getStreamerRule(name: string) {
 export function saveStreamerRule(name: string, rule: StreamerRule) {
   return post<{ streamer: string; rule: StreamerRule }>(`/streamers/${encodeURIComponent(name)}/rule`, rule);
 }
+
+export function getVideoPlayUrl(streamer: string, file: string) {
+  return `/api/streamers/${encodeURIComponent(streamer)}/play?file=${encodeURIComponent(file)}`;
+}

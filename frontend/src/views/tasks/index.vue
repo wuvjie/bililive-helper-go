@@ -3,7 +3,10 @@
     <!-- Schedule Status -->
     <div class="schedule-grid">
       <div class="card">
-        <div class="card-title">🔄 自动合并</div>
+        <div class="card-title card-title-flex">
+          <span>🔄 自动合并</span>
+          <button class="card-action-btn" :disabled="sse.isRunning.value" @click="handleRunTask('merge')">立即合并</button>
+        </div>
         <div class="card-body sched-body">
           <div class="sched-row">
             <span class="sched-label">状态</span>
@@ -24,7 +27,10 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-title">🧹 自动清理</div>
+        <div class="card-title card-title-flex">
+          <span>🧹 自动清理</span>
+          <button class="card-action-btn" :disabled="sse.isRunning.value" @click="handleRunTask('clean')">立即清理</button>
+        </div>
         <div class="card-body sched-body">
           <div class="sched-row">
             <span class="sched-label">状态</span>
@@ -149,7 +155,6 @@ import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox, type TableInstance } from "element-plus";
 import { getStreamers, getStreamerFiles } from "@/api/status";
 import { getSchedule } from "@/api/schedule";
-import { getCleanEstimate } from "@/api/task";
 import { useSSE } from "@/utils/sse";
 import { formatTime } from "@/utils/format";
 import ReTerminal from "@/components/ReTerminal/index.vue";
@@ -238,19 +243,26 @@ async function handleMerge() {
   });
 }
 
+async function handleRunTask(task: "merge" | "clean") {
+  if (task === "merge") {
+    sse.startSSE("/api/merge", {});
+  } else {
+    sse.startSSE("/api/clean", {});
+  }
+}
+
 async function handleClean() {
   try {
     if (selectedStreamer.value) {
       await ElMessageBox.confirm(
-        `即将清理主播「${selectedStreamer.value}」的已合并文件，确认执行？`,
+        `即将清理主播「${selectedStreamer.value}」的已合并及过期录像，确认执行？`,
         "清理确认",
         { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
       );
     } else {
-      const estimate = await getCleanEstimate();
       await ElMessageBox.confirm(
-        `预计将清理 ${estimate.file_count} 个文件，释放 ${estimate.total_size_gb?.toFixed(2)} GB 空间。确认执行？`,
-        "清理确认",
+        "即将根据系统配置的阈值执行全局磁盘清理，确认执行？",
+        "全局清理确认",
         { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
       );
     }
@@ -390,5 +402,30 @@ onActivated(refreshData);
 
 @media (max-width: 768px) {
   .schedule-grid { grid-template-columns: 1fr; }
+}
+.card-title-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-action-btn {
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  color: var(--charcoal);
+  border-radius: var(--r-sm);
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.card-action-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.card-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

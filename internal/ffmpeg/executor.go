@@ -24,7 +24,7 @@ type Executor interface {
 	ProbeHealth(ctx context.Context, path string) bool
 
 	// TrimVideo 按时间参数裁剪视频并输出到指定路径（stream-copy）。
-	TrimVideo(ctx context.Context, input, output, startTime, durationOrEnd string, isEnd bool) error
+	TrimVideo(ctx context.Context, input, output, startTime, endTime string) error
 }
 
 // DefaultExecutor 是 Executor 的默认实现，直接调用包级函数。
@@ -54,6 +54,6 @@ func (d *DefaultExecutor) ProbeHealth(ctx context.Context, path string) bool {
 	return ProbeHealth(ctx, path)
 }
 
-func (d *DefaultExecutor) TrimVideo(ctx context.Context, input, output, startTime, durationOrEnd string, isEnd bool) error {
-	return TrimVideo(ctx, input, output, startTime, durationOrEnd, isEnd)
+func (d *DefaultExecutor) TrimVideo(ctx context.Context, input, output, startTime, endTime string) error {
+	return TrimVideo(ctx, input, output, startTime, endTime)
 }

@@ -225,7 +225,7 @@ func TestConfig_StreamerRules_ApplyFromJSON(t *testing.T) {
 	if !ok {
 		t.Fatalf("应成功加载 streamer_b 规则")
 	}
-	if !rule.TrimEnabled || rule.TrimMode != "range" || rule.StartTime != "00:05:00" || rule.MinKeep != 5 {
+	if !rule.TrimEnabled || rule.TrimStart != "00:05:00" || rule.TrimEnd != "00:35:00" || rule.MinKeep != 5 {
 		t.Errorf("解析结果与预期不符: %+v", rule)
 	}
 }

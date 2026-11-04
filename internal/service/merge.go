@@ -647,11 +647,16 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		onProgress(fmt.Sprintf("✅ → %s", filepath.Base(concatOutputPath)))
 	}
 
-	// 合并校验通过后删除原始文件
+	// 伴生弹幕文件对齐：使合并版视频自动拥有对应的 XML 弹幕文件
+	alignCompanionDanmaku(folder, files, concatOutputPath)
+
+	// 合并校验通过后删除原始文件（连带删除原分片的伴生文件）
 	for _, f := range files {
-		if err := utils.SafeUnlink(filepath.Join(folder, f)); err != nil {
+		fullPath := filepath.Join(folder, f)
+		if err := utils.SafeUnlink(fullPath); err != nil {
 			opLog.Log(fmt.Sprintf("⚠ 删除源文件失败: %s (%v)", f, err))
 		}
+		cleanCompanionFiles(fullPath)
 	}
 
 	return true
@@ -742,47 +747,49 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 }
 
 // applyStreamerTrim 检查并执行针对指定主播的视频时段裁剪规则。
-// 若成功裁剪，将原子替换原视频并恢复时间戳；若失败或未启用，安全保留原视频。
+// 若成功裁剪，将原子替换原视频并恢复时间戳；若失败或无需截取，安全保留原视频。
 func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, videoPath string, originalMtime time.Time, onProgress ProgressFunc, opLog *OpLogger) bool {
 	rule, ok := s.config.GetStreamerRule(streamerName)
 	if !ok || !rule.TrimEnabled {
 		return false
 	}
 
+	start := strings.TrimSpace(rule.TrimStart)
+	if start == "" {
+		start = "00:00:00"
+	}
+	end := strings.TrimSpace(rule.TrimEnd)
+
+	// 时长预检：若从头截取且设置了结束时间，检查视频时长是否本就小于结束时间
+	if (start == "0" || start == "00:00:00") && end != "" {
+		if endSec, err := ffmpeg.ParseTimeSeconds(end); err == nil && endSec > 0 {
+			if dur, err := s.ffmpeg.ProbeDuration(ctx, videoPath); err == nil && dur > 0 && dur <= endSec {
+				if opLog != nil {
+					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 截取上限 (%s)，保留原视频", streamerName, dur, end))
+				}
+				onProgress(fmt.Sprintf("[%s] ℹ 视频时长短于设定时段，无需裁剪，保留完整视频", streamerName))
+				return true
+			}
+		}
+	}
+
+	trimDesc := fmt.Sprintf("[%s - %s]", start, func() string {
+		if end == "" {
+			return "结束"
+		}
+		return end
+	}())
+	onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪: %s", streamerName, trimDesc))
+
 	trimmedTmp := videoPath + ".trim.mp4"
 	defer utils.SafeUnlink(trimmedTmp)
 
-	var err error
-	var trimDesc string
-	if rule.TrimMode == "range" {
-		start := rule.StartTime
-		if start == "" {
-			start = "00:00:00"
-		}
-		end := rule.EndTime
-		if end == "" {
-			return false
-		}
-		trimDesc = fmt.Sprintf("时段 [%s - %s]", start, end)
-		onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪: %s", streamerName, trimDesc))
-		err = ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, start, end, true)
-	} else {
-		// 默认或 head 模式：保留前 N 分钟
-		mins := rule.DurationMinutes
-		if mins <= 0 {
-			mins = 30 // 默认 30 分钟
-		}
-		durationStr := fmt.Sprintf("%02d:%02d:00", mins/60, mins%60)
-		trimDesc = fmt.Sprintf("前 %d 分钟", mins)
-		onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪: %s", streamerName, trimDesc))
-		err = ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, "00:00:00", durationStr, false)
-	}
-
+	err := s.ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, start, end)
 	if err != nil {
 		if opLog != nil {
 			opLog.Log(fmt.Sprintf("⚠ [%s] 视频裁剪未生效或失败: %v，已安全保留原完整视频", streamerName, err))
 		}
-		onProgress(fmt.Sprintf("[%s] ⚠ 裁剪未生效（可能视频时长短于设定时段），已保留原完整视频", streamerName))
+		onProgress(fmt.Sprintf("[%s] ⚠ 裁剪未生效，已保留原完整视频", streamerName))
 		return false
 	}
 
@@ -805,6 +812,29 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s）", streamerName, trimDesc))
 	}
 	return true
+}
+
+// alignCompanionDanmaku 查找源分片对应的 XML 弹幕文件，将其对齐并重命名为与合并版视频同名
+func alignCompanionDanmaku(folder string, files []string, concatOutputPath string) {
+	mergedBase := strings.TrimSuffix(concatOutputPath, filepath.Ext(concatOutputPath))
+	mergedXml := mergedBase + ".xml"
+
+	// 如果合并版弹幕已存在，无需重复创建
+	if _, err := os.Stat(mergedXml); err == nil {
+		return
+	}
+
+	for _, f := range files {
+		fBase := strings.TrimSuffix(f, filepath.Ext(f))
+		srcXml := filepath.Join(folder, fBase+".xml")
+		if _, err := os.Stat(srcXml); err == nil {
+			// 找到源弹幕，复制一份为合并版弹幕
+			if data, err := os.ReadFile(srcXml); err == nil {
+				_ = os.WriteFile(mergedXml, data, 0644)
+			}
+			break
+		}
+	}
 }
 
 // SortByFilename 按文件名中的日期时间升序排列文件列表。
