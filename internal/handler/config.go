@@ -3,18 +3,12 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
-	"sort"
-	"strings"
 	"time"
 
 	"bililive-helper-go/internal/config"
-	"bililive-helper-go/internal/fsutil"
-	"bililive-helper-go/internal/utils"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // GetConfig 返回当前配置（不含敏感字段）。

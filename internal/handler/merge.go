@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"bililive-helper-go/internal/fsutil"
 	"bililive-helper-go/internal/model"
 	"bililive-helper-go/internal/utils"
 
