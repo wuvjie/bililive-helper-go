@@ -72,7 +72,7 @@ var (
 		WhitelistKeywords:  []string{"留存", "纪念", "高能", "生日", "勿删"},
 		SafeMode:           "hours",
 		SafeDays:           1,
-		MaxDeletePerRun:    10,
+		MaxDeletePerRun:    50,
 		BackupStartHour:    0,
 		BackupStartMinute:  0,
 		BackupEndHour:      0,

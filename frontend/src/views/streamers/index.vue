@@ -4,7 +4,10 @@
       <template #header>
         <div class="card-header">
           <div class="header-left">
-            <span class="card-title">👤 主播录播管理</span>
+            <div class="card-title-group">
+              <span class="title-icon">👤</span>
+              <span class="title-text">主播录播管理</span>
+            </div>
             <span class="streamer-total-stat">
               共 <strong>{{ streamers.length }}</strong> 位主播 · <strong>{{ totalFiles }}</strong> 个录像 · <strong>{{ totalSizeGB }}</strong> GB
             </span>
@@ -409,13 +412,26 @@ onActivated(() => loadData());
   justify-content: space-between;
   align-items: center;
 }
-.card-title {
+.card-title-group {
   display: inline-flex;
   align-items: center;
-  font-weight: 600;
-  font-size: 14px;
+  gap: 6px;
+  height: 26px;
+  line-height: 26px;
+  flex-shrink: 0;
+}
+.title-icon {
+  font-size: 16px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+.title-text {
+  font-size: 14px;
+  font-weight: 600;
   color: var(--ink);
+  line-height: 1;
+  white-space: nowrap;
 }
 .header-right {
   display: flex;
@@ -664,13 +680,13 @@ onActivated(() => loadData());
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .streamer-total-stat {
   display: inline-flex;
   align-items: center;
   height: 24px;
-  line-height: 1;
+  line-height: 22px;
   font-size: 12px;
   color: var(--steel, #888);
   background: var(--surface, #fafafa);
@@ -679,6 +695,8 @@ onActivated(() => loadData());
   border-radius: var(--r-sm, 4px);
   font-family: var(--font-mono);
   box-sizing: border-box;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .streamer-total-stat strong {
   color: var(--ink, #333);
@@ -724,5 +742,29 @@ onActivated(() => loadData());
 }
 .drawer-action-btn:hover {
   background: #d8eedf;
+}
+
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .header-left {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .header-left::-webkit-scrollbar {
+    display: none;
+  }
+  .header-right {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .header-right :deep(.el-input) {
+    flex: 1;
+  }
 }
 </style>
