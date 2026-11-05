@@ -78,4 +78,18 @@ defineEmits<{
   opacity: 1;
   background: rgba(0, 0, 0, 0.05);
 }
+
+html.dark .disk-alert-banner.warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-bottom-color: rgba(245, 158, 11, 0.25);
+}
+html.dark .disk-alert-banner.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-bottom-color: rgba(239, 68, 68, 0.3);
+}
+html.dark .disk-alert-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
 </style>

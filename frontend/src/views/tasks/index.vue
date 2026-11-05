@@ -730,7 +730,7 @@ onActivated(async () => {
 /* Terminal Card */
 .terminal-container-card {
   background: #1e1e1e;
-  border: 1px solid #333333;
+  border: 1px solid var(--hairline);
   border-radius: var(--r-md, 8px);
   overflow: hidden;
   display: flex;
@@ -753,7 +753,7 @@ onActivated(async () => {
   align-items: center;
   padding: 8px 12px;
   background: #252526;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--hairline);
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -774,7 +774,7 @@ onActivated(async () => {
   height: 28px;
   box-sizing: border-box;
   background: #1e1e1e;
-  border: 1px solid #3c3c3c;
+  border: 1px solid var(--hairline-strong);
   color: #cccccc;
   font-size: 12px;
   padding: 0 8px;
@@ -832,7 +832,7 @@ onActivated(async () => {
 }
 .history-quick-select :deep(.el-input__wrapper) {
   background: #1e1e1e;
-  box-shadow: 0 0 0 1px #3c3c3c inset;
+  box-shadow: 0 0 0 1px var(--hairline) inset;
 }
 .history-quick-select :deep(.el-input__inner) {
   color: #ccc;
@@ -867,14 +867,14 @@ onActivated(async () => {
 .retry-bar {
   background: #1f1f1f;
   padding: 6px 12px;
-  border-top: 1px solid #2e2e2e;
+  border-top: 1px solid var(--hairline);
 }
 .ops-action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: transparent;
-  border: 1px solid #444;
+  border: 1px solid var(--hairline-strong);
   color: #ccc;
   font-size: 12px;
   padding: 3px 8px;
