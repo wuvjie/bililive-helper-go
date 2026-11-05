@@ -173,6 +173,8 @@ onUnmounted(() => {
   border: 1px solid #3c3c3c;
   padding: 1px 6px;
   border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .terminal-badge-stat {
@@ -180,6 +182,8 @@ onUnmounted(() => {
   padding: 1px 6px;
   border-radius: 10px;
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .badge-stat-err {
   background: rgba(244, 71, 71, 0.2);
