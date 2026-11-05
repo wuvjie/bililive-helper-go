@@ -31,7 +31,7 @@
                   placeholder="搜索主播名..."
                   clearable
                   size="small"
-                  style="width: 140px"
+                  style="width: 190px"
                   @input="onStreamerSearch"
                   @clear="loadHistory(1)"
                 />
@@ -121,9 +121,9 @@
           </template>
         </el-table-column>
         <template #empty>
-          <div class="history-empty-box">
-            <div class="empty-icon-wrapper">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <div class="history-empty-box empty-illustration">
+            <div class="empty-icon-wrapper" style="background: rgba(99, 102, 241, 0.09); color: #4f46e5;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
             <span class="empty-title">暂无操作日志</span>
             <span class="empty-desc">未找到符合当前类型或主播筛选条件的历史记录</span>

@@ -60,7 +60,7 @@
       <div class="card">
         <div class="card-title">
           <div class="card-title-left">
-            <div class="ui-icon-box">
+            <div class="ui-icon-box icon-box-blue">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
             </div>
             <span class="card-title-main">存储空间监控</span>
@@ -116,8 +116,7 @@
       <div class="card">
         <div class="card-title">
           <div class="card-title-left">
-            <div class="card-title-left">
-            <div class="ui-icon-box">
+            <div class="ui-icon-box icon-box-purple">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
             <span class="card-title-main">自动化调度监控</span>
@@ -185,7 +184,7 @@
       <div class="card">
         <div class="card-title">
           <div class="card-title-left">
-            <div class="ui-icon-box">
+            <div class="ui-icon-box icon-box-teal">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             </div>
             <span class="card-title-main">近 7 天产出与清理趋势</span>
@@ -208,10 +207,12 @@
               <span class="trend-date">{{ day.date.slice(5) }}</span>
             </div>
           </div>
-          <div v-else class="trend-empty">
-            <div class="empty-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-            <span class="trend-empty-title">近 7 天暂无自动化处理数据</span>
-            <span class="trend-empty-desc">当录像分片合并或触发磁盘清理时，每日吞吐量将自动在此展现</span>
+          <div v-else class="trend-empty empty-illustration">
+            <div class="empty-icon-wrapper" style="background: rgba(20, 184, 166, 0.09); color: #0d9488;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <span class="empty-title">近 7 天暂无自动化处理数据</span>
+            <span class="empty-desc">当录像分片合并或触发磁盘清理时，每日吞吐量将自动在此展现</span>
           </div>
 
           <div class="trend-legend">
@@ -225,7 +226,7 @@
       <div class="card">
         <div class="card-title">
           <div class="card-title-left">
-            <div class="ui-icon-box">
+            <div class="ui-icon-box icon-box-indigo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             </div>
             <span class="card-title-main">最近操作记录</span>
