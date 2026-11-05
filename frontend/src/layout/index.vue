@@ -327,7 +327,7 @@ router.afterEach(() => fetchDiskStatus());
   height: 52px;
   display: flex; align-items: center; padding: 0 16px;
   border-bottom: 1px solid var(--hairline); flex-shrink: 0;
-  .logo-text { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; white-space: nowrap; }
+  .logo-text { font-size: 16px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; white-space: nowrap; }
   .logo-text-mini { font-size: 16px; font-weight: 700; color: var(--ink); }
 }
 
@@ -507,7 +507,7 @@ router.afterEach(() => fetchDiskStatus());
   align-items: center;
 }
 
-.nav-icon { font-size: 17px; cursor: pointer; color: var(--steel); &:hover { color: var(--ink); } }
+.nav-icon { font-size: 18px; cursor: pointer; color: var(--steel); &:hover { color: var(--ink); } }
 .nav-divider { width: 1px; height: 14px; background: var(--hairline); flex-shrink: 0; }
 
 .nav-btn-icon {

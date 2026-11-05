@@ -523,7 +523,7 @@ onUnmounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #d9730d;
+  background: #b45309;
 }
 
 .settings-tabs {
@@ -581,7 +581,7 @@ onUnmounted(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #d9730d;
+  background: #b45309;
   box-shadow: 0 0 0 2px rgba(217, 115, 13, 0.4);
 }
 .save-bar-title {

@@ -181,7 +181,7 @@ onUnmounted(() => {
 }
 
 .terminal-badge-stat {
-  font-size: 10px;
+  font-size: 11px;
   padding: 1px 6px;
   border-radius: 10px;
   font-weight: 600;
