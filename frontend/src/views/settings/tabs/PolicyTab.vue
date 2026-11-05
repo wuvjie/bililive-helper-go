@@ -387,9 +387,11 @@ function addTag(keyword: string) {
 
 .compact-counter {
   width: 120px;
+  height: 32px;
 }
 .compact-select {
   width: 96px;
+  height: 32px;
   flex-shrink: 0;
 }
 .inline-unit-row {
@@ -432,6 +434,22 @@ function addTag(keyword: string) {
   gap: 8px;
   min-height: 32px;
   flex-wrap: nowrap;
+
+  :deep(.el-input__wrapper) {
+    height: 32px !important;
+    box-sizing: border-box;
+  }
+  :deep(.el-input-number) {
+    height: 32px;
+  }
+  :deep(.el-input-number__decrease),
+  :deep(.el-input-number__increase) {
+    height: 30px !important;
+    width: 28px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* Buffer Zone Card */
@@ -465,9 +483,9 @@ function addTag(keyword: string) {
 }
 .buffer-val-pill {
   font-size: 11px;
-  color: #448361;
-  background: #edf6f0;
-  border: 1px solid rgba(68, 131, 97, 0.25);
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid rgba(217, 119, 6, 0.25);
   padding: 2px 8px;
   border-radius: 12px;
   font-weight: 500;
@@ -487,8 +505,8 @@ function addTag(keyword: string) {
   transition: width 0.2s ease;
 }
 .track-fill-buffer {
-  background: #d9730d;
-  opacity: 0.85;
+  background: #d97706;
+  opacity: 0.9;
   transition: width 0.2s ease;
 }
 .buffer-scale-labels {
@@ -498,7 +516,8 @@ function addTag(keyword: string) {
   color: var(--steel, #888);
 }
 .buffer-scale-mid {
-  color: #d9730d;
+  color: #d97706;
+  font-weight: 500;
 }
 
 /* Whitelist Tag Group */
@@ -640,4 +659,47 @@ function addTag(keyword: string) {
   vertical-align: -1px;
 }
 
+
+html.dark {
+  .buffer-zone-card {
+    background: #18181b;
+    border-color: #27272a;
+  }
+  .buffer-val-pill {
+    background: rgba(245, 158, 11, 0.12);
+    color: #e5a034;
+    border-color: rgba(245, 158, 11, 0.25);
+  }
+  .buffer-visual-track {
+    background: #27272a;
+  }
+  .track-fill-safe {
+    background: #10b981;
+  }
+  .track-fill-buffer {
+    background: #e5a034;
+  }
+  .buffer-scale-mid {
+    color: #e5a034;
+  }
+  .tags-container {
+    background: #141416;
+    border-color: #27272a;
+  }
+  .keyword-tag {
+    background: #1f1f23;
+    border-color: #27272a;
+    color: #e4e4e7;
+  }
+  .quick-preset-pill {
+    background: #18181b;
+    border-color: #27272a;
+    color: #a1a1aa;
+    &:hover:not(:disabled) {
+      background: rgba(34, 197, 94, 0.12);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #34d399;
+    }
+  }
+}
 </style>

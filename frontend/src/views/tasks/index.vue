@@ -973,20 +973,57 @@ html.dark {
     background: var(--surface) !important;
     border-color: var(--hairline) !important;
   }
+  .badge-emerald {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+  }
+  .dot-emerald {
+    background: #10b981 !important;
+  }
+  .badge-amber {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+  }
+  .dot-amber {
+    background: #f59e0b !important;
+  }
+  .badge-off {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #71717a !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
   .btn-merge-action {
-    background: rgba(34, 197, 94, 0.14) !important;
-    color: #4ade80 !important;
-    border-color: rgba(34, 197, 94, 0.3) !important;
+    background: #18181b !important;
+    color: #e4e4e7 !important;
+    border-color: #27272a !important;
+    svg {
+      color: #34d399;
+    }
     &:hover:not(:disabled) {
-      background: rgba(34, 197, 94, 0.24) !important;
+      background: #222226 !important;
+      border-color: #3f3f46 !important;
+      color: #ffffff !important;
+      svg {
+        color: #10b981;
+      }
     }
   }
   .btn-clean-action {
-    background: rgba(245, 158, 11, 0.14) !important;
-    color: #fbbf24 !important;
-    border-color: rgba(245, 158, 11, 0.3) !important;
+    background: #18181b !important;
+    color: #e4e4e7 !important;
+    border-color: #27272a !important;
+    svg {
+      color: #fbbf24;
+    }
     &:hover:not(:disabled) {
-      background: rgba(245, 158, 11, 0.24) !important;
+      background: #222226 !important;
+      border-color: #3f3f46 !important;
+      color: #ffffff !important;
+      svg {
+        color: #f59e0b;
+      }
     }
   }
   .btn-targeted-merge {

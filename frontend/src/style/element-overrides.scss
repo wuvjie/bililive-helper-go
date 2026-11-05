@@ -258,13 +258,35 @@
 // ── Select (consistent font) ──
 .el-select {
   .el-input__inner {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--charcoal);
   }
   .el-input__inner::placeholder {
     color: var(--stone);
-    font-size: 14px;
+    font-size: 13px;
   }
+}
+
+// 统一约束 Element Plus 下拉菜单项字号，根治弹层字号(14px)大于外层表单标签(13px)的层级倒挂问题
+.el-select-dropdown__item {
+  font-size: 13px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  padding: 0 12px !important;
+}
+.el-select-dropdown.is-multiple .el-select-dropdown__item {
+  height: 32px !important;
+  line-height: 32px !important;
+}
+.el-select-dropdown .el-select-dropdown__item.is-selected {
+  font-weight: 600;
+}
+.el-select--small .el-select-dropdown__item,
+.el-select-dropdown--small .el-select-dropdown__item {
+  font-size: 12px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  padding: 0 10px !important;
 }
 
 // ── Time Picker icon (thinner stroke) ──
@@ -275,6 +297,36 @@
 
 // Element Plus Dark Mode Overrides
 html.dark {
+  // 表格在暗黑模式下柔化边框噪点
+  .el-table {
+    th.el-table__cell.is-leaf,
+    td.el-table__cell {
+      border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    &::before,
+    .el-table__inner-wrapper::before {
+      background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+  }
+
+  // 下拉选择器在暗黑模式下的色彩与选项高亮
+  .el-select-dropdown {
+    background-color: #18181b !important;
+    border-color: #27272a !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+  .el-select-dropdown__item {
+    color: #e4e4e7 !important;
+    &.hover, &:hover {
+      background-color: #222226 !important;
+      color: #ffffff !important;
+    }
+    &.is-selected {
+      color: #60a5fa !important;
+      background-color: rgba(59, 130, 246, 0.12) !important;
+    }
+  }
+
   --el-color-primary: #f4f4f5;
   --el-color-primary-light-3: #d4d4d8;
   --el-color-primary-light-5: #a1a1aa;
@@ -304,8 +356,8 @@ html.dark {
 
   --el-table-bg-color: #18181b;
   --el-table-tr-bg-color: #18181b;
-  --el-table-row-hover-bg-color: #222226;
-  --el-table-border-color: #27272a;
+  --el-table-row-hover-bg-color: #1f1f23;
+  --el-table-border-color: rgba(255, 255, 255, 0.05);
   --el-table-header-text-color: #a1a1aa;
   --el-table-text-color: #e4e4e7;
 
@@ -596,4 +648,26 @@ html.dark {
 .el-loading-spinner .path {
   stroke: var(--ink);
   stroke-width: 3.5;
+}
+
+
+// 键盘可访问性：仅在键盘导航时展现沉浸双层光晕
+:focus-visible {
+  outline: 2px solid #2563eb !important;
+  outline-offset: 2px !important;
+}
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+// 物理动效降级兼容 (Accessibility Reduced Motion)
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

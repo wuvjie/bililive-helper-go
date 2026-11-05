@@ -189,10 +189,12 @@ async function handleSubmit() {
   line-height: 1.5;
 }
 .tip-text code {
-  background: var(--surface-hover, #eee);
-  padding: 1px 5px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--charcoal, #333);
+  padding: 1.5px 6px;
   border-radius: 4px;
   font-family: var(--font-mono);
+  border: 1px solid var(--hairline, #eee);
 }
 
 @media (max-width: 680px) {
@@ -227,4 +229,10 @@ async function handleSubmit() {
   vertical-align: -2px;
 }
 
+
+html.dark .tip-text code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f4f4f5 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
 </style>
