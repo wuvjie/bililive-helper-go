@@ -98,3 +98,41 @@ button:not(:disabled) {
 ::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--stone); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+// Dark Mode Palette — OLED Deep Charcoal with subtle luminescence
+html.dark {
+  --primary: #f4f4f5;
+  --primary-pressed: #e4e4e7;
+  --on-primary: #09090b;
+
+  --canvas: #09090b;
+  --surface: #141416;
+  --surface-card: #18181b;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5), 0 6px 16px -4px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 2px 6px rgba(0, 0, 0, 0.6), 0 12px 24px -6px rgba(0, 0, 0, 0.7);
+  --shadow-popover: 0 4px 24px -2px rgba(0, 0, 0, 0.8);
+
+  --hairline: #27272a;
+  --hairline-strong: #3f3f46;
+
+  --ink: #f4f4f5;
+  --charcoal: #e4e4e7;
+  --slate: #a1a1aa;
+  --steel: #71717a;
+  --stone: #52525b;
+  --link: #60a5fa;
+
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+
+  --tint-peach: rgba(251, 146, 60, 0.12);
+  --tint-mint: rgba(52, 211, 153, 0.12);
+  --tint-lavender: rgba(167, 139, 250, 0.12);
+  --tint-sky: rgba(96, 165, 250, 0.12);
+
+  --highlight: #27272a;
+}

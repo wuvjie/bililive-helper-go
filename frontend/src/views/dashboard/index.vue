@@ -986,4 +986,12 @@ onActivated(async () => {
   flex-shrink: 0;
 }
 
+
+html.dark {
+  .stat-peach { border-color: rgba(251, 146, 60, 0.25) !important; }
+  .stat-mint { border-color: rgba(52, 211, 153, 0.25) !important; }
+  .stat-sky { border-color: rgba(96, 165, 250, 0.25) !important; }
+  .stat-lavender { border-color: rgba(167, 139, 250, 0.25) !important; }
+}
+
 </style>

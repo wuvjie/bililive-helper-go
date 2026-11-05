@@ -260,3 +260,71 @@
 .el-input__suffix .el-icon {
   color: var(--steel);
 }
+
+// Element Plus Dark Mode Overrides
+html.dark {
+  --el-color-primary: #f4f4f5;
+  --el-color-primary-light-3: #d4d4d8;
+  --el-color-primary-light-5: #a1a1aa;
+  --el-color-primary-light-7: #71717a;
+  --el-color-primary-light-8: #3f3f46;
+  --el-color-primary-light-9: #27272a;
+  --el-color-primary-dark-2: #ffffff;
+
+  --el-bg-color: #18181b;
+  --el-bg-color-overlay: #1c1c20;
+  --el-bg-color-page: #09090b;
+  --el-text-color-primary: #f4f4f5;
+  --el-text-color-regular: #e4e4e7;
+  --el-text-color-secondary: #a1a1aa;
+  --el-text-color-placeholder: #52525b;
+  --el-border-color: #27272a;
+  --el-border-color-light: #27272a;
+  --el-fill-color-blank: #18181b;
+  --el-fill-color: #27272a;
+  --el-fill-color-light: #222226;
+  --el-fill-color-lighter: #1c1c20;
+
+  --el-card-bg-color: #18181b;
+  --el-card-border-color: #27272a;
+
+  --el-dialog-bg-color: #18181b;
+
+  --el-table-bg-color: #18181b;
+  --el-table-tr-bg-color: #18181b;
+  --el-table-row-hover-bg-color: #222226;
+  --el-table-border-color: #27272a;
+  --el-table-header-text-color: #a1a1aa;
+  --el-table-text-color: #e4e4e7;
+
+  .el-tabs__item {
+    color: var(--steel);
+    &:hover {
+      background: var(--highlight);
+      color: var(--charcoal);
+    }
+    &.is-active {
+      background: var(--highlight);
+      color: var(--ink);
+    }
+  }
+
+  .el-loading-mask {
+    background-color: rgba(9, 9, 11, 0.7) !important;
+  }
+}
+
+.el-loading-mask {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background-color: rgba(251, 251, 250, 0.65);
+  transition: opacity 0.2s ease;
+}
+.el-loading-spinner .circular {
+  width: 32px;
+  height: 32px;
+}
+.el-loading-spinner .path {
+  stroke: var(--ink);
+  stroke-width: 3.5;
+}

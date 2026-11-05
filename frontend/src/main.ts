@@ -1,3 +1,13 @@
+// Initialize theme before mounting to avoid flash
+(function() {
+  const saved = localStorage.getItem("bhg_theme") || "auto";
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  if (saved === "dark" || (saved === "auto" && prefersDark)) {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+})();
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import router from "./router";
