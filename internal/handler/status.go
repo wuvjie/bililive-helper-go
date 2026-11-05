@@ -10,6 +10,7 @@ import (
 
 	"bililive-helper-go/internal/config"
 	"bililive-helper-go/internal/fsutil"
+	"bililive-helper-go/internal/service"
 	"bililive-helper-go/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -407,6 +408,12 @@ func (h *Handler) DeleteStreamerFile(c *gin.Context) {
 		return
 	}
 
+	// 检查该主播是否正在进行合并，避免删除正在被 FFmpeg 读取的文件
+	if h.merge.IsStreamerLocked(streamer) {
+		failBadRequest(c, fmt.Sprintf("主播 %s 正在进行合并处理中，暂时无法删除文件", streamer))
+		return
+	}
+
 	cfg := h.config.Snapshot()
 	fullPath := filepath.Join(cfg.TargetDir, streamer, file)
 	info, err := os.Stat(fullPath)
@@ -421,6 +428,9 @@ func (h *Handler) DeleteStreamerFile(c *gin.Context) {
 		fail(c, http.StatusInternalServerError, "删除文件失败: "+err.Error())
 		return
 	}
+
+	// 级联清理同名伴生文件（XML 弹幕、封面图、元数据等），防止产生孤儿文件
+	service.CleanCompanionFiles(fullPath)
 
 	// 记录到操作历史，并计入 clean 任务以计入累计释放磁盘空间
 	detail := fmt.Sprintf("手动删除视频: %s (%s)", file, utils.FormatSize(fileSize))

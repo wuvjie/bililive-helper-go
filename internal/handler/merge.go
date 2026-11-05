@@ -169,14 +169,14 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 			if req.BackupStartHour != nil {
 				h.config.BackupStartHour = *req.BackupStartHour
 			}
-			if req.BackupStartMin != nil {
-				h.config.BackupStartMinute = *req.BackupStartMin
+			if req.BackupStartMinute != nil {
+				h.config.BackupStartMinute = *req.BackupStartMinute
 			}
 			if req.BackupEndHour != nil {
 				h.config.BackupEndHour = *req.BackupEndHour
 			}
-			if req.BackupEndMin != nil {
-				h.config.BackupEndMinute = *req.BackupEndMin
+			if req.BackupEndMinute != nil {
+				h.config.BackupEndMinute = *req.BackupEndMinute
 			}
 			backupChanged = true
 			return h.config.Validate()
