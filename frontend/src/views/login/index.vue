@@ -19,18 +19,6 @@
         <p class="brand-sub">录播自动合并与媒体管理平台</p>
       </div>
 
-      <!-- 错误提示横幅 (密码错误/请求失败时显现) -->
-      <transition name="banner-fade">
-        <div v-if="errorMessage" class="login-error-banner">
-          <svg class="error-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <span class="error-banner-text">{{ errorMessage }}</span>
-        </div>
-      </transition>
-
       <!-- 登录表单 -->
       <el-form
         ref="formRef"
@@ -67,6 +55,18 @@
             @keydown.enter.prevent="handleLogin"
           />
         </el-form-item>
+
+        <!-- 错误提示横幅：平滑就地显示于密码框下方，卡片头部与输入框永不跳跃 -->
+        <transition name="banner-fade">
+          <div v-if="errorMessage" class="login-error-banner">
+            <svg class="error-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span class="error-banner-text">{{ errorMessage }}</span>
+          </div>
+        </transition>
 
         <el-form-item class="submit-form-item">
           <el-button
@@ -167,6 +167,11 @@ async function handleLogin() {
 }
 
 onMounted(() => {
+  // 若已处于登录状态，直接重定向至控制台
+  if (auth.isAuthenticated) {
+    router.replace("/");
+    return;
+  }
   // 页面载入时自动聚焦密码框
   setTimeout(() => {
     passwordInputRef.value?.focus();
@@ -289,11 +294,13 @@ onMounted(() => {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #dc2626;
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
-  margin-bottom: 20px;
+  margin-top: -6px;
+  margin-bottom: 16px;
+  line-height: 1.4;
 }
 
 .error-banner-icon {
