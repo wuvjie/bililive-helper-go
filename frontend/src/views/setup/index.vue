@@ -181,7 +181,7 @@ async function handleSubmit() {
 }
 
 .setup-title {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--ink, #1c1c1e);
   letter-spacing: -0.4px;

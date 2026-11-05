@@ -511,7 +511,7 @@ onActivated(async () => {
 }
 
 .title-icon {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .title-text {
@@ -541,7 +541,7 @@ onActivated(async () => {
 
 .badge-amber {
   background: #fffbeb;
-  color: #d97706;
+  color: #b45309;
   border: 1px solid #fde68a;
 }
 .dot-amber {
@@ -806,7 +806,7 @@ onActivated(async () => {
   background: #448361;
 }
 .pulse-dot {
-  background: #d9730d;
+  background: #b45309;
   animation: pulse-dot 1.2s infinite;
 }
 @keyframes pulse-dot {
@@ -816,8 +816,8 @@ onActivated(async () => {
 }
 
 .tab-tag-live {
-  font-size: 10px;
-  background: #d9730d;
+  font-size: 11px;
+  background: #b45309;
   color: #fff;
   padding: 1px 4px;
   border-radius: 2px;

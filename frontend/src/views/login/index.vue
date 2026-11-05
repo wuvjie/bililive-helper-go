@@ -272,7 +272,7 @@ onMounted(() => {
 }
 
 .brand-title {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--ink, #1c1c1e);
   letter-spacing: -0.4px;
@@ -343,7 +343,7 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #d9730d;
+  color: #b45309;
   background: #fff7ed;
   border: 1px solid #fed7aa;
   padding: 1px 6px;

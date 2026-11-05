@@ -127,6 +127,12 @@
             </div>
             <span class="empty-title">暂无操作日志</span>
             <span class="empty-desc">未找到符合当前类型或主播筛选条件的历史记录</span>
+            <button v-if="taskFilter || streamerFilter" class="btn-empty-action" @click="taskFilter = ''; streamerFilter = '';">
+              重置筛选条件
+            </button>
+            <button v-else class="btn-empty-action" @click="loadData">
+              刷新日志列表
+            </button>
           </div>
         </template>
       </el-table>
@@ -799,7 +805,7 @@ onActivated(() => loadHistory(currentPage.value));
   background: rgba(2, 132, 199, 0.08);
 }
 .action-retry {
-  color: #d9730d;
+  color: #b45309;
 }
 .action-retry:hover {
   color: #b45309;

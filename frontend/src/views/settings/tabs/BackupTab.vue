@@ -123,7 +123,7 @@ function onFileChange(e: Event) {
   font-size: 18px;
 }
 .backup-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--charcoal);
 }

@@ -125,6 +125,12 @@
             </div>
             <span class="empty-title">未发现匹配的主播</span>
             <span class="empty-desc">请确认搜索关键词或检查录像存储目录中是否存在主播子文件夹</span>
+            <button v-if="searchQuery" class="btn-empty-action" @click="searchQuery = ''">
+              清空搜索条件
+            </button>
+            <button v-else class="btn-empty-action" @click="loadData">
+              刷新列表
+            </button>
           </div>
         </template>
       </el-table>
@@ -635,7 +641,7 @@ onActivated(() => loadData());
   color: var(--charcoal);
 }
 .section-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel);
 }
 .section-desc {
@@ -1025,7 +1031,7 @@ onActivated(() => loadData());
   color: var(--ink, #1e293b);
 }
 .setting-card-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel, #64748b);
 }
 .setting-card-desc {
@@ -1138,7 +1144,7 @@ onActivated(() => loadData());
   color: var(--ink, #1e293b);
 }
 .rule-badge-pill {
-  font-size: 11px;
+  font-size: 12px;
   padding: 2px 8px;
   border-radius: 12px;
   font-weight: 500;
@@ -1154,7 +1160,7 @@ onActivated(() => loadData());
   border: 1px solid #e2e8f0;
 }
 .rule-badge-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel, #64748b);
 }
 

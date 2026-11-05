@@ -23,7 +23,7 @@
 
   --el-color-success: #448361;
   --el-color-danger: #e03131;
-  --el-color-warning: #d9730d;
+  --el-color-warning: #b45309;
 
   --el-border-radius-base: 6px;
   --el-border-radius-small: 4px;
@@ -301,11 +301,11 @@ html.dark {
   .el-table {
     th.el-table__cell.is-leaf,
     td.el-table__cell {
-      border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+      border-bottom-color: rgba(255, 255, 255, 0.075) !important;
     }
     &::before,
     .el-table__inner-wrapper::before {
-      background-color: rgba(255, 255, 255, 0.05) !important;
+      background-color: rgba(255, 255, 255, 0.075) !important;
     }
   }
 
@@ -357,7 +357,7 @@ html.dark {
   --el-table-bg-color: #18181b;
   --el-table-tr-bg-color: #18181b;
   --el-table-row-hover-bg-color: #1f1f23;
-  --el-table-border-color: rgba(255, 255, 255, 0.05);
+  --el-table-border-color: rgba(255, 255, 255, 0.075);
   --el-table-header-text-color: #a1a1aa;
   --el-table-text-color: #e4e4e7;
 
@@ -427,8 +427,8 @@ html.dark {
     border-color: rgba(251, 191, 36, 0.35) !important;
     color: #fbbf24 !important;
     &:hover {
-      background-color: #d97706 !important;
-      border-color: #d97706 !important;
+      background-color: #b45309 !important;
+      border-color: #b45309 !important;
       color: #ffffff !important;
     }
   }
@@ -669,5 +669,26 @@ select:focus:not(:focus-visible) {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+
+// 物理动效：进出场差异化（出场比入场快 30% 黄金法则）
+.el-dialog,
+.el-drawer {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.el-dialog-fade-leave-active,
+.el-drawer-fade-leave-active {
+  transition-duration: 0.16s !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1) !important;
+}
+
+// 移动端 iOS Safari 防视口自动放大基准 (Font size >= 16px on < 640px)
+@media (max-width: 640px) {
+  .el-input__inner,
+  .el-textarea__inner,
+  .el-select .el-input__inner {
+    font-size: 16px !important;
   }
 }

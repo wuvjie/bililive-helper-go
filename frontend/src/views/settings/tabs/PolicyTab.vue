@@ -111,7 +111,6 @@
                   :min="1" :max="168" :step="1" class="compact-counter"
                   @update:model-value="updateField('SAFE_AGE_MINUTES', (Number($event) || 1) * 60)"
                 />
-                <span class="unit-text">小时</span>
               </div>
               <div v-if="config.SAFE_MODE === 'days'" class="inline-unit-row">
                 <el-input-number
@@ -121,7 +120,6 @@
                   class="compact-counter"
                   @update:model-value="updateField('SAFE_DAYS', Number($event))"
                 />
-                <span class="unit-text">天</span>
               </div>
             </div>
             <div class="field-hint">在此保护期内生成的最新录像享有免删保护，即使磁盘水位达到警戒线，清理任务也绝不会删除保护期内的文件。</div>
@@ -485,7 +483,7 @@ function addTag(keyword: string) {
   font-size: 11px;
   color: #b45309;
   background: #fffbeb;
-  border: 1px solid rgba(217, 119, 6, 0.25);
+  border: 1px solid rgba(180, 83, 9, 0.25);
   padding: 2px 8px;
   border-radius: 12px;
   font-weight: 500;
@@ -505,7 +503,7 @@ function addTag(keyword: string) {
   transition: width 0.2s ease;
 }
 .track-fill-buffer {
-  background: #d97706;
+  background: #b45309;
   opacity: 0.9;
   transition: width 0.2s ease;
 }
@@ -516,7 +514,7 @@ function addTag(keyword: string) {
   color: var(--steel, #888);
 }
 .buffer-scale-mid {
-  color: #d97706;
+  color: #b45309;
   font-weight: 500;
 }
 

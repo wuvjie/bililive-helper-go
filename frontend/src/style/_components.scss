@@ -86,7 +86,7 @@
   }
   &.icon-box-amber {
     background: rgba(245, 158, 11, 0.09);
-    color: #d97706;
+    color: #b45309;
   }
   &.icon-box-teal {
     background: rgba(20, 184, 166, 0.09);
@@ -115,9 +115,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: var(--r-full);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
   border: 1px solid transparent;
@@ -341,4 +341,34 @@ code {
   margin: 0 6px;
   font-weight: 300;
   user-select: none;
+}
+
+
+// 空状态行动出口按钮 (Actionable Empty State CTA)
+.btn-empty-action {
+  margin-top: 12px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  &:hover {
+    background: var(--highlight);
+    border-color: var(--charcoal);
+    color: var(--ink);
+  }
+}
+html.dark .btn-empty-action {
+  background: #1f1f23;
+  border-color: #27272a;
+  color: #e4e4e7;
+  &:hover {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #ffffff;
+  }
 }
