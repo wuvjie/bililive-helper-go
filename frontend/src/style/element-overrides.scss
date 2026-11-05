@@ -324,31 +324,60 @@ html.dark {
   .el-loading-mask {
     background-color: rgba(9, 9, 11, 0.7) !important;
   }
-  // Buttons in dark mode
+  // Buttons in dark mode (Sapphire Blue CTA eliminates blinding white glare)
   .el-button--primary {
-    background: #f4f4f5 !important;
-    border-color: #f4f4f5 !important;
-    color: #09090b !important;
-    font-weight: 600 !important;
+    background: #2563eb !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
     &:hover {
-      background: #e4e4e7 !important;
-      border-color: #e4e4e7 !important;
-      color: #09090b !important;
+      background: #1d4ed8 !important;
+      border-color: #2563eb !important;
+      color: #ffffff !important;
+    }
+    &:active {
+      background: #1e40af !important;
+    }
+    &.is-disabled, &:disabled {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #64748b !important;
     }
   }
-  .el-button:not(.el-button--primary):not(.el-button--danger) {
+  .el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--success):not(.el-button--warning) {
     background-color: #18181b !important;
     border-color: #27272a !important;
-    color: #f4f4f5 !important;
+    color: #e4e4e7 !important;
     &:hover {
       background-color: #27272a !important;
       border-color: #3f3f46 !important;
-      color: #ffffff !important;
+      color: #f4f4f5 !important;
     }
-    &.is-disabled {
+    &.is-disabled, &:disabled {
       background-color: #141416 !important;
       border-color: #222226 !important;
       color: #52525b !important;
+    }
+  }
+  .el-button--success {
+    background-color: rgba(52, 211, 153, 0.15) !important;
+    border-color: rgba(52, 211, 153, 0.35) !important;
+    color: #34d399 !important;
+    &:hover {
+      background-color: #059669 !important;
+      border-color: #059669 !important;
+      color: #ffffff !important;
+    }
+  }
+  .el-button--warning {
+    background-color: rgba(251, 191, 36, 0.15) !important;
+    border-color: rgba(251, 191, 36, 0.35) !important;
+    color: #fbbf24 !important;
+    &:hover {
+      background-color: #d97706 !important;
+      border-color: #d97706 !important;
+      color: #ffffff !important;
     }
   }
   .el-button--danger {
@@ -401,6 +430,83 @@ html.dark {
     .el-progress-bar__outer {
       background-color: #27272a !important;
     }
+  }
+
+  // Steppers (Input Number) in dark mode — eliminate blinding white +/- boxes
+  .el-input-number {
+    .el-input-number__decrease,
+    .el-input-number__increase {
+      background-color: #1f1f23 !important;
+      border-color: #27272a !important;
+      color: #a1a1aa !important;
+      &:hover {
+        background-color: #27272a !important;
+        color: #f4f4f5 !important;
+      }
+      &.is-disabled {
+        background-color: #141416 !important;
+        border-color: #222226 !important;
+        color: #52525b !important;
+      }
+    }
+    .el-input__wrapper {
+      background-color: #141416 !important;
+      box-shadow: 0 0 0 1px #27272a inset !important;
+      &:hover {
+        box-shadow: 0 0 0 1px #3f3f46 inset !important;
+      }
+      &.is-focus {
+        box-shadow: 0 0 0 1px #3b82f6 inset !important;
+      }
+    }
+  }
+
+  // Time Picker Panel in dark mode
+  .el-time-panel {
+    background-color: #18181b !important;
+    border-color: #27272a !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+    .el-time-panel__content::after,
+    .el-time-panel__content::before {
+      border-color: #27272a !important;
+    }
+    .el-time-panel__footer {
+      border-color: #27272a !important;
+    }
+    .el-time-spinner__item {
+      color: #a1a1aa !important;
+      &:hover:not(.is-disabled):not(.is-active) {
+        background: #27272a !important;
+        color: #f4f4f5 !important;
+      }
+      &.is-active:not(.is-disabled) {
+        color: #ffffff !important;
+        font-weight: 600;
+      }
+    }
+    .el-time-panel__btn {
+      color: #a1a1aa !important;
+      &.confirm {
+        color: #60a5fa !important;
+        font-weight: 600;
+      }
+    }
+  }
+
+  // Light poppers / tooltips in dark mode
+  .el-popper.is-light {
+    background-color: #1c1c20 !important;
+    border-color: #27272a !important;
+    color: #e4e4e7 !important;
+    .el-popper__arrow::before {
+      background-color: #1c1c20 !important;
+      border-color: #27272a !important;
+    }
+  }
+
+  // Descriptions in dark mode
+  .el-descriptions {
+    --el-descriptions-item-bordered-label-background: #141416;
   }
 
   // Inputs & Selects in dark mode

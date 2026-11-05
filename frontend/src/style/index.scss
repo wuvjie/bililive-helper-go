@@ -101,9 +101,9 @@ button:not(:disabled) {
 
 // Dark Mode Palette — OLED Deep Charcoal with subtle luminescence
 html.dark {
-  --primary: #f4f4f5;
-  --primary-pressed: #e4e4e7;
-  --on-primary: #09090b;
+  --primary: #2563eb;
+  --primary-pressed: #1d4ed8;
+  --on-primary: #ffffff;
 
   --canvas: #09090b;
   --surface: #141416;
