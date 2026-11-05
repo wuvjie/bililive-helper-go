@@ -137,14 +137,14 @@ func (h *Handler) GetSchedule(c *gin.Context) {
 // 记录变更日志并异步写入历史。
 func (h *Handler) SaveSchedule(c *gin.Context) {
 	var req struct {
-		MergeInterval    int    `json:"merge_interval"`
-		CleanInterval    int    `json:"clean_interval"`
-		MergeEnabled     bool   `json:"merge_enabled"`
-		CleanEnabled     bool   `json:"clean_enabled"`
-		BackupStartHour  *int   `json:"BACKUP_START_HOUR"`
-		BackupStartMin   *int   `json:"BACKUP_START_MINUTE"`
-		BackupEndHour    *int   `json:"BACKUP_END_HOUR"`
-		BackupEndMin     *int   `json:"BACKUP_END_MINUTE"`
+		MergeInterval     int  `json:"merge_interval"`
+		CleanInterval     int  `json:"clean_interval"`
+		MergeEnabled      bool `json:"merge_enabled"`
+		CleanEnabled      bool `json:"clean_enabled"`
+		BackupStartHour   *int `json:"backup_start_hour"`
+		BackupStartMinute *int `json:"backup_start_minute"`
+		BackupEndHour     *int `json:"backup_end_hour"`
+		BackupEndMinute   *int `json:"backup_end_minute"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		failBadRequest(c, "参数错误")
@@ -164,7 +164,7 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 
 	// 如果请求中包含静默时段字段，先更新配置再保存调度（保证原子性）
 	backupChanged := false
-	if req.BackupStartHour != nil || req.BackupStartMin != nil || req.BackupEndHour != nil || req.BackupEndMin != nil {
+	if req.BackupStartHour != nil || req.BackupStartMinute != nil || req.BackupEndHour != nil || req.BackupEndMinute != nil {
 		if err := h.config.Apply(func() error {
 			if req.BackupStartHour != nil {
 				h.config.BackupStartHour = *req.BackupStartHour

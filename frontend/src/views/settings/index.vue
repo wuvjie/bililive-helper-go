@@ -294,11 +294,17 @@ async function handleSaveSchedule() {
       const [h, m] = backupStart.value.split(":").map(Number);
       payload.backup_start_hour = h;
       payload.backup_start_minute = m;
+    } else {
+      payload.backup_start_hour = 0;
+      payload.backup_start_minute = 0;
     }
     if (backupEnd.value) {
       const [h, m] = backupEnd.value.split(":").map(Number);
       payload.backup_end_hour = h;
       payload.backup_end_minute = m;
+    } else {
+      payload.backup_end_hour = 0;
+      payload.backup_end_minute = 0;
     }
     await saveSchedule(payload);
     ElMessage.success("任务调度设置已保存");
