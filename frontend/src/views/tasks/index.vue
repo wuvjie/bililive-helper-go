@@ -33,7 +33,7 @@
               :disabled="sse.isRunning.value"
               @click="handleRunGlobal('merge')"
             >
-              <span class="btn-icon">⚡</span>
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               <span>立即全局合并</span>
             </button>
           </div>
@@ -71,7 +71,7 @@
               :disabled="sse.isRunning.value"
               @click="handleRunGlobal('clean')"
             >
-              <span class="btn-icon">🧹</span>
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
               <span>立即全局清理</span>
             </button>
           </div>
@@ -83,7 +83,10 @@
     <div class="card targeted-card">
       <div class="targeted-bar">
         <div class="targeted-left">
-          <span class="targeted-label">🎯 定向主播快捷任务:</span>
+          <span class="targeted-label">
+            <svg class="targeted-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            定向主播快捷任务:
+          </span>
           <el-select
             v-model="selectedStreamer"
             placeholder="选择特定主播..."
@@ -897,4 +900,28 @@ onActivated(async () => {
     width: 100%;
   }
 }
+
+.title-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-svg-sm {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.targeted-svg-ico {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+.btn-task-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 </style>

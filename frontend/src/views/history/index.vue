@@ -3,7 +3,12 @@
     <el-card shadow="hover">
       <template #header>
         <div class="card-header">
-          <span>📋 操作日志</span>
+          <div class="card-title-group">
+            <div class="ui-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <span class="title-text">操作审计日志</span>
+          </div>
           <div class="header-actions">
             <div class="header-filters">
               <el-select
@@ -15,10 +20,10 @@
                 @change="loadHistory(1)"
               >
                 <el-option label="全部任务" value="" />
-                <el-option label="🔗 分片合并" value="merge" />
-                <el-option label="🧹 磁盘清理" value="clean" />
-                <el-option label="⚙️ 配置变更" value="config" />
-                <el-option label="⏱️ 调度事件" value="schedule" />
+                <el-option label="分片合并" value="merge" />
+                <el-option label="磁盘清理" value="clean" />
+                <el-option label="配置变更" value="config" />
+                <el-option label="调度事件" value="schedule" />
               </el-select>
               <el-input
                 v-model="filterStreamer"
@@ -59,7 +64,13 @@
         <el-table-column prop="task" label="类型" width="110" align="center" header-align="center" sortable>
           <template #default="{ row }">
             <span class="type-label">
-              <span class="type-icon">{{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}</span>
+              <span class="task-type-pill" :class="'type-' + row.task">
+              <svg v-if="row.task === 'merge'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <svg v-else-if="row.task === 'clean'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              <svg v-else-if="row.task === 'config'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg v-else class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>{{ row.task === 'merge' ? '分片合并' : row.task === 'clean' ? '磁盘清理' : row.task === 'config' ? '配置变更' : '调度事件' }}</span>
+            </span>
               {{ taskLabel(row.task) }}
             </span>
           </template>
@@ -108,7 +119,9 @@
         </el-table-column>
         <template #empty>
           <div class="history-empty-box">
-            <span class="empty-emoji">📋</span>
+            <div class="empty-icon-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
             <span class="empty-title">暂无操作日志</span>
             <span class="empty-desc">未找到符合当前类型或主播筛选条件的历史记录</span>
           </div>
@@ -944,4 +957,63 @@ onActivated(() => loadHistory(currentPage.value));
     flex-shrink: 0 !important;
   }
 }
+
+.card-title-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.task-type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.task-type-pill.type-merge {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.task-type-pill.type-clean {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+.task-type-pill.type-config {
+  background: #fdf4ff;
+  color: #86198f;
+  border: 1px solid #f5d0fe;
+}
+.task-type-pill.type-schedule {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+.task-svg-sm {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.empty-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  color: var(--stone);
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 </style>

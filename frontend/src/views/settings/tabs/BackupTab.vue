@@ -4,21 +4,27 @@
       <!-- Export card -->
       <div class="backup-card">
         <div class="backup-card-header">
-          <span class="backup-icon">📤</span>
+          <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
           <span class="backup-title">导出配置备份</span>
         </div>
         <p class="backup-desc">将系统当前的阈值策略、定时调度参数以及各主播的个性化截取与保护规则导出为 JSON 备份文件。</p>
         <div class="backup-spacer"></div>
         <div class="backup-action-group">
-          <button class="btn-action-half btn-export" @click="emit('export-file')">📥 下载配置文件 (.json)</button>
-          <button class="btn-action-half btn-copy" @click="emit('copy-json')">📋 复制配置代码</button>
+          <button class="btn-action-half btn-export" @click="emit('export-file')">
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>下载配置文件 (.json)</span>
+            </button>
+          <button class="btn-action-half btn-copy" @click="emit('copy-json')">
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>复制配置代码</span>
+            </button>
         </div>
       </div>
 
       <!-- Import card -->
       <div class="backup-card">
         <div class="backup-card-header">
-          <span class="backup-icon">📥</span>
+          <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
           <span class="backup-title">导入配置恢复</span>
         </div>
         <p class="backup-desc">选择之前导出的 JSON 备份文件，导入并校验通过后将自动覆盖应用现有设置。</p>
@@ -30,7 +36,7 @@
           @change="onFileChange"
         />
         <div class="import-file-box" @click="importFileRef?.click()">
-          <span class="import-file-icon">📂</span>
+          <svg class="import-file-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
           <span class="import-file-text">{{ selectedFileName || '点击选择本地 JSON 备份文件...' }}</span>
         </div>
         <div class="import-manual-toggle">
@@ -245,4 +251,24 @@ function onFileChange(e: Event) {
     padding: 8px 4px 16px 8px;
   }
 }
+
+.backup-card-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-svg-sm {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+.import-file-svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: -3px;
+  color: var(--steel);
+}
+
 </style>

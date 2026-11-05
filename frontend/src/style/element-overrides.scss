@@ -37,9 +37,10 @@
   --el-card-bg-color: #ffffff;
   --el-card-border-color: #e5e3df;
   border: 1px solid var(--hairline) !important;
-  box-shadow: none !important;
+  box-shadow: var(--shadow-card) !important;
   border-radius: var(--r-md) !important;
 }
+.el-card.is-hover-shadow:hover { box-shadow: var(--shadow-card-hover) !important; }
 
 // ── Dialogs ──
 .el-dialog {

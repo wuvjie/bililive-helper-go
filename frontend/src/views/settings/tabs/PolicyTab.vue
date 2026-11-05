@@ -75,7 +75,7 @@
           <div class="buffer-zone-card">
             <div class="buffer-zone-header">
               <div class="buffer-header-left">
-                <span class="buffer-icon">🎯</span>
+                <svg class="buffer-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                 <span class="buffer-title">空间释放缓冲区间</span>
               </div>
               <span class="buffer-val-pill">
@@ -89,7 +89,7 @@
             </div>
             <div class="buffer-scale-labels">
               <span>目标保底: <strong class="mono-val">{{ config.TARGET_THRESHOLD }}%</strong></span>
-              <span class="buffer-scale-mid">⚡ 释放冲程: <strong class="mono-val">{{ bufferPct }}%</strong></span>
+              <span class="buffer-scale-mid">释放冲程: <strong class="mono-val">{{ bufferPct }}%</strong></span>
               <span>触发上限: <strong class="mono-val">{{ config.TRIGGER_THRESHOLD }}%</strong></span>
             </div>
           </div>
@@ -206,7 +206,7 @@
           保存全局策略
         </el-button>
         <el-button class="btn-reset-policy" @click="emit('reset-defaults')">
-          🔄 恢复推荐预设
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> 恢复推荐预设
         </el-button>
       </div>
     </el-form>
@@ -621,4 +621,23 @@ function addTag(keyword: string) {
     overflow-x: auto;
   }
 }
+
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.buffer-svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+.btn-svg-sm {
+  width: 13px;
+  height: 13px;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
 </style>
