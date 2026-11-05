@@ -59,7 +59,6 @@
             @keydown="checkCapsLock"
             @keyup="checkCapsLock"
             @focus="checkCapsLock"
-            @keyup.enter="handleLogin"
           />
         </el-form-item>
 
@@ -133,16 +132,16 @@ function triggerShake() {
 
 async function handleLogin() {
   if (loading.value) return;
+  loading.value = true;
+  errorMessage.value = "";
 
   const valid = await formRef.value?.validate().catch(() => false);
   if (!valid) {
+    loading.value = false;
     triggerShake();
     passwordInputRef.value?.focus();
     return;
   }
-
-  loading.value = true;
-  errorMessage.value = "";
 
   try {
     await login(form.password);

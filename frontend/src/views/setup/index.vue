@@ -37,7 +37,6 @@
             size="large"
             :prefix-icon="Lock"
             class="setup-input"
-            @keyup.enter="handleSubmit"
           />
         </el-form-item>
 
@@ -108,11 +107,12 @@ onMounted(async () => {
 
 async function handleSubmit() {
   if (loading.value) return;
+  loading.value = true;
   const valid = await formRef.value?.validate().catch(() => false);
   if (!valid) {
+    loading.value = false;
     return;
   }
-  loading.value = true;
   try {
     await setupInit({ password: form.password });
     auth.markAuthenticated();
