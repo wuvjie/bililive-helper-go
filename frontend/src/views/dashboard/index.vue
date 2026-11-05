@@ -21,27 +21,37 @@
       </div>
     </div>
 
-    <!-- Stat Cards with pastel tints (方案 A: 今日合并 · 昨日合并 · 本月合并 · 累计释放) -->
+    <!-- Stat Cards with pastel tints (今日合并次数 · 昨日合并次数 · 本月合并次数 · 累计释放空间) -->
     <div class="stat-grid">
       <div class="stat-card stat-peach">
-        <span class="stat-label">今日合并</span>
-        <span class="stat-value">{{ stats?.today?.merge_count || 0 }}<span class="stat-unit">次</span></span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.today?.merge_bytes }">{{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}</span>
+        <span class="stat-label">今日合并次数</span>
+        <span class="stat-value">{{ stats?.today?.merge_count || 0 }}</span>
+        <span class="stat-sub" :class="{ 'stat-empty': !stats?.today?.merge_bytes }">
+          产出体积 {{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}
+        </span>
       </div>
       <div class="stat-card stat-mint">
-        <span class="stat-label">昨日合并</span>
-        <span class="stat-value">{{ yesterdayStats.count }}<span class="stat-unit">次</span></span>
-        <span class="stat-sub" :class="{ 'stat-empty': !yesterdayStats.bytes }">{{ yesterdayStats.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}</span>
+        <span class="stat-label">昨日合并次数</span>
+        <span class="stat-value">{{ yesterdayStats.count }}</span>
+        <span class="stat-sub" :class="{ 'stat-empty': !yesterdayStats.bytes }">
+          产出体积 {{ yesterdayStats.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}
+        </span>
       </div>
       <div class="stat-card stat-sky">
-        <span class="stat-label">本月合并</span>
-        <span class="stat-value">{{ stats?.month?.merge_count || 0 }}<span class="stat-unit">次</span></span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.month?.merge_bytes }">{{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}</span>
+        <span class="stat-label">本月合并次数</span>
+        <span class="stat-value">{{ stats?.month?.merge_count || 0 }}</span>
+        <span class="stat-sub" :class="{ 'stat-empty': !stats?.month?.merge_bytes }">
+          产出体积 {{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}
+        </span>
       </div>
       <div class="stat-card stat-lavender">
         <span class="stat-label">累计释放空间</span>
-        <span class="stat-value">{{ totalFreedStats.count }}<span class="stat-unit">次</span></span>
-        <span class="stat-sub" :class="{ 'stat-empty': !totalFreedStats.bytes }">{{ totalFreedStats.bytes ? formatBytes(totalFreedStats.bytes) : '0.00 GB' }}</span>
+        <span class="stat-value" :class="{ 'stat-empty': !totalFreedStats.bytes }">
+          {{ freedSpaceDisplay.val }}<span class="stat-unit">{{ freedSpaceDisplay.unit }}</span>
+        </span>
+        <span class="stat-sub">
+          累计清理 {{ totalFreedStats.count }} 次
+        </span>
       </div>
     </div>
 
@@ -379,8 +389,13 @@ const diskColor = computed(() => {
 });
 
 const totalRecordingsGB = computed(() => {
-  const sum = detail.value?.streamers?.reduce((acc, s) => acc + (s.size_gb || 0), 0) || 0;
-  return sum.toFixed(1);
+  const sumBytes = detail.value?.streamers?.reduce((acc, s) => {
+    if (s.size_bytes !== undefined && s.size_bytes !== null) {
+      return acc + s.size_bytes;
+    }
+    return acc + (s.size_gb ? s.size_gb * (1024 ** 3) : 0);
+  }, 0) || 0;
+  return (sumBytes / (1024 ** 3)).toFixed(1);
 });
 
 const isTaskRunning = computed(() => {
@@ -526,17 +541,34 @@ onActivated(async () => {
 .stat-sky { background: var(--tint-sky); border: 1px solid #b8d8f5; }
 .stat-lavender { background: var(--tint-lavender); border: 1px solid #d0c8e8; }
 
-.stat-label { font-size: 13px; color: var(--slate); margin-bottom: 4px; }
+.stat-label { font-size: 13px; color: var(--slate); margin-bottom: 6px; }
 .stat-unit {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--steel, #64748b);
-  margin-left: 2px;
+  margin-left: 4px;
+  font-family: var(--font-mono);
 }
 
-.stat-value { font-size: 32px; font-weight: 600; color: var(--ink); line-height: 1; letter-spacing: -0.5px; font-family: var(--font-mono); height: 36px; display: flex; align-items: flex-end; }
-.stat-sub { font-size: 13px; color: var(--steel); margin-top: 2px; font-family: var(--font-mono); }
-.stat-empty { color: #c7c7cc; opacity: 0.4; }
+.stat-value {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -0.5px;
+  font-family: var(--font-mono);
+  height: 36px;
+  display: flex;
+  align-items: baseline;
+}
+.stat-sub {
+  font-size: 12px;
+  color: var(--steel);
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.stat-empty { color: #c7c7cc; opacity: 0.5; }
 
 /* Cards */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
