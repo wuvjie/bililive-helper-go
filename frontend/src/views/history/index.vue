@@ -77,27 +77,27 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="115" align="center">
+        <el-table-column label="操作" width="135" align="right" header-align="right">
           <template #default="{ row }">
             <div class="row-actions-group">
               <button
-                v-if="row.log_id && (row.task === 'merge' || row.task === 'clean')"
-                class="log-view-btn"
-                @click="viewLog(row)"
-                title="查看详细运行日志"
-              >
-                查看
-              </button>
-              <button
                 v-if="row.task === 'merge' && row.status === 'fail' && row.streamer"
-                class="retry-btn"
+                class="row-action-btn action-retry"
                 @click="retryMerge(row)"
                 title="重试合并"
               >
                 重试
               </button>
               <button
-                class="del-log-btn"
+                v-if="row.log_id && (row.task === 'merge' || row.task === 'clean')"
+                class="row-action-btn action-view"
+                @click="viewLog(row)"
+                title="查看详细运行日志"
+              >
+                查看
+              </button>
+              <button
+                class="row-action-btn action-delete"
                 @click="handleDeleteRecord(row)"
                 title="删除此条记录"
               >
@@ -530,26 +530,7 @@ onActivated(() => loadHistory(currentPage.value));
 .dot-fail { color: var(--slate); }
 .dot-fail::before { background: #e03131; }
 
-/* View log button — visible as subtle steel link, darkens on hover */
-.log-view-btn {
-  background: transparent; border: none; padding: 2px 6px;
-  font-size: 13px; color: var(--steel); cursor: pointer;
-  border-radius: var(--r-xs); transition: all 0.15s;
-}
-.log-view-btn:hover {
-  color: var(--ink);
-  text-decoration: underline;
-}
 
-/* Retry button — visible on failed merge rows */
-.retry-btn {
-  background: transparent; border: none; padding: 2px 6px;
-  font-size: 13px; color: #d9730d; cursor: pointer;
-  border-radius: var(--r-xs); transition: all 0.15s;
-}
-.retry-btn:hover {
-  text-decoration: underline;
-}
 
 .history-empty-box {
   display: flex;
@@ -776,34 +757,51 @@ onActivated(() => loadHistory(currentPage.value));
 .line-divider .log-line-text { opacity: 0.35; }
 .line-header .log-line-text { color: #4ec9b0; font-weight: 600; }
 
+/* Unified row action buttons — consistent 12px pill styling */
 .row-actions-group {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 4px;
+  white-space: nowrap;
+  flex-wrap: nowrap;
 }
-.del-log-btn {
+.row-action-btn {
   background: transparent;
   border: 1px solid transparent;
-  color: var(--steel, #94a3b8);
-  border-radius: var(--r-sm, 4px);
-  padding: 2px 6px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1.4;
+  padding: 2px 7px;
+  border-radius: var(--r-xs, 4px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
 }
-.del-log-btn:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+.action-view {
+  color: var(--steel, #64748b);
+}
+.action-view:hover {
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.2);
+}
+.action-retry {
+  color: #d9730d;
+}
+.action-retry:hover {
+  color: #b45309;
+  background: rgba(217, 115, 13, 0.1);
+  border-color: rgba(217, 115, 13, 0.25);
+}
+.action-delete {
+  color: var(--slate, #94a3b8);
+}
+.action-delete:hover {
   color: #dc2626;
-}
-.text-action-danger {
-  color: #dc2626 !important;
-}
-.text-action-danger:hover {
-  background: #fee2e2 !important;
-  color: #b91c1c !important;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.2);
 }
 
 /* Stable & Flexible Log Modal Bar */
