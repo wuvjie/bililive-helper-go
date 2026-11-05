@@ -127,7 +127,7 @@
     <el-dialog
       v-model="logDialogVisible"
       :title="`📋 操作日志: ${activeLogTitle}`"
-      width="820px"
+      width="min(880px, 94vw)"
       top="5vh"
       destroy-on-close
       class="terminal-modal-dialog"
@@ -135,7 +135,23 @@
       <div class="log-modal-body" v-loading="logLoading">
         <div class="log-modal-bar">
           <div class="log-bar-left">
-            <span class="log-meta-tag">{{ activeLogMeta }}</span>
+            <span
+              class="log-meta-tag log-meta-id"
+              :title="`任务 ID: ${activeLogId || activeLogMeta} (点击复制)`"
+              @click="copyToClipboard(activeLogId, '已复制任务 ID')"
+            >
+              <span class="meta-label">ID:</span> {{ activeLogId || activeLogMeta }}
+            </span>
+            <span
+              v-if="activeLogStatus"
+              class="log-meta-status"
+              :class="activeLogStatus === 'success' ? 'status-ok' : (activeLogStatus === 'partial' ? 'status-warn' : 'status-fail')"
+            >
+              {{ activeLogStatus === 'success' ? '成功' : (activeLogStatus === 'partial' ? '部分' : '失败') }}
+            </span>
+            <span v-if="activeLogTime" class="log-meta-time" :title="`执行时间: ${activeLogTime}`">
+              {{ activeLogTime }}
+            </span>
             <span class="log-lines-count">{{ formattedLogLines.length }} 行</span>
           </div>
           <div class="log-modal-actions">
@@ -196,6 +212,8 @@ const activeLogTitle = ref("");
 const activeLogMeta = ref("");
 const activeLogTask = ref("");
 const activeLogId = ref("");
+const activeLogTime = ref("");
+const activeLogStatus = ref("");
 const logFilter = ref("");
 
 interface FormattedLogLine {
@@ -346,7 +364,11 @@ async function viewLog(row: HistoryRecord | Record<string, any>) {
   }
   const taskName = row.task === 'merge' ? '分片合并' : '磁盘清理';
   activeLogTitle.value = `${taskName} · ${row.streamer || '全局'}`;
-  activeLogMeta.value = `任务 ID: ${row.log_id} · ${row.time} (${row.status === 'success' ? '成功' : '失败'})`;
+  activeLogTask.value = row.task || '';
+  activeLogId.value = row.log_id || '';
+  activeLogTime.value = row.time || '';
+  activeLogStatus.value = row.status || '';
+  activeLogMeta.value = `任务 ID: ${row.log_id} · ${row.time} (${row.status === 'success' ? '成功' : (row.status === 'partial' ? '部分' : '失败')})`;
   logDialogVisible.value = true;
   logContent.value = "";
   logLoading.value = true;
@@ -714,7 +736,7 @@ onActivated(() => loadHistory(currentPage.value));
   color: #b91c1c !important;
 }
 
-/* Stable Log Modal Bar (No awkward wrapping when focused) */
+/* Stable & Flexible Log Modal Bar */
 .log-modal-bar {
   display: flex !important;
   justify-content: space-between !important;
@@ -722,24 +744,87 @@ onActivated(() => loadHistory(currentPage.value));
   padding: 8px 14px !important;
   background: #252526 !important;
   border-bottom: 1px solid #333 !important;
-  gap: 12px !important;
-  flex-wrap: nowrap !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
 }
 .log-bar-left {
   display: flex !important;
   align-items: center !important;
+  flex-wrap: wrap !important;
   gap: 8px !important;
   min-width: 0 !important;
-  flex: 1 !important;
+  flex: 1 1 auto !important;
 }
 .log-meta-tag {
   color: #9cdcfe !important;
   font-size: 12px !important;
   font-family: var(--font-mono) !important;
+}
+.log-meta-id {
+  cursor: pointer;
+  background: rgba(156, 220, 254, 0.08);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(156, 220, 254, 0.22);
   white-space: nowrap !important;
+  max-width: 280px;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  min-width: 0 !important;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.log-meta-id:hover {
+  background: rgba(156, 220, 254, 0.18);
+  border-color: #9cdcfe;
+  color: #fff !important;
+}
+.log-meta-id .meta-label {
+  color: #858585;
+  font-weight: 500;
+  margin-right: 3px;
+}
+.log-meta-status {
+  font-size: 11px !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.log-meta-status.status-ok {
+  background: rgba(46, 204, 113, 0.15) !important;
+  color: #4ade80 !important;
+  border: 1px solid rgba(46, 204, 113, 0.3) !important;
+}
+.log-meta-status.status-warn {
+  background: rgba(234, 179, 8, 0.15) !important;
+  color: #facc15 !important;
+  border: 1px solid rgba(234, 179, 8, 0.3) !important;
+}
+.log-meta-status.status-fail {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+.log-meta-time {
+  font-size: 11px !important;
+  color: #a0a0a0 !important;
+  font-family: var(--font-mono) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.log-lines-count {
+  font-size: 11px !important;
+  color: #888 !important;
+  background: #1e1e1e !important;
+  border: 1px solid #3c3c3c !important;
+  padding: 2px 7px !important;
+  border-radius: 10px !important;
+  font-family: var(--font-mono) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
 }
 .log-modal-actions {
   display: flex !important;
@@ -764,7 +849,7 @@ onActivated(() => loadHistory(currentPage.value));
   border-color: #007fd4 !important;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   :deep(.terminal-modal-dialog) {
     width: 95% !important;
     max-width: 95% !important;
@@ -773,11 +858,17 @@ onActivated(() => loadHistory(currentPage.value));
   .log-modal-bar {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 8px !important;
+    gap: 10px !important;
     padding: 10px 12px !important;
   }
   .log-bar-left {
-    justify-content: space-between !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+  }
+  .log-meta-id {
+    max-width: 160px !important;
   }
   .log-modal-actions {
     display: flex !important;
