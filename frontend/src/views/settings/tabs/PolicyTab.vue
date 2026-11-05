@@ -207,13 +207,11 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
+      <!-- 辅助操作：仅保留次级恢复预设操作，保存由外层浮动保存栏权威统领 -->
       <div class="policy-actions">
-        <el-button type="primary" :loading="saving" class="btn-save-policy" @click="emit('save')">
-          保存全局策略
-        </el-button>
         <el-button class="btn-reset-policy" @click="emit('reset-defaults')">
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> 恢复推荐预设
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>恢复推荐预设</span>
         </el-button>
       </div>
     </el-form>
@@ -226,7 +224,7 @@ import type { ConfigDTO } from "@/api/types";
 
 const props = defineProps<{
   config: ConfigDTO;
-  saving: boolean;
+  saving?: boolean;
   totalDiskGb?: number;
 }>();
 
@@ -626,14 +624,6 @@ function addTag(keyword: string) {
   padding-top: 8px;
   flex-wrap: wrap;
 }
-.btn-save-policy {
-  padding: 10px 28px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: var(--r-md);
-  background: var(--primary);
-  border-color: var(--primary);
-}
 .btn-reset-policy {
   padding: 10px 18px;
   font-size: 13px;
@@ -648,7 +638,6 @@ function addTag(keyword: string) {
     gap: 10px;
     padding-top: 12px;
   }
-  .btn-save-policy,
   .btn-reset-policy {
     width: 100% !important;
     height: 42px;

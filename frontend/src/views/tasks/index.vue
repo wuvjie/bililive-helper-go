@@ -203,9 +203,9 @@
       <!-- Reconnect bar if SSE errored -->
       <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value && activeLogTab === 'live'" class="retry-bar">
         <button class="ops-action ops-retry" @click="sse.retryLast()">
-          <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-          重新连接
-        </button>
+            <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <span>重新连接</span>
+          </button>
       </div>
     </div>
   </div>

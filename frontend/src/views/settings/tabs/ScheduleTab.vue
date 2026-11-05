@@ -102,13 +102,7 @@
           </el-form-item>
         </div>
       </div>
-
-      <!-- Action Button -->
-      <div class="schedule-actions">
-        <el-button type="primary" :loading="saving" class="btn-save-schedule" @click="emit('save')">
-          保存调度计划
-        </el-button>
-      </div>
+      <!-- 单一行动权威法则：由外层吸底浮动栏统一保存与放弃，消除表单内同义重复按钮 -->
     </el-form>
   </div>
 </template>
@@ -125,7 +119,7 @@ defineProps<{
   form: ScheduleForm;
   backupStart: string;
   backupEnd: string;
-  saving: boolean;
+  saving?: boolean;
   loading: boolean;
 }>();
 
@@ -133,7 +127,7 @@ const emit = defineEmits<{
   "update:form": [value: ScheduleForm];
   "update:backupStart": [value: string];
   "update:backupEnd": [value: string];
-  save: [];
+  save?: [];
 }>();
 </script>
 
@@ -207,17 +201,6 @@ const emit = defineEmits<{
 .time-sep {
   font-size: 13px;
   color: var(--steel);
-}
-.schedule-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0 16px 0;
-}
-.btn-save-schedule {
-  padding: 8px 24px;
-  font-size: 13px;
-  font-weight: 500;
 }
 
 @media (max-width: 640px) {

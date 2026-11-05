@@ -33,7 +33,6 @@
               :saving="savingConfig"
               :total-disk-gb="totalDiskGb"
               @update:config="config = $event"
-              @save="handleSaveConfig"
               @reset-defaults="handleResetDefaults"
             />
           </div>
@@ -57,8 +56,7 @@
               @update:form="Object.assign(scheduleForm, $event)"
               @update:backup-start="backupStart = $event"
               @update:backup-end="backupEnd = $event"
-              @save="handleSaveSchedule"
-            />
+              />
           </div>
         </el-tab-pane>
 
@@ -112,7 +110,7 @@
             <button
               class="btn-bar-primary"
               :disabled="savingConfig || savingSchedule"
-              @click="handleSaveCurrentTab"
+              @click="handleSaveSettings"
             >
               {{ (savingConfig || savingSchedule) ? '保存中...' : '立即保存配置' }}
             </button>
@@ -375,14 +373,94 @@ function handleDiscardChanges() {
   ElMessage.info("已放弃并还原未保存的更改");
 }
 
-async function handleSaveCurrentTab() {
-  if (activeTab.value === "policy") {
-    await handleSaveConfig();
-  } else if (activeTab.value === "schedule") {
-    await handleSaveSchedule();
-  } else {
-    await handleSaveConfig();
-    await handleSaveSchedule();
+function isPolicyDirty(): boolean {
+  return Boolean(initialPolicySnapshot.value && serializePolicyConfig(config.value) !== initialPolicySnapshot.value);
+}
+
+function isScheduleDirty(): boolean {
+  return Boolean(initialScheduleSnapshot.value && serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value) !== initialScheduleSnapshot.value);
+}
+
+async function handleSaveSettings() {
+  const policyDirty = isPolicyDirty();
+  const scheduleDirty = isScheduleDirty();
+
+  if (!policyDirty && !scheduleDirty) {
+    return;
+  }
+
+  if (policyDirty && config.value.TRIGGER_THRESHOLD <= config.value.TARGET_THRESHOLD) {
+    ElMessage.error("触发阈值必须大于目标阈值");
+    return;
+  }
+
+  savingConfig.value = policyDirty;
+  savingSchedule.value = scheduleDirty;
+
+  try {
+    const promises: Promise<unknown>[] = [];
+
+    if (policyDirty) {
+      const payload = { ...config.value };
+      if (typeof payload.WHITELIST_KEYWORDS === "string") {
+        payload.WHITELIST_KEYWORDS = (payload.WHITELIST_KEYWORDS as string)
+          .split(/[,，]/)
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+      }
+      promises.push(saveConfig(payload));
+    }
+
+    if (scheduleDirty) {
+      const payload: Record<string, unknown> = {
+        merge_enabled: scheduleForm.merge_enabled,
+        clean_enabled: scheduleForm.clean_enabled,
+        merge_interval: scheduleForm.merge_interval,
+        clean_interval: scheduleForm.clean_interval,
+      };
+      if (backupStart.value) {
+        const [h, m] = backupStart.value.split(":").map(Number);
+        payload.backup_start_hour = h;
+        payload.backup_start_minute = m;
+      } else {
+        payload.backup_start_hour = 0;
+        payload.backup_start_minute = 0;
+      }
+      if (backupEnd.value) {
+        const [h, m] = backupEnd.value.split(":").map(Number);
+        payload.backup_end_hour = h;
+        payload.backup_end_minute = m;
+      } else {
+        payload.backup_end_hour = 0;
+        payload.backup_end_minute = 0;
+      }
+      promises.push(saveSchedule(payload));
+    }
+
+    await Promise.all(promises);
+
+    // Guaranteed EXACTLY ONE Toast authority
+    if (policyDirty && scheduleDirty) {
+      ElMessage.success("全局策略与调度设置已成功保存");
+    } else if (policyDirty) {
+      ElMessage.success("全局策略已成功保存");
+    } else {
+      ElMessage.success("任务调度设置已保存");
+    }
+
+    // Refresh snapshots
+    if (policyDirty) {
+      initialPolicySnapshot.value = serializePolicyConfig(config.value);
+      await loadConfigData();
+    }
+    if (scheduleDirty) {
+      initialScheduleSnapshot.value = serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value);
+    }
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.error || err?.message || "保存配置失败");
+  } finally {
+    savingConfig.value = false;
+    savingSchedule.value = false;
   }
 }
 
