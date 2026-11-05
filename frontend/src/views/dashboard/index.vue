@@ -118,7 +118,6 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
             <span class="card-title-main">自动化调度监控</span>
-          </div>
             <span class="monitor-mode-tag">
               <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-idle'"></span>
               {{ isTaskRunning ? '任务执行中' : '自动调度生效中' }}
