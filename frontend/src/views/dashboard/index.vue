@@ -296,13 +296,50 @@ const recentHistory = ref<HistoryRecord[]>([]);
 const loading = ref(true);
 
 const greeting = computed(() => {
-  const h = new Date().getHours();
-  if (h < 6) return "凌晨好";
-  if (h < 9) return "早上好";
-  if (h < 12) return "上午好";
-  if (h < 14) return "中午好";
-  if (h < 18) return "下午好";
-  return "晚上好";
+  const now = new Date();
+  const h = now.getHours();
+  const d = now.getDate(); // 基于日期做轮换，当天内刷新稳定不跳跃，每日又富有新鲜感
+
+  const pick = (list: string[]) => list[d % list.length];
+
+  if (h < 6) {
+    return pick([
+      "夜深了，早点休息，明天又是新的一天",
+      "夜深了，注意身体，早点睡个好觉"
+    ]);
+  }
+  if (h < 9) {
+    return pick([
+      "早上好，新的一天开始啦",
+      "早上好，晨光正好，元气满满",
+      "早上好，迎接充满希望的新一天"
+    ]);
+  }
+  if (h < 12) {
+    return pick([
+      "上午好，今天也是充实专注的一天",
+      "上午好，保持专注，开启高效时光",
+      "上午好，愿你有顺心顺遂的一天"
+    ]);
+  }
+  if (h < 14) {
+    return pick([
+      "中午好，辛苦了，记得好好吃顿午饭",
+      "中午好，午间小憩，适度放松一下"
+    ]);
+  }
+  if (h < 18) {
+    return pick([
+      "下午好，喝杯水，歇歇眼睛吧",
+      "下午好，来杯茶，保持好状态",
+      "下午好，劳逸结合，事半功倍"
+    ]);
+  }
+  return pick([
+    "晚上好，愿你度过轻松惬意的夜晚",
+    "晚上好，卸下疲惫，享受属于自己的时光",
+    "晚上好，静享晚间安宁与自在"
+  ]);
 });
 
 const todayDate = computed(() =>
@@ -832,6 +869,7 @@ onActivated(async () => {
 @media (max-width: 600px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .dash-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .dash-header h1 { font-size: 20px; line-height: 1.3; }
 }
 
 @media (max-width: 640px) {
