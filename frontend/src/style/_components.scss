@@ -96,6 +96,18 @@
     background: rgba(99, 102, 241, 0.09);
     color: #4f46e5;
   }
+  &.icon-box-rose {
+    background: rgba(244, 63, 94, 0.09);
+    color: #e11d48;
+  }
+  &.icon-box-orange {
+    background: rgba(249, 115, 22, 0.09);
+    color: #ea580c;
+  }
+  &.icon-box-slate {
+    background: rgba(100, 116, 139, 0.09);
+    color: #475569;
+  }
 }
 
 // 现代胶囊标签 (Pill Badges)
@@ -274,6 +286,18 @@ html.dark {
     &.icon-box-indigo {
       background: rgba(99, 102, 241, 0.16);
       color: #818cf8;
+    }
+    &.icon-box-rose {
+      background: rgba(244, 63, 94, 0.16);
+      color: #fb7185;
+    }
+    &.icon-box-orange {
+      background: rgba(249, 115, 22, 0.16);
+      color: #fb923c;
+    }
+    &.icon-box-slate {
+      background: rgba(148, 163, 184, 0.16);
+      color: #cbd5e1;
     }
   }
 

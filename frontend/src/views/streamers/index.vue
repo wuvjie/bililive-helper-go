@@ -5,7 +5,7 @@
         <div class="card-header">
           <div class="header-left">
             <div class="card-title-group">
-              <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+              <div class="ui-icon-box icon-box-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="title-text">主播管理</span>
             </div>
             <span class="streamer-total-stat">
@@ -140,7 +140,10 @@
         <div class="rule-setting-card">
           <div class="setting-card-header">
             <div class="header-title-box">
-              <span class="setting-card-title"><svg class="inline-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>自动视频时段裁剪</span>
+              <div class="card-title-left-inline">
+                <div class="ui-icon-box icon-box-emerald" style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
+                <span class="setting-card-title">自动视频时段裁剪</span>
+              </div>
               <span class="setting-card-sub">无损流复制 · 零画质损失</span>
             </div>
             <el-switch v-model="formRule.trim_enabled" />
@@ -177,7 +180,10 @@
         <div class="rule-setting-card">
           <div class="setting-card-header">
             <div class="header-title-box">
-              <span class="setting-card-title"><svg class="inline-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>存储与清理保护</span>
+              <div class="card-title-left-inline">
+                <div class="ui-icon-box icon-box-rose" style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <span class="setting-card-title">存储与清理保护</span>
+              </div>
               <span class="setting-card-sub">优先于系统全局清理策略</span>
             </div>
           </div>
@@ -952,6 +958,11 @@ onActivated(() => loadData());
   align-items: baseline;
   gap: 8px;
   flex-wrap: wrap;
+}
+.card-title-left-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .setting-card-title {
   font-size: 14px;

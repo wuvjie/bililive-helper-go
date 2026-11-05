@@ -5,7 +5,7 @@
         <div class="settings-header">
           <div class="header-left">
             <div class="title-group-flex">
-              <div class="ui-icon-box">
+              <div class="ui-icon-box icon-box-purple">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               </div>
               <span class="settings-title">系统设置</span>
@@ -20,7 +20,13 @@
 
       <el-tabs v-model="activeTab" :tab-position="tabPosition" class="settings-tabs">
         <!-- Tab 1: 全局策略 -->
-        <el-tab-pane label="全局策略" name="policy">
+        <el-tab-pane name="policy">
+          <template #label>
+            <span class="settings-tab-label">
+              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              <span>全局策略</span>
+            </span>
+          </template>
           <div v-loading="configLoading" class="tab-pane-wrap">
             <PolicyTab
               :config="config"
@@ -34,7 +40,13 @@
         </el-tab-pane>
 
         <!-- Tab 2: 任务调度 -->
-        <el-tab-pane label="定时调度" name="schedule">
+        <el-tab-pane name="schedule">
+          <template #label>
+            <span class="settings-tab-label">
+              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>定时调度</span>
+            </span>
+          </template>
           <div v-loading="scheduleLoading" class="tab-pane-wrap">
             <ScheduleTab
               :form="scheduleForm"
@@ -51,7 +63,13 @@
         </el-tab-pane>
 
         <!-- Tab 3: 配置备份与恢复 -->
-        <el-tab-pane label="配置备份" name="backup">
+        <el-tab-pane name="backup">
+          <template #label>
+            <span class="settings-tab-label">
+              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>配置备份</span>
+            </span>
+          </template>
           <div class="tab-pane-wrap">
             <BackupTab
               :selected-file-name="selectedImportFileName"
@@ -66,7 +84,13 @@
         </el-tab-pane>
 
         <!-- Tab 4: 安全与密码 -->
-        <el-tab-pane label="安全设置" name="security">
+        <el-tab-pane name="security">
+          <template #label>
+            <span class="settings-tab-label">
+              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>安全设置</span>
+            </span>
+          </template>
           <div class="tab-pane-wrap">
             <SecurityTab />
           </div>
@@ -505,6 +529,22 @@ onUnmounted(() => {
 .settings-tabs {
   min-height: 540px;
   padding: 12px 0;
+}
+.settings-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.tab-svg-ico {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.el-tabs__item:hover .tab-svg-ico,
+.el-tabs__item.is-active .tab-svg-ico {
+  opacity: 1;
 }
 
 .tab-pane-wrap {
