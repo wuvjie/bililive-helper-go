@@ -2,7 +2,7 @@
   <div class="security-tab">
     <div class="form-section-card">
       <div class="section-title">
-        <span class="section-icon">🔐</span>
+        <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
         <span>修改管理密码</span>
       </div>
       <p class="section-desc">修改当前 Web 系统的登录访问密码。密码仅保存在本地安全凭据中，修改后即刻生效。</p>

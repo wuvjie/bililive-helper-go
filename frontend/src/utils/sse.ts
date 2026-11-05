@@ -104,7 +104,7 @@ export function useSSE() {
       const friendlyMsg = isNetworkError ? "网络连接中断，请检查网络后重试" : e.message;
 
       error.value = friendlyMsg;
-      addLine(`❌ ${friendlyMsg}`);
+      addLine(`[失败] ${friendlyMsg}`);
     } finally {
       isRunning.value = false;
     }
