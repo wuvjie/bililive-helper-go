@@ -4,7 +4,12 @@
       <template #header>
         <div class="settings-header">
           <div class="header-left">
-            <span class="settings-title">⚙️ 系统设置</span>
+            <div class="title-group-flex">
+              <div class="ui-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </div>
+              <span class="settings-title">系统设置</span>
+            </div>
             <span class="settings-subtitle">管理自动化录制合并、磁盘巡检保护、计划调度与系统凭据</span>
           </div>
           <span v-if="isFormDirty()" class="unsaved-badge">
@@ -607,4 +612,14 @@ onUnmounted(() => {
     padding: 8px 12px;
   }
 }
+
+.title-group-flex {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.unsaved-badge .badge-dot {
+  animation: livePulseWarning 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 </style>

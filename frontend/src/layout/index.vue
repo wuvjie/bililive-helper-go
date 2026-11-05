@@ -97,10 +97,24 @@
                   <div class="user-dropdown-sub">版本 v2.0.0 (Release)</div>
                 </div>
                 <el-dropdown-item command="change-password" divided>
-                  <span>🔑 修改管理密码</span>
+                  <span class="dropdown-item-flex">
+                    <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="7.5" cy="15.5" r="5.5" />
+                      <path d="M21 2l-9.6 9.6" />
+                      <path d="M15.5 7.5l3 3L22 7l-3-3" />
+                    </svg>
+                    <span>修改管理密码</span>
+                  </span>
                 </el-dropdown-item>
                 <el-dropdown-item command="logout" divided>
-                  <span style="color: #d4433a;">🚪 退出系统</span>
+                  <span class="dropdown-item-flex text-danger">
+                    <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span>退出系统</span>
+                  </span>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -363,12 +377,32 @@ router.afterEach(() => fetchDiskStatus());
 .layout-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); }
 
 .layout-navbar {
-  height: 52px; background: var(--canvas);
+  height: 52px;
+  background: rgba(251, 251, 250, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 20px;
   border-bottom: 1px solid var(--hairline);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   flex-shrink: 0; z-index: 10;
   .navbar-left, .navbar-right { display: flex; align-items: center; gap: 8px; }
+}
+
+.dropdown-item-flex {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  width: 100%;
+  &.text-danger {
+    color: #e03131;
+  }
+}
+.dropdown-item-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 /* 顶部汉堡按钮 */

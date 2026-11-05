@@ -3,7 +3,10 @@
     <div class="terminal-header">
       <div class="terminal-header-left">
         <slot name="title">
-          <span class="terminal-title">{{ title || "📺 任务输出" }}</span>
+          <span class="terminal-title">
+            <svg class="term-title-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span>{{ title || "任务输出" }}</span>
+          </span>
         </slot>
         <span class="terminal-badge-count">{{ filteredLines.length }} 行</span>
         <span v-if="errorCount > 0" class="terminal-badge-stat badge-stat-err">{{ errorCount }} 错误</span>
@@ -15,7 +18,7 @@
           <input
             v-model="filterKeyword"
             type="text"
-            placeholder="🔍 过滤日志..."
+            placeholder="过滤控制台日志..."
             class="terminal-filter-input"
           />
         </div>
@@ -25,14 +28,14 @@
           @click="autoScroll = !autoScroll"
           :title="autoScroll ? '点击暂停自动滚动' : '点击恢复自动跟随到底部'"
         >
-          {{ autoScroll ? "⬇ 自动滚动" : "⏸ 已暂停" }}
+          {{ autoScroll ? "自动滚动" : "已暂停滚动" }}
         </button>
         <button
           class="terminal-action-btn"
           @click="handleCopy"
           title="复制当前控制台全部日志"
         >
-          📋 复制
+          <svg class="term-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制
         </button>
         <button
           class="terminal-action-btn terminal-clear-btn"
@@ -307,4 +310,22 @@ onUnmounted(() => {
     padding: 8px 10px;
   }
 }
+
+.terminal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.term-title-svg {
+  width: 14px;
+  height: 14px;
+  color: #4ade80;
+}
+.term-btn-svg {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
 </style>
