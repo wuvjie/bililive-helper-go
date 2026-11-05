@@ -21,36 +21,34 @@
       </div>
     </div>
 
-    <!-- Stat Cards with pastel tints (今日合并次数 · 昨日合并次数 · 本月合并次数 · 累计释放空间) -->
+    <!-- Stat Cards with pastel tints (今日合并 · 昨日合并 · 本月合并 · 累计清理) -->
     <div class="stat-grid">
       <div class="stat-card stat-peach">
-        <span class="stat-label">今日合并次数</span>
+        <span class="stat-label">今日合并</span>
         <span class="stat-value">{{ stats?.today?.merge_count || 0 }}</span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.today?.merge_bytes }">
-          产出体积 {{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}
+        <span class="stat-sub">
+          产出 {{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}
         </span>
       </div>
       <div class="stat-card stat-mint">
-        <span class="stat-label">昨日合并次数</span>
+        <span class="stat-label">昨日合并</span>
         <span class="stat-value">{{ yesterdayStats.count }}</span>
-        <span class="stat-sub" :class="{ 'stat-empty': !yesterdayStats.bytes }">
-          产出体积 {{ yesterdayStats.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}
+        <span class="stat-sub">
+          产出 {{ yesterdayStats.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}
         </span>
       </div>
       <div class="stat-card stat-sky">
-        <span class="stat-label">本月合并次数</span>
+        <span class="stat-label">本月合并</span>
         <span class="stat-value">{{ stats?.month?.merge_count || 0 }}</span>
-        <span class="stat-sub" :class="{ 'stat-empty': !stats?.month?.merge_bytes }">
-          产出体积 {{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}
+        <span class="stat-sub">
+          产出 {{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}
         </span>
       </div>
       <div class="stat-card stat-lavender">
-        <span class="stat-label">累计释放空间</span>
-        <span class="stat-value" :class="{ 'stat-empty': !totalFreedStats.bytes }">
-          {{ freedSpaceDisplay.val }}<span class="stat-unit">{{ freedSpaceDisplay.unit }}</span>
-        </span>
+        <span class="stat-label">累计清理</span>
+        <span class="stat-value">{{ totalFreedStats.count }}</span>
         <span class="stat-sub">
-          累计清理 {{ totalFreedStats.count }} 次
+          释放 {{ freedSpaceDisplay.val }} {{ freedSpaceDisplay.unit }}
         </span>
       </div>
     </div>
@@ -585,7 +583,7 @@ onActivated(async () => {
   font-family: var(--font-mono);
   white-space: nowrap;
 }
-.stat-empty { color: #c7c7cc; opacity: 0.5; }
+
 
 /* Cards */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -1044,7 +1042,7 @@ html.dark {
 
   .stat-label { color: #d4d4d8; }
   .stat-sub { color: #a1a1aa; }
-  .stat-empty { color: #71717a; opacity: 0.7; }
+  
 
   .card-title {
     border-bottom-color: var(--hairline);
