@@ -6,7 +6,7 @@
       <div class="card">
         <div class="card-title card-title-flex">
           <div class="title-left">
-            <span class="title-icon">🔄</span>
+            <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
             <span class="title-text">自动分片合并</span>
           </div>
           <span class="badge-status" :class="schedule?.merge?.enabled ? 'badge-on' : 'badge-off'">
@@ -44,7 +44,7 @@
       <div class="card">
         <div class="card-title card-title-flex">
           <div class="title-left">
-            <span class="title-icon">🧹</span>
+            <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
             <span class="title-text">自动磁盘清理</span>
           </div>
           <span class="badge-status" :class="schedule?.clean?.enabled ? 'badge-on' : 'badge-off'">
@@ -148,21 +148,21 @@
             :class="{ active: activeLogTab === 'recent_merge' }"
             @click="switchRecentTab('merge')"
           >
-            <span>📋</span> 最近合并日志
+            <svg class="tab-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>最近合并日志</span>
           </button>
           <button
             class="term-tab-btn"
             :class="{ active: activeLogTab === 'recent_clean' }"
             @click="switchRecentTab('clean')"
           >
-            <span>🧹</span> 最近清理日志
+            <svg class="tab-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg><span>最近清理日志</span>
           </button>
 
           <!-- History dropdown selection -->
           <div class="history-select-wrap" v-if="historyOptions.length > 0">
             <el-select
               v-model="selectedHistoryId"
-              placeholder="📜 历史任务回显..."
+              placeholder="选择查看历史任务归档..."
               size="small"
               class="history-quick-select"
               @change="onHistorySelect"
@@ -182,10 +182,10 @@
             ⏳ 读取日志中...
           </span>
           <span v-else-if="activeLogTab === 'live' && sse.isRunning.value" class="meta-status meta-live">
-            ⚡ 正在接收流式输出
+            <span class="status-pulse-dot dot-active"></span> 正在接收实时输出
           </span>
           <span v-else-if="activeLogTab !== 'live' && activeLogMeta" class="meta-status meta-archive" :title="activeLogMeta">
-            📌 {{ activeLogMeta }}
+            <svg class="meta-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> {{ activeLogMeta }}
           </span>
         </div>
       </div>
@@ -246,15 +246,15 @@ const displayedLines = computed(() => {
 
 const currentTerminalTitle = computed(() => {
   if (activeLogTab.value === "live") {
-    return sse.isRunning.value ? "📺 实时运行终端（流式输出中...）" : "📺 实时运行终端（已完成）";
+    return sse.isRunning.value ? "实时运行终端（流式输出中...）" : "实时运行终端（已完成）";
   }
   if (activeLogTab.value === "recent_merge") {
-    return "📋 最近一次合并任务完整日志";
+    return "最近一次合并任务完整日志";
   }
   if (activeLogTab.value === "recent_clean") {
-    return "🧹 最近一次清理任务完整日志";
+    return "最近一次清理任务完整日志";
   }
-  return "📜 历史任务归档日志";
+  return "历史任务归档日志";
 });
 
 const currentEmptyText = computed(() => {
@@ -922,6 +922,20 @@ onActivated(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+
+.tab-svg-sm {
+  width: 13px;
+  height: 13px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+.meta-svg-sm {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  vertical-align: -1px;
 }
 
 </style>

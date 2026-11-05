@@ -5,7 +5,7 @@
         <div class="card-header">
           <div class="header-left">
             <div class="card-title-group">
-              <span class="title-icon">👤</span>
+              <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="title-text">主播管理</span>
             </div>
             <span class="streamer-total-stat">
@@ -127,7 +127,7 @@
     <!-- 主播规则配置弹窗 (卡片式设置面板) -->
     <el-dialog
       v-model="ruleDialogVisible"
-      :title="`⚙️ 主播个性化规则: ${currentStreamer}`"
+      :title="`个性化规则 · ${currentStreamer}`"
       width="560px"
       destroy-on-close
       class="rule-dialog"
@@ -137,7 +137,7 @@
         <div class="rule-setting-card">
           <div class="setting-card-header">
             <div class="header-title-box">
-              <span class="setting-card-title">✂ 自动视频时段裁剪</span>
+              <span class="setting-card-title"><svg class="inline-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>自动视频时段裁剪</span>
               <span class="setting-card-sub">无损流复制 · 零画质损失</span>
             </div>
             <el-switch v-model="formRule.trim_enabled" />
@@ -160,9 +160,9 @@
             </div>
             <div class="trim-quick-presets">
               <span class="preset-label">快捷填入:</span>
-              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '00:30:00')">⚡ 前 30 分钟</button>
-              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '01:00:00')">⚡ 前 1 小时</button>
-              <button type="button" class="preset-pill preset-pill-clear" @click="fillTrimPreset('00:00:00', '')">✕ 清空结束</button>
+              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '00:30:00')">前 30 分钟</button>
+              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '01:00:00')">前 1 小时</button>
+              <button type="button" class="preset-pill preset-pill-clear" @click="fillTrimPreset('00:00:00', '')">清空结束</button>
             </div>
             <div class="form-tip">
               * 结束时间留空表示截取到最后；时间格式为 <code>时:分:秒</code>（如 00:30:00）。
@@ -174,7 +174,7 @@
         <div class="rule-setting-card">
           <div class="setting-card-header">
             <div class="header-title-box">
-              <span class="setting-card-title">🛡️ 存储与清理保护</span>
+              <span class="setting-card-title"><svg class="inline-card-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>存储与清理保护</span>
               <span class="setting-card-sub">优先于系统全局清理策略</span>
             </div>
           </div>
@@ -184,7 +184,7 @@
               <div class="rule-item-left">
                 <span class="rule-item-name">免清理免删保护</span>
                 <span class="rule-badge-pill" :class="formRule.protected ? 'pill-protected' : 'pill-default'">
-                  {{ formRule.protected ? '🔒 已豁免清理' : '遵循全局' }}
+                  {{ formRule.protected ? '已豁免清理' : '遵循全局' }}
                 </span>
               </div>
               <el-switch v-model="formRule.protected" />
@@ -231,7 +231,7 @@
     <!-- 录像文件抽屉 -->
     <el-drawer
       v-model="drawerVisible"
-      :title="`🎬 ${drawerStreamer} 的录像文件清单`"
+      :title="`录像文件清单 · ${drawerStreamer}`"
       size="680px"
       destroy-on-close
     >
@@ -270,14 +270,14 @@
                     ▶ 播放
                   </button>
                   <button class="play-btn-sm btn-del-video" @click="handleDeleteFile(row)" title="从磁盘永久删除该录像文件">
-                    🗑️ 删除
+                    <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 删除
                   </button>
                 </div>
               </template>
             </el-table-column>
             <template #empty>
               <div class="drawer-empty-box">
-                <span class="empty-emoji">🎬</span>
+                <div class="empty-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg></div>
                 <span class="empty-title">暂无录像文件</span>
                 <span class="empty-desc">该主播录像目录暂未生成切片或录像文件</span>
               </div>
@@ -1136,6 +1136,14 @@ onActivated(() => loadData());
     width: 24px;
     height: 24px;
   }
+}
+
+
+.inline-card-svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
 }
 
 </style>

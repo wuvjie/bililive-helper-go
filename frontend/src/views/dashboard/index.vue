@@ -199,7 +199,7 @@
             </div>
           </div>
           <div v-else class="trend-empty">
-            <span class="trend-empty-icon">📊</span>
+            <div class="empty-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
             <span class="trend-empty-title">近 7 天暂无自动化处理数据</span>
             <span class="trend-empty-desc">当录像分片合并或触发磁盘清理时，每日吞吐量将自动在此展现</span>
           </div>
@@ -226,7 +226,7 @@
         </div>
         <div class="card-body recent-body">
           <div v-if="recentHistory.length === 0" class="recent-empty">
-            <span class="recent-empty-icon">📝</span>
+            <div class="empty-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
             <span class="recent-empty-title">暂无近期操作记录</span>
             <span class="recent-empty-desc">后台自动执行或手动触发的任务记录将保存在此处</span>
           </div>
