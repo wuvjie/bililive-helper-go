@@ -9,9 +9,9 @@
             <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
             <span class="title-text">自动分片合并</span>
           </div>
-          <span class="badge-status" :class="schedule?.merge?.enabled ? 'badge-emerald' : 'badge-off'">
-            <span class="status-dot-sm" :class="schedule?.merge?.enabled ? 'dot-emerald' : 'dot-off'" />
-            {{ schedule?.merge?.enabled ? '定时计划中' : '已暂停' }}
+          <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
+            {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '定时调度已启用' : '定时调度已暂停' }}
           </span>
         </div>
         <div class="card-body sched-body">
@@ -47,9 +47,9 @@
             <div class="ui-icon-box icon-box-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
             <span class="title-text">自动磁盘清理</span>
           </div>
-          <span class="badge-status" :class="schedule?.clean?.enabled ? 'badge-amber' : 'badge-off'">
-            <span class="status-dot-sm" :class="schedule?.clean?.enabled ? 'dot-amber' : 'dot-off'" />
-            {{ schedule?.clean?.enabled ? '巡检保护中' : '未开启' }}
+          <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
+            {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '磁盘巡检已开启' : '巡检保护未开启' }}
           </span>
         </div>
         <div class="card-body sched-body">
@@ -570,6 +570,14 @@ onActivated(async () => {
   color: #888;
   border: 1px solid #e0e0e0;
 }
+.badge-standing {
+  background: var(--surface);
+  color: var(--slate);
+  border: 1px solid var(--hairline-strong);
+}
+.dot-standing {
+  background: var(--steel);
+}
 
 .sched-body {
   padding: 16px 18px;
@@ -736,7 +744,7 @@ onActivated(async () => {
 /* Terminal Card */
 .terminal-container-card {
   background: #1e1e1e;
-  border: 1px solid var(--hairline);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--r-md, 8px);
   overflow: hidden;
   display: flex;
@@ -779,8 +787,8 @@ onActivated(async () => {
   width: 124px;
   height: 28px;
   box-sizing: border-box;
-  background: #1e1e1e;
-  border: 1px solid var(--hairline-strong);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #cccccc;
   font-size: 12px;
   padding: 0 8px;
@@ -791,14 +799,14 @@ onActivated(async () => {
   white-space: nowrap;
 }
 .term-tab-btn:hover {
-  background: #2a2d2e;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  border-color: #555;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 .term-tab-btn.active {
   background: #37373d;
   color: #ffffff;
-  border-color: #007fd4;
+  border-color: #3b82f6;
   font-weight: 500;
 }
 
@@ -837,8 +845,8 @@ onActivated(async () => {
   width: 210px;
 }
 .history-quick-select :deep(.el-input__wrapper) {
-  background: #1e1e1e;
-  box-shadow: 0 0 0 1px var(--hairline) inset;
+  background: #18181b;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
 }
 .history-quick-select :deep(.el-input__inner) {
   color: #ccc;
@@ -873,14 +881,14 @@ onActivated(async () => {
 .retry-bar {
   background: #1f1f1f;
   padding: 6px 12px;
-  border-top: 1px solid var(--hairline);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .ops-action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: transparent;
-  border: 1px solid var(--hairline-strong);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ccc;
   font-size: 12px;
   padding: 3px 8px;

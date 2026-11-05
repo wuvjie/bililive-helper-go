@@ -137,7 +137,7 @@ onUnmounted(() => {
 <style scoped>
 .re-terminal {
   background: #191919;
-  border: 1px solid var(--hairline, #27272a);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   overflow: hidden;
   display: flex;
@@ -170,7 +170,7 @@ onUnmounted(() => {
 }
 
 .terminal-badge-count {
-  font-size: 11px;
+  font-size: 12px;
   color: #888888;
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.12);

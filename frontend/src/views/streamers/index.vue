@@ -587,7 +587,7 @@ onActivated(() => loadData());
   gap: 2px;
 }
 .unit-lbl {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--stone);
 }
 
@@ -857,11 +857,14 @@ onActivated(() => loadData());
 .header-refresh-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
+  height: 32px;
+  padding: 0 12px;
+  box-sizing: border-box;
   background: transparent;
   border: 1px solid var(--hairline, #dcdfe6);
-  padding: 4px 10px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--slate, #606266);
   border-radius: var(--r-sm, 4px);
   cursor: pointer;
@@ -1204,6 +1207,9 @@ onActivated(() => loadData());
 .ghost-action {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1;
 }
 .empty-icon-wrapper {
   width: 44px;

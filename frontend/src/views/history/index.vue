@@ -17,7 +17,7 @@
                 clearable
                 size="small"
                 popper-class="select-popper-small"
-                style="width: 128px"
+                style="width: 140px"
                 @change="loadHistory(1)"
               >
                 <el-option label="全部任务" value="" />
@@ -32,7 +32,7 @@
                   placeholder="搜索主播名..."
                   clearable
                   size="small"
-                  style="width: 190px"
+                  style="width: 220px"
                   @input="onStreamerSearch"
                   @clear="loadHistory(1)"
                 />
@@ -522,7 +522,9 @@ onActivated(() => loadHistory(currentPage.value));
 .text-action {
   background: transparent;
   border: none;
-  padding: 4px 8px;
+  height: 32px;
+  padding: 0 8px;
+  box-sizing: border-box;
   border-radius: var(--r-xs, 4px);
   font-size: 13px;
   font-weight: 500;
@@ -531,6 +533,7 @@ onActivated(() => loadHistory(currentPage.value));
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   user-select: none;
 }
@@ -729,7 +732,7 @@ onActivated(() => loadHistory(currentPage.value));
   gap: 8px;
 }
 .log-lines-count {
-  font-size: 11px;
+  font-size: 12px;
   color: #888;
   background: #1e1e1e;
   border: 1px solid var(--hairline-strong);
@@ -894,7 +897,7 @@ onActivated(() => loadHistory(currentPage.value));
   margin-right: 3px;
 }
 .log-meta-status {
-  font-size: 11px !important;
+  font-size: 12px !important;
   padding: 2px 7px !important;
   border-radius: 4px !important;
   font-weight: 600 !important;
@@ -924,7 +927,7 @@ onActivated(() => loadHistory(currentPage.value));
   flex-shrink: 0 !important;
 }
 .log-lines-count {
-  font-size: 11px !important;
+  font-size: 12px !important;
   color: #888 !important;
   background: #1e1e1e !important;
   border: 1px solid var(--hairline-strong) !important;

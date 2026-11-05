@@ -255,8 +255,7 @@
                   </span>
                 </div>
                 <div class="recent-right">
-                  <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
-                  <span v-else class="recent-status-dot dot-emerald"></span>
+                  <span class="recent-status-dot" :class="row.status === 'fail' ? 'dot-fail' : 'dot-emerald'"></span>
                   <span class="recent-time">{{ formatShortTime(row.time) }}</span>
                 </div>
               </div>
@@ -550,7 +549,8 @@ onActivated(async () => {
 .env-item { display: flex; align-items: center; gap: 5px; font-size: 12px; }
 .env-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .env-label { color: var(--stone); font-size: 12px; }
-.env-val { font-size: 11px; font-weight: 500; }
+.env-val {
+  font-size: 12px; font-weight: 500; }
 .val-ok { color: #448361; }
 .val-err { color: #e03131; }
 .env-divider { width: 1px; height: 12px; background: var(--hairline); }
@@ -938,7 +938,7 @@ onActivated(async () => {
   flex-shrink: 0;
 }
 .recent-tag {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   padding: 1px 6px;
   border-radius: var(--r-xs);
@@ -965,6 +965,7 @@ html.dark {
 .recent-right { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .recent-status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; margin: 0; }
 .dot-emerald { background: #10b981; }
+.dot-fail { background: #ef4444; }
 .recent-fail { font-size: 11px; color: #ef4444; font-weight: 500; background: rgba(239, 68, 68, 0.1); padding: 1px 6px; border-radius: var(--r-xs); line-height: 1.4; }
 .recent-time { font-family: var(--font-mono); font-size: 12px; color: var(--steel); min-width: 38px; text-align: right; font-feature-settings: "tnum"; }
 
@@ -990,7 +991,7 @@ html.dark {
     gap: 3px !important;
   }
   .data-label {
-    font-size: 11px !important;
+    font-size: 12px !important;
     color: var(--steel) !important;
   }
   .data-cell .mono-val {

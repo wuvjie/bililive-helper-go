@@ -397,8 +397,8 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 600;
   border-radius: 8px;
-  background: #1c1c1e;
-  border-color: #1c1c1e;
+  background: var(--primary, #2563eb);
+  border-color: var(--primary, #2563eb);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -408,10 +408,10 @@ onMounted(() => {
 }
 
 .login-submit-btn:hover {
-  background: #2c2c2e;
-  border-color: #2c2c2e;
+  background: var(--primary-hover, #1d4ed8);
+  border-color: var(--primary-hover, #1d4ed8);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(28, 28, 30, 0.15);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .login-submit-btn:active {
