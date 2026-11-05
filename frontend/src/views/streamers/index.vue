@@ -744,19 +744,61 @@ onActivated(() => loadData());
   border-color: var(--primary);
 }
 
+/* Mandatory True-Dark Theater Canvas for Video Player (in BOTH light and dark modes) */
+:deep(.player-dialog.el-dialog) {
+  background: #0b0b0c !important;
+  border: 1px solid #27272a !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.8) !important;
+  overflow: hidden;
+
+  .el-dialog__header {
+    background: #0b0b0c !important;
+    border-bottom: 1px solid #1f1f23 !important;
+    padding: 14px 20px !important;
+    margin-right: 0 !important;
+
+    .el-dialog__title {
+      color: #f4f4f5 !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      letter-spacing: -0.2px;
+    }
+    .el-dialog__headerbtn {
+      top: 14px !important;
+      .el-dialog__close {
+        color: #a1a1aa !important;
+        font-size: 16px !important;
+        transition: color 0.15s ease;
+      }
+      &:hover .el-dialog__close {
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .el-dialog__body {
+    background: #0b0b0c !important;
+    padding: 0 !important;
+  }
+}
+
 .player-wrap {
-  background: #000;
-  border-radius: var(--r-md);
+  background: #000000;
+  border-radius: 0;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 440px;
+  aspect-ratio: 16 / 9;
 }
 .video-element {
   width: 100%;
-  max-height: 540px;
+  height: 100%;
+  max-height: 560px;
   outline: none;
+  display: block;
 }
 
 .header-left {
@@ -813,18 +855,18 @@ onActivated(() => loadData());
   cursor: help;
 }
 .drawer-action-btn {
-  background: #edf6f0;
-  border: 1px solid #c7e6d0;
-  color: #2b6a48;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #059669;
   font-size: 12px;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: var(--r-sm, 4px);
   cursor: pointer;
   font-weight: 500;
   transition: all 0.15s;
 }
 .drawer-action-btn:hover {
-  background: #d8eedf;
+  background: rgba(16, 185, 129, 0.16);
 }
 
 .streamer-empty-box, .drawer-empty-box {

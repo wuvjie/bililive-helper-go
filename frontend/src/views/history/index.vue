@@ -612,7 +612,7 @@ onActivated(() => loadHistory(currentPage.value));
   background: #191919;
   color: #b0b0b0;
   padding: 16px 24px 16px 16px;
-  border: 1px solid #2e2e2e;
+  border: 1px solid var(--hairline);
   border-radius: var(--r-sm);
   max-height: 60vh;
   overflow-y: auto;
@@ -677,7 +677,7 @@ onActivated(() => loadHistory(currentPage.value));
 }
 .btn-copy-log {
   background: #1e1e1e;
-  border: 1px solid #3c3c3c;
+  border: 1px solid var(--hairline-strong);
   color: #ccc;
   font-size: 12px;
   padding: 3px 10px;
@@ -699,7 +699,7 @@ onActivated(() => loadHistory(currentPage.value));
   font-size: 11px;
   color: #888;
   background: #1e1e1e;
-  border: 1px solid #3c3c3c;
+  border: 1px solid var(--hairline-strong);
   padding: 1px 6px;
   border-radius: 10px;
   font-family: var(--font-mono);
@@ -711,7 +711,7 @@ onActivated(() => loadHistory(currentPage.value));
 }
 .log-filter-box {
   background: #1e1e1e;
-  border: 1px solid #3c3c3c;
+  border: 1px solid var(--hairline-strong);
   color: #d4d4d4;
   font-size: 11px;
   padding: 3px 8px;
@@ -894,7 +894,7 @@ onActivated(() => loadHistory(currentPage.value));
   font-size: 11px !important;
   color: #888 !important;
   background: #1e1e1e !important;
-  border: 1px solid #3c3c3c !important;
+  border: 1px solid var(--hairline-strong) !important;
   padding: 2px 7px !important;
   border-radius: 10px !important;
   font-family: var(--font-mono) !important;
@@ -911,7 +911,7 @@ onActivated(() => loadHistory(currentPage.value));
 }
 .log-filter-box {
   background: #1e1e1e !important;
-  border: 1px solid #3c3c3c !important;
+  border: 1px solid var(--hairline-strong) !important;
   color: #d4d4d4 !important;
   font-size: 11px !important;
   padding: 4px 8px !important;

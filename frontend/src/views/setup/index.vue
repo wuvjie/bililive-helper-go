@@ -287,4 +287,75 @@ async function handleSubmit() {
   text-align: center;
   user-select: none;
 }
+
+@media (max-width: 640px) {
+  .setup-container {
+    padding: 16px 12px;
+  }
+  .setup-card {
+    padding: 28px 20px 24px;
+    border-radius: 12px;
+  }
+  .setup-input :deep(.el-input__inner) {
+    font-size: 16px !important; /* Prevents iOS Safari auto-zoom on input focus */
+  }
+}
+
+html.dark {
+  .setup-container {
+    background: #09090b;
+    background-image:
+      radial-gradient(ellipse at 50% -20%, rgba(37, 99, 235, 0.12) 0%, transparent 70%),
+      radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+  .setup-card {
+    background: #141416;
+    border-color: #27272a;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.5),
+      0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  }
+  .brand-icon-wrapper {
+    background: #1f1f23;
+    color: #3b82f6;
+    border: 1px solid #27272a;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+  .setup-title {
+    color: #f4f4f5;
+  }
+  .setup-sub {
+    color: #a1a1aa;
+  }
+  .field-label {
+    color: #d4d4d8;
+  }
+  .setup-input :deep(.el-input__wrapper) {
+    background: #18181b;
+    box-shadow: 0 0 0 1px #27272a inset !important;
+  }
+  .setup-input :deep(.el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #3f3f46 inset !important;
+  }
+  .setup-input :deep(.el-input__wrapper.is-focus) {
+    background: #1f1f23;
+    box-shadow: 0 0 0 1.5px #2563eb inset, 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+  }
+  .setup-input :deep(.el-input__inner) {
+    color: #f4f4f5;
+  }
+  .setup-btn {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+  }
+  .setup-btn:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+  }
+  .setup-footer {
+    color: #71717a;
+  }
+}
 </style>

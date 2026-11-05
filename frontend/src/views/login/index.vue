@@ -444,4 +444,88 @@ onMounted(() => {
   text-align: center;
   user-select: none;
 }
+
+@media (max-width: 640px) {
+  .login-container {
+    padding: 16px 12px;
+  }
+  .login-card {
+    padding: 28px 20px 24px;
+    border-radius: 12px;
+  }
+  .password-input :deep(.el-input__inner) {
+    font-size: 16px !important; /* Prevents iOS Safari auto-zoom on input focus */
+  }
+}
+
+html.dark {
+  .login-container {
+    background: #09090b;
+    background-image:
+      radial-gradient(ellipse at 50% -20%, rgba(37, 99, 235, 0.12) 0%, transparent 70%),
+      radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+  .login-card {
+    background: #141416;
+    border-color: #27272a;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.5),
+      0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  }
+  .brand-icon-wrapper {
+    background: #1f1f23;
+    color: #3b82f6;
+    border: 1px solid #27272a;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+  .brand-title {
+    color: #f4f4f5;
+  }
+  .brand-sub {
+    color: #a1a1aa;
+  }
+  .field-label {
+    color: #d4d4d8;
+  }
+  .caps-hint {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.25);
+  }
+  .password-input :deep(.el-input__wrapper) {
+    background: #18181b;
+    box-shadow: 0 0 0 1px #27272a inset !important;
+  }
+  .password-input :deep(.el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px #3f3f46 inset !important;
+  }
+  .password-input :deep(.el-input__wrapper.is-focus) {
+    background: #1f1f23;
+    box-shadow: 0 0 0 1.5px #2563eb inset, 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+  }
+  .password-input :deep(.el-input__inner) {
+    color: #f4f4f5;
+  }
+  .password-input :deep(.el-input__inner::placeholder) {
+    color: #71717a;
+  }
+  .login-error-banner {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+  .login-submit-btn {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+  }
+  .login-submit-btn:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+  }
+  .login-footer {
+    color: #71717a;
+  }
+}
 </style>
