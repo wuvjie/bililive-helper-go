@@ -514,7 +514,7 @@ onUnmounted(() => {
   background: #fff8f0;
   border: 1px solid rgba(217, 115, 13, 0.3);
   color: #b35600;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   padding: 3px 8px;
   border-radius: 12px;
@@ -590,7 +590,7 @@ onUnmounted(() => {
   color: #ffffff;
 }
 .save-bar-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: #888888;
 }
 .save-bar-actions {

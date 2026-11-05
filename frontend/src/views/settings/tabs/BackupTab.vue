@@ -41,7 +41,8 @@
         </div>
         <div class="import-manual-toggle">
           <span class="toggle-link" @click="showManualPaste = !showManualPaste">
-            {{ showManualPaste ? '▾ 收起手动粘贴' : '▸ 或手动粘贴 JSON 代码' }}
+            <svg class="toggle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'rotate-open': showManualPaste }"><polyline points="6 9 12 15 18 9"/></svg>
+            {{ showManualPaste ? '收起手动粘贴' : '或手动粘贴 JSON 代码' }}
           </span>
           <textarea
             v-if="showManualPaste"
@@ -199,6 +200,9 @@ function onFileChange(e: Event) {
   margin: 6px 0 12px;
 }
 .toggle-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: var(--steel, #888);
   cursor: pointer;
@@ -206,6 +210,15 @@ function onFileChange(e: Event) {
 }
 .toggle-link:hover {
   color: var(--ink, #333);
+}
+.toggle-svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s ease;
+  transform: rotate(-90deg);
+  &.rotate-open {
+    transform: rotate(0deg);
+  }
 }
 .backup-textarea {
   width: 100%;

@@ -152,7 +152,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--hairline, #27272a);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -173,7 +173,7 @@ onUnmounted(() => {
   font-size: 11px;
   color: #888888;
   background: #1e1e1e;
-  border: 1px solid var(--hairline-strong, #3f3f46);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 1px 6px;
   border-radius: 10px;
   white-space: nowrap;
@@ -181,7 +181,7 @@ onUnmounted(() => {
 }
 
 .terminal-badge-stat {
-  font-size: 11px;
+  font-size: 12px;
   padding: 1px 6px;
   border-radius: 10px;
   font-weight: 600;
@@ -207,7 +207,7 @@ onUnmounted(() => {
 
 .terminal-filter-input {
   background: #1e1e1e;
-  border: 1px solid var(--hairline-strong, #3f3f46);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #d4d4d4;
   font-size: 11px;
   padding: 3px 8px;
@@ -224,9 +224,9 @@ onUnmounted(() => {
 
 .terminal-action-btn {
   background: #1e1e1e;
-  border: 1px solid var(--hairline-strong, #3f3f46);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #cccccc;
-  font-size: 11px;
+  font-size: 12px;
   padding: 3px 8px;
   border-radius: 4px;
   cursor: pointer;

@@ -88,9 +88,18 @@
               <div class="track-fill-buffer" :style="{ width: bufferPct + '%' }" title="每次清理释放的空间缓冲"></div>
             </div>
             <div class="buffer-scale-labels">
-              <span>目标保底: <strong class="mono-val">{{ config.TARGET_THRESHOLD }}%</strong></span>
-              <span class="buffer-scale-mid">释放冲程: <strong class="mono-val">{{ bufferPct }}%</strong></span>
-              <span>触发上限: <strong class="mono-val">{{ config.TRIGGER_THRESHOLD }}%</strong></span>
+              <span class="buffer-scale-item">
+                <span class="scale-lbl">目标保底:</span>
+                <span class="scale-val">{{ config.TARGET_THRESHOLD }}%</span>
+              </span>
+              <span class="buffer-scale-item buffer-scale-mid">
+                <span class="scale-lbl">释放冲程:</span>
+                <span class="scale-val">{{ bufferPct }}%</span>
+              </span>
+              <span class="buffer-scale-item">
+                <span class="scale-lbl">触发上限:</span>
+                <span class="scale-val">{{ config.TRIGGER_THRESHOLD }}%</span>
+              </span>
             </div>
           </div>
 
@@ -383,13 +392,26 @@ function addTag(keyword: string) {
   margin-top: 6px;
 }
 
+.compact-counter,
+.compact-select {
+  height: 32px !important;
+  line-height: 32px !important;
+
+  :deep(.el-input__wrapper) {
+    height: 32px !important;
+    box-sizing: border-box !important;
+  }
+}
 .compact-counter {
   width: 120px;
-  height: 32px;
+  :deep(.el-input-number__decrease),
+  :deep(.el-input-number__increase) {
+    height: 30px !important;
+    line-height: 30px !important;
+  }
 }
 .compact-select {
   width: 96px;
-  height: 32px;
   flex-shrink: 0;
 }
 .inline-unit-row {
@@ -480,7 +502,7 @@ function addTag(keyword: string) {
   color: var(--charcoal, #333);
 }
 .buffer-val-pill {
-  font-size: 11px;
+  font-size: 12px;
   color: #b45309;
   background: #fffbeb;
   border: 1px solid rgba(180, 83, 9, 0.25);
@@ -510,12 +532,28 @@ function addTag(keyword: string) {
 .buffer-scale-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel, #888);
 }
-.buffer-scale-mid {
-  color: #b45309;
+.buffer-scale-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+}
+.scale-lbl {
+  font-size: 12px;
   font-weight: 500;
+  color: var(--steel, #888);
+}
+.scale-val {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--ink, #333);
+}
+.buffer-scale-mid .scale-val {
+  color: #b45309;
 }
 
 /* Whitelist Tag Group */
@@ -559,7 +597,7 @@ function addTag(keyword: string) {
   flex-wrap: wrap;
 }
 .quick-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel, #888);
 }
 .quick-preset-pill {
@@ -568,7 +606,7 @@ function addTag(keyword: string) {
   color: var(--slate, #555);
   padding: 2px 7px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -677,8 +715,17 @@ html.dark {
   .track-fill-buffer {
     background: #e5a034;
   }
-  .buffer-scale-mid {
-    color: #e5a034;
+  .buffer-scale-labels {
+    color: #a1a1aa;
+    .scale-lbl {
+      color: #a1a1aa !important;
+    }
+    .scale-val {
+      color: #f4f4f5 !important;
+    }
+    .buffer-scale-mid .scale-val {
+      color: #e5a034 !important;
+    }
   }
   .tags-container {
     background: #141416;
