@@ -1035,4 +1035,18 @@ onActivated(() => loadHistory(currentPage.value));
   display: none;
 }
 
+
+html.dark {
+  .text-action {
+    background: #18181b;
+    border-color: #27272a;
+    color: #f4f4f5;
+    &:hover { background: #27272a; border-color: #3f3f46; }
+  }
+  .log-modal-bar {
+    background: #18181b;
+    border-bottom-color: #27272a;
+  }
+}
+
 </style>
