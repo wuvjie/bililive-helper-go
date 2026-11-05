@@ -1,6 +1,11 @@
 <template>
   <div class="login-container">
-    <div class="login-card" :class="{ 'is-shaking': isShaking }">
+    <div
+      class="login-card-wrapper"
+      :class="{ 'is-shaking': isShaking }"
+      @animationend="isShaking = false"
+    >
+      <div class="login-card">
       <!-- 品牌 Logo 与标题区 -->
       <div class="login-header">
         <div class="brand-icon-wrapper">
@@ -15,7 +20,7 @@
       </div>
 
       <!-- 错误提示横幅 (密码错误/请求失败时显现) -->
-      <transition name="el-zoom-in-top">
+      <transition name="banner-fade">
         <div v-if="errorMessage" class="login-error-banner">
           <svg class="error-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10" />
@@ -79,6 +84,7 @@
           </el-button>
         </el-form-item>
       </el-form>
+      </div>
     </div>
 
     <!-- 底部微信息 -->
@@ -124,10 +130,11 @@ function checkCapsLock(e: KeyboardEvent) {
 }
 
 function triggerShake() {
-  isShaking.value = true;
-  setTimeout(() => {
-    isShaking.value = false;
-  }, 450);
+  isShaking.value = false;
+  // Next tick to allow restarting animation if already shaking
+  requestAnimationFrame(() => {
+    isShaking.value = true;
+  });
 }
 
 async function handleLogin() {
@@ -215,15 +222,35 @@ onMounted(() => {
   }
 }
 
-/* 密码错误时的震颤动画 */
-@keyframes shakeAnimation {
+/* 独立的震颤外层容器 — 绝不影响卡片自身的入场动画 */
+.login-card-wrapper {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  will-change: transform;
+}
+
+/* 仿 macOS/iOS 锁屏输错密码的自然微阻尼震颤 */
+@keyframes naturalShake {
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-7px); }
-  40%, 80% { transform: translateX(7px); }
+  16%, 48%, 80% { transform: translateX(-6px); }
+  32%, 64%, 96% { transform: translateX(6px); }
 }
 
 .is-shaking {
-  animation: shakeAnimation 0.4s ease-in-out !important;
+  animation: naturalShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* 错误横幅平滑展开渐变，无突兀缩放跳动 */
+.banner-fade-enter-active,
+.banner-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.banner-fade-enter-from,
+.banner-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 /* 头部品牌展示 */
