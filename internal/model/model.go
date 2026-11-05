@@ -27,13 +27,17 @@ type ScheduleConfig struct {
 
 // ScheduleStatus 表示调度器的运行状态（各任务的启用状态、执行时间等）。
 type ScheduleStatus struct {
-	Running       bool       `json:"running"`
-	MergeEnabled  bool       `json:"merge_enabled"`
-	MergeInterval int        `json:"merge_interval"`
-	CleanEnabled  bool       `json:"clean_enabled"`
-	CleanInterval int        `json:"clean_interval"`
-	Merge         TaskStatus `json:"merge"`
-	Clean         TaskStatus `json:"clean"`
+	Running           bool       `json:"running"`
+	MergeEnabled      bool       `json:"merge_enabled"`
+	MergeInterval     int        `json:"merge_interval"`
+	CleanEnabled      bool       `json:"clean_enabled"`
+	CleanInterval     int        `json:"clean_interval"`
+	BackupStartHour   int        `json:"backup_start_hour"`
+	BackupStartMinute int        `json:"backup_start_minute"`
+	BackupEndHour     int        `json:"backup_end_hour"`
+	BackupEndMinute   int        `json:"backup_end_minute"`
+	Merge             TaskStatus `json:"merge"`
+	Clean             TaskStatus `json:"clean"`
 }
 
 // TaskStatus 表示单个任务的运行状态。

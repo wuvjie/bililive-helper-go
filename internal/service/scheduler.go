@@ -274,12 +274,17 @@ func (s *SchedulerService) GetStatus() model.ScheduleStatus {
 
 	hasRunning := s.running["merge"] || s.running["clean"]
 
+	cfg := s.config.Snapshot()
 	return model.ScheduleStatus{
-		Running:       hasRunning,
-		MergeEnabled:  schedule.MergeEnabled,
-		MergeInterval: schedule.MergeInterval,
-		CleanEnabled:  schedule.CleanEnabled,
-		CleanInterval: schedule.CleanInterval,
+		Running:           hasRunning,
+		MergeEnabled:      schedule.MergeEnabled,
+		MergeInterval:     schedule.MergeInterval,
+		CleanEnabled:      schedule.CleanEnabled,
+		CleanInterval:     schedule.CleanInterval,
+		BackupStartHour:   cfg.BackupStartHour,
+		BackupStartMinute: cfg.BackupStartMinute,
+		BackupEndHour:     cfg.BackupEndHour,
+		BackupEndMinute:   cfg.BackupEndMinute,
 		Merge: model.TaskStatus{
 			Enabled:   schedule.MergeEnabled,
 			Interval:  schedule.MergeInterval,

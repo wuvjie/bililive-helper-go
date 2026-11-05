@@ -262,11 +262,15 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, cf
 		if err != nil {
 			continue
 		}
+		fileTime := info.ModTime()
+		if _, dt, ok := utils.ParseFilename(name); ok {
+			fileTime = dt
+		}
 		videos = append(videos, candidateFile{
 			Path:  filepath.Join(folder, name),
 			Name:  name,
 			Size:  info.Size(),
-			Mtime: info.ModTime().Unix(),
+			Mtime: fileTime.Unix(),
 		})
 	}
 

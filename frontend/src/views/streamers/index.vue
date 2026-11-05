@@ -416,6 +416,10 @@ const playFileName = ref("");
 const playUrl = ref("");
 
 function openPlayer(streamer: string, fileName: string) {
+  if (/\.(flv|ts)$/i.test(fileName)) {
+    ElMessage.info("该录像是 FLV/TS 原始流媒体切片，浏览器暂不支持原生解码，建议通过合并任务转为 MP4 成片后预览");
+    return;
+  }
   playFileName.value = fileName;
   playUrl.value = getVideoPlayUrl(streamer, fileName);
   playerVisible.value = true;
