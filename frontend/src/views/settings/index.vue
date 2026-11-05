@@ -341,7 +341,39 @@ async function handleSaveSchedule() {
   }
 }
 
+const OFFICIAL_RECOMMENDED_POLICY = {
+  GAP_MINUTES: 30,
+  MERGE_AGE_MINUTES: 30,
+  TRIGGER_THRESHOLD: 80,
+  TARGET_THRESHOLD: 60,
+  SAFE_MODE: "hours",
+  SAFE_AGE_MINUTES: 120,
+  SAFE_DAYS: 1,
+  MIN_KEEP_PER_STREAMER: 3,
+  MAX_DELETE_PER_RUN: 50,
+  WHITELIST_KEYWORDS: ["留存", "纪念", "高能", "生日", "勿删"]
+};
+
 async function handleResetDefaults() {
+  const targetConfig = {
+    ...config.value,
+    ...OFFICIAL_RECOMMENDED_POLICY
+  };
+  const targetSerialized = serializePolicyConfig(targetConfig);
+  const currentFormSerialized = serializePolicyConfig(config.value);
+  const initialSavedSerialized = initialPolicySnapshot.value;
+
+  // 1. 若当前表单值已完全等于官方预设：
+  if (currentFormSerialized === targetSerialized) {
+    if (currentFormSerialized === initialSavedSerialized) {
+      ElMessage.info("当前配置已是官方推荐预设，无需更改");
+    } else {
+      ElMessage.info("当前表单已是官方推荐预设，请点击底部「立即保存配置」生效");
+    }
+    return;
+  }
+
+  // 2. 当前表单值与官方预设不同，弹出确认提示：
   try {
     await ElMessageBox.confirm(
       "是否将全局合并与磁盘清理策略重置为系统官方推荐参数？（断流 30 分钟、静置 30 分钟、水位 80%/60%、免删 2 小时、保底 3 场、单次最大 50 个）",
@@ -351,20 +383,17 @@ async function handleResetDefaults() {
   } catch {
     return;
   }
-  config.value = {
-    ...config.value,
-    GAP_MINUTES: 30,
-    MERGE_AGE_MINUTES: 30,
-    TRIGGER_THRESHOLD: 80,
-    TARGET_THRESHOLD: 60,
-    SAFE_MODE: "hours",
-    SAFE_AGE_MINUTES: 120,
-    SAFE_DAYS: 1,
-    MIN_KEEP_PER_STREAMER: 3,
-    MAX_DELETE_PER_RUN: 50,
-    WHITELIST_KEYWORDS: ["留存", "纪念", "高能", "生日", "勿删"]
-  };
-  ElMessage.success("已恢复官方推荐预设，请点击底部「立即保存配置」生效");
+
+  config.value = targetConfig;
+
+  // 3. 应用预设后，比对新表单与数据库基准快照的状态闭环（三态自适应反馈律）：
+  if (targetSerialized === initialSavedSerialized) {
+    // 恰好还原回数据库原值（草稿被抵消，保存栏自动平滑收起）
+    ElMessage.info("已还原为已保存的推荐预设");
+  } else {
+    // 产生实际配置变更，保存栏平滑升起，正面引导保存
+    ElMessage.success("已恢复官方推荐预设，请点击底部「立即保存配置」生效");
+  }
 }
 
 function handleDiscardChanges() {
