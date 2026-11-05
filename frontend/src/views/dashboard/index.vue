@@ -326,6 +326,22 @@ const totalFreedStats = computed(() => {
   };
 });
 
+const freedSpaceDisplay = computed(() => {
+  const bytes = totalFreedStats.value.bytes || 0;
+  if (bytes <= 0) {
+    return { val: "0.00", unit: "GB" };
+  }
+  const gb = bytes / (1024 ** 3);
+  if (gb >= 0.01) {
+    return { val: gb.toFixed(2), unit: "GB" };
+  }
+  const mb = bytes / (1024 ** 2);
+  if (mb >= 0.1) {
+    return { val: mb.toFixed(1), unit: "MB" };
+  }
+  return { val: (bytes / 1024).toFixed(0), unit: "KB" };
+});
+
 const stats = ref<StatsResponse>();
 const setup = ref<SetupCheck>();
 const recentHistory = ref<HistoryRecord[]>([]);
@@ -574,7 +590,7 @@ onActivated(async () => {
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 .card {
-  background: var(--canvas); border: 1px solid var(--hairline);
+  background: var(--surface-card); border: 1px solid var(--hairline);
   border-radius: var(--r-md); overflow: hidden;
   box-shadow: none;
   display: flex; flex-direction: column;
@@ -606,7 +622,7 @@ onActivated(async () => {
 .data-cell {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 10px 14px;
-  background: var(--canvas);
+  background: var(--surface);
   min-width: 0;
 }
 .data-cell:nth-child(odd) { border-right: 1px solid var(--hairline); }
@@ -1024,6 +1040,100 @@ html.dark {
   .stat-mint { border-color: rgba(52, 211, 153, 0.25) !important; }
   .stat-sky { border-color: rgba(96, 165, 250, 0.25) !important; }
   .stat-lavender { border-color: rgba(167, 139, 250, 0.25) !important; }
+
+  .stat-label { color: #d4d4d8; }
+  .stat-sub { color: #a1a1aa; }
+  .stat-empty { color: #71717a; opacity: 0.7; }
+
+  .card-title {
+    border-bottom-color: var(--hairline);
+    color: var(--ink);
+  }
+  .card-title-main { color: #f4f4f5; }
+  .card-header-action {
+    color: #a1a1aa;
+    &:hover { color: #f4f4f5; background: var(--highlight); }
+  }
+  .monitor-mode-tag {
+    background: #18181b;
+    border-color: var(--hairline);
+    color: #a1a1aa;
+  }
+  .data-grid {
+    border-color: var(--hairline);
+  }
+  .data-cell {
+    background: #141416;
+    border-color: var(--hairline);
+  }
+  .data-label { color: #a1a1aa; }
+  .disk-label { color: #a1a1aa; }
+  .runtime-label { color: #a1a1aa; }
+  .substrip-text { color: #a1a1aa; }
+
+  .health-pill {
+    background: #141416;
+    border-color: var(--hairline);
+    color: #a1a1aa;
+  }
+  .health-pill-warn {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+    color: #fbbf24 !important;
+  }
+
+  .badge-idle {
+    background: rgba(34, 197, 94, 0.12) !important;
+    color: #4ade80 !important;
+    border-color: rgba(34, 197, 94, 0.25) !important;
+  }
+  .badge-running {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+  }
+
+  .recent-row {
+    border-bottom-color: var(--hairline);
+    &:hover { background: rgba(255, 255, 255, 0.03); }
+  }
+  .recent-who { color: #a1a1aa; }
+  .recent-action { color: #e4e4e7; }
+  .recent-fail {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+  }
+  .recent-time { color: #71717a; }
+
+  .trend-empty {
+    background: #141416;
+    border-color: var(--hairline);
+  }
+  .trend-empty-title { color: #e4e4e7; }
+  .trend-empty-desc { color: #71717a; }
+  .trend-date { color: #71717a; }
+  .trend-legend { color: #a1a1aa; }
+
+  .task-type-pill.type-merge {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+  }
+  .task-type-pill.type-clean {
+    background: rgba(59, 130, 246, 0.12) !important;
+    color: #60a5fa !important;
+    border-color: rgba(59, 130, 246, 0.25) !important;
+  }
+  .task-type-pill.type-config {
+    background: rgba(168, 85, 247, 0.12) !important;
+    color: #c084fc !important;
+    border-color: rgba(168, 85, 247, 0.25) !important;
+  }
+  .task-type-pill.type-schedule {
+    background: rgba(148, 163, 184, 0.12) !important;
+    color: #94a3b8 !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+  }
 }
 
 </style>

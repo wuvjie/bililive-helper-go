@@ -938,4 +938,52 @@ onActivated(async () => {
   vertical-align: -1px;
 }
 
+
+html.dark {
+  .task-status-card {
+    background: var(--surface-card) !important;
+    border-color: var(--hairline) !important;
+  }
+  .task-sub-card {
+    background: var(--surface) !important;
+    border-color: var(--hairline) !important;
+  }
+  .btn-merge-action {
+    background: rgba(34, 197, 94, 0.14) !important;
+    color: #4ade80 !important;
+    border-color: rgba(34, 197, 94, 0.3) !important;
+    &:hover:not(:disabled) {
+      background: rgba(34, 197, 94, 0.24) !important;
+    }
+  }
+  .btn-clean-action {
+    background: rgba(245, 158, 11, 0.14) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    &:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.24) !important;
+    }
+  }
+  .btn-targeted-merge {
+    background: #18181b !important;
+    color: #f4f4f5 !important;
+    border-color: #27272a !important;
+    &:hover:not(:disabled) {
+      background: rgba(34, 197, 94, 0.14) !important;
+      color: #4ade80 !important;
+      border-color: rgba(34, 197, 94, 0.3) !important;
+    }
+  }
+  .btn-targeted-clean {
+    background: #18181b !important;
+    color: #f4f4f5 !important;
+    border-color: #27272a !important;
+    &:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.14) !important;
+      color: #fbbf24 !important;
+      border-color: rgba(245, 158, 11, 0.3) !important;
+    }
+  }
+}
+
 </style>

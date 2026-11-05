@@ -148,12 +148,12 @@
 .el-button--primary {
   background: var(--primary) !important;
   border-color: var(--primary) !important;
-  color: #ffffff !important;
+  color: var(--on-primary) !important;
 }
 .el-button--primary:hover {
   background: var(--primary-pressed) !important;
   border-color: var(--primary-pressed) !important;
-  color: #ffffff !important;
+  color: var(--on-primary) !important;
 }
 
 // ── Progress (desaturated green, warm track) ──
@@ -312,6 +312,157 @@ html.dark {
   .el-loading-mask {
     background-color: rgba(9, 9, 11, 0.7) !important;
   }
+  // Buttons in dark mode
+  .el-button--primary {
+    background: #f4f4f5 !important;
+    border-color: #f4f4f5 !important;
+    color: #09090b !important;
+    font-weight: 600 !important;
+    &:hover {
+      background: #e4e4e7 !important;
+      border-color: #e4e4e7 !important;
+      color: #09090b !important;
+    }
+  }
+  .el-button:not(.el-button--primary):not(.el-button--danger) {
+    background-color: #18181b !important;
+    border-color: #27272a !important;
+    color: #f4f4f5 !important;
+    &:hover {
+      background-color: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #ffffff !important;
+    }
+    &.is-disabled {
+      background-color: #141416 !important;
+      border-color: #222226 !important;
+      color: #52525b !important;
+    }
+  }
+  .el-button--danger {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+    color: #f87171 !important;
+    &:hover {
+      background-color: #ef4444 !important;
+      border-color: #ef4444 !important;
+      color: #ffffff !important;
+    }
+  }
+
+  // Sliders in dark mode
+  .el-slider {
+    --el-slider-runway-bg-color: #27272a !important;
+    --el-slider-main-bg-color: #3b82f6 !important;
+    .el-slider__runway {
+      background-color: #27272a !important;
+    }
+    .el-slider__bar {
+      background-color: #3b82f6 !important;
+    }
+    .el-slider__button {
+      border: 2px solid #3b82f6 !important;
+      background-color: #ffffff !important;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.4) !important;
+    }
+  }
+
+  // Switches in dark mode
+  .el-switch {
+    --el-switch-off-color: #27272a;
+    --el-switch-on-color: #3b82f6;
+    .el-switch__core {
+      background-color: #27272a !important;
+      border-color: #3f3f46 !important;
+    }
+    &.is-checked .el-switch__core {
+      background-color: #3b82f6 !important;
+      border-color: #3b82f6 !important;
+      .el-switch__action {
+        background-color: #ffffff !important;
+      }
+    }
+  }
+
+  // Progress bars in dark mode
+  .el-progress {
+    .el-progress-bar__outer {
+      background-color: #27272a !important;
+    }
+  }
+
+  // Inputs & Selects in dark mode
+  .el-input__wrapper, .el-textarea__inner {
+    background-color: #141416 !important;
+    box-shadow: 0 0 0 1px #27272a inset !important;
+    color: #f4f4f5 !important;
+    &:hover {
+      box-shadow: 0 0 0 1px #3f3f46 inset !important;
+    }
+    &.is-focus, &:focus {
+      box-shadow: 0 0 0 1px #3b82f6 inset !important;
+    }
+  }
+  .el-input__inner {
+    color: #f4f4f5 !important;
+    &::placeholder {
+      color: #71717a !important;
+    }
+  }
+
+  // Dialog & Drawer in dark mode
+  .el-dialog {
+    background-color: #18181b !important;
+    border-color: #27272a !important;
+  }
+  .el-dialog__title {
+    color: #f4f4f5 !important;
+  }
+  .el-drawer {
+    background-color: #141416 !important;
+    border-left-color: #27272a !important;
+  }
+  .el-drawer__title {
+    color: #f4f4f5 !important;
+  }
+
+  // Dropdowns in dark mode
+  .el-dropdown-menu {
+    background: #18181b !important;
+    border-color: #27272a !important;
+    .el-dropdown-menu__item {
+      color: #e4e4e7 !important;
+      &:hover, &:focus {
+        background: #27272a !important;
+        color: #ffffff !important;
+      }
+      &.divided {
+        border-top-color: #27272a !important;
+      }
+    }
+  }
+
+  // Pagination in dark mode
+  .el-pagination {
+    --el-pagination-hover-color: #f4f4f5;
+    .btn-prev, .btn-next, .el-pager li {
+      background-color: #18181b !important;
+      color: #a1a1aa !important;
+      border: 1px solid #27272a !important;
+      border-radius: var(--r-xs) !important;
+      &:hover {
+        color: #ffffff !important;
+        border-color: #3f3f46 !important;
+      }
+      &.is-active {
+        background-color: #27272a !important;
+        color: #f4f4f5 !important;
+        border-color: #3f3f46 !important;
+        font-weight: 600;
+      }
+    }
+  }
+
 }
 
 .el-loading-mask {

@@ -455,7 +455,7 @@ onUnmounted(() => {
 .settings-card {
   border-radius: 12px;
   border: 1px solid var(--hairline);
-  background: var(--canvas);
+  background: var(--surface-card);
 }
 
 .settings-header {
@@ -620,6 +620,24 @@ onUnmounted(() => {
 }
 .unsaved-badge .badge-dot {
   animation: livePulseWarning 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+
+html.dark {
+  .settings-card {
+    background: var(--surface-card);
+    border-color: var(--hairline);
+  }
+  .unsaved-badge {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+    color: #fbbf24 !important;
+  }
+  .save-bar-inner {
+    background: #1c1c20;
+    border-color: #2e2e33;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  }
 }
 
 </style>

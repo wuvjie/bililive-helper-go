@@ -1165,4 +1165,32 @@ onActivated(() => loadData());
   display: none;
 }
 
+
+html.dark {
+  .quick-pill-btn {
+    background: #18181b;
+    border-color: #27272a;
+    color: #f4f4f5;
+    &:hover {
+      background: #27272a;
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+  }
+  .trim-config-box, .rule-item-block, .rule-setting-card {
+    background: #18181b !important;
+    border-color: #27272a !important;
+  }
+  .header-refresh-btn {
+    background: #18181b;
+    border-color: #27272a;
+    color: #f4f4f5;
+    &:hover { background: #27272a; }
+  }
+  .drawer-footer {
+    background: #141416;
+    border-top-color: #27272a;
+  }
+}
+
 </style>
