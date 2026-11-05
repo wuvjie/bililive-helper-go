@@ -123,13 +123,25 @@
   --el-menu-item-height: 36px;
 }
 
-// ── Inputs ──
+// ── Inputs (充足内边距与舒适呼吸感，告别文字紧贴边框) ──
 .el-input {
   --el-input-bg-color: #ffffff;
   --el-input-border-color: #d3d1cb;
   --el-input-hover-border-color: #a4a097;
   --el-input-focus-border-color: #2f80ed;
   --el-input-text-color: #37352f;
+}
+.el-input__wrapper {
+  padding: 4px 12px !important;
+  border-radius: var(--r-sm) !important;
+  box-shadow: 0 0 0 1px #d3d1cb inset;
+  transition: all 0.15s ease;
+}
+.el-input--small .el-input__wrapper {
+  padding: 2px 10px !important;
+}
+.el-input__inner {
+  padding-left: 2px;
 }
 // Kill purple/blue focus ring on all input variants
 .el-input__wrapper.is-focus,

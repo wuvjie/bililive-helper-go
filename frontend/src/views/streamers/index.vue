@@ -20,7 +20,7 @@
                 :prefix-icon="Search"
                 clearable
                 size="small"
-                style="width: 200px"
+                style="width: 230px"
               />
               <span v-if="!searchQuery" class="kbd-badge search-kbd">/</span>
             </div>
@@ -115,7 +115,7 @@
           </template>
         </el-table-column>
         <template #empty>
-          <div class="streamer-empty-box">
+          <div class="streamer-empty-box empty-illustration">
             <div class="empty-icon-wrapper">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>

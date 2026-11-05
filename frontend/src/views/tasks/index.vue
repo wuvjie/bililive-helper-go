@@ -6,11 +6,11 @@
       <div class="card">
         <div class="card-title card-title-flex">
           <div class="title-left">
-            <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+            <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
             <span class="title-text">自动分片合并</span>
           </div>
-          <span class="badge-status" :class="schedule?.merge?.enabled ? 'badge-on' : 'badge-off'">
-            <span class="status-dot-sm" :class="schedule?.merge?.enabled ? 'dot-ok' : 'dot-off'" />
+          <span class="badge-status" :class="schedule?.merge?.enabled ? 'badge-emerald' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.merge?.enabled ? 'dot-emerald' : 'dot-off'" />
             {{ schedule?.merge?.enabled ? '定时计划中' : '已暂停' }}
           </span>
         </div>
@@ -44,11 +44,11 @@
       <div class="card">
         <div class="card-title card-title-flex">
           <div class="title-left">
-            <div class="ui-icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+            <div class="ui-icon-box icon-box-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
             <span class="title-text">自动磁盘清理</span>
           </div>
-          <span class="badge-status" :class="schedule?.clean?.enabled ? 'badge-on' : 'badge-off'">
-            <span class="status-dot-sm" :class="schedule?.clean?.enabled ? 'dot-ok' : 'dot-off'" />
+          <span class="badge-status" :class="schedule?.clean?.enabled ? 'badge-amber' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.clean?.enabled ? 'dot-amber' : 'dot-off'" />
             {{ schedule?.clean?.enabled ? '巡检保护中' : '未开启' }}
           </span>
         </div>
@@ -83,10 +83,10 @@
     <div class="card targeted-card">
       <div class="targeted-bar">
         <div class="targeted-left">
-          <span class="targeted-label">
-            <svg class="targeted-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            定向主播快捷任务:
-          </span>
+          <div class="targeted-label-wrap">
+            <div class="ui-icon-box icon-box-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+            <span class="targeted-label">定向主播快捷任务:</span>
+          </div>
           <el-select
             v-model="selectedStreamer"
             placeholder="选择特定主播..."
@@ -529,6 +529,31 @@ onActivated(async () => {
   font-size: 12px;
   font-weight: 500;
 }
+
+.badge-emerald {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.dot-emerald {
+  background: #10b981;
+}
+
+.badge-amber {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+.dot-amber {
+  background: #f59e0b;
+}
+
+.targeted-label-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .badge-on {
   background: #edf6f0;
   color: #2b6a48;
