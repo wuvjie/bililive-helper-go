@@ -51,12 +51,12 @@
 
       <div class="table-responsive-wrapper">
       <el-table :data="history" v-loading="loading" class="history-table">
-        <el-table-column prop="time" label="时间" width="180" sortable>
+        <el-table-column prop="time" label="时间" width="175" sortable>
           <template #default="{ row }">
             <span class="mono-time">{{ row.time }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="task" label="类型" width="90" align="center" sortable>
+        <el-table-column prop="task" label="类型" width="110" align="center" header-align="center" sortable>
           <template #default="{ row }">
             <span class="type-label">
               <span class="type-icon">{{ row.task === 'merge' ? '🔗' : row.task === 'clean' ? '🧹' : row.task === 'config' ? '⚙️' : '⏱️' }}</span>
@@ -64,20 +64,20 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="streamer" label="主播" width="120" show-overflow-tooltip sortable />
-        <el-table-column label="详情" min-width="250">
+        <el-table-column prop="streamer" label="主播" width="145" show-overflow-tooltip sortable />
+        <el-table-column label="详情" min-width="260">
           <template #default="{ row }">
             <span class="detail-text">{{ row.detail || formatDetail(row) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100" align="right" header-align="right" sortable>
+        <el-table-column prop="status" label="状态" width="95" align="center" header-align="center" sortable>
           <template #default="{ row }">
             <span class="status-dot-text" :class="row.status === 'success' ? 'dot-success' : 'dot-fail'">
               {{ row.status === 'success' ? '成功' : '失败' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="135" align="right" header-align="right">
+        <el-table-column label="操作" width="150" align="center" header-align="center">
           <template #default="{ row }">
             <div class="row-actions-group">
               <button
@@ -434,7 +434,7 @@ onActivated(() => loadHistory(currentPage.value));
   padding-bottom: 6px;
 }
 :deep(.history-table) {
-  min-width: 860px;
+  min-width: 940px;
 }
 .card-header {
   display: flex;
@@ -495,10 +495,6 @@ onActivated(() => loadHistory(currentPage.value));
   flex-shrink: 0;
 }
 
-/* Sort arrow alignment — compensate leftward push on sortable headers */
-.history-table :deep(.el-table__header) th.is-sortable .cell {
-  padding-left: 3px;
-}
 
 /* Pagination — align right edge with table border */
 .pagination { margin-top: 16px; display: flex; justify-content: flex-end; padding-right: 0; }
@@ -757,22 +753,22 @@ onActivated(() => loadHistory(currentPage.value));
 .line-divider .log-line-text { opacity: 0.35; }
 .line-header .log-line-text { color: #4ec9b0; font-weight: 600; }
 
-/* Unified row action buttons — consistent 12px pill styling */
+/* Unified row action buttons — optically centered 12px pill styling */
 .row-actions-group {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
   white-space: nowrap;
   flex-wrap: nowrap;
 }
 .row-action-btn {
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: var(--r-xs, 4px);
   cursor: pointer;
   white-space: nowrap;
@@ -785,7 +781,6 @@ onActivated(() => loadHistory(currentPage.value));
 .action-view:hover {
   color: #0284c7;
   background: rgba(2, 132, 199, 0.08);
-  border-color: rgba(2, 132, 199, 0.2);
 }
 .action-retry {
   color: #d9730d;
@@ -793,7 +788,6 @@ onActivated(() => loadHistory(currentPage.value));
 .action-retry:hover {
   color: #b45309;
   background: rgba(217, 115, 13, 0.1);
-  border-color: rgba(217, 115, 13, 0.25);
 }
 .action-delete {
   color: var(--slate, #94a3b8);
@@ -801,7 +795,6 @@ onActivated(() => loadHistory(currentPage.value));
 .action-delete:hover {
   color: #dc2626;
   background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.2);
 }
 
 /* Stable & Flexible Log Modal Bar */
