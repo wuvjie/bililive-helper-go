@@ -246,26 +246,22 @@
             >
               <div class="recent-top-line">
                 <div class="recent-left">
-                  <span class="recent-icon" :class="row.status === 'fail' ? 'icon-error' : ''">
-                    <span class="task-type-pill" :class="'type-' + row.task">
-                    <svg v-if="row.task === 'merge'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                    <svg v-else-if="row.task === 'clean'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                    <svg v-else-if="row.task === 'config'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    <svg v-else class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span>{{ row.task === 'merge' ? '分片合并' : row.task === 'clean' ? '磁盘清理' : row.task === 'config' ? '配置变更' : '调度事件' }}</span>
-                  </span>
+                  <span class="recent-tag" :class="'tag-' + row.task">
+                    {{ row.task === 'merge' ? '合并' : row.task === 'clean' ? '清理' : row.task === 'config' ? '配置' : '调度' }}
                   </span>
                   <span class="recent-who">{{ row.streamer || '全局' }}</span>
-                  <span class="recent-action desktop-action" :title="row.detail || formatDetail(row)">{{ row.detail || formatDetail(row) }}</span>
+                  <span class="recent-action desktop-action" :title="cleanDetailText(row.detail || formatDetail(row), row.task)">
+                    {{ cleanDetailText(row.detail || formatDetail(row), row.task) }}
+                  </span>
                 </div>
                 <div class="recent-right">
                   <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
-                  <span v-else class="status-dot-sm dot-emerald" title="成功"></span>
+                  <span v-else class="recent-status-dot dot-emerald"></span>
                   <span class="recent-time">{{ formatShortTime(row.time) }}</span>
                 </div>
               </div>
-              <div class="recent-action mobile-action" :title="row.detail || formatDetail(row)">
-                {{ row.detail || formatDetail(row) }}
+              <div class="recent-action mobile-action" :title="cleanDetailText(row.detail || formatDetail(row), row.task)">
+                {{ cleanDetailText(row.detail || formatDetail(row), row.task) }}
               </div>
             </div>
           </div>
@@ -480,6 +476,22 @@ function formatNextTime(ts?: number): string {
   const hours = String(date.getHours()).padStart(2, "0");
   const mins = String(date.getMinutes()).padStart(2, "0");
   return `${hours}:${mins}`;
+}
+
+function cleanDetailText(raw: string, task?: string): string {
+  if (!raw) return "-";
+  let s = raw.trim();
+  if (s.startsWith("调度已保存:") || s.startsWith("调度已保存：")) {
+    const params = s.replace(/^调度已保存[:：]\s*/, "");
+    return `重新应用当前调度（${params}，无参数变动）`;
+  }
+  if (s === "配置未改动" || s === "无变更") {
+    return "重新应用当前配置 (无参数改动)";
+  }
+  s = s.replace(/^(调度变更|配置变更|系统配置变更|合并任务|清理任务)[:：]\s*/, "");
+  s = s.replace(/([^\s]+)\s*→\s*([^\s]+)/g, "$1 → $2");
+  s = s.replace(/,\s*/g, "，");
+  return s;
 }
 
 function formatDetail(row: HistoryRecord): string {
@@ -925,12 +937,36 @@ onActivated(async () => {
   font-size: 13px;
   flex-shrink: 0;
 }
-.recent-who { color: #8a8a8a; flex-shrink: 0; min-width: 52px; font-size: 12px; }
+.recent-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  color: var(--slate);
+  border: 1px solid var(--hairline);
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.tag-merge { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2); color: #059669; }
+.tag-clean { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2); color: #b45309; }
+.tag-config { background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.2); color: #4f46e5; }
+.tag-schedule { background: rgba(100, 116, 139, 0.08); border-color: rgba(100, 116, 139, 0.2); color: #475569; }
+
+html.dark {
+  .tag-merge { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.25); color: #34d399; }
+  .tag-clean { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.25); color: #fbbf24; }
+  .tag-config { background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.25); color: #818cf8; }
+  .tag-schedule { background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.25); color: #94a3b8; }
+}
+
+.recent-who { color: var(--steel); flex-shrink: 0; min-width: 48px; font-size: 12px; }
 .recent-action { color: var(--charcoal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
-.recent-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.recent-fail { font-size: 12px; color: #d4433a; font-weight: 600; background: #fff0f0; padding: 1px 5px; border-radius: 3px; }
-.recent-success-dot { width: 6px; height: 6px; border-radius: 50%; background: #448361; display: inline-block; }
-.recent-time { font-family: var(--font-mono); font-size: 11px; color: #aeaeb2; min-width: 38px; text-align: right; }
+.recent-right { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.recent-status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; margin: 0; }
+.dot-emerald { background: #10b981; }
+.recent-fail { font-size: 11px; color: #ef4444; font-weight: 500; background: rgba(239, 68, 68, 0.1); padding: 1px 6px; border-radius: var(--r-xs); line-height: 1.4; }
+.recent-time { font-family: var(--font-mono); font-size: 12px; color: var(--steel); min-width: 38px; text-align: right; font-feature-settings: "tnum"; }
 
 @media (max-width: 1024px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }

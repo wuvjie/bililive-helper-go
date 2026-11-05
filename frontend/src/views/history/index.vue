@@ -75,14 +75,13 @@
               <svg v-else class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span>{{ row.task === 'merge' ? '分片合并' : row.task === 'clean' ? '磁盘清理' : row.task === 'config' ? '配置变更' : '调度事件' }}</span>
             </span>
-              {{ taskLabel(row.task) }}
             </span>
           </template>
         </el-table-column>
         <el-table-column prop="streamer" label="主播" width="145" show-overflow-tooltip sortable />
         <el-table-column label="详情" min-width="260">
           <template #default="{ row }">
-            <span class="detail-text">{{ row.detail || formatDetail(row) }}</span>
+            <span class="detail-text">{{ cleanDetailText(row.detail || formatDetail(row), row.task) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="95" align="center" header-align="center" sortable>
@@ -373,6 +372,33 @@ async function loadHistory(page: number) {
   } finally {
     if (seq === loadSeq) loading.value = false;
   }
+}
+
+function cleanDetailText(raw: string, task?: string): string {
+  if (!raw) return "-";
+  let s = raw.trim();
+
+  // Schedule re-apply with identical parameters
+  if (s.startsWith("调度已保存:") || s.startsWith("调度已保存：")) {
+    const params = s.replace(/^调度已保存[:：]\s*/, "");
+    return `重新应用当前调度（${params}，无参数变动）`;
+  }
+
+  // Config re-apply without diff
+  if (s === "配置未改动" || s === "无变更") {
+    return "重新应用当前配置 (无参数改动)";
+  }
+
+  // Strip redundant domain prefix
+  s = s.replace(/^(调度变更|配置变更|系统配置变更|合并任务|清理任务)[:：]\s*/, "");
+
+  // Space around arrows: 720→360 -> 720 → 360
+  s = s.replace(/([^\s]+)\s*→\s*([^\s]+)/g, "$1 → $2");
+
+  // Format comma
+  s = s.replace(/,\s*/g, "，");
+
+  return s;
 }
 
 function taskLabel(task: string) {
