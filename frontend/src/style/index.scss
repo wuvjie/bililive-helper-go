@@ -4,8 +4,9 @@
 // Notion & Linear-inspired design system — ink-on-paper aesthetic with modern depth
 :root {
   // Primary (Notion ink black)
-  --primary: #1c1c1e;
-  --primary-pressed: #0a0a0a;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-pressed: #1e40af;
   --on-primary: #ffffff;
 
   // Surfaces (Background has subtle warmth, cards are crisp white for natural layering)
@@ -102,6 +103,7 @@ button:not(:disabled) {
 // Dark Mode Palette — OLED Deep Charcoal with subtle luminescence
 html.dark {
   --primary: #2563eb;
+  --primary-hover: #3b82f6;
   --primary-pressed: #1d4ed8;
   --on-primary: #ffffff;
 

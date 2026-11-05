@@ -586,7 +586,7 @@ router.afterEach(() => fetchDiskStatus());
   line-height: 1.4;
 }
 .user-dropdown-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   font-family: var(--font-mono);
   margin-top: 2px;

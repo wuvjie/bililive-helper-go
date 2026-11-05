@@ -364,7 +364,7 @@ async function handleResetDefaults() {
     MAX_DELETE_PER_RUN: 50,
     WHITELIST_KEYWORDS: ["留存", "纪念", "高能", "生日", "勿删"]
   };
-  ElMessage.info("已加载官方推荐预设，请核对后点击保存生效");
+  ElMessage.success("已恢复官方推荐预设，请点击底部「立即保存配置」生效");
 }
 
 function handleDiscardChanges() {

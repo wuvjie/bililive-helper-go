@@ -157,13 +157,14 @@ function onFileChange(e: Event) {
   transition: all 0.15s ease;
 }
 .btn-action-half.btn-export {
-  background: var(--primary);
-  color: var(--on-primary);
-  border: 1px solid var(--primary);
+  background: var(--surface-card, #ffffff);
+  color: var(--charcoal, #37352f);
+  border: 1px solid var(--hairline-strong, #c8c4be);
 }
 .btn-action-half.btn-export:hover {
-  background: var(--primary-pressed);
-  border-color: var(--primary-pressed);
+  background: var(--highlight, #f1f1ef);
+  border-color: var(--steel, #787671);
+  color: var(--ink, #1a1a1a);
 }
 .btn-action-half.btn-copy {
   background: var(--surface, #fafafa);
@@ -324,5 +325,15 @@ html.dark {
       color: #e4e4e7;
     }
   }
+}
+html.dark .btn-action-half.btn-export {
+  background: #18181b !important;
+  border-color: #3f3f46 !important;
+  color: #e4e4e7 !important;
+}
+html.dark .btn-action-half.btn-export:hover {
+  background: #27272a !important;
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
 }
 </style>
