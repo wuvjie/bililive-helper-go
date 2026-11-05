@@ -164,6 +164,7 @@
               v-model="selectedHistoryId"
               placeholder="选择查看历史任务归档..."
               size="small"
+              popper-class="select-popper-small"
               class="history-quick-select"
               @change="onHistorySelect"
             >
@@ -211,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onActivated } from "vue";
+import { ref, computed, watch, onMounted, onActivated, onDeactivated } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getStreamers } from "@/api/status";
@@ -226,6 +227,11 @@ const route = useRoute();
 const schedule = ref<ScheduleStatus>();
 const streamers = ref<StreamerInfo[]>([]);
 const selectedStreamer = ref("");
+
+// 离开页面时安全重置未执行的临时定向主播选择，防止再次进入时记忆衰减误操作
+onDeactivated(() => {
+  selectedStreamer.value = "";
+});
 const sse = useSSE();
 
 // Log tabs: 'live' | 'recent_merge' | 'recent_clean' | 'history'
@@ -753,7 +759,7 @@ onActivated(async () => {
   align-items: center;
   padding: 8px 12px;
   background: #252526;
-  border-bottom: 1px solid var(--hairline);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -816,7 +822,7 @@ onActivated(async () => {
 }
 
 .tab-tag-live {
-  font-size: 11px;
+  font-size: 12px;
   background: #b45309;
   color: #fff;
   padding: 1px 4px;
@@ -974,17 +980,17 @@ html.dark {
     border-color: var(--hairline) !important;
   }
   .badge-emerald {
-    background: rgba(16, 185, 129, 0.12) !important;
+    background: rgba(16, 185, 129, 0.08) !important;
     color: #34d399 !important;
-    border-color: rgba(16, 185, 129, 0.25) !important;
+    border-color: rgba(16, 185, 129, 0.18) !important;
   }
   .dot-emerald {
     background: #10b981 !important;
   }
   .badge-amber {
-    background: rgba(245, 158, 11, 0.12) !important;
+    background: rgba(245, 158, 11, 0.08) !important;
     color: #fbbf24 !important;
-    border-color: rgba(245, 158, 11, 0.25) !important;
+    border-color: rgba(245, 158, 11, 0.18) !important;
   }
   .dot-amber {
     background: #f59e0b !important;

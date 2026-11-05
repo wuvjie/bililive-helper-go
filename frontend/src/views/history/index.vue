@@ -16,6 +16,7 @@
                 placeholder="全部任务类型"
                 clearable
                 size="small"
+                popper-class="select-popper-small"
                 style="width: 128px"
                 @change="loadHistory(1)"
               >
@@ -647,7 +648,7 @@ onActivated(() => loadHistory(currentPage.value));
   display: inline-block;
   padding: 2px 8px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 .pill-success {
@@ -978,7 +979,7 @@ onActivated(() => loadHistory(currentPage.value));
   gap: 5px;
   padding: 2px 8px;
   border-radius: var(--r-full);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
@@ -1052,6 +1053,36 @@ html.dark {
   .log-modal-bar {
     background: #18181b;
     border-bottom-color: #27272a;
+  }
+  .task-type-pill.type-merge {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+  .task-type-pill.type-clean {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.25);
+  }
+  .task-type-pill.type-config {
+    background: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
+    border-color: rgba(168, 85, 247, 0.25);
+  }
+  .task-type-pill.type-schedule {
+    background: rgba(255, 255, 255, 0.06);
+    color: #a1a1aa;
+    border-color: rgba(255, 255, 255, 0.10);
+  }
+  .pill-success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+  .pill-fail {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.25);
   }
 }
 

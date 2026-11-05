@@ -286,10 +286,10 @@
               <template #default="{ row }">
                 <div class="drawer-file-actions">
                   <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
-                    ▶ 播放
+                    <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>播放
                   </button>
                   <button class="play-btn-sm btn-del-video" @click="handleDeleteFile(row)" title="从磁盘永久删除该录像文件">
-                    <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 删除
+                    <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>删除
                   </button>
                 </div>
               </template>
@@ -309,7 +309,7 @@
     <!-- 在线视频播放预览弹窗 -->
     <el-dialog
       v-model="playerVisible"
-      :title="`▶ 播放预览: ${playFileName}`"
+      :title="`播放预览: ${playFileName}`"
       width="800px"
       destroy-on-close
       class="player-dialog"
@@ -557,7 +557,7 @@ onActivated(() => loadData());
 
 /* Badge pills */
 .badge-pill {
-  font-size: 11px;
+  font-size: 12px;
   padding: 1px 6px;
   border-radius: var(--r-sm);
   font-weight: 500;
@@ -667,7 +667,7 @@ onActivated(() => loadData());
   flex: 1;
 }
 .time-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel);
 }
 .range-arrow {
@@ -682,7 +682,7 @@ onActivated(() => loadData());
   color: var(--charcoal);
   border-radius: var(--r-sm);
   padding: 6px 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -739,11 +739,18 @@ onActivated(() => loadData());
   color: var(--ink);
 }
 .play-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 26px;
+  line-height: 24px;
+  box-sizing: border-box;
   background: var(--surface);
   border: 1px solid var(--hairline-strong);
   border-radius: var(--r-sm);
-  padding: 2px 6px;
-  font-size: 11px;
+  padding: 0 8px;
+  font-size: 12px;
   color: var(--charcoal);
   cursor: pointer;
   transition: all 0.15s;
@@ -838,11 +845,11 @@ onActivated(() => loadData());
   font-size: 12px;
   color: var(--ink, #333);
   font-weight: 600;
-  margin: 0 2px;
+  margin: 0 4px;
 }
 .streamer-total-stat .stat-sep {
   color: var(--stone, #a4a097);
-  margin: 0 6px;
+  margin: 0 8px;
   font-weight: 300;
 }
 .header-refresh-btn {
@@ -956,7 +963,7 @@ onActivated(() => loadData());
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   padding: 2px 7px;
   border-radius: 10px;
@@ -1066,7 +1073,7 @@ onActivated(() => loadData());
   flex: 1;
 }
 .time-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel, #64748b);
   font-weight: 500;
 }
@@ -1084,7 +1091,7 @@ onActivated(() => loadData());
   margin: 4px 0;
 }
 .preset-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel, #64748b);
   font-weight: 500;
 }
@@ -1097,7 +1104,7 @@ onActivated(() => loadData());
   color: var(--charcoal, #334155);
   border-radius: 20px;
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1174,6 +1181,7 @@ onActivated(() => loadData());
 .btn-del-video {
   color: #dc2626 !important;
   border-color: #fecaca !important;
+  background: #fef2f2;
 }
 .btn-del-video:hover {
   background: #fee2e2 !important;
@@ -1187,10 +1195,9 @@ onActivated(() => loadData());
   gap: 10px;
 }
 .btn-svg-sm {
-  width: 13px;
-  height: 13px;
-  margin-right: 4px;
-  vertical-align: -1px;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 .ghost-action {
   display: inline-flex;
@@ -1262,6 +1269,26 @@ html.dark {
   .drawer-footer {
     background: #141416;
     border-top-color: #27272a;
+  }
+  .play-btn-sm {
+    background: #18181b;
+    border-color: #3f3f46;
+    color: #e4e4e7;
+    &:hover {
+      background: #27272a;
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+  }
+  .play-btn-sm.btn-del-video {
+    background: rgba(239, 68, 68, 0.12) !important;
+    border-color: rgba(239, 68, 68, 0.25) !important;
+    color: #f87171 !important;
+    &:hover {
+      background: rgba(239, 68, 68, 0.22) !important;
+      border-color: rgba(239, 68, 68, 0.40) !important;
+      color: #fca5a5 !important;
+    }
   }
 }
 

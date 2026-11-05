@@ -260,7 +260,7 @@
                 </div>
                 <div class="recent-right">
                   <span v-if="row.status === 'fail'" class="recent-fail">失败</span>
-                  <span v-else class="recent-success-dot" title="成功">●</span>
+                  <span v-else class="status-dot-sm dot-emerald" title="成功"></span>
                   <span class="recent-time">{{ formatShortTime(row.time) }}</span>
                 </div>
               </div>
@@ -537,7 +537,7 @@ onActivated(async () => {
 .env-status { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; }
 .env-item { display: flex; align-items: center; gap: 5px; font-size: 12px; }
 .env-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.env-label { color: var(--stone); font-size: 11px; }
+.env-label { color: var(--stone); font-size: 12px; }
 .env-val { font-size: 11px; font-weight: 500; }
 .val-ok { color: #448361; }
 .val-err { color: #e03131; }
@@ -707,7 +707,7 @@ onActivated(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--steel);
   background: var(--surface);
@@ -724,8 +724,8 @@ onActivated(async () => {
   display: inline-block;
 }
 .dot-idle {
-  background: #448361;
-  box-shadow: 0 0 0 2px rgba(68, 131, 97, 0.2);
+  background: #71717a;
+  box-shadow: none;
 }
 .dot-active {
   background: #b45309;
@@ -757,9 +757,9 @@ onActivated(async () => {
   font-weight: 500;
 }
 .badge-idle {
-  background: #edf6f0;
-  color: #2b6a48;
-  border: 1px solid #d2ecd9;
+  background: #f4f4f5;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
 }
 .badge-running {
   background: #fff6ed;
@@ -966,7 +966,7 @@ onActivated(async () => {
     gap: 6px !important;
   }
   .health-pill {
-    font-size: 11px !important;
+    font-size: 12px !important;
     padding: 0 6px !important;
     min-width: 0 !important;
   }
@@ -999,7 +999,7 @@ onActivated(async () => {
   gap: 5px;
   padding: 2px 8px;
   border-radius: var(--r-full);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
@@ -1079,9 +1079,13 @@ html.dark {
   }
 
   .badge-idle {
-    background: rgba(34, 197, 94, 0.12) !important;
-    color: #4ade80 !important;
-    border-color: rgba(34, 197, 94, 0.25) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #a1a1aa !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  .dot-idle {
+    background: #a1a1aa !important;
+    box-shadow: none !important;
   }
   .badge-running {
     background: rgba(245, 158, 11, 0.12) !important;

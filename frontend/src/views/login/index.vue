@@ -342,7 +342,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   color: #b45309;
   background: #fff7ed;
   border: 1px solid #fed7aa;

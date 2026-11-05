@@ -239,9 +239,10 @@
 // Dark mode component overrides
 html.dark {
   code {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #f4f4f5 !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
+    background: #27272a !important;
+    color: #60a5fa !important;
+    border: 1px solid #3f3f46 !important;
+    font-weight: 500;
   }
   .stat-sep {
     color: #52525b !important;
@@ -281,11 +282,11 @@ html.dark {
       color: #c084fc;
     }
     &.icon-box-emerald {
-      background: rgba(16, 185, 129, 0.16);
+      background: rgba(16, 185, 129, 0.10);
       color: #34d399;
     }
     &.icon-box-amber {
-      background: rgba(245, 158, 11, 0.16);
+      background: rgba(245, 158, 11, 0.10);
       color: #fbbf24;
     }
     &.icon-box-teal {

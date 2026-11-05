@@ -231,8 +231,9 @@ async function handleSubmit() {
 
 
 html.dark .tip-text code {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #f4f4f5 !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: #27272a !important;
+  color: #60a5fa !important;
+  border: 1px solid #3f3f46 !important;
+  font-weight: 500;
 }
 </style>

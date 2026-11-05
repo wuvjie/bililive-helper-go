@@ -282,7 +282,9 @@
   font-weight: 600;
 }
 .el-select--small .el-select-dropdown__item,
-.el-select-dropdown--small .el-select-dropdown__item {
+.el-select-dropdown--small .el-select-dropdown__item,
+.el-popper.select-popper-small .el-select-dropdown__item,
+.select-popper-small .el-select-dropdown__item {
   font-size: 12px !important;
   height: 28px !important;
   line-height: 28px !important;
@@ -651,14 +653,30 @@ html.dark {
 }
 
 
-// 键盘可访问性：仅在键盘导航时展现沉浸双层光晕
-:focus-visible {
+// 键盘可访问性与输入控件聚焦隔离铁律 (Input Focus Isolation vs. Keyboard Focus Ring)
+// 文本输入控件绝对禁用外部 outline 粗框，仅依靠 1px 优雅内嵌阴影与边框高亮
+input,
+textarea,
+.el-input__wrapper,
+.el-textarea__inner {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+// 仅在纯键盘导航聚焦时，对无边框交互元素展现 2px 双层聚焦外框
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+.el-button:focus-visible,
+.el-switch:focus-visible,
+.el-tabs__item:focus-visible,
+.el-checkbox:focus-visible,
+.el-radio:focus-visible {
   outline: 2px solid #2563eb !important;
   outline-offset: 2px !important;
 }
 button:focus:not(:focus-visible),
-input:focus:not(:focus-visible),
-select:focus:not(:focus-visible) {
+a:focus:not(:focus-visible) {
   outline: none !important;
 }
 
