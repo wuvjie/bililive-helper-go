@@ -16,20 +16,25 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	rateLimitWindow  = 3 * time.Minute // 登录失败惩罚与冷却窗口：3 分钟
+	maxLoginAttempts = 5              // 允许的最大连续失败次数
+)
+
 var (
 	rateMu       sync.Mutex
 	rateAttempts = map[string][]time.Time{}
 	rateLastGC   = time.Time{}
 )
 
-// isRateLimited 检查指定 IP 是否在 5 分钟内登录尝试次数超过 5 次。
+// isRateLimited 检查指定 IP 是否在 3 分钟内登录尝试次数达到上限（>= 5 次）。
 // 使用内存 map 存储尝试记录，定期 GC 清理过期条目防止内存泄漏。
 func isRateLimited(ip string) bool {
 	rateMu.Lock()
 	defer rateMu.Unlock()
 
 	now := time.Now()
-	cutoff := now.Add(-5 * time.Minute)
+	cutoff := now.Add(-rateLimitWindow)
 
 	// 定期 GC：清理过期 IP 条目，防止内存无限增长
 	if now.Sub(rateLastGC) > time.Minute {
@@ -57,13 +62,31 @@ func isRateLimited(ip string) bool {
 		}
 	}
 	rateAttempts[ip] = valid
-	return len(valid) >= 5
+	return len(valid) >= maxLoginAttempts
 }
 
-func recordAttempt(ip string) {
+// recordAttempt 记录一次失败尝试，返回该 IP 在冷却窗口内的累计失败次数。
+func recordAttempt(ip string) int {
 	rateMu.Lock()
 	defer rateMu.Unlock()
-	rateAttempts[ip] = append(rateAttempts[ip], time.Now())
+	now := time.Now()
+	cutoff := now.Add(-rateLimitWindow)
+	var valid []time.Time
+	for _, t := range rateAttempts[ip] {
+		if t.After(cutoff) {
+			valid = append(valid, t)
+		}
+	}
+	valid = append(valid, now)
+	rateAttempts[ip] = valid
+	return len(valid)
+}
+
+// clearAttempts 在成功验证密码后重置该 IP 的失败记录。
+func clearAttempts(ip string) {
+	rateMu.Lock()
+	defer rateMu.Unlock()
+	delete(rateAttempts, ip)
 }
 
 func hashPassword(password string) (string, error) {
@@ -80,7 +103,7 @@ func verifyPassword(hashed, password string) bool {
 
 // LoginPage 渲染登录页面。
 func (h *Handler) LoginPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "login.html", nil)
+	c.Redirect(http.StatusFound, "/#/login")
 }
 
 // Index 返回 Vue SPA 的主入口页面。
@@ -93,7 +116,7 @@ func (h *Handler) Index(c *gin.Context) {
 func (h *Handler) Login(c *gin.Context) {
 	ip := c.ClientIP()
 	if isRateLimited(ip) {
-		failTooMany(c, "登录尝试次数过多，请 5 分钟后再试")
+		failTooMany(c, "登录尝试次数过多，请 3 分钟后再试")
 		return
 	}
 
@@ -112,10 +135,18 @@ func (h *Handler) Login(c *gin.Context) {
 	passwordOK := verifyPassword(h.hashedPassword, req.Password)
 	h.passwordMu.RUnlock()
 	if !passwordOK {
-		recordAttempt(ip)
-		failUnauthorized(c, "密码错误")
+		fails := recordAttempt(ip)
+		remaining := maxLoginAttempts - fails
+		if remaining > 0 {
+			failUnauthorized(c, fmt.Sprintf("密码错误，还可尝试 %d 次", remaining))
+		} else {
+			failUnauthorized(c, "密码错误，已达尝试上限，请 3 分钟后再试")
+		}
 		return
 	}
+
+	// 认证成功：立即重置该 IP 的失败尝试计数
+	clearAttempts(ip)
 
 	session := sessions.Default(c)
 	// 清除旧 Session 数据防止 Session 固定攻击
@@ -137,7 +168,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	if err := session.Save(); err != nil {
 		h.logger.Warn("session 保存失败", zap.Error(err))
 	}
-	c.Redirect(http.StatusFound, "/login")
+	c.Redirect(http.StatusFound, "/#/login")
 }
 
 // Health 返回服务健康状态，用于 Docker 健康检查。
