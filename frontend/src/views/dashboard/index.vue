@@ -297,8 +297,9 @@ const loading = ref(true);
 
 const greeting = computed(() => {
   const h = new Date().getHours();
-  if (h < 6) return "夜深了，注意休息";
-  if (h < 12) return "早上好";
+  if (h < 6) return "凌晨好";
+  if (h < 9) return "早上好";
+  if (h < 12) return "上午好";
   if (h < 14) return "中午好";
   if (h < 18) return "下午好";
   return "晚上好";
