@@ -40,7 +40,7 @@ func AtomicSave(path string, data []byte, perm os.FileMode) error {
 		return fmt.Errorf("写入临时文件失败: %w", err)
 	}
 
-	if err := os.Rename(tmp, path); err != nil {
+	if err := ReplaceFile(tmp, path); err != nil {
 		os.Remove(tmp)
 		return fmt.Errorf("原子替换文件失败: %w", err)
 	}

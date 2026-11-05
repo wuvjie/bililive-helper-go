@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,6 +20,28 @@ type Options struct {
 	Args     []string
 	Timeout  time.Duration    // 0 means DefaultTimeout
 	OnStdout func(line string) // called for each stdout line (for progress parsing)
+}
+
+type tailBuffer struct {
+	mu  sync.Mutex
+	buf []byte
+	max int
+}
+
+func (b *tailBuffer) Write(p []byte) (n int, err error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.buf = append(b.buf, p...)
+	if len(b.buf) > b.max {
+		b.buf = b.buf[len(b.buf)-b.max:]
+	}
+	return len(p), nil
+}
+
+func (b *tailBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return string(b.buf)
 }
 
 // Run 执行 ffmpeg 命令。
@@ -31,6 +55,9 @@ func Run(ctx context.Context, opts Options) error {
 
 	cmd := exec.Command("ffmpeg", opts.Args...)
 	setProcessGroup(cmd)
+
+	stderrTail := &tailBuffer{max: 4096}
+	cmd.Stderr = stderrTail
 
 	// StdoutPipe 必须在 Start 之前创建（os/exec 要求），
 	// 但 goroutine 在 Start 之后启动，避免 Start 失败时 goroutine 泄漏。
@@ -65,7 +92,13 @@ func Run(ctx context.Context, opts Options) error {
 
 	select {
 	case err := <-done:
-		return err
+		if err != nil {
+			if tail := strings.TrimSpace(stderrTail.String()); tail != "" {
+				return fmt.Errorf("ffmpeg 执行失败 (%w): %s", err, tail)
+			}
+			return err
+		}
+		return nil
 	case <-ctx.Done():
 		killProcessGroup(cmd)
 		<-done

@@ -108,18 +108,21 @@ type MergeResult struct {
 // checkDiskSpaceForMerge 检查合并任务是否有足够的磁盘空间。
 // TS 管线峰值空间：源文件 + TS 中间文件 + 输出文件 ≈ 3 倍源文件 + 2GB 余量。
 func (s *MergeService) checkDiskSpaceForMerge(tasks []mergeTask, targetDir string) error {
-	var totalSourceBytes int64
+	var maxTaskBytes int64
 	for _, t := range tasks {
-		totalSourceBytes += int64(t.SizeGB * oneGB)
+		taskBytes := int64(t.SizeGB * oneGB)
+		if taskBytes > maxTaskBytes {
+			maxTaskBytes = taskBytes
+		}
 	}
 	disk, err := utils.GetDiskUsage(targetDir)
 	if err != nil {
 		return fmt.Errorf("获取磁盘信息失败（%s）: %w", targetDir, err)
 	}
-	// TS 管线峰值空间：源文件 + TS 中间文件 + 输出文件 ≈ 3 倍源文件 + 2GB 余量
-	needed := (totalSourceBytes * 3) + tsMergeHeadroomBytes
+	// 合并任务为串行执行，峰值空间取决于最大单场任务所需空间：源文件 + TS 中间文件 + 输出文件 ≈ 3 倍源文件 + 2GB 余量
+	needed := (maxTaskBytes * 3) + tsMergeHeadroomBytes
 	if int64(disk.Free) < needed {
-		return fmt.Errorf("磁盘空间不足：需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
+		return fmt.Errorf("磁盘空间不足：最大待合并任务需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
 			float64(needed)/oneGB, float64(disk.Free)/oneGB)
 	}
 	return nil
@@ -656,7 +659,7 @@ func (s *MergeService) doMerge(ctx context.Context, files []string, folder strin
 		if err := utils.SafeUnlink(fullPath); err != nil {
 			opLog.Log(fmt.Sprintf("⚠ 删除源文件失败: %s (%v)", f, err))
 		}
-		cleanCompanionFiles(fullPath)
+		CleanCompanionFiles(fullPath)
 	}
 
 	return true
@@ -714,6 +717,16 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 			return opLog.LogID(), fmt.Errorf("有效文件不足2个（%d 个文件已不存在，请刷新文件列表）", len(skipped))
 		}
 		return opLog.LogID(), fmt.Errorf("有效文件不足2个")
+	}
+
+	// 磁盘空间前置检查：确保可用空间满足 TS 转换峰值
+	disk, diskErr := utils.GetDiskUsage(folder)
+	if diskErr == nil {
+		needed := (totalInputBytes * 3) + tsMergeHeadroomBytes
+		if int64(disk.Free) < needed {
+			return opLog.LogID(), fmt.Errorf("磁盘空间不足：需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
+				float64(needed)/oneGB, float64(disk.Free)/oneGB)
+		}
 	}
 
 	// 按文件名中的日期时间升序排序（确保合并后时间线正确）

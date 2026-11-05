@@ -370,7 +370,7 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 		}
 
 		// 级联清理同名伴生文件（XML 弹幕、封面图、元数据等），防止产生孤儿文件
-		cleanCompanionFiles(f.Path)
+		CleanCompanionFiles(f.Path)
 
 		deleted++
 		freed += f.Size
@@ -386,8 +386,8 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	return deleted, freed, truncated
 }
 
-// cleanCompanionFiles 级联清理与视频同名的伴生文件（XML 弹幕、封面图、元数据等）。
-func cleanCompanionFiles(videoPath string) {
+// CleanCompanionFiles 级联清理与视频同名的伴生文件（XML 弹幕、封面图、元数据等）。
+func CleanCompanionFiles(videoPath string) {
 	ext := filepath.Ext(videoPath)
 	base := strings.TrimSuffix(videoPath, ext)
 	companions := []string{".xml", ".cover.jpg", ".json", ".nfo"}

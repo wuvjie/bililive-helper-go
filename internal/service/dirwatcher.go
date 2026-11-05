@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/utils"
 
 	"go.uber.org/zap"
 )
@@ -131,7 +132,7 @@ func (w *DirWatcher) getLatestMtime(dirPath string) time.Time {
 
 	var latest time.Time
 	for _, f := range files {
-		if f.IsDir() {
+		if f.IsDir() || !utils.IsVideoFile(f.Name()) {
 			continue
 		}
 		info, err := f.Info()
