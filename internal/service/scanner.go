@@ -50,6 +50,14 @@ type convertTask struct {
 	Name    string
 }
 
+// ScanSummary 汇总一次扫描中的目录和主播状态信息。
+type ScanSummary struct {
+	TotalStreamers int // 发现的主播目录数
+	ActiveStreams  int // 正在录制的主播数
+	WaitingSafety  int // 处于下播安全期内的主播数
+	UpToDate       int // 录像已处于最新状态（已合并或无需合并）的主播数
+}
+
 const (
 	recordingActiveThreshold = 5 * time.Minute // 录制活跃判定阈值：最新文件在此时间内被认为还在录制
 	defaultGapMinutes        = 30              // 场次间隔回退值：未配置时的默认分钟数
@@ -198,13 +206,14 @@ func isStreamActive(folder string, batchKey string) bool {
 
 // scanTasks 扫描录制目录，将文件按主播分组、按时间排序、按间隔分场次。
 // 返回待合并任务列表和待转换任务列表（FLV→MP4）。
-func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg config.Config) ([]mergeTask, []convertTask) {
+func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg config.Config) ([]mergeTask, []convertTask, ScanSummary) {
+	var stats ScanSummary
 	var tasks []mergeTask
 	var convertTasks []convertTask
 	var pending []pendingBatch // Phase 1: 收集候选，Phase 2: 并发验证稳定性
 	entries, err := os.ReadDir(root)
 	if err != nil {
-		return nil, nil
+		return nil, nil, stats
 	}
 
 	gapMinutes := cfg.GapMinutes
@@ -219,12 +228,19 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 		if streamer != "" && entry.Name() != streamer {
 			continue
 		}
+		stats.TotalStreamers++
 
 		folder := filepath.Join(root, entry.Name())
 		videos := s.getVideoFiles(folder)
 		if len(videos) == 0 {
+			stats.UpToDate++
 			continue
 		}
+
+		streamerActive := false
+		streamerWaitingSafety := false
+		initConvertCount := len(convertTasks)
+		initPendingCount := len(pending)
 
 		// 按文件名中的 key（主播+标题）分组
 		groups := make(map[string][]videoFile)
@@ -358,6 +374,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 						}
 
 						if isStreamActive(folder, key) {
+							streamerActive = true
 							s.logger.Info(fmt.Sprintf("[%s] ⏭ %s → 录制中，跳过", entry.Name(), singleName))
 							continue
 						}
@@ -368,6 +385,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 							mergeAgeMin = defaultMergeAgeMinutes
 						}
 						if ageMin < mergeAgeMin {
+							streamerWaitingSafety = true
 							s.logger.Info(fmt.Sprintf("[%s] ⏭ %s → 等待安全期（%.0f分钟前，需%.0f分钟）", entry.Name(), singleName, ageMin, mergeAgeMin))
 							continue
 						}
@@ -395,12 +413,14 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				// 多文件合并（过滤后 >=2 个文件）
 				// 主播正在录制时，跳过所有批次（避免合并未完成的场次）
 				if isStreamActive(folder, key) {
+					streamerActive = true
 					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 主播正在录制，跳过", entry.Name(), len(names)))
 					continue
 				}
 
 				lastFile := filepath.Join(folder, names[len(names)-1])
 				if isFileBeingWritten(ctx, lastFile, 2*time.Second) {
+					streamerActive = true
 					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 文件写入中，跳过", entry.Name(), len(names)))
 					continue
 				}
@@ -416,6 +436,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				}
 
 				if ageMinutes < mergeAgeMinutes {
+					streamerWaitingSafety = true
 					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 等待安全期（%.0f分钟前，需%.0f分钟）", entry.Name(), len(names), ageMinutes, mergeAgeMinutes))
 					continue
 				}
@@ -429,6 +450,15 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					Streamer: entry.Name(),
 				})
 			}
+		}
+		if len(convertTasks) > initConvertCount || len(pending) > initPendingCount {
+			// 有待处理任务
+		} else if streamerActive {
+			stats.ActiveStreams++
+		} else if streamerWaitingSafety {
+			stats.WaitingSafety++
+		} else {
+			stats.UpToDate++
 		}
 	}
 	// Phase 2: 并发验证候选批次的文件稳定性（避免串行阻塞 1 分钟/批次）
@@ -460,5 +490,5 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 		}
 		wg.Wait()
 	}
-	return tasks, convertTasks
+	return tasks, convertTasks, stats
 }

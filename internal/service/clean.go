@@ -68,10 +68,14 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	if streamer == "" {
 		if disk.UsedPct < cfg.TriggerThreshold {
-			msg := fmt.Sprintf("📊 %s 磁盘 %.1f%%（未达阈值 %.0f%%）", setup.Tag, disk.UsedPct, cfg.TriggerThreshold)
+			msg := fmt.Sprintf("📊 %s 磁盘使用率 %.1f%%（低于触发阈值 %.0f%%，无需清理）", setup.Tag, disk.UsedPct, cfg.TriggerThreshold)
 			progress(msg)
+			if !setup.IsManual {
+				setup.OpLog.Discard()
+				return &CleanResult{}, "", nil
+			}
 			s.history.Add("clean", streamer, "success",
-				fmt.Sprintf("磁盘 %.1f%% 未达阈值 %.0f%%", disk.UsedPct, cfg.TriggerThreshold), setup.LogID)
+				fmt.Sprintf("磁盘 %.1f%% 低于阈值 %.0f%%", disk.UsedPct, cfg.TriggerThreshold), setup.LogID)
 			return &CleanResult{}, setup.LogID, nil
 		}
 		progress(fmt.Sprintf("📊 磁盘 %.1f%%（阈值 %.0f%%）", disk.UsedPct, cfg.TriggerThreshold))
@@ -105,8 +109,12 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	}
 
 	if len(candidates) == 0 {
-		msg := "ℹ 扫描完成，无符合条件的文件可删"
+		msg := "ℹ 扫描完成，无符合清理条件的文件（所有文件均受最小保留或安全期保护）"
 		progress(msg)
+		if !setup.IsManual {
+			setup.OpLog.Discard()
+			return &CleanResult{}, "", nil
+		}
 		s.history.Add("clean", streamer, "success", "无符合条件的文件可删", setup.LogID)
 		return &CleanResult{}, setup.LogID, nil
 	}

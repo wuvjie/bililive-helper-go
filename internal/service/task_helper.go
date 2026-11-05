@@ -19,6 +19,7 @@ type TaskSetup struct {
 	Progress ProgressFunc
 	LogID    string
 	Tag      string // "[全局]" 或 "[主播名]"
+	IsManual bool   // 是否为手动触发（onProgress != nil）
 }
 
 // PrepareTask 执行任务启动前的通用准备工作。
@@ -27,6 +28,7 @@ type TaskSetup struct {
 // streamer 为空表示全局模式。
 func PrepareTask(cfg *config.Config, logger *zap.Logger, logDir, taskType, displayName, streamer string, onProgress ProgressFunc) (*TaskSetup, error) {
 	snap := cfg.Snapshot()
+	isManual := onProgress != nil
 
 	// 创建操作日志（失败时降级为 nil）
 	opLog, err := NewOpLogger(filepath.Join(snap.LogDir, logDir), taskType)
@@ -42,17 +44,17 @@ func PrepareTask(cfg *config.Config, logger *zap.Logger, logDir, taskType, displ
 
 	// 静默时段检查
 	if snap.IsBackupWindow() {
-		opLog.Close()
+		opLog.Discard()
 		return nil, fmt.Errorf("当前处于静默时段（%d:%02d-%d:%02d），%s暂停",
 			snap.BackupStartHour, snap.BackupStartMinute,
 			snap.BackupEndHour, snap.BackupEndMinute,
 			displayName)
 	}
 
-	// 路径存在性检查
+	// 路径存在性检查：通俗易懂的中文报错提示，方便新手排查 Docker 挂载
 	if _, err := os.Stat(snap.TargetDir); os.IsNotExist(err) {
-		opLog.Close()
-		return nil, fmt.Errorf("路径不存在: %s", snap.TargetDir)
+		opLog.Discard()
+		return nil, fmt.Errorf("录像存储目录不存在或未挂载: %s (请检查 Docker 容器目录映射)", snap.TargetDir)
 	}
 
 	tag := "[全局]"
@@ -66,5 +68,6 @@ func PrepareTask(cfg *config.Config, logger *zap.Logger, logDir, taskType, displ
 		Progress: progress,
 		LogID:    opLog.LogID(),
 		Tag:      tag,
+		IsManual: isManual,
 	}, nil
 }
