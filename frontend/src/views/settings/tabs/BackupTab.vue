@@ -12,7 +12,7 @@
         <div class="backup-action-group">
           <button class="btn-action-half btn-export" @click="emit('export-file')">
               <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>下载配置文件 (.json)</span>
+              <span>下载配置文件 (JSON)</span>
             </button>
           <button class="btn-action-half btn-copy" @click="emit('copy-json')">
               <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -37,7 +37,7 @@
         />
         <div class="import-file-box" @click="importFileRef?.click()">
           <svg class="import-file-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          <span class="import-file-text">{{ selectedFileName || '点击选择本地 JSON 备份文件...' }}</span>
+          <span class="import-file-text">{{ selectedFileName || '点击选择本地 JSON 配置文件...' }}</span>
         </div>
         <div class="import-manual-toggle">
           <span class="toggle-link" @click="showManualPaste = !showManualPaste">
@@ -271,4 +271,45 @@ function onFileChange(e: Event) {
   color: var(--steel);
 }
 
+
+html.dark {
+  .backup-card {
+    background: #18181b;
+    border-color: #27272a;
+  }
+  .btn-action-half.btn-copy {
+    background: #1f1f23;
+    border-color: #27272a;
+    color: #e4e4e7;
+    &:hover {
+      background: #27272a;
+      border-color: #3f3f46;
+      color: #ffffff;
+    }
+  }
+  .import-file-box {
+    background: #141416;
+    border-color: #27272a;
+    &:hover {
+      border-color: #3b82f6;
+    }
+  }
+  .import-file-text {
+    color: #a1a1aa;
+  }
+  .backup-textarea {
+    background: #141416;
+    border-color: #27272a;
+    color: #f4f4f5;
+    &:focus {
+      border-color: #3b82f6;
+    }
+  }
+  .toggle-link {
+    color: #71717a;
+    &:hover {
+      color: #e4e4e7;
+    }
+  }
+}
 </style>

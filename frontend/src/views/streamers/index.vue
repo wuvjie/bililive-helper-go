@@ -9,7 +9,11 @@
               <span class="title-text">主播管理</span>
             </div>
             <span class="streamer-total-stat">
-              共 <strong>{{ streamers.length }}</strong> 位主播 · <strong>{{ totalFiles }}</strong> 个录像 · <strong>{{ totalSizeGB }}</strong> GB
+              共 <strong class="mono-val">{{ streamers.length }}</strong> 位主播
+              <span class="stat-sep">/</span>
+              <strong class="mono-val">{{ totalFiles }}</strong> 个录像
+              <span class="stat-sep">/</span>
+              <strong class="mono-val">{{ totalSizeGB }}</strong> GB
             </span>
           </div>
           <div class="header-right">
@@ -816,15 +820,24 @@ onActivated(() => loadData());
   color: var(--steel, #888);
   background: var(--surface, #fafafa);
   border: 1px solid var(--hairline, #eee);
-  padding: 0 8px;
+  padding: 0 10px;
   border-radius: var(--r-sm, 4px);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   box-sizing: border-box;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.streamer-total-stat strong {
+.streamer-total-stat .mono-val {
+  font-family: var(--font-mono);
+  font-size: 12px;
   color: var(--ink, #333);
+  font-weight: 600;
+  margin: 0 2px;
+}
+.streamer-total-stat .stat-sep {
+  color: var(--stone, #a4a097);
+  margin: 0 6px;
+  font-weight: 300;
 }
 .header-refresh-btn {
   display: inline-flex;
@@ -1246,4 +1259,16 @@ html.dark {
   }
 }
 
+
+html.dark .streamer-total-stat {
+  background: #18181b;
+  border-color: #27272a;
+  color: #a1a1aa;
+}
+html.dark .streamer-total-stat .mono-val {
+  color: #f4f4f5;
+}
+html.dark .streamer-total-stat .stat-sep {
+  color: #52525b;
+}
 </style>
