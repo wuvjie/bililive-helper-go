@@ -13,14 +13,17 @@
             </span>
           </div>
           <div class="header-right">
-            <el-input
-              v-model="searchQuery"
-              placeholder="搜索主播名..."
-              :prefix-icon="Search"
-              clearable
-              size="small"
-              style="width: 200px"
-            />
+            <div class="search-input-wrap">
+              <el-input
+                v-model="searchQuery"
+                placeholder="搜索主播名..."
+                :prefix-icon="Search"
+                clearable
+                size="small"
+                style="width: 200px"
+              />
+              <span v-if="!searchQuery" class="kbd-badge search-kbd">/</span>
+            </div>
             <button class="header-refresh-btn" @click="loadData" title="刷新列表">
               <svg class="refresh-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
               刷新
@@ -1144,6 +1147,22 @@ onActivated(() => loadData());
   height: 14px;
   margin-right: 6px;
   vertical-align: -2px;
+}
+
+
+.search-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.search-kbd {
+  position: absolute;
+  right: 8px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.search-input-wrap:focus-within .search-kbd {
+  display: none;
 }
 
 </style>

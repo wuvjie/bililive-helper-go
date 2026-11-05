@@ -74,6 +74,27 @@
           </div>
         </div>
         <div class="navbar-right">
+          <!-- 主题切换按钮：明亮 / 暗黑 -->
+          <el-tooltip :content="appStore.isDark ? '切换至明亮模式' : '切换至暗黑模式'" placement="bottom">
+            <button class="nav-btn-icon theme-toggle-btn" @click="appStore.toggleTheme" :title="appStore.isDark ? '浅色模式' : '深色模式'">
+              <!-- 浅色模式下显示月亮图标（点击切暗黑） -->
+              <svg v-if="!appStore.isDark" class="nav-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+              <!-- 暗黑模式下显示太阳图标（点击切浅色） -->
+              <svg v-else class="nav-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </button>
+          </el-tooltip>
           <el-tooltip content="刷新数据" placement="bottom">
             <button class="nav-btn-icon" :class="{ spinning: isRefreshing }" @click="refreshPage">
               <svg class="nav-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -238,6 +259,40 @@ async function fetchDiskStatus() {
   } catch { /* silently ignore */ }
 }
 onMounted(() => fetchDiskStatus());
+
+// 全局快捷键支持：按 / 聚焦当前页面搜索框，按 Esc 退出
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const activeEl = document.activeElement;
+  const isInput =
+    activeEl &&
+    (activeEl.tagName === "INPUT" ||
+      activeEl.tagName === "TEXTAREA" ||
+      (activeEl as HTMLElement).isContentEditable);
+
+  if (e.key === "/" && !isInput) {
+    const searchInput = document.querySelector<HTMLInputElement>(
+      ".header-right .el-input__inner, .header-filters .el-input__inner, .terminal-filter-input"
+    );
+    if (searchInput) {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+    }
+  } else if (e.key === "Escape") {
+    if (isInput) {
+      (activeEl as HTMLElement).blur();
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", handleGlobalKeydown);
+  appStore.applyTheme();
+});
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleGlobalKeydown);
+});
+
 router.afterEach(() => fetchDiskStatus());
 </script>
 
@@ -591,4 +646,28 @@ router.afterEach(() => fetchDiskStatus());
     font-size: 12px;
   }
 }
+
+html.dark {
+  .layout-sidebar {
+    background: var(--surface);
+    border-right-color: var(--hairline);
+  }
+  .layout-navbar {
+    background: rgba(18, 18, 21, 0.85);
+    border-bottom-color: var(--hairline);
+  }
+  .sidebar-bottom-toggle {
+    background: var(--surface);
+    border-top-color: var(--hairline);
+  }
+  .user-pill-btn {
+    background: var(--surface);
+    border-color: var(--hairline);
+  }
+  .nav-hamburger-btn {
+    background: var(--surface);
+    border-color: var(--hairline);
+  }
+}
+
 </style>

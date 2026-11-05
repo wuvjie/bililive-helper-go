@@ -25,15 +25,18 @@
                 <el-option label="配置变更" value="config" />
                 <el-option label="调度事件" value="schedule" />
               </el-select>
-              <el-input
-                v-model="filterStreamer"
-                placeholder="搜索主播名..."
-                clearable
-                size="small"
-                style="width: 140px"
-                @input="onStreamerSearch"
-                @clear="loadHistory(1)"
-              />
+              <div class="search-input-wrap">
+                <el-input
+                  v-model="filterStreamer"
+                  placeholder="搜索主播名..."
+                  clearable
+                  size="small"
+                  style="width: 140px"
+                  @input="onStreamerSearch"
+                  @clear="loadHistory(1)"
+                />
+                <span v-if="!filterStreamer" class="kbd-badge search-kbd">/</span>
+              </div>
             </div>
             <div class="header-buttons">
               <button class="text-action" @click="loadHistory(currentPage)" title="刷新列表">
@@ -1014,6 +1017,22 @@ onActivated(() => loadHistory(currentPage.value));
     width: 24px;
     height: 24px;
   }
+}
+
+
+.search-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.search-kbd {
+  position: absolute;
+  right: 8px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.search-input-wrap:focus-within .search-kbd {
+  display: none;
 }
 
 </style>
