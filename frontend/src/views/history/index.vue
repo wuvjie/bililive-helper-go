@@ -5,42 +5,46 @@
         <div class="card-header">
           <span>📋 操作日志</span>
           <div class="header-actions">
-            <el-select
-              v-model="filterTask"
-              placeholder="全部任务类型"
-              clearable
-              size="small"
-              style="width: 128px"
-              @change="loadHistory(1)"
-            >
-              <el-option label="全部任务" value="" />
-              <el-option label="🔗 分片合并" value="merge" />
-              <el-option label="🧹 磁盘清理" value="clean" />
-              <el-option label="⚙️ 配置变更" value="config" />
-              <el-option label="⏱️ 调度事件" value="schedule" />
-            </el-select>
-            <el-input
-              v-model="filterStreamer"
-              placeholder="搜索主播名..."
-              clearable
-              size="small"
-              style="width: 140px"
-              @input="onStreamerSearch"
-              @clear="loadHistory(1)"
-            />
-            <span class="action-divider"></span>
-            <button class="text-action" @click="loadHistory(currentPage)">
-              <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-              刷新
-            </button>
-            <button class="text-action" @click="handleExport">
-              <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-              导出
-            </button>
-            <button class="text-action text-action-danger" @click="handleClearHistory" title="清空全部操作历史记录与日志文件">
-              <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
-              清空
-            </button>
+            <div class="header-filters">
+              <el-select
+                v-model="filterTask"
+                placeholder="全部任务类型"
+                clearable
+                size="small"
+                style="width: 128px"
+                @change="loadHistory(1)"
+              >
+                <el-option label="全部任务" value="" />
+                <el-option label="🔗 分片合并" value="merge" />
+                <el-option label="🧹 磁盘清理" value="clean" />
+                <el-option label="⚙️ 配置变更" value="config" />
+                <el-option label="⏱️ 调度事件" value="schedule" />
+              </el-select>
+              <el-input
+                v-model="filterStreamer"
+                placeholder="搜索主播名..."
+                clearable
+                size="small"
+                style="width: 140px"
+                @input="onStreamerSearch"
+                @clear="loadHistory(1)"
+              />
+            </div>
+            <div class="header-buttons">
+              <button class="text-action" @click="loadHistory(currentPage)" title="刷新列表">
+                <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                刷新
+              </button>
+              <button class="text-action" @click="handleExport" title="导出历史记录为 JSON">
+                <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                导出
+              </button>
+              <span class="action-divider"></span>
+              <button class="text-action text-action-danger" @click="handleClearHistory" title="清空全部操作历史记录与日志文件">
+                <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                清空
+              </button>
+            </div>
           </div>
         </div>
       </template>
@@ -248,9 +252,22 @@ const filteredLogLines = computed(() => {
 });
 
 function downloadRawLog() {
-  if (!activeLogTask.value || !activeLogId.value) return;
-  const url = getRawLogDownloadUrl(activeLogTask.value, activeLogId.value);
-  window.open(url, "_blank");
+  const content = logContent.value;
+  if (!content) {
+    ElMessage.warning("日志内容为空或尚未加载完成");
+    return;
+  }
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const filename = `${activeLogTask.value || 'task'}_${activeLogId.value || 'log'}.log`;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  ElMessage.success(`已开始下载日志文件: ${filename}`);
 }
 
 async function copyLogContent() {
@@ -426,17 +443,57 @@ onActivated(() => loadHistory(currentPage.value));
   flex-wrap: wrap;
   gap: 8px;
 }
-.header-actions { display: flex; gap: 8px; align-items: center; margin-right: -4px; }
-.action-divider { width: 1px; height: 14px; background: var(--hairline); flex-shrink: 0; }
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.header-filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.header-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.action-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--hairline, #e2e8f0);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
 /* Pure text action buttons with inline SVG icons */
 .text-action {
-  background: transparent; border: none; padding: 0;
-  font-size: 13px; font-weight: 500; color: var(--steel);
-  cursor: pointer; transition: color 0.15s;
-  display: inline-flex; align-items: center; gap: 4px;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  border-radius: var(--r-xs, 4px);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--steel, #64748b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
 }
-.text-action:hover { color: var(--ink); }
-.action-icon { width: 14px; height: 14px; flex-shrink: 0; }
+.text-action:hover {
+  color: var(--ink, #0f172a);
+  background: rgba(0, 0, 0, 0.04);
+}
+.action-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
 
 /* Sort arrow alignment — compensate leftward push on sortable headers */
 .history-table :deep(.el-table__header) th.is-sortable .cell {
@@ -521,21 +578,34 @@ onActivated(() => loadHistory(currentPage.value));
   .card-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
   }
   .header-actions {
     width: 100%;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
     margin-right: 0;
   }
-  .header-actions :deep(.el-select) {
+  .header-filters {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .header-filters :deep(.el-select) {
     flex: 1;
     min-width: 120px;
   }
-  .header-actions :deep(.el-input) {
+  .header-filters :deep(.el-input) {
     flex: 1;
     min-width: 130px;
+  }
+  .header-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
   }
   :deep(.terminal-modal-dialog) {
     width: 95% !important;
