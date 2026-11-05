@@ -36,8 +36,8 @@
         ref="formRef"
         :model="form"
         :rules="rules"
-        @submit.prevent="handleLogin"
         class="login-form"
+        @submit.prevent
       >
         <el-form-item prop="password" class="password-form-item">
           <div class="field-header">
@@ -64,6 +64,7 @@
             @keydown="checkCapsLock"
             @keyup="checkCapsLock"
             @focus="checkCapsLock"
+            @keydown.enter.prevent="handleLogin"
           />
         </el-form-item>
 
@@ -71,8 +72,8 @@
           <el-button
             type="primary"
             :loading="loading"
-            native-type="submit"
             class="login-submit-btn"
+            @click="handleLogin"
           >
             <span v-if="loading">正在验证身份...</span>
             <span v-else class="btn-inner">
@@ -161,15 +162,7 @@ async function handleLogin() {
     const serverMsg = err.response?.data?.error || err.response?.data?.message;
     errorMessage.value = serverMsg || "密码错误，请重新输入";
     triggerShake();
-
-    // 聚焦并选中输入框文本，方便立即重新输入
-    setTimeout(() => {
-      passwordInputRef.value?.focus();
-      const inputEl = passwordInputRef.value?.$el?.querySelector("input");
-      if (inputEl) {
-        inputEl.select();
-      }
-    }, 50);
+    passwordInputRef.value?.focus();
   }
 }
 
@@ -207,19 +200,7 @@ onMounted(() => {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.02),
     0 16px 36px -12px rgba(0, 0, 0, 0.06);
-  animation: cardAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
-}
-
-@keyframes cardAppear {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 /* 独立的震颤外层容器 — 绝不影响卡片自身的入场动画 */
@@ -231,15 +212,15 @@ onMounted(() => {
   will-change: transform;
 }
 
-/* 仿 macOS/iOS 锁屏输错密码的自然微阻尼震颤 */
+/* 仿 macOS/iOS 锁屏输错密码的自然微阻尼震颤 — 使用 translate3d 开启硬件加速且不触发布局重排 */
 @keyframes naturalShake {
-  0%, 100% { transform: translateX(0); }
-  16%, 48%, 80% { transform: translateX(-6px); }
-  32%, 64%, 96% { transform: translateX(6px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  20%, 60% { transform: translate3d(-5px, 0, 0); }
+  40%, 80% { transform: translate3d(5px, 0, 0); }
 }
 
 .is-shaking {
-  animation: naturalShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  animation: naturalShake 0.32s ease-in-out;
 }
 
 /* 错误横幅平滑展开渐变，无突兀缩放跳动 */

@@ -13,7 +13,7 @@
         <p class="setup-sub">首次初始化部署，请设置管理密码</p>
       </div>
 
-      <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleSubmit" class="setup-form">
+      <el-form ref="formRef" :model="form" :rules="rules" class="setup-form" @submit.prevent>
         <el-form-item prop="password" class="setup-form-item">
           <label class="field-label">设置管理员密码</label>
           <el-input
@@ -37,11 +37,12 @@
             size="large"
             :prefix-icon="Lock"
             class="setup-input"
+            @keydown.enter.prevent="handleSubmit"
           />
         </el-form-item>
 
         <el-form-item class="submit-form-item">
-          <el-button type="primary" :loading="loading" native-type="submit" class="setup-btn">
+          <el-button type="primary" :loading="loading" class="setup-btn" @click="handleSubmit">
             <span v-if="loading">正在初始化...</span>
             <span v-else class="btn-inner">
               <span>完成配置并开始使用</span>
@@ -150,19 +151,7 @@ async function handleSubmit() {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.02),
     0 16px 36px -12px rgba(0, 0, 0, 0.06);
-  animation: cardAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
-}
-
-@keyframes cardAppear {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .setup-header {
