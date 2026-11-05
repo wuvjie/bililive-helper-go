@@ -176,12 +176,42 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	} else {
 		progress(fmt.Sprintf("▶ 开始 %s 合并", setup.Tag))
 	}
-	progress(fmt.Sprintf("⚙ 扫描 %s ...", root))
+	if streamer != "" {
+		progress(fmt.Sprintf("⚙ 扫描 [%s] 的录像文件 ...", streamer))
+	} else {
+		progress("⚙ 扫描录像存储目录 ...")
+	}
 
-	tasks, convertTasks := s.scanTasks(ctx, root, streamer, cfg)
+	tasks, convertTasks, scanInfo := s.scanTasks(ctx, root, streamer, cfg)
 	if len(tasks) == 0 && len(convertTasks) == 0 {
-		s.history.Add("merge", streamer, "success", "扫描完成，无待合并文件", setup.LogID)
-		progress("ℹ 无待合并文件")
+		duration := time.Since(start)
+		var reason string
+		if scanInfo.TotalStreamers == 0 {
+			if streamer != "" {
+				reason = fmt.Sprintf("未找到主播 [%s] 的录像文件夹", streamer)
+			} else {
+				reason = "录像存储目录中暂无任何主播文件夹"
+			}
+		} else if scanInfo.ActiveStreams > 0 && scanInfo.WaitingSafety == 0 {
+			reason = fmt.Sprintf("扫描 %d 个主播目录：主播正在直播录制中，暂不合并", scanInfo.TotalStreamers)
+		} else if scanInfo.WaitingSafety > 0 && scanInfo.ActiveStreams == 0 {
+			reason = fmt.Sprintf("扫描 %d 个主播目录：录像处于下播安全期（需静置满 %d 分钟），暂不合并", scanInfo.TotalStreamers, cfg.MergeAgeMinutes)
+		} else if scanInfo.ActiveStreams > 0 && scanInfo.WaitingSafety > 0 {
+			reason = fmt.Sprintf("扫描 %d 个主播目录：%d 个录制中，%d 个等待安全期，暂不合并", scanInfo.TotalStreamers, scanInfo.ActiveStreams, scanInfo.WaitingSafety)
+		} else {
+			reason = fmt.Sprintf("扫描 %d 个主播目录：全部录像已就绪或无需合并", scanInfo.TotalStreamers)
+		}
+
+		progress(fmt.Sprintf("ℹ %s (耗时 %s)", reason, formatDuration(duration)))
+
+		// 自动定时轮询空跑：不产生无用历史记录，清理空日志文件，保持列表纯净
+		if !setup.IsManual {
+			setup.OpLog.Discard()
+			return &MergeResult{}, "", nil
+		}
+
+		// 手动触发时：保留历史记录以便用户确认操作反馈
+		s.history.Add("merge", streamer, "success", reason, setup.LogID)
 		return &MergeResult{}, setup.LogID, nil
 	}
 

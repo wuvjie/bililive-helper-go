@@ -16,6 +16,7 @@ const maxOpLogSize = 10 * 1024 * 1024 // 10MB: 单个操作日志文件大小上
 type OpLogger struct {
 	mu      sync.Mutex
 	file    *os.File
+	path    string
 	logID   string
 	closed  bool
 	written int64 // 已写入字节数，用于大小限制
@@ -34,7 +35,7 @@ func NewOpLogger(logDir, taskType string) (*OpLogger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("创建日志文件失败: %w", err)
 	}
-	return &OpLogger{file: f, logID: logID}, nil
+	return &OpLogger{file: f, path: path, logID: logID}, nil
 }
 
 // Log 写入一行带时间戳的日志。并发安全。超过大小限制后停止写入。
@@ -76,6 +77,17 @@ func (l *OpLogger) LogID() string {
 		return ""
 	}
 	return l.logID
+}
+
+// Discard 关闭并删除当前操作日志文件（用于空跑任务，避免产生无用小文件）。
+func (l *OpLogger) Discard() {
+	if l == nil {
+		return
+	}
+	l.Close()
+	if l.path != "" {
+		_ = os.Remove(l.path)
+	}
 }
 
 // Close 关闭日志文件。重复调用安全。
