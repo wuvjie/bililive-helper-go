@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +18,14 @@ import (
 	"go.uber.org/zap"
 )
 
+func round1(v float64) float64 {
+	return math.Round(v*10) / 10
+}
+
+func round2(v float64) float64 {
+	return math.Round(v*100) / 100
+}
+
 // Status 返回简要系统状态：磁盘使用率、主播数量、总容量。
 func (h *Handler) Status(c *gin.Context) {
 	cfg := h.config.ToDTO()
@@ -29,7 +38,7 @@ func (h *Handler) Status(c *gin.Context) {
 	ok(c, gin.H{
 		"disk_usage": disk.UsedPct,
 		"streamers":  streamers,
-		"total_gb":   float64(int(float64(disk.Total)/1073741824*10)) / 10,
+		"total_gb":   round1(float64(disk.Total) / 1073741824),
 	})
 }
 
@@ -46,13 +55,13 @@ func (h *Handler) StatusDetail(c *gin.Context) {
 	ok(c, gin.H{
 		"disk": gin.H{
 			"usage_pct": disk.UsedPct,
-			"total_gb":  float64(int(float64(disk.Total)/1073741824*10)) / 10,
-			"used_gb":   float64(int(float64(disk.Used)/1073741824*10)) / 10,
-			"free_gb":   float64(int(float64(disk.Free)/1073741824*10)) / 10,
+			"total_gb":  round1(float64(disk.Total) / 1073741824),
+			"used_gb":   round1(float64(disk.Used) / 1073741824),
+			"free_gb":   round1(float64(disk.Free) / 1073741824),
 		},
 		"pending": gin.H{
 			"original_files":   pendingCount,
-			"original_size_gb": float64(int(float64(pendingSize)/1073741824*100)) / 100,
+			"original_size_gb": round2(float64(pendingSize) / 1073741824),
 		},
 		"streamers": streamers,
 		"schedule":  h.scheduler.GetStatus(),
@@ -72,7 +81,7 @@ func (h *Handler) Stats(c *gin.Context) {
 
 	for _, r := range records {
 		// 有效清理：状态成功且实际产生了磁盘释放（排除未达水位无文件删除的空跑扫描）
-		isEffectiveClean := r.Task == "clean" && r.Status == "success" && (r.FreedBytes > 0 || r.FilesCount > 0)
+		isEffectiveClean := r.Task == "clean" && (r.Status == "success" || r.Status == "partial") && (r.FreedBytes > 0 || r.FilesCount > 0)
 		if isEffectiveClean {
 			totalClean++
 			totalCleanBytes += r.FreedBytes
@@ -138,7 +147,7 @@ func (h *Handler) Stats(c *gin.Context) {
 		}
 		recordDay := r.Time[:10]
 		isEffectiveMerge := r.Task == "merge" && (r.Status == "success" || r.Status == "partial") && (r.MergedBytes > 0 || r.FilesCount > 0)
-		isEffectiveClean := r.Task == "clean" && r.Status == "success" && (r.FreedBytes > 0 || r.FilesCount > 0)
+		isEffectiveClean := r.Task == "clean" && (r.Status == "success" || r.Status == "partial") && (r.FreedBytes > 0 || r.FilesCount > 0)
 
 		for i := range dailyStats {
 			if dailyStats[i].Date == recordDay {
@@ -191,8 +200,8 @@ func (h *Handler) Stats(c *gin.Context) {
 			"clean_bytes": totalCleanBytes,
 		},
 		"daily":           dailyStats,
-		"daily_output_gb": float64(int(dailyOutputGB*10)) / 10,
-		"days_until_full": float64(int(daysUntilFull)),
+		"daily_output_gb": round1(dailyOutputGB),
+		"days_until_full": math.Round(daysUntilFull),
 	})
 }
 
@@ -281,7 +290,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			"name":       si.name,
 			"files":      si.count,
 			"size_bytes": si.size,
-			"size_gb":    float64(int(float64(si.size)/1073741824*100)) / 100,
+			"size_gb":    round2(float64(si.size) / 1073741824),
 			"mtime":      mtime,
 			"rule":       rule,
 			"has_rule":   hasRule,
