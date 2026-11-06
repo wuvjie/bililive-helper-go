@@ -114,7 +114,7 @@
               <el-dropdown-menu class="nav-dropdown-menu">
                 <div class="user-dropdown-header">
                   <div class="user-dropdown-title">系统管理员</div>
-                  <div class="user-dropdown-sub">版本 v2.0.0 (Release)</div>
+                  <div class="user-dropdown-sub">版本 v3.0.0 (Release)</div>
                 </div>
                 <el-dropdown-item command="change-password" divided>
                   <span class="dropdown-item-flex">
