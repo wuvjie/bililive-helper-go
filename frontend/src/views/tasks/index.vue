@@ -750,6 +750,7 @@ onActivated(async () => {
 
 /* Terminal Card */
 .terminal-container-card {
+  color-scheme: dark;
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--r-md, 8px);
@@ -857,6 +858,7 @@ onActivated(async () => {
   margin-left: 6px;
 }
 .history-quick-select {
+  color-scheme: dark !important;
   width: 210px;
 
   :deep(.el-select__wrapper),

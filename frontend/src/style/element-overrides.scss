@@ -738,6 +738,7 @@ a:focus:not(:focus-visible) {
 // ── 终端控制栏历史归档下拉选择器（全场景强穿透深色隔离）──
 .history-quick-select {
   width: 210px !important;
+  color-scheme: dark !important;
   --el-fill-color-blank: #18181b !important;
   --el-border-color: rgba(255, 255, 255, 0.15) !important;
   --el-border-color-hover: rgba(255, 255, 255, 0.3) !important;
@@ -777,10 +778,28 @@ a:focus:not(:focus-visible) {
   background: #18181b !important;
   background-color: #18181b !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  --el-bg-color-overlay: #18181b !important;
+  --el-fill-color-blank: #18181b !important;
+  --el-border-color-light: rgba(255, 255, 255, 0.15) !important;
+  --el-text-color-regular: #e4e4e7 !important;
+  --el-text-color-primary: #e4e4e7 !important;
+  --el-text-color-secondary: #a1a1aa !important;
+  color-scheme: dark !important;
+
+  .el-select-dropdown {
+    background: #18181b !important;
+    background-color: #18181b !important;
+  }
 
   .el-popper__arrow::before {
     background: #18181b !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .el-select-dropdown__empty {
+    color: #a1a1aa !important;
+    font-size: 12px !important;
+    font-family: var(--font-mono) !important;
   }
 
   .el-select-dropdown__item {
