@@ -676,8 +676,28 @@ a:focus-visible,
 .el-tabs__item:focus-visible,
 .el-checkbox:focus-visible,
 .el-radio:focus-visible {
-  outline: 2px solid #2563eb !important;
+  outline: 2px solid var(--hairline-focus, #2563eb) !important;
   outline-offset: 2px !important;
+}
+
+// Windows 高对比度模式下确保键盘焦点与输入框不丢失 (WCAG 2.4.7 Forced Colors Safeguard)
+@media (forced-colors: active) {
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  a:focus-visible,
+  .el-button:focus-visible,
+  .el-switch:focus-visible,
+  .el-tabs__item:focus-visible,
+  .el-checkbox:focus-visible,
+  .el-radio:focus-visible,
+  input:focus,
+  textarea:focus,
+  .el-input.is-focus .el-input__wrapper,
+  .el-textarea.is-focus .el-textarea__inner,
+  .el-select.is-focus .el-select__wrapper {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
 }
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
