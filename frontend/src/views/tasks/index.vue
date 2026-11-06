@@ -851,15 +851,26 @@ onActivated(async () => {
 }
 .history-quick-select {
   width: 210px;
-}
-.history-quick-select :deep(.el-input__wrapper) {
-  background-color: #18181b !important;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset !important;
-}
-.history-quick-select :deep(.el-input__inner) {
-  color: #e4e4e7 !important;
-  font-size: 12px !important;
-  font-family: var(--font-mono) !important;
+
+  :deep(.el-select__wrapper),
+  :deep(.el-input__wrapper) {
+    background-color: #18181b !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    line-height: 26px !important;
+    border-radius: var(--r-sm, 4px) !important;
+  }
+  :deep(.el-select__placeholder),
+  :deep(.el-select__selected-item),
+  :deep(.el-input__inner) {
+    color: #e4e4e7 !important;
+    font-size: 12px !important;
+    font-family: var(--font-mono) !important;
+  }
+  :deep(.el-select__caret) {
+    color: #a1a1aa !important;
+  }
 }
 
 .terminal-meta-right {
