@@ -164,8 +164,15 @@
               v-model="selectedHistoryId"
               placeholder="选择查看历史任务归档..."
               size="small"
-              popper-class="select-popper-small"
+              popper-class="select-popper-small history-select-popper"
               class="history-quick-select"
+              :style="{
+                '--el-fill-color-blank': '#18181b',
+                '--el-border-color': 'rgba(255, 255, 255, 0.15)',
+                '--el-border-color-hover': 'rgba(255, 255, 255, 0.3)',
+                '--el-text-color-regular': '#e4e4e7',
+                '--el-text-color-placeholder': '#a1a1aa'
+              }"
               @change="onHistorySelect"
             >
               <el-option
@@ -474,7 +481,7 @@ onActivated(async () => {
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .tasks {
   display: flex;
   flex-direction: column;
