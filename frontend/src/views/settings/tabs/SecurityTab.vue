@@ -59,7 +59,7 @@
       <div class="tip-content">
         <div class="tip-title">密码管理提示</div>
         <div class="tip-text">
-          修改密码后，旧的浏览器会话将自动失效并更新。如果遗忘密码，可在 Docker 容器日志中查看初始生成的密码，或在启动环境变量中指定 <code>PASSWORD</code> 参数直接重设。
+          修改密码后，旧的浏览器会话将自动失效并更新。如果遗忘密码，可在 Docker 容器日志中查看初始生成的密码，或在启动环境变量中指定<code>PASSWORD</code>参数直接重设。
         </div>
       </div>
     </div>
@@ -189,12 +189,13 @@ async function handleSubmit() {
   line-height: 1.5;
 }
 .tip-text code {
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--charcoal, #333);
-  padding: 1.5px 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  padding: 2px 6px;
   border-radius: 4px;
   font-family: var(--font-mono);
-  border: 1px solid var(--hairline, #eee);
+  font-weight: 500;
+  border: 1px solid rgba(37, 99, 235, 0.18);
 }
 
 @media (max-width: 680px) {

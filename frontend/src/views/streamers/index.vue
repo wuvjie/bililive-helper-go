@@ -1012,6 +1012,19 @@ onActivated(() => loadData());
   border-radius: var(--r-md, 8px);
   overflow: hidden;
 }
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+
+  :deep(.el-button) {
+    min-width: 84px;
+    height: 32px;
+    font-size: 13px;
+    box-sizing: border-box;
+  }
+}
 :deep(.rule-dialog .el-dialog__body) {
   padding: 16px 20px 20px !important;
 }

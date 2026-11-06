@@ -257,8 +257,12 @@ function onFileChange(e: Event) {
   transition: opacity 0.15s;
 }
 .btn-full:disabled {
-  opacity: 0.5;
+  background: var(--surface-hover, #f4f4f5) !important;
+  color: var(--stone, #a1a1aa) !important;
+  border: 1px solid var(--hairline, #e2e8f0) !important;
+  opacity: 1 !important;
   cursor: not-allowed;
+  box-shadow: none !important;
 }
 
 @media (max-width: 768px) {
@@ -337,5 +341,10 @@ html.dark .btn-action-half.btn-export:hover {
   background: rgba(37, 99, 235, 0.22) !important;
   border-color: #3b82f6 !important;
   color: #93c5fd !important;
+}
+html.dark .btn-full:disabled {
+  background: #27272a !important;
+  color: #71717a !important;
+  border-color: #3f3f46 !important;
 }
 </style>
