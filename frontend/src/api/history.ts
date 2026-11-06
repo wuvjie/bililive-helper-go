@@ -1,7 +1,7 @@
 import { get, post, del } from "@/utils/http";
 import type { HistoryResponse, HistoryRecord } from "./types";
 
-export function getHistory(params: { page?: number; per_page?: number; task?: string }) {
+export function getHistory(params: { page?: number; per_page?: number; task?: string; streamer?: string }) {
   return get<HistoryResponse>("/history", params);
 }
 
