@@ -476,18 +476,11 @@ function addTag(keyword: string) {
 .safe-age-group {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   flex-wrap: nowrap;
 
-  .compound-counter :deep(.el-input__wrapper) {
-    border-top-right-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-  }
-  .compound-select :deep(.el-input__wrapper) {
-    border-top-left-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    margin-left: -1px;
-  }
-:deep(.el-input__wrapper) {
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
     height: 32px !important;
     box-sizing: border-box;
   }

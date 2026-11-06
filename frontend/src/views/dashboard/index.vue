@@ -993,7 +993,7 @@ html.dark {
 .recent-status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; margin: 0; }
 .dot-emerald { background: #10b981; }
 .dot-fail { background: #ef4444; }
-.recent-fail { font-size: 11px; color: #ef4444; font-weight: 500; background: rgba(239, 68, 68, 0.1); padding: 1px 6px; border-radius: var(--r-xs); line-height: 1.4; }
+.recent-fail { font-size: 12px; color: #ef4444; font-weight: 500; background: rgba(239, 68, 68, 0.1); padding: 1px 6px; border-radius: var(--r-xs); line-height: 1.4; }
 .recent-time { font-family: var(--font-mono); font-size: 12px; color: var(--steel); min-width: 38px; text-align: right; font-feature-settings: "tnum"; }
 
 @media (max-width: 1024px) {

@@ -30,7 +30,7 @@
             </div>
             <button class="header-refresh-btn" @click="loadData" title="刷新列表">
               <svg class="refresh-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              刷新
+              <span>刷新</span>
             </button>
           </div>
         </div>
@@ -1320,6 +1320,16 @@ html.dark {
       border-color: rgba(239, 68, 68, 0.40) !important;
       color: #fca5a5 !important;
     }
+  }
+  .pill-default {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #a1a1aa !important;
+  }
+  .pill-protected {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+    color: #34d399 !important;
   }
 }
 
