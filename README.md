@@ -2,37 +2,44 @@
 
 > B 站 / 抖音直播录制后处理工具 — 自动合并、智能清理、Web 管理控制台
 
-[![Go](https://img.shields.io/badge/Go-1.26-blue.svg)](https://golang.org/)
-[![Vue](https://img.shields.io/badge/Vue-3.5-green.svg)](https://vuejs.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-v3.0.0-blue.svg)](https://github.com/wuvjie/bililive-helper-go)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 简介
 
-自动监控 [bililive-go](https://github.com/hr3lxpesr6/bililive-go) 录制目录，将 FLV/TS 分片合并为完整视频，磁盘不足时智能清理旧文件，提供现代 Web 控制台实时管理。
+自动监控 [bililive-go](https://github.com/hr3lxpesr6/bililive-go) 等录制工具的输出目录，自动将录制生成的 FLV/TS 视频分片无损拼接或转换为完整 MP4 视频；当磁盘空间不足时，自动根据保留策略清理过期录像；同时提供功能完善的 Web 管理控制台，支持在线管理主播、视频回放、配置调整及实时日志查看。
 
-| 层 | 技术 |
-|----|------|
-| 后端 | Go 1.26、Gin 1.12、Zap |
-| 前端 | Vue 3.5、TypeScript 6、Element Plus 2.14、Vite 8 |
-| 视频 | FFmpeg（stream-copy 无损拼接 + 自动硬件编码 fallback） |
-| 部署 | Docker Compose、Docker CLI (`docker run`)、WSL Container (`wslc`) |
+## 核心功能
 
-## 功能
-
-- **录制合并**：FLV→MP4 无损转码、TS Concat Demuxer 稳定拼接、时间戳对齐、XML 弹幕与封面伴生对齐
-- **智能清理**：磁盘阈值触发、白名单保护、安全期保护、一键免删、伴生弹幕与封面级联清理
-- **任务调度**：事件驱动（目录变化检测）+ 固定间隔兜底、任务队列并发控制、静默时段
-- **Web 控制台**：系统概览、主播管理、文件抽屉与在线视频预览、任务中心（SSE 实时日志）、操作审计、全局策略与备份
-- **安全设计**：bcrypt 哈希、登录限流、Session 版本化、CSP 安全头、路径穿越防护
+- **录制合并与转码**：
+  - FLV 转 MP4 无损快速转封装，TS 分片自动流拷贝拼接；
+  - 录制时间戳精确保持，关联的 XML 弹幕及封面图片自动重命名对齐。
+- **自动化视频裁剪**：
+  - 支持按主播配置时段裁剪规则（如自动截取开播前 30 分钟），转码时自动裁剪并替换，免去人工二次剪辑。
+- **智能磁盘清理**：
+  - 磁盘空间达到警戒线时自动按需清理旧视频，支持免删保护期（按小时或天数保护最新录像）；
+  - 支持主播级独立策略（可单独为某个主播设置保留天数、最少保留视频数、或一键免删保护）；
+  - 清理视频时级联删除对应的 XML 弹幕及封面文件，不留孤岛文件。
+- **自动化任务与监控**：
+  - 录制目录变动实时感知（录制完成自动即刻触发）+ 定时巡检双重保障；
+  - 任务并发互斥控制，支持设置避让时段（如每日数据备份期暂停任务）。
+- **Web 管理控制台**：
+  - **系统概览**：磁盘空间实时监控、近期产出与清理趋势图表、系统健康状态；
+  - **主播管理**：主播列表/卡片双视图、录像文件抽屉管理、在线视频播放预览；
+  - **任务中心**：实时任务控制台日志输出、历史任务归档分类回查（支持按类型筛选）、日志关键词过滤；
+  - **配置与备份**：所有全局策略与主播个性化规则支持一键导出为 JSON 备份及导入恢复；
+  - **使用体验**：支持日常模式与暗黑夜间模式切换，支持常用键盘快捷键（`/` 快速聚焦搜索、`D` 切换暗黑模式、`Esc` 关闭弹层等）。
+- **账户与安全**：
+  - 管理员密码加密存储、连续登录失败冷却保护、会话安全隔离、路径穿越校验。
 
 ---
 
-## 部署运行
+## 安装部署
 
-本工具支持 **Docker Compose**、**原生 Docker CLI (`docker run`)** 以及 **Windows WSL Container (`wslc`)** 三种部署方式。
+本工具推荐通过容器化方式部署（开箱即用，内置 FFmpeg 与所有运行时），支持 **Docker Compose**、**原生 Docker CLI (`docker run`)** 以及 **Windows WSL Container (`wslc`)** 三种方式。
 
 无论哪种部署方式，容器内部均采用统一的标准固定路径（实现宿主机与容器的彻底解耦）：
-- `/recordings`：录制视频根目录（宿主机挂载 bililive-go 录制输出目录）
+- `/recordings`：录制视频根目录（宿主机挂载 bililive-go 等工具的录制输出目录）
 - `/data`：持久化数据根目录（宿主机挂载配置、日志、会话凭据目录）
 
 首先克隆项目：
@@ -45,7 +52,7 @@ cd bililive-helper-go
 
 ---
 
-### 方案一：Docker Compose 部署（推荐，适合常规多容器与 NAS 环境）
+### 方式一：Docker Compose 部署（推荐，适合常规多容器与 NAS 环境）
 
 适合习惯通过 YAML 文件和环境配置文件集中管理服务的用户。
 
@@ -90,7 +97,7 @@ docker compose down           # 停止并移除容器
 
 ---
 
-### 方案二：Docker CLI 原生命令行（适合 Linux / NAS / macOS 无 Compose 环境）
+### 方式二：Docker CLI 原生命令行（适合 Linux / NAS / macOS 无 Compose 环境）
 
 适合偏好轻量单条命令运行、不希望安装或维护 docker-compose 的用户。
 
@@ -141,7 +148,7 @@ docker stop bililive-helper-go       # 停止容器
 
 ---
 
-### 方案三：WSL Container 部署（适合 Windows PowerShell + `wslc`）
+### 方式三：WSL Container 部署（适合 Windows PowerShell + `wslc`）
 
 适合在 Windows 环境下使用 WSL Container CLI (`wslc`) 进行本地或测试部署的用户。原生支持 PowerShell 换行语法（反引号 `）与 Windows 盘符路径。
 
@@ -189,7 +196,7 @@ wslc start bililive-helper-go      # 启动已停止的容器
 
 ---
 
-### Web 访问与初始化向导
+## Web 访问与初始化向导
 
 无论采用上述哪种方式启动，服务就绪后直接在浏览器中打开：
 ```text
@@ -200,44 +207,22 @@ http://<宿主机IP>:5689
 
 ---
 
-## 环境依赖
+## 常见问题与说明
 
-| 依赖 | 版本 | 说明 |
-|------|------|------|
-| Go | 1.26+ | 后端编译（本地开发） |
-| Node.js | 20.19+ | 前端编译（Vite 8 要求） |
-| FFmpeg | 任意 | 视频转码、校验（Docker 镜像内已预装） |
-| Docker / WSL | 20.10+ | 容器化部署（推荐） |
+**Q: 录像合并需要安装什么工具吗？**  
+A: 不需要。Docker 镜像中已经内置了完整可靠的 FFmpeg 视频处理流水线，开箱即用。
 
-## 开发调试
+**Q: 忘记管理员密码怎么办？**  
+A: 删除宿主机挂载数据目录中的 `.credentials.json`（即 `{DATA_DIR}/.credentials.json`），然后重启容器，系统会自动重新进入首次启动向导让您设定新密码。
 
-```bash
-# 后端（本地开发模式）
-go run ./cmd/server
+**Q: 磁盘达到清理阈值了，为什么有些录像没有被清理？**  
+A: 请排查以下原因：
+1. 视频处于免删保护期内（默认对最新录像提供免删保护，可在全局策略中调整）；
+2. 该主播开启了「一键免删保护」或设置了较高的「最少保留视频数」；
+3. 当前处于设定的静默时段（如备份避让期）。
 
-# 前端（本地开发模式，API 代理到 :5000）
-cd frontend && npm install && npm run dev
-
-# 测试
-go test ./...           # 后端单元测试
-cd frontend && npm test # 前端单元测试
-cd frontend && npm run lint # 代码检查
-```
-
-## 文档
-
-- [API 接口文档](docs/api.md) — 所有 REST 端点说明
-- [配置参考](docs/config.md) — 目录挂载规范、环境变量与 config.json 字段
-
-## 常见问题
-
-**ffmpeg 未安装** → Docker 镜像已内置 FFmpeg；若本地宿主机运行请通过系统包管理器安装。
-
-**忘记密码** → 删除宿主机数据目录中的 `.credentials.json`（即 `{DATA_DIR}/.credentials.json`）后重启容器，系统将重新进入初始化向导。
-
-**磁盘超阈值未触发清理** → 检查是否开启了静默时段（默认关闭）、视频是否处于安全保护期，或该主播是否开启了「一键免删」。
-
-**合并失败 "磁盘空间不足"** → TS 合并管线峰值需约 3 倍源文件大小空间，建议保证录制目录预留充足剩余容量。
+**Q: 提示合并失败 "磁盘空间不足"？**  
+A: 视频分片流拷贝拼接过程中需要临时工作空间，建议录制目录预留充裕的剩余可用空间。
 
 ## 许可证
 
