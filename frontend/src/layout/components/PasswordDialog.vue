@@ -57,6 +57,14 @@ async function handleSubmit() {
 .pw-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+
+  :deep(.el-button) {
+    min-width: 84px;
+    height: 32px;
+    font-size: 13px;
+    box-sizing: border-box;
+  }
 }
 </style>

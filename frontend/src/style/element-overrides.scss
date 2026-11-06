@@ -179,7 +179,7 @@
 // ── Slider (thin track, ink thumb) ──
 .el-slider {
   --el-slider-runway-bg-color: #e5e5ea;
-  --el-slider-main-bg-color: #1c1c1e;
+  --el-slider-main-bg-color: #2563eb;
   --el-slider-height: 4px;
   .el-slider__runway {
     height: 4px;
@@ -188,7 +188,7 @@
   .el-slider__bar {
     height: 4px;
     border-radius: 2px;
-    background-color: #1c1c1e;
+    background-color: #2563eb;
   }
   .el-slider__button-wrapper {
     top: -16px;
@@ -196,7 +196,7 @@
   .el-slider__button {
     width: 16px;
     height: 16px;
-    border: 2px solid #1c1c1e;
+    border: 2px solid #2563eb;
     background-color: #ffffff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.15s;
