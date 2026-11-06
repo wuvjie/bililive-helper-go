@@ -189,6 +189,7 @@ async function handleSubmit() {
   line-height: 1.5;
 }
 .tip-text code {
+  margin: 0 4px;
   background: rgba(37, 99, 235, 0.08);
   color: #1d4ed8;
   padding: 2px 6px;

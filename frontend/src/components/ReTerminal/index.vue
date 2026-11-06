@@ -137,6 +137,7 @@ onUnmounted(() => {
 
 <style scoped>
 .re-terminal {
+  color-scheme: dark;
   background: #191919;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
