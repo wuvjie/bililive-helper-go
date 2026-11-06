@@ -734,3 +734,69 @@ a:focus:not(:focus-visible) {
     font-size: 16px !important;
   }
 }
+
+// ── 终端控制栏历史归档下拉选择器（全场景强穿透深色隔离）──
+.history-quick-select {
+  width: 210px !important;
+  --el-fill-color-blank: #18181b !important;
+  --el-border-color: rgba(255, 255, 255, 0.15) !important;
+  --el-border-color-hover: rgba(255, 255, 255, 0.3) !important;
+  --el-text-color-regular: #e4e4e7 !important;
+  --el-text-color-placeholder: #a1a1aa !important;
+
+  .el-select__wrapper,
+  .el-input__wrapper {
+    background-color: #18181b !important;
+    background: #18181b !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    line-height: 26px !important;
+    border-radius: var(--r-sm, 4px) !important;
+  }
+
+  .el-select__placeholder,
+  .el-select__selected-item,
+  .el-select__placeholder span,
+  .el-select__selected-item span,
+  .el-input__inner {
+    color: #e4e4e7 !important;
+    font-size: 12px !important;
+    font-family: var(--font-mono) !important;
+  }
+
+  .el-select__caret,
+  .el-select__suffix,
+  .el-icon {
+    color: #a1a1aa !important;
+  }
+}
+
+// 终端历史归档下拉弹出层（全场景暗黑沉浸隔离）
+.el-popper.history-select-popper {
+  background: #18181b !important;
+  background-color: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+
+  .el-popper__arrow::before {
+    background: #18181b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .el-select-dropdown__item {
+    color: #e4e4e7 !important;
+    font-size: 12px !important;
+    font-family: var(--font-mono) !important;
+
+    &.hover,
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08) !important;
+      color: #ffffff !important;
+    }
+
+    &.is-selected {
+      color: #60a5fa !important;
+      font-weight: 600 !important;
+    }
+  }
+}
