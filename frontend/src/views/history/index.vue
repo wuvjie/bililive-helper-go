@@ -503,6 +503,13 @@ onActivated(() => loadHistory(currentPage.value));
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+
+  :deep(.el-select__wrapper),
+  :deep(.el-input__wrapper) {
+    height: 32px !important;
+    min-height: 32px !important;
+    box-sizing: border-box !important;
+  }
 }
 .header-buttons {
   display: flex;

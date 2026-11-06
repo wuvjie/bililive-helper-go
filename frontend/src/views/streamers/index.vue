@@ -531,6 +531,12 @@ onActivated(() => loadData());
   display: flex;
   gap: 12px;
   align-items: center;
+
+  :deep(.el-input__wrapper) {
+    height: 32px !important;
+    min-height: 32px !important;
+    box-sizing: border-box !important;
+  }
 }
 .goto-tasks-btn {
   color: var(--stone) !important;

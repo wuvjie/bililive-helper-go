@@ -571,12 +571,12 @@ onActivated(async () => {
   border: 1px solid #e0e0e0;
 }
 .badge-standing {
-  background: var(--surface);
-  color: var(--slate);
-  border: 1px solid var(--hairline-strong);
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.20);
 }
 .dot-standing {
-  background: var(--steel);
+  background: #10b981;
 }
 
 .sched-body {

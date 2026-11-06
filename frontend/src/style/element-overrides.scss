@@ -246,10 +246,10 @@
   }
 }
 
-// ── Switch (inactive = subtle gray, active = ink black) ──
+// ── Switch (inactive = subtle gray, active = system primary) ──
 .el-switch {
-  --el-switch-off-color: #d3d1cb;
-  --el-switch-on-color: #1c1c1e;
+  --el-switch-off-color: #e2e8f0;
+  --el-switch-on-color: #2563eb;
   .el-switch__core {
     border-radius: 12px;
   }
@@ -470,6 +470,9 @@ html.dark {
     .el-switch__core {
       background-color: #27272a !important;
       border-color: #3f3f46 !important;
+      .el-switch__action {
+        background-color: #a1a1aa !important;
+      }
     }
     &.is-checked .el-switch__core {
       background-color: #3b82f6 !important;
