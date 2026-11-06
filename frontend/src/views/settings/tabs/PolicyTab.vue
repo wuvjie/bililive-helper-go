@@ -114,7 +114,7 @@
               <div v-if="config.SAFE_MODE === 'hours'" class="inline-unit-row">
                 <el-input-number
                   :model-value="safeAgeHours"
-                  :min="1" :max="168" :step="1" class="compact-counter compound-counter"
+                  :min="1" :max="168" :step="1" class="compact-counter"
                   @update:model-value="updateField('SAFE_AGE_MINUTES', (Number($event) || 1) * 60)"
                 />
               </div>
@@ -123,13 +123,13 @@
                   :model-value="config.SAFE_DAYS"
                   :min="1"
                   :max="365"
-                  class="compact-counter compound-counter"
+                  class="compact-counter"
                   @update:model-value="updateField('SAFE_DAYS', Number($event))"
                 />
               </div>
               <el-select
                 :model-value="config.SAFE_MODE"
-                class="compact-select compound-select"
+                class="compact-select"
                 style="width: 86px; flex-shrink: 0;"
                 @update:model-value="onSafeModeChange"
               >

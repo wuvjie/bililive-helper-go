@@ -65,17 +65,18 @@
           </div>
         </div>
         <div class="card-body">
-          <div class="disk-top">
-            <span class="disk-label">磁盘使用率</span>
-            <span class="disk-pct mono-val" :style="{ color: diskColor }">{{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%</span>
+          <div class="card-top-metric">
+            <div class="disk-top">
+              <span class="disk-label">磁盘使用率</span>
+              <span class="disk-pct mono-val" :style="{ color: diskColor }">{{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%</span>
+            </div>
+            <el-progress
+              :percentage="detail?.disk?.usage_pct || 0"
+              :color="diskColor"
+              :stroke-width="6"
+              :format="() => ''"
+            />
           </div>
-          <el-progress
-            :percentage="detail?.disk?.usage_pct || 0"
-            :color="diskColor"
-            :stroke-width="6"
-            :format="() => ''"
-            style="margin-bottom: 16px"
-          />
           <div class="data-grid">
             <div class="data-cell">
               <span class="data-label">总容量</span>
@@ -99,7 +100,7 @@
               <span class="mono-val">{{ totalRecordingsGB }} GB</span>
             </div>
           </div>
-          <div v-if="stats?.daily_output_gb || stats?.days_until_full" class="bottom-health-bar">
+          <div class="bottom-health-bar">
             <span class="health-pill">
               近7天产出: <strong class="mono-val">{{ stats?.daily_output_gb?.toFixed(1) || 0 }}</strong> GB/天
             </span>
@@ -128,16 +129,18 @@
           </router-link>
         </div>
         <div class="card-body">
-          <div class="runtime-top">
-            <span class="runtime-label">当前任务状态</span>
-            <div class="runtime-badge" :class="isTaskRunning ? 'badge-running' : 'badge-idle'">
-              <span>{{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并视频...' : '正在清理磁盘...') : '空闲待命中' }}</span>
+          <div class="card-top-metric">
+            <div class="runtime-top">
+              <span class="runtime-label">当前任务状态</span>
+              <div class="runtime-badge" :class="isTaskRunning ? 'badge-running' : 'badge-idle'">
+                <span>{{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并视频...' : '正在清理磁盘...') : '空闲待命中' }}</span>
+              </div>
             </div>
-          </div>
-          <div class="runtime-substrip">
-            <span class="substrip-text">
-              {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : '定时调度器与目录监听器持续常驻，主播关播分片将自动静置后合并' }}
-            </span>
+            <div class="runtime-substrip">
+              <span class="substrip-text">
+                {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : '定时调度器与目录监听器持续常驻，主播关播分片将自动静置后合并' }}
+              </span>
+            </div>
           </div>
 
           <div class="data-grid">
@@ -618,8 +621,15 @@ onActivated(async () => {
 }
 .card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
 
-/* Disk */
-.disk-top { display: flex; justify-content: space-between; margin-bottom: 8px; }
+/* Disk & Runtime Metrics Alignment */
+.card-top-metric {
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.disk-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
 .disk-label { font-size: 14px; color: var(--slate); }
 .disk-pct { font-size: 20px; font-weight: 600; }
 .mono-val { font-family: var(--font-mono); font-size: 13px; color: var(--charcoal); }
@@ -794,8 +804,10 @@ onActivated(async () => {
 }
 
 .runtime-substrip {
-  margin-bottom: 14px;
-  min-height: 20px;
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .substrip-text {
   font-size: 12px;
@@ -857,15 +869,16 @@ onActivated(async () => {
 .trend-body {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 200px;
-  height: 200px;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 190px;
+  height: auto;
 }
 .trend-chart {
   display: flex;
   justify-content: space-around;
   align-items: flex-end;
-  height: 110px;
+  height: 135px;
   width: 100%;
 }
 .trend-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -881,14 +894,14 @@ onActivated(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 110px;
+  height: 135px;
   gap: 4px;
 }
 .trend-empty-icon { font-size: 24px; opacity: 0.6; }
 .trend-empty-title { font-size: 13px; font-weight: 500; color: var(--charcoal); }
 .trend-empty-desc { font-size: 12px; color: var(--stone); text-align: center; }
 
-.trend-legend { display: flex; gap: 16px; justify-content: center; margin-top: 8px; font-size: 13px; color: var(--steel); }
+.trend-legend { display: flex; gap: 16px; justify-content: center; margin-top: 0; font-size: 13px; color: var(--steel); }
 .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
 
 /* Recent Operations */

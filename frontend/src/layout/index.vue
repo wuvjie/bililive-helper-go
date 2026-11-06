@@ -60,7 +60,6 @@
             class="nav-hamburger-btn"
             @click="handleToggleCollapse"
             title="菜单导航"
-            :class="{ active: isMobile ? mobileOpen : appStore.sidebar.opened }"
           >
             <svg class="hamburger-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="4" y1="6" x2="20" y2="6"></line>
@@ -479,11 +478,6 @@ router.afterEach(() => fetchDiskStatus());
     background: var(--highlight);
     color: var(--ink);
     border-color: var(--faint);
-  }
-
-  &.active {
-    background: var(--highlight);
-    color: var(--primary);
   }
 
   .hamburger-svg {
