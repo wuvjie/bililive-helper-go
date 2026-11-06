@@ -157,14 +157,16 @@ function onFileChange(e: Event) {
   transition: all 0.15s ease;
 }
 .btn-action-half.btn-export {
-  background: var(--surface-card, #ffffff);
-  color: var(--charcoal, #37352f);
-  border: 1px solid var(--hairline-strong, #c8c4be);
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.20);
+  font-weight: 600;
 }
 .btn-action-half.btn-export:hover {
-  background: var(--highlight, #f1f1ef);
-  border-color: var(--steel, #787671);
-  color: var(--ink, #1a1a1a);
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #1e40af;
+  transform: translateY(-1px);
 }
 .btn-action-half.btn-copy {
   background: var(--surface, #fafafa);
@@ -327,13 +329,13 @@ html.dark {
   }
 }
 html.dark .btn-action-half.btn-export {
-  background: #18181b !important;
-  border-color: #3f3f46 !important;
-  color: #e4e4e7 !important;
+  background: rgba(37, 99, 235, 0.14) !important;
+  border-color: rgba(59, 130, 246, 0.30) !important;
+  color: #60a5fa !important;
 }
 html.dark .btn-action-half.btn-export:hover {
-  background: #27272a !important;
+  background: rgba(37, 99, 235, 0.22) !important;
   border-color: #3b82f6 !important;
-  color: #3b82f6 !important;
+  color: #93c5fd !important;
 }
 </style>

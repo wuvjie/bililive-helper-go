@@ -252,13 +252,13 @@ onMounted(() => {
   width: 52px;
   height: 52px;
   border-radius: 13px;
-  background: #1c1c1e;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
   margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(28, 28, 30, 0.18);
+  box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.28);
   transition: transform 0.2s ease;
 }
 
@@ -369,7 +369,7 @@ onMounted(() => {
 }
 
 .password-input :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1.5px #1c1c1e inset, 0 0 0 3px rgba(28, 28, 30, 0.08) !important;
+  box-shadow: 0 0 0 1.5px #2563eb inset, 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
   background: #ffffff;
 }
 
