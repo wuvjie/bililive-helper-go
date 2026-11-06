@@ -712,14 +712,21 @@ onActivated(() => loadHistory(currentPage.value));
   font-family: var(--font-mono);
 }
 .btn-copy-log {
-  background: #1e1e1e;
-  border: 1px solid var(--hairline-strong);
-  color: #ccc;
-  font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ccc !important;
+  font-size: 12px !important;
+  height: 28px !important;
+  line-height: 26px !important;
+  box-sizing: border-box !important;
+  padding: 0 10px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
 }
 .btn-copy-log:hover {
   background: #2a2d2e;
@@ -831,8 +838,8 @@ onActivated(() => loadHistory(currentPage.value));
   color: var(--steel, #64748b);
 }
 .action-view:hover {
-  color: #0284c7;
-  background: rgba(2, 132, 199, 0.08);
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
 }
 .action-retry {
   color: #b45309;
@@ -842,7 +849,7 @@ onActivated(() => loadHistory(currentPage.value));
   background: rgba(217, 115, 13, 0.1);
 }
 .action-delete {
-  color: var(--slate, #94a3b8);
+  color: var(--steel, #64748b);
 }
 .action-delete:hover {
   color: #dc2626;
@@ -930,7 +937,7 @@ onActivated(() => loadHistory(currentPage.value));
   font-size: 12px !important;
   color: #888 !important;
   background: #1e1e1e !important;
-  border: 1px solid var(--hairline-strong) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   padding: 2px 7px !important;
   border-radius: 10px !important;
   font-family: var(--font-mono) !important;
@@ -947,19 +954,21 @@ onActivated(() => loadHistory(currentPage.value));
 }
 .log-filter-box {
   background: #1e1e1e !important;
-  border: 1px solid var(--hairline-strong) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #d4d4d4 !important;
-  font-size: 11px !important;
-  padding: 4px 8px !important;
+  font-size: 12px !important;
+  height: 28px !important;
+  line-height: 26px !important;
+  box-sizing: border-box !important;
+  padding: 0 8px !important;
   border-radius: 4px !important;
   outline: none !important;
   font-family: var(--font-mono) !important;
-  width: 125px !important;
-  box-sizing: border-box !important;
+  width: 130px !important;
   transition: border-color 0.15s ease !important;
 }
 .log-filter-box:focus {
-  border-color: #007fd4 !important;
+  border-color: #3b82f6 !important;
 }
 
 @media (max-width: 680px) {

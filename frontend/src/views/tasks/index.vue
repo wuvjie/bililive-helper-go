@@ -780,34 +780,42 @@ onActivated(async () => {
 }
 
 .term-tab-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 124px;
   height: 28px;
+  padding: 0 12px;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cccccc;
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
   font-size: 12px;
-  padding: 0 8px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   font-family: var(--font-mono);
   white-space: nowrap;
 }
 .term-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e4e4e7;
 }
 .term-tab-btn.active {
-  background: #37373d;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  border-color: #3b82f6;
-  font-weight: 500;
+  font-weight: 600;
+}
+.term-tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 1px;
 }
 
 .tab-indicator {
@@ -845,13 +853,13 @@ onActivated(async () => {
   width: 210px;
 }
 .history-quick-select :deep(.el-input__wrapper) {
-  background: #18181b;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+  background-color: #18181b !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset !important;
 }
 .history-quick-select :deep(.el-input__inner) {
-  color: #ccc;
-  font-size: 12px;
-  font-family: var(--font-mono);
+  color: #e4e4e7 !important;
+  font-size: 12px !important;
+  font-family: var(--font-mono) !important;
 }
 
 .terminal-meta-right {

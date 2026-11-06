@@ -209,8 +209,11 @@ onUnmounted(() => {
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #d4d4d4;
-  font-size: 11px;
-  padding: 3px 8px;
+  font-size: 12px !important;
+  height: 26px !important;
+  line-height: 24px !important;
+  box-sizing: border-box !important;
+  padding: 0 8px;
   border-radius: 4px;
   outline: none;
   font-family: var(--font-mono);
@@ -218,7 +221,7 @@ onUnmounted(() => {
   transition: all 0.15s ease;
 }
 .terminal-filter-input:focus {
-  border-color: #007fd4;
+  border-color: #3b82f6;
   width: 140px;
 }
 
@@ -226,12 +229,19 @@ onUnmounted(() => {
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #cccccc;
-  font-size: 12px;
-  padding: 3px 8px;
+  font-size: 12px !important;
+  height: 26px !important;
+  line-height: 24px !important;
+  box-sizing: border-box !important;
+  padding: 0 8px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 .terminal-action-btn:hover {
   background: #2d2d30;

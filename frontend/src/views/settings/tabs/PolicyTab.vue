@@ -4,8 +4,14 @@
       <!-- Section 1: 录制与合并规则 -->
       <div class="form-section-card">
         <div class="section-title">
-          <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-          <span>录制与合并规则</span>
+          <div class="section-title-left">
+            <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+            <span>录制与合并规则</span>
+          </div>
+          <button type="button" class="btn-ghost-header" @click="emit('reset-defaults')" title="恢复官方推荐预设配置">
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>恢复推荐预设</span>
+          </button>
         </div>
         <div class="section-body">
           <el-form-item label="断流重连容差">
@@ -105,19 +111,10 @@
 
           <el-form-item label="新录像免删保护">
             <div class="safe-age-group">
-              <el-select
-                :model-value="config.SAFE_MODE"
-                class="compact-select"
-                style="width: 92px; flex-shrink: 0;"
-                @update:model-value="onSafeModeChange"
-              >
-                <el-option label="按小时" value="hours" />
-                <el-option label="按天" value="days" />
-              </el-select>
               <div v-if="config.SAFE_MODE === 'hours'" class="inline-unit-row">
                 <el-input-number
                   :model-value="safeAgeHours"
-                  :min="1" :max="168" :step="1" class="compact-counter"
+                  :min="1" :max="168" :step="1" class="compact-counter compound-counter"
                   @update:model-value="updateField('SAFE_AGE_MINUTES', (Number($event) || 1) * 60)"
                 />
               </div>
@@ -126,10 +123,19 @@
                   :model-value="config.SAFE_DAYS"
                   :min="1"
                   :max="365"
-                  class="compact-counter"
+                  class="compact-counter compound-counter"
                   @update:model-value="updateField('SAFE_DAYS', Number($event))"
                 />
               </div>
+              <el-select
+                :model-value="config.SAFE_MODE"
+                class="compact-select compound-select"
+                style="width: 86px; flex-shrink: 0;"
+                @update:model-value="onSafeModeChange"
+              >
+                <el-option label="小时" value="hours" />
+                <el-option label="天" value="days" />
+              </el-select>
             </div>
             <div class="field-hint">在此保护期内生成的最新录像享有免删保护，即使磁盘水位达到警戒线，清理任务也绝不会删除保护期内的文件。</div>
           </el-form-item>
@@ -205,14 +211,6 @@
             <div class="field-hint">包含任一白名单关键词的视频文件名或主播目录，将永远受保护不被清理。</div>
           </el-form-item>
         </div>
-      </div>
-
-      <!-- 辅助操作：仅保留次级恢复预设操作，保存由外层浮动保存栏权威统领 -->
-      <div class="policy-actions">
-        <el-button class="btn-reset-policy" @click="emit('reset-defaults')">
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          <span>恢复推荐预设</span>
-        </el-button>
       </div>
     </el-form>
   </div>
@@ -352,6 +350,35 @@ function addTag(keyword: string) {
 
 .section-title {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.section-title-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-ghost-header {
+  background: transparent;
+  border: none;
+  color: var(--steel, #64748b);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-ghost-header:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ink);
+}
+
+.old-section-title {
+  display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
@@ -447,13 +474,20 @@ function addTag(keyword: string) {
 }
 
 .safe-age-group {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 32px;
   flex-wrap: nowrap;
 
-  :deep(.el-input__wrapper) {
+  .compound-counter :deep(.el-input__wrapper) {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  .compound-select :deep(.el-input__wrapper) {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    margin-left: -1px;
+  }
+:deep(.el-input__wrapper) {
     height: 32px !important;
     box-sizing: border-box;
   }

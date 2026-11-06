@@ -282,7 +282,7 @@
                 </el-tooltip>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="130" align="center">
+            <el-table-column label="操作" width="150" align="center">
               <template #default="{ row }">
                 <div class="drawer-file-actions">
                   <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
@@ -755,6 +755,8 @@ onActivated(() => loadData());
   font-size: 12px;
   color: var(--charcoal);
   cursor: pointer;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
   transition: all 0.15s;
 }
 .play-btn-sm:hover {
@@ -1182,6 +1184,8 @@ onActivated(() => loadData());
   align-items: center;
   justify-content: center;
   gap: 6px;
+  white-space: nowrap !important;
+  flex-wrap: nowrap !important;
 }
 .btn-del-video {
   color: #dc2626 !important;
