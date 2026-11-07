@@ -8,7 +8,6 @@
           <div class="title-left">
             <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
             <span class="title-text">自动分片合并</span>
-            <router-link to="/settings?tab=schedule" class="card-header-action" title="前往系统设置修改合并调度参数">配置 ⚙️</router-link>
           </div>
           <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
@@ -47,7 +46,6 @@
           <div class="title-left">
             <div class="ui-icon-box icon-box-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
             <span class="title-text">自动磁盘清理</span>
-            <router-link to="/settings?tab=schedule" class="card-header-action" title="前往系统设置修改清理巡检参数">配置 ⚙️</router-link>
           </div>
           <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
@@ -131,37 +129,28 @@
       </div>
     </div>
 
-    <!-- 3. Bottom Section: 智能控制台与日志查看 (双模智能终端) -->
+    <!-- 3. Bottom Section: 实时执行终端 -->
     <div class="terminal-container-card">
-      <!-- Terminal Ctrl Bar (Focused on Real-time execution) -->
-      <div class="terminal-ctrl-bar">
-        <div class="terminal-tabs">
-          <div class="term-title-box">
-            <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }"></span>
-            <span class="term-title-text">实时执行终端</span>
-            <span v-if="sse.isRunning.value" class="tab-tag-live">运行中</span>
-            <span v-else class="tab-tag-idle">空闲待命</span>
-          </div>
-        </div>
-
-        <div class="terminal-meta-right">
-          <span v-if="sse.isRunning.value" class="meta-status meta-live">
-            <span class="status-pulse-dot dot-active"></span> 正在接收实时输出
-          </span>
-          <router-link to="/history" class="term-history-link" title="前往操作日志页面查看已归档的全部历史任务与日志">
-            查看历史操作日志 ↗
-          </router-link>
-        </div>
-      </div>
-
-      <!-- ReTerminal Component -->
+      <!-- ReTerminal Component with integrated command bar -->
       <ReTerminal
         :lines="displayedLines"
         :title="currentTerminalTitle"
         :empty-text="currentEmptyText"
-        height="460px"
+        height="480px"
         @clear="handleClear"
-      />
+      >
+        <template #title>
+          <div class="term-title-wrapper">
+            <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }" />
+            <span class="term-title-text">实时执行终端</span>
+            <span v-if="sse.isRunning.value" class="term-badge-tag tag-running">运行中</span>
+            <span v-else class="term-badge-tag tag-idle">空闲待命</span>
+            <router-link to="/history" class="term-history-link" title="前往操作日志页面查看已归档的全部历史任务与日志">
+              查看历史日志 ↗
+            </router-link>
+          </div>
+        </template>
+      </ReTerminal>
 
       <!-- Reconnect bar if SSE errored -->
       <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value " class="retry-bar">

@@ -122,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, watch, onMounted, onUnmounted, onActivated } from "vue";
 import { useRoute, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
@@ -562,6 +562,26 @@ async function handleImport() {
     }
   }
 }
+
+
+// Tab synchronization with route query (?tab=schedule / ?tab=policy / etc.)
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (typeof newTab === "string" && ["policy", "schedule", "backup", "security"].includes(newTab)) {
+      activeTab.value = newTab;
+    }
+  }
+);
+
+onActivated(() => {
+  if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
+    activeTab.value = route.query.tab;
+  }
+  loadConfigData();
+  loadScheduleData();
+  loadDiskStatus();
+});
 
 onMounted(() => {
   window.addEventListener("resize", handleResize);

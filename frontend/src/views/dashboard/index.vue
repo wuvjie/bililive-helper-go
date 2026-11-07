@@ -631,7 +631,7 @@ onActivated(async () => {
 }
 .disk-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
 .disk-label { font-size: 14px; color: var(--slate); }
-.disk-pct { font-size: 20px; font-weight: 600; }
+.disk-top .disk-pct { font-family: var(--font-mono); font-size: 20px; font-weight: 700; line-height: 1; }
 .mono-val { font-family: var(--font-mono); font-size: 13px; color: var(--charcoal); }
 
 /* Data grid — 2×2 with hairline dividers, strict equal columns */

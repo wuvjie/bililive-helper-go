@@ -8,20 +8,20 @@
               <div class="ui-icon-box icon-box-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="title-text">主播管理</span>
             </div>
-            <div class="streamer-total-stat">
-              <span class="stat-group">
-                <strong class="mono-val">{{ streamers.length }}</strong>
-                <span class="stat-label">位主播</span>
+            <div class="streamer-meta-stat">
+              <span class="meta-item">
+                <strong class="meta-num">{{ streamers.length }}</strong>
+                <span class="meta-unit">位主播</span>
               </span>
-              <span class="stat-divider" />
-              <span class="stat-group">
-                <strong class="mono-val">{{ totalFiles }}</strong>
-                <span class="stat-label">个录像</span>
+              <span class="meta-dot">·</span>
+              <span class="meta-item">
+                <strong class="meta-num">{{ totalFiles }}</strong>
+                <span class="meta-unit">个录像</span>
               </span>
-              <span class="stat-divider" />
-              <span class="stat-group">
-                <strong class="mono-val">{{ totalSizeGB }}</strong>
-                <span class="stat-label">GB</span>
+              <span class="meta-dot">·</span>
+              <span class="meta-item">
+                <strong class="meta-num">{{ totalSizeGB }}</strong>
+                <span class="meta-unit">GB</span>
               </span>
             </div>
           </div>
@@ -38,10 +38,7 @@
               />
               <span v-if="!searchQuery" class="kbd-badge search-kbd">/</span>
             </div>
-            <button class="header-refresh-btn" @click="loadData" title="刷新列表">
-              <svg class="refresh-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              <span>刷新</span>
-            </button>
+
           </div>
         </div>
       </template>
@@ -49,7 +46,7 @@
       <div class="table-responsive-wrapper">
       <el-table
         :data="filteredStreamers"
-        :tooltip-options="{ enterable: false, showAfter: 500, placement: 'top' }"
+        :tooltip-options="{ enterable: false, showAfter: 800, placement: 'top' }"
         v-loading="loading"
         style="width: 100%"
         class="streamer-table"
@@ -103,7 +100,7 @@
           :sort-method="sortMtime"
         >
           <template #default="{ row }">
-            <el-tooltip v-if="row.mtime" :content="formatExactTime(row.mtime)" placement="top" :show-after="500">
+            <el-tooltip v-if="row.mtime" :content="`${formatExactTime(row.mtime)} (${formatRelativeTime(row.mtime, tick)})`" placement="top" :show-after="800" :enterable="false">
               <span class="mono-val cursor-help">{{ formatRelativeTime(row.mtime, tick) }}</span>
             </el-tooltip>
             <span v-else class="mono-val">-</span>
@@ -270,7 +267,7 @@
         <div class="table-responsive-wrapper">
           <el-table
             :data="drawerFiles"
-            :tooltip-options="{ enterable: false, showAfter: 500, placement: 'top' }"
+            :tooltip-options="{ enterable: false, showAfter: 800, placement: 'top' }"
             size="small"
             max-height="650"
             class="drawer-table"
@@ -284,7 +281,7 @@
             <el-table-column
               prop="mtime"
               label="录制时间"
-              width="135"
+              width="145"
               align="right"
               header-align="right"
               sortable
@@ -292,8 +289,14 @@
               :sort-method="(a: any, b: any) => (a.mtime || 0) - (b.mtime || 0)"
             >
               <template #default="{ row }">
-                <el-tooltip v-if="row.mtime" :content="formatExactTime(row.mtime)" placement="top">
-                  <span class="mono-val cursor-help">{{ formatRelativeTime(row.mtime, tick) }}</span>
+                <el-tooltip
+                  v-if="row.mtime"
+                  :content="`${formatExactTime(row.mtime)} (${formatRelativeTime(row.mtime, tick)})`"
+                  placement="top"
+                  :show-after="800"
+                  :enterable="false"
+                >
+                  <span class="mono-val date-time-cell">{{ formatDisplayDateTime(row.mtime) }}</span>
                 </el-tooltip>
                 <span v-else class="mono-val">-</span>
               </template>
@@ -1024,44 +1027,43 @@ onActivated(() => loadData());
   gap: 12px;
   flex-wrap: nowrap;
 }
-.streamer-total-stat {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  font-size: 12px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  padding: 0 10px;
-  border-radius: 13px;
-  font-family: var(--font-sans);
-  box-sizing: border-box;
-  white-space: nowrap;
-  flex-shrink: 0;
-  user-select: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-}
-.streamer-total-stat .stat-group {
+.streamer-meta-stat {
   display: inline-flex;
   align-items: baseline;
-  gap: 3px;
+  gap: 8px;
+  margin-left: 4px;
+  font-size: 13px;
+  line-height: 1;
+
+  .meta-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .meta-num {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--charcoal, #18181b);
+  }
+
+  .meta-unit {
+    font-size: 12px;
+    color: var(--slate, #71717a);
+  }
+
+  .meta-dot {
+    color: var(--hairline-strong, #a1a1aa);
+    font-weight: 700;
+    font-size: 14px;
+    user-select: none;
+  }
 }
-.streamer-total-stat .mono-val {
-  font-family: var(--font-mono);
+
+.date-time-cell {
   font-size: 12px;
-  color: var(--ink);
-  font-weight: 600;
-  font-feature-settings: "tnum";
-}
-.streamer-total-stat .stat-label {
-  font-size: 11px;
-  color: var(--steel);
-}
-.streamer-total-stat .stat-divider {
-  width: 1px;
-  height: 10px;
-  background: var(--hairline-strong);
-  margin: 0 8px;
-  opacity: 0.6;
+  letter-spacing: -0.02em;
 }
 .header-refresh-btn {
   display: inline-flex;
@@ -1687,18 +1689,13 @@ html.dark {
 }
 
 
-html.dark .streamer-total-stat {
-  background: #141416;
-  border-color: #27272a;
-}
-html.dark .streamer-total-stat .mono-val {
+html.dark .streamer-meta-stat .meta-num {
   color: #f4f4f5;
 }
-html.dark .streamer-total-stat .stat-label {
+html.dark .streamer-meta-stat .meta-unit {
   color: #a1a1aa;
 }
-html.dark .streamer-total-stat .stat-divider {
-  background: #3f3f46;
-  opacity: 0.8;
+html.dark .streamer-meta-stat .meta-dot {
+  color: #52525b;
 }
 </style>
