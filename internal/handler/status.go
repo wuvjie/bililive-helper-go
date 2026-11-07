@@ -382,6 +382,28 @@ func (h *Handler) SaveStreamerRule(c *gin.Context) {
 		failBadRequest(c, "请求格式错误: "+err.Error())
 		return
 	}
+
+	// 标准化字段并与当前规则比对：若未发生实质变更，保持幂等，避免无谓磁盘写盘与虚假审计历史
+	normRule := rule
+	if normRule.TrimStart == "" && normRule.TrimEnabled {
+		normRule.TrimStart = "00:00:00"
+	}
+	normRule.TrimMode = ""
+	normRule.DurationMinutes = 0
+	normRule.StartTime = ""
+	normRule.EndTime = ""
+
+	if oldRule, exists := h.config.GetStreamerRule(name); exists {
+		if oldRule.Protected == normRule.Protected &&
+			oldRule.MinKeep == normRule.MinKeep &&
+			oldRule.TrimEnabled == normRule.TrimEnabled &&
+			oldRule.TrimStart == normRule.TrimStart &&
+			oldRule.TrimEnd == normRule.TrimEnd {
+			ok(c, gin.H{"streamer": name, "rule": rule, "unchanged": true})
+			return
+		}
+	}
+
 	if err := h.config.SetStreamerRule(name, rule); err != nil {
 		h.logger.Error("保存主播规则失败", zap.String("streamer", name), zap.Error(err))
 		fail(c, http.StatusInternalServerError, "保存主播规则失败")

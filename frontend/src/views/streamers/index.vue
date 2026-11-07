@@ -8,13 +8,22 @@
               <div class="ui-icon-box icon-box-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="title-text">主播管理</span>
             </div>
-            <span class="streamer-total-stat">
-              共 <strong class="mono-val">{{ streamers.length }}</strong> 位主播
-              <span class="stat-sep">/</span>
-              <strong class="mono-val">{{ totalFiles }}</strong> 个录像
-              <span class="stat-sep">/</span>
-              <strong class="mono-val">{{ totalSizeGB }}</strong> GB
-            </span>
+            <div class="streamer-total-stat">
+              <span class="stat-group">
+                <strong class="mono-val">{{ streamers.length }}</strong>
+                <span class="stat-label">位主播</span>
+              </span>
+              <span class="stat-divider" />
+              <span class="stat-group">
+                <strong class="mono-val">{{ totalFiles }}</strong>
+                <span class="stat-label">个录像</span>
+              </span>
+              <span class="stat-divider" />
+              <span class="stat-group">
+                <strong class="mono-val">{{ totalSizeGB }}</strong>
+                <span class="stat-label">GB</span>
+              </span>
+            </div>
           </div>
           <div class="header-right">
             <div class="search-input-wrap">
@@ -55,10 +64,6 @@
               <span v-if="row.rule?.trim_enabled" class="badge-pill badge-trim">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
                 <span>{{ row.rule.trim_start || '00:00:00' }} ~ {{ row.rule.trim_end || '结束' }}</span>
-              </span>
-              <span v-if="row.rule?.min_keep > 0" class="badge-pill badge-minkeep">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>留 ≥ {{ row.rule.min_keep }} 场</span>
               </span>
             </div>
           </template>
@@ -185,84 +190,6 @@
               </div>
             </div>
 
-            <!-- 场景化快捷填入预设 -->
-            <div class="trim-presets-container">
-              <div class="preset-group">
-                <span class="preset-label">跳过片头暖场:</span>
-                <button
-                  type="button"
-                  class="preset-pill"
-                  :class="{ 'is-active': isTrimActive('00:05:00', '') }"
-                  @click="fillTrimPreset('00:05:00', '')"
-                >
-                  <span v-if="isTrimActive('00:05:00', '')" class="pill-check">✓</span>
-                  前 5 分钟
-                </button>
-                <button
-                  type="button"
-                  class="preset-pill"
-                  :class="{ 'is-active': isTrimActive('00:10:00', '') }"
-                  @click="fillTrimPreset('00:10:00', '')"
-                >
-                  <span v-if="isTrimActive('00:10:00', '')" class="pill-check">✓</span>
-                  前 10 分钟
-                </button>
-                <button
-                  type="button"
-                  class="preset-pill"
-                  :class="{ 'is-active': isTrimActive('00:15:00', '') }"
-                  @click="fillTrimPreset('00:15:00', '')"
-                >
-                  <span v-if="isTrimActive('00:15:00', '')" class="pill-check">✓</span>
-                  前 15 分钟
-                </button>
-              </div>
-
-              <div class="preset-group">
-                <span class="preset-label">精选前半场:</span>
-                <button
-                  type="button"
-                  class="preset-pill"
-                  :class="{ 'is-active': isTrimActive('00:00:00', '00:30:00') }"
-                  @click="fillTrimPreset('00:00:00', '00:30:00')"
-                >
-                  <span v-if="isTrimActive('00:00:00', '00:30:00')" class="pill-check">✓</span>
-                  前 30 分钟
-                </button>
-                <button
-                  type="button"
-                  class="preset-pill"
-                  :class="{ 'is-active': isTrimActive('00:00:00', '01:00:00') }"
-                  @click="fillTrimPreset('00:00:00', '01:00:00')"
-                >
-                  <span v-if="isTrimActive('00:00:00', '01:00:00')" class="pill-check">✓</span>
-                  前 1 小时
-                </button>
-                <button
-                  type="button"
-                  class="preset-pill"
-                  :class="{ 'is-active': isTrimActive('00:00:00', '02:00:00') }"
-                  @click="fillTrimPreset('00:00:00', '02:00:00')"
-                >
-                  <span v-if="isTrimActive('00:00:00', '02:00:00')" class="pill-check">✓</span>
-                  前 2 小时
-                </button>
-              </div>
-
-              <div class="preset-group preset-group-actions">
-                <button
-                  type="button"
-                  class="preset-pill preset-pill-reset"
-                  :class="{ 'is-active': isTrimActive('00:00:00', '') }"
-                  @click="fillTrimPreset('00:00:00', '')"
-                  title="保留整场视频不进行裁剪"
-                >
-                  <span v-if="isTrimActive('00:00:00', '')" class="pill-check">✓</span>
-                  完整录像 (不裁剪)
-                </button>
-              </div>
-            </div>
-
             <!-- 实时语义解算卡片 -->
             <div class="trim-semantic-card" :class="{ 'is-invalid': trimSemanticInfo.isInvalid }">
               <div class="semantic-icon-row">
@@ -313,69 +240,7 @@
             </div>
           </div>
 
-          <div class="rule-item-block rule-item-border">
-            <div class="rule-item-header">
-              <div class="rule-item-left">
-                <span class="rule-item-name">个性化最少保留场次</span>
-                <span class="rule-badge-sub">
-                  {{ formRule.min_keep > 0 ? `至少保留最新的 ${formRule.min_keep} 场` : '继承全局预设 (3 场)' }}
-                </span>
-              </div>
-              <div class="inline-unit-row">
-                <el-input-number
-                  v-model="formRule.min_keep"
-                  :min="0"
-                  :max="50"
-                  class="compact-counter"
-                  style="width: 110px;"
-                />
-                <span class="unit-lbl">场</span>
-              </div>
-            </div>
-            <!-- 保留场次快捷填入 -->
-            <div class="minkeep-presets">
-              <span class="preset-label">快捷填入:</span>
-              <button
-                type="button"
-                class="preset-pill"
-                :class="{ 'is-active': formRule.min_keep === 0 }"
-                @click="formRule.min_keep = 0"
-              >
-                <span v-if="formRule.min_keep === 0" class="pill-check">✓</span>
-                遵循全局 (0)
-              </button>
-              <button
-                type="button"
-                class="preset-pill"
-                :class="{ 'is-active': formRule.min_keep === 3 }"
-                @click="formRule.min_keep = 3"
-              >
-                <span v-if="formRule.min_keep === 3" class="pill-check">✓</span>
-                保留 3 场
-              </button>
-              <button
-                type="button"
-                class="preset-pill"
-                :class="{ 'is-active': formRule.min_keep === 5 }"
-                @click="formRule.min_keep = 5"
-              >
-                <span v-if="formRule.min_keep === 5" class="pill-check">✓</span>
-                保留 5 场
-              </button>
-              <button
-                type="button"
-                class="preset-pill"
-                :class="{ 'is-active': formRule.min_keep === 10 }"
-                @click="formRule.min_keep = 10"
-              >
-                <span v-if="formRule.min_keep === 10" class="pill-check">✓</span>
-                保留 10 场
-              </button>
-            </div>
-            <div class="form-tip">
-              <strong>【覆盖全局】</strong>设为 0 时遵循全局策略；设为大于 0 则优先覆盖全局，无论空间多么紧张始终保底保留该主播最新的 N 场录播。
-            </div>
-          </div>
+          
         </div>
       </div>
 
@@ -543,18 +408,7 @@ const formRule = ref<StreamerRule>({
   protected: false,
 });
 
-function fillTrimPreset(start: string, end: string) {
-  formRule.value.trim_start = start;
-  formRule.value.trim_end = end;
-}
-
-function isTrimActive(start: string, end: string): boolean {
-  const curStart = (formRule.value.trim_start || "00:00:00").trim();
-  const curEnd = (formRule.value.trim_end || "").trim();
-  const targetStart = (start || "00:00:00").trim();
-  const targetEnd = (end || "").trim();
-  return curStart === targetStart && curEnd === targetEnd;
-}
+const initialRuleSnapshot = ref<string>("");
 
 // 解析 "HH:mm:ss" 或 "mm:ss" 为总秒数
 function parseSeconds(val: string): number | null {
@@ -695,12 +549,19 @@ function openRuleDialog(row: StreamerInfo) {
       protected: false,
     };
   }
+  initialRuleSnapshot.value = JSON.stringify(formRule.value);
   ruleDialogVisible.value = true;
 }
 
 async function handleSaveRule() {
   if (formRule.value.trim_enabled && trimSemanticInfo.value.isInvalid) {
     ElMessage.warning(trimSemanticInfo.value.text);
+    return;
+  }
+  // 变更检测 (Dirty Check)：未发生任何改动时不发送网络请求、不刷盘、不产生虚假操作记录
+  if (JSON.stringify(formRule.value) === initialRuleSnapshot.value) {
+    ElMessage.info("未检测到规则变动，无需保存");
+    ruleDialogVisible.value = false;
     return;
   }
   savingRule.value = true;
@@ -1156,30 +1017,41 @@ onActivated(() => loadData());
 .streamer-total-stat {
   display: inline-flex;
   align-items: center;
-  height: 24px;
-  line-height: 22px;
+  height: 26px;
   font-size: 12px;
-  color: var(--steel, #888);
-  background: var(--surface, #fafafa);
-  border: 1px solid var(--hairline, #eee);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
   padding: 0 10px;
-  border-radius: var(--r-sm, 4px);
+  border-radius: 13px;
   font-family: var(--font-sans);
   box-sizing: border-box;
   white-space: nowrap;
   flex-shrink: 0;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.streamer-total-stat .stat-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
 }
 .streamer-total-stat .mono-val {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--ink, #333);
+  color: var(--ink);
   font-weight: 600;
-  margin: 0 4px;
+  font-feature-settings: "tnum";
 }
-.streamer-total-stat .stat-sep {
-  color: var(--stone, #a4a097);
+.streamer-total-stat .stat-label {
+  font-size: 11px;
+  color: var(--steel);
+}
+.streamer-total-stat .stat-divider {
+  width: 1px;
+  height: 10px;
+  background: var(--hairline-strong);
   margin: 0 8px;
-  font-weight: 300;
+  opacity: 0.6;
 }
 .header-refresh-btn {
   display: inline-flex;
@@ -1806,14 +1678,17 @@ html.dark {
 
 
 html.dark .streamer-total-stat {
-  background: #18181b;
+  background: #141416;
   border-color: #27272a;
-  color: #a1a1aa;
 }
 html.dark .streamer-total-stat .mono-val {
   color: #f4f4f5;
 }
-html.dark .streamer-total-stat .stat-sep {
-  color: #52525b;
+html.dark .streamer-total-stat .stat-label {
+  color: #a1a1aa;
+}
+html.dark .streamer-total-stat .stat-divider {
+  background: #3f3f46;
+  opacity: 0.8;
 }
 </style>
