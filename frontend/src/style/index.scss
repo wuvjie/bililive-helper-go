@@ -67,10 +67,21 @@
   --glass-border: var(--hairline);
   --glass-blur: blur(12px);
 
+    // 8-Point Spatial System (Linear & Apple HIG Standards)
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  // Radius (tight Notion micro-round)
   --r-xs: 3px;
   --r-sm: 4px;
   --r-md: 6px;
   --r-lg: 10px;
+  --r-xl: 14px;
   --r-full: 9999px;
 }
 
