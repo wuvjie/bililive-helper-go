@@ -1,33 +1,24 @@
 <template>
   <div class="settings">
-    <el-card shadow="hover" class="settings-card">
-      <template #header>
-        <div class="settings-header">
-          <div class="header-left">
-            <div class="title-group-flex">
-              <div class="ui-icon-box icon-box-purple">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              </div>
-              <span class="settings-title">系统设置</span>
-            </div>
-            <span class="settings-subtitle">管理自动化录制合并、磁盘巡检保护、计划调度与系统凭据</span>
-          </div>
-          <span v-if="isFormDirty()" class="unsaved-badge">
-            <span class="badge-dot"></span> 未保存的配置更改
-          </span>
-        </div>
-      </template>
+    <!-- Page Header (Top Level, outside card) -->
+    <header class="settings-page-header">
+      <div class="header-text-wrap">
+        <h1 class="page-title">系统设置</h1>
+        <p class="page-desc">管理自动化录制合并、磁盘巡检保护、计划调度与系统安全凭据</p>
+      </div>
+    </header>
 
-      <!-- Continuous Scroll Layout with Sticky Anchor Sidebar -->
-      <div class="settings-layout">
-        <!-- Left: Sticky Anchor Navigation -->
-        <aside class="settings-sidebar">
+    <!-- Main Two-Column Layout -->
+    <div class="settings-layout">
+      <!-- Left: Sticky Sidebar Navigation (200px) -->
+      <aside class="settings-sidebar">
+        <div class="sidebar-sticky-inner">
+          <div class="sidebar-caption">配置目录</div>
           <nav class="settings-nav">
             <button
               v-for="item in navSections"
               :key="item.id"
-              type="button"
-              class="nav-anchor-btn"
+              class="nav-tab-btn"
               :class="{ active: activeSectionId === item.id }"
               @click="scrollToSection(item.id)"
             >
@@ -38,71 +29,110 @@
                 <svg v-else-if="item.id === 'security'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </span>
               <span class="nav-btn-text">{{ item.label }}</span>
+              <span v-if="activeSectionId === item.id" class="nav-active-pill" />
             </button>
           </nav>
-        </aside>
+        </div>
+      </aside>
 
-        <!-- Right: Continuous Stream of Sections -->
-        <main class="settings-content" ref="contentRef">
-          <!-- 1. 全局策略 -->
-          <section id="section-policy" class="settings-section" data-section="policy">
-            <div v-loading="configLoading" class="section-pane-wrap">
-              <PolicyTab
-                :config="config"
-                :saving="savingConfig"
-                :total-disk-gb="totalDiskGb"
-                @update:config="config = $event"
-                @reset-defaults="handleResetDefaults"
-              />
+      <!-- Right: Continuous Flow of Sections (All same width, zero nested border madness) -->
+      <main class="settings-content" ref="contentRef">
+        <!-- 1. 全局策略 -->
+        <section id="section-policy" class="settings-section-card" data-section="policy">
+          <div class="section-card-header">
+            <div class="section-header-title-row">
+              <div class="ui-icon-box icon-box-emerald">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </div>
+              <div class="section-header-texts">
+                <h2 class="section-main-title">全局策略</h2>
+                <p class="section-sub-title">配置录播分片合并静置容差时间、磁盘巡检保护水位以及新录像免删天数</p>
+              </div>
             </div>
-          </section>
+          </div>
+          <div class="section-card-body" v-loading="configLoading">
+            <PolicyTab
+              :config="config"
+              :saving="savingConfig"
+              :total-disk-gb="totalDiskGb"
+              @update:config="config = $event"
+              @reset-defaults="handleResetDefaults"
+            />
+          </div>
+        </section>
 
-          <div class="section-divider" />
-
-          <!-- 2. 任务调度 -->
-          <section id="section-schedule" class="settings-section" data-section="schedule">
-            <div v-loading="scheduleLoading" class="section-pane-wrap">
-              <ScheduleTab
-                :form="scheduleForm"
-                :backup-start="backupStart"
-                :backup-end="backupEnd"
-                :saving="savingSchedule"
-                :loading="scheduleLoading"
-                @update:form="Object.assign(scheduleForm, $event)"
-                @update:backup-start="backupStart = $event"
-                @update:backup-end="backupEnd = $event"
-              />
+        <!-- 2. 定时调度 -->
+        <section id="section-schedule" class="settings-section-card" data-section="schedule">
+          <div class="section-card-header">
+            <div class="section-header-title-row">
+              <div class="ui-icon-box icon-box-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="section-header-texts">
+                <h2 class="section-main-title">定时调度</h2>
+                <p class="section-sub-title">设定自动分片合并与磁盘清理巡检的运行周期与自动执行开关</p>
+              </div>
             </div>
-          </section>
+          </div>
+          <div class="section-card-body" v-loading="scheduleLoading">
+            <ScheduleTab
+              :form="scheduleForm"
+              :backup-start="backupStart"
+              :backup-end="backupEnd"
+              :saving="savingSchedule"
+              :loading="scheduleLoading"
+              @update:form="Object.assign(scheduleForm, $event)"
+              @update:backup-start="backupStart = $event"
+              @update:backup-end="backupEnd = $event"
+            />
+          </div>
+        </section>
 
-          <div class="section-divider" />
-
-          <!-- 3. 配置备份与恢复 -->
-          <section id="section-backup" class="settings-section" data-section="backup">
-            <div class="section-pane-wrap">
-              <BackupTab
-                :selected-file-name="selectedImportFileName"
-                :import-json="importJson"
-                @export-file="handleExport"
-                @copy-json="handleCopyConfig"
-                @file-selected="handleFileSelect"
-                @update:import-json="importJson = $event"
-                @apply-import="handleImport"
-              />
+        <!-- 3. 配置备份与恢复 (统一整卡) -->
+        <section id="section-backup" class="settings-section-card" data-section="backup">
+          <div class="section-card-header">
+            <div class="section-header-title-row">
+              <div class="ui-icon-box icon-box-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <div class="section-header-texts">
+                <h2 class="section-main-title">配置备份与恢复</h2>
+                <p class="section-sub-title">导出当前系统全部策略规则与调度参数，或从已有备份中导入恢复</p>
+              </div>
             </div>
-          </section>
+          </div>
+          <div class="section-card-body">
+            <BackupTab
+              :selected-file-name="selectedImportFileName"
+              :import-json="importJson"
+              @export-file="handleExport"
+              @copy-json="handleCopyConfig"
+              @file-selected="handleFileSelect"
+              @update:import-json="importJson = $event"
+              @apply-import="handleImport"
+            />
+          </div>
+        </section>
 
-          <div class="section-divider" />
-
-          <!-- 4. 安全设置 -->
-          <section id="section-security" class="settings-section" data-section="security">
-            <div class="section-pane-wrap">
-              <SecurityTab />
+        <!-- 4. 安全设置 (统一整卡) -->
+        <section id="section-security" class="settings-section-card" data-section="security">
+          <div class="section-card-header">
+            <div class="section-header-title-row">
+              <div class="ui-icon-box icon-box-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <div class="section-header-texts">
+                <h2 class="section-main-title">安全设置</h2>
+                <p class="section-sub-title">修改 Web 管理控制台访问密码与安全凭据</p>
+              </div>
             </div>
-          </section>
-        </main>
-      </div>
-    </el-card>
+          </div>
+          <div class="section-card-body">
+            <SecurityTab />
+          </div>
+        </section>
+      </main>
+    </div>
 
     <!-- Floating Sticky Save Bar (吸底浮动保存栏) -->
     <transition name="save-bar-slide">
@@ -130,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted, onActivated, nextTick } from "vue";
+import { ref, reactive, watch, onMounted, onUnmounted, onActivated, nextTick } from "vue";
 import { useRoute, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
@@ -163,20 +193,28 @@ const activeSectionId = ref<string>(
 let isUserClicking = false;
 let userClickTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Helper: 获取最外层滚动容器 (.layout-content)
+function getScrollContainer(): HTMLElement | null {
+  return document.querySelector(".layout-content") as HTMLElement | null;
+}
+
 function scrollToSection(id: string) {
   activeSectionId.value = id;
   isUserClicking = true;
   if (userClickTimer) clearTimeout(userClickTimer);
 
+  const container = getScrollContainer();
   const el = document.getElementById(`section-${id}`);
-  if (el) {
-    const headerOffset = 70;
-    const elementPosition = el.getBoundingClientRect().top;
-    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-    window.scrollTo({
-      top: offsetPosition,
+  if (container && el) {
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const targetScroll = container.scrollTop + (elRect.top - containerRect.top) - 16;
+    container.scrollTo({
+      top: Math.max(0, targetScroll),
       behavior: "smooth"
     });
+  } else if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   userClickTimer = setTimeout(() => {
@@ -184,14 +222,26 @@ function scrollToSection(id: string) {
   }, 750);
 }
 
-// ScrollSpy via IntersectionObserver
+function handleContainerScroll() {
+  if (isUserClicking) return;
+  const container = getScrollContainer();
+  if (!container) return;
+  if (container.scrollHeight - container.scrollTop - container.clientHeight < 60) {
+    activeSectionId.value = "security";
+  }
+}
+
 let observer: IntersectionObserver | null = null;
 
 function setupScrollSpy() {
   if (observer) {
     observer.disconnect();
+    observer = null;
   }
-  const sections = document.querySelectorAll(".settings-section");
+  const container = getScrollContainer();
+  const sections = document.querySelectorAll(".settings-section-card");
+  if (!sections.length) return;
+
   observer = new IntersectionObserver(
     (entries) => {
       if (isUserClicking) return;
@@ -205,19 +255,12 @@ function setupScrollSpy() {
       });
     },
     {
-      rootMargin: "-15% 0px -70% 0px",
-      threshold: 0
+      root: container,
+      rootMargin: "-10% 0px -60% 0px",
+      threshold: [0, 0.2]
     }
   );
   sections.forEach((sec) => observer?.observe(sec));
-}
-
-function handleWindowScroll() {
-  if (isUserClicking) return;
-  // If scrolled close to bottom of page, highlight the last section
-  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
-    activeSectionId.value = "security";
-  }
 }
 
 const savingConfig = ref(false);
@@ -240,7 +283,7 @@ const backupEnd = ref("");
 const selectedImportFileName = ref("");
 const importJson = ref("");
 
-// Baseline Snapshot System (数学级快照比对，杜绝误报)
+// Baseline Snapshot System
 const initialPolicySnapshot = ref("");
 const initialScheduleSnapshot = ref("");
 
@@ -318,7 +361,7 @@ function handleDiscardChanges() {
   ElMessage.info("已放弃未保存的配置更改，恢复为上次保存状态");
 }
 
-// 离开路由守卫：若有未保存改动弹窗拦截
+// 离开路由守卫
 onBeforeRouteLeave((to, from, next) => {
   if (isFormDirty()) {
     ElMessageBox.confirm(
@@ -494,7 +537,6 @@ async function handleSaveSettings() {
     await Promise.all(promises);
     ElMessage.success("系统配置已成功保存生效");
 
-    // Refresh snapshots
     if (policyDirty) {
       initialPolicySnapshot.value = serializePolicyConfig(config.value);
       await loadConfigData();
@@ -597,7 +639,10 @@ onActivated(() => {
 });
 
 onMounted(() => {
-  window.addEventListener("scroll", handleWindowScroll, { passive: true });
+  const container = getScrollContainer();
+  if (container) {
+    container.addEventListener("scroll", handleContainerScroll, { passive: true });
+  }
   loadConfigData();
   loadScheduleData();
   loadDiskStatus();
@@ -610,7 +655,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  window.removeEventListener("scroll", handleWindowScroll);
+  const container = getScrollContainer();
+  if (container) {
+    container.removeEventListener("scroll", handleContainerScroll);
+  }
   if (observer) observer.disconnect();
   if (userClickTimer) clearTimeout(userClickTimer);
 });
@@ -618,147 +666,120 @@ onUnmounted(() => {
 
 <style scoped>
 .settings {
-  max-width: 1080px;
+  max-width: 1100px;
   margin: 0 auto;
   position: relative;
-  padding-bottom: 80px;
+  padding-bottom: 90px;
 }
 
-.settings-card {
-  border-radius: var(--r-lg, 12px);
-  border: 1px solid var(--hairline);
-  background: var(--surface-card);
+/* Page Level Header */
+.settings-page-header {
+  margin-bottom: 24px;
 }
-
-.settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.title-group-flex {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.settings-title {
-  font-size: 16px;
-  font-weight: 600;
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
   color: var(--charcoal);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
 }
-
-.settings-subtitle {
-  font-size: 12px;
+.page-desc {
+  font-size: 13px;
   color: var(--steel);
+  margin: 0;
 }
 
-.unsaved-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff8f0;
-  border: 1px solid rgba(217, 115, 13, 0.3);
-  color: #b35600;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 12px;
-}
-.badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #b45309;
-}
-
-/* Two-column Continuous Scroll Layout */
+/* Layout */
 .settings-layout {
   display: flex;
-  gap: 24px;
-  padding: 16px 0 24px 0;
+  gap: 28px;
   align-items: flex-start;
 }
-
-/* Sticky Left Sidebar Navigation */
-.settings-sidebar {
-  width: 180px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 80px;
-  z-index: 10;
+@media (max-width: 860px) {
+  .settings-layout {
+    flex-direction: column;
+  }
+  .settings-sidebar {
+    width: 100% !important;
+    position: static !important;
+  }
+  .settings-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
 }
 
+/* Sticky Sidebar (200px) */
+.settings-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 16px;
+}
+.sidebar-sticky-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sidebar-caption {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  padding-left: 12px;
+}
 .settings-nav {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: var(--bg-hover, #f4f4f5);
-  padding: 6px;
-  border-radius: var(--r-md, 8px);
-  border: 1px solid var(--hairline, #e4e4e7);
 }
-
-.nav-anchor-btn {
+.nav-tab-btn {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
-  height: 38px;
-  padding: 0 12px;
-  border-radius: 6px;
+  gap: 10px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--r-sm, 6px);
   border: none;
   background: transparent;
-  color: var(--slate, #71717a);
+  color: var(--slate, #64748b);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
   text-align: left;
-  width: 100%;
-
-  .nav-btn-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .tab-svg-ico {
-    width: 15px;
-    height: 15px;
-    stroke-width: 2;
-    opacity: 0.8;
-  }
-
-  &:hover {
-    color: var(--charcoal, #18181b);
-    background: rgba(0, 0, 0, 0.04);
-  }
-
-  &.active {
-    background: var(--surface, #ffffff);
-    color: #4f46e5;
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-
-    .tab-svg-ico {
-      opacity: 1;
-      color: #4f46e5;
-    }
-  }
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.nav-tab-btn:hover {
+  color: var(--charcoal);
+  background: var(--surface-subtle, rgba(0, 0, 0, 0.04));
+}
+.nav-tab-btn.active {
+  color: var(--color-primary, #3b82f6);
+  background: var(--highlight, rgba(59, 130, 246, 0.08));
+  font-weight: 600;
+}
+.nav-active-pill {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--color-primary, #3b82f6);
+  border-radius: 0 2px 2px 0;
+}
+.tab-svg-ico {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
-/* Right Content Stream */
+/* Right Content Main Stream (Uniform 100% width, no width mismatches) */
 .settings-content {
-  max-width: 860px;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -766,18 +787,60 @@ onUnmounted(() => {
   gap: 28px;
 }
 
-.settings-section {
-  scroll-margin-top: 80px;
+/* Unified Section Card (Every section looks identical in width, radius & borders) */
+.settings-section-card {
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline, #e4e4e7);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
-.section-pane-wrap {
-  width: 100%;
+.section-card-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+  background: var(--surface-subtle, rgba(0, 0, 0, 0.015));
+}
+.section-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-header-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.section-main-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.section-sub-title {
+  margin: 0;
+  font-size: 12px;
+  color: var(--steel);
 }
 
-.section-divider {
-  height: 1px;
-  background: var(--hairline, #e4e4e7);
-  margin: 4px 0;
+.section-card-body {
+  padding: 22px;
+}
+
+/* Eliminate nested card borders inside PolicyTab, ScheduleTab, BackupTab, SecurityTab */
+.settings-section-card :deep(.form-section-card),
+.settings-section-card :deep(.backup-card) {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+.settings-section-card :deep(.form-section-card + .form-section-card),
+.settings-section-card :deep(.backup-card + .backup-card) {
+  margin-top: 24px !important;
+  padding-top: 24px !important;
+  border-top: 1px solid var(--hairline) !important;
 }
 
 /* Floating Sticky Save Bar (吸底保存条) */
@@ -786,20 +849,21 @@ onUnmounted(() => {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
+  z-index: 1000;
   width: calc(100% - 48px);
-  max-width: 640px;
+  max-width: 820px;
+  animation: barFloat 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .save-bar-inner {
+  background: rgba(24, 24, 27, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 40px;
+  padding: 10px 18px 10px 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #252526;
-  border: 1px solid #3e3e42;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  padding: 10px 18px;
-  border-radius: var(--r-xl, 14px);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 .save-bar-left {
   display: flex;
@@ -812,61 +876,69 @@ onUnmounted(() => {
   border-radius: 50%;
   background: #f59e0b;
   box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-  animation: pulse-amber 2s infinite;
+  animation: pulse-warn-dot 1.8s infinite;
+}
+@keyframes pulse-warn-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 .save-bar-title {
+  color: #f4f4f5;
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
 }
 .save-bar-sub {
-  font-size: 12px;
   color: #a1a1aa;
+  font-size: 12px;
 }
 .save-bar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .btn-bar-ghost {
-  height: 32px;
-  padding: 0 14px;
-  font-size: 12px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #d4d4d8;
-  border-radius: var(--r-sm, 6px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s;
 }
 .btn-bar-ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 .btn-bar-primary {
-  height: 32px;
-  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #3b82f6;
+  border: 1px solid #60a5fa;
+  color: #ffffff;
+  padding: 6px 18px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  background: #4f46e5;
-  border: 1px solid #4338ca;
-  color: #ffffff;
-  border-radius: var(--r-sm, 6px);
   cursor: pointer;
-  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  transition: all 0.15s;
 }
 .btn-bar-primary:hover:not(:disabled) {
-  background: #4338ca;
+  background: #2563eb;
+  transform: translateY(-1px);
 }
 .btn-bar-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* Animations */
 .save-bar-slide-enter-active,
 .save-bar-slide-leave-active {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .save-bar-slide-enter-from,
 .save-bar-slide-leave-to {
@@ -874,67 +946,19 @@ onUnmounted(() => {
   transform: translate(-50%, 20px);
 }
 
-@keyframes pulse-amber {
-  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+/* Dark mode tweaks */
+html.dark .nav-tab-btn {
+  color: #94a3b8;
 }
-
-/* Dark Mode Overrides */
-html.dark {
-  .settings-nav {
-    background: #18181b;
-    border-color: #27272a;
-  }
-  .nav-anchor-btn {
-    color: #a1a1aa;
-
-    &:hover {
-      color: #f4f4f5;
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    &.active {
-      background: #27272a;
-      color: #818cf8;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-
-      .tab-svg-ico {
-        color: #818cf8;
-      }
-    }
-  }
-  .section-divider {
-    background: #27272a;
-  }
+html.dark .nav-tab-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
 }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .settings-layout {
-    flex-direction: column;
-    gap: 16px;
-  }
-  .settings-sidebar {
-    width: 100%;
-    position: sticky;
-    top: 60px;
-  }
-  .settings-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 4px;
-    gap: 4px;
-  }
-  .nav-anchor-btn {
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .save-bar-sub {
-    display: none;
-  }
-  .save-bar-inner {
-    padding: 8px 12px;
-  }
+html.dark .nav-tab-btn.active {
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.12);
+}
+html.dark .section-card-header {
+  background: rgba(255, 255, 255, 0.02);
 }
 </style>

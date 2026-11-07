@@ -10,50 +10,50 @@
             <span class="title-text">操作审计日志</span>
           </div>
           <div class="header-actions">
-            <div class="header-filters">
-              <div class="task-segmented-pills">
-                <button
-                  type="button"
-                  class="seg-pill"
-                  :class="{ active: filterTask === '' }"
-                  @click="setTaskFilter('')"
-                >
-                  全部
-                </button>
-                <button
-                  type="button"
-                  class="seg-pill"
-                  :class="{ active: filterTask === 'merge' }"
-                  @click="setTaskFilter('merge')"
-                >
-                  分片合并
-                </button>
-                <button
-                  type="button"
-                  class="seg-pill"
-                  :class="{ active: filterTask === 'clean' }"
-                  @click="setTaskFilter('clean')"
-                >
-                  磁盘清理
-                </button>
-                <button
-                  type="button"
-                  class="seg-pill"
-                  :class="{ active: filterTask === 'config' }"
-                  @click="setTaskFilter('config')"
-                >
-                  配置变更
-                </button>
-                <button
-                  type="button"
-                  class="seg-pill"
-                  :class="{ active: filterTask === 'schedule' }"
-                  @click="setTaskFilter('schedule')"
-                >
-                  调度事件
-                </button>
-              </div>
+            <div class="task-segmented-pills">
+              <button
+                type="button"
+                class="seg-pill"
+                :class="{ active: filterTask === '' }"
+                @click="setTaskFilter('')"
+              >
+                全部
+              </button>
+              <button
+                type="button"
+                class="seg-pill"
+                :class="{ active: filterTask === 'merge' }"
+                @click="setTaskFilter('merge')"
+              >
+                分片合并
+              </button>
+              <button
+                type="button"
+                class="seg-pill"
+                :class="{ active: filterTask === 'clean' }"
+                @click="setTaskFilter('clean')"
+              >
+                磁盘清理
+              </button>
+              <button
+                type="button"
+                class="seg-pill"
+                :class="{ active: filterTask === 'config' }"
+                @click="setTaskFilter('config')"
+              >
+                配置变更
+              </button>
+              <button
+                type="button"
+                class="seg-pill"
+                :class="{ active: filterTask === 'schedule' }"
+                @click="setTaskFilter('schedule')"
+              >
+                调度事件
+              </button>
+            </div>
 
+            <div class="header-right-tools">
               <div class="search-input-wrap">
                 <el-input
                   ref="streamerSearchRef"
@@ -61,17 +61,15 @@
                   placeholder="搜索主播名..."
                   clearable
                   size="small"
-                  style="width: 200px"
+                  style="width: 180px"
                   @input="onStreamerSearch"
                   @clear="loadHistory(1)"
                 />
                 <span v-if="!filterStreamer" class="kbd-badge search-kbd">/</span>
               </div>
-            </div>
-            <div class="header-buttons">
-              <button class="text-action text-action-danger" @click="handleClearHistory" title="清空全部操作历史记录与日志文件">
+              <button class="btn-clear-history" @click="handleClearHistory" title="清空全部操作历史记录与日志文件">
                 <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
-                <span>清空</span>
+                <span>清空日志</span>
               </button>
             </div>
           </div>
@@ -1119,56 +1117,86 @@ html.dark {
 .task-segmented-pills {
   display: inline-flex;
   align-items: center;
-  background: var(--bg-hover, #f4f4f5);
-  border: 1px solid var(--hairline, #e4e4e7);
-  padding: 2px;
-  border-radius: var(--r-sm, 6px);
-  gap: 2px;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 .seg-pill {
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 5px 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--slate, #71717a);
-  border-radius: 4px;
+  color: var(--steel, #64748b);
+  border-radius: var(--r-sm, 6px);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
-
-  &:hover {
-    color: var(--charcoal, #18181b);
-    background: rgba(0, 0, 0, 0.04);
-  }
-
-  &.active {
-    background: var(--surface, #ffffff);
-    color: #4f46e5;
-    font-weight: 600;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
 }
 
-html.dark .task-segmented-pills {
-  background: #18181b;
-  border-color: #27272a;
+.seg-pill:hover {
+  color: var(--ink, #18181b);
+  background: var(--highlight, rgba(0, 0, 0, 0.04));
+}
+
+.seg-pill.active {
+  background: var(--surface-card, #ffffff);
+  border-color: var(--hairline, #e4e4e7);
+  color: var(--color-primary, #4f46e5);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.header-right-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-clear-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--hairline, #e4e4e7);
+  background: var(--surface-card, #ffffff);
+  color: var(--steel, #64748b);
+  font-size: 12px;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-clear-history:hover {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
 }
 
 html.dark .seg-pill {
-  color: #a1a1aa;
-
-  &:hover {
-    color: #f4f4f5;
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  &.active {
-    background: #27272a;
-    color: #818cf8;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
+  color: #94a3b8;
 }
-
+html.dark .seg-pill:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.06);
+}
+html.dark .seg-pill.active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #818cf8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+html.dark .btn-clear-history {
+  background: var(--surface-card);
+  border-color: var(--hairline);
+  color: #94a3b8;
+}
+html.dark .btn-clear-history:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+}
 </style>

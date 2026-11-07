@@ -321,16 +321,12 @@
                 </el-tooltip>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="220" align="center" fixed="right">
+            <el-table-column label="操作" width="135" align="center">
               <template #default="{ row }">
                 <div class="drawer-file-actions">
                   <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
                     <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <span>播放</span>
-                  </button>
-                  <button class="play-btn-sm btn-copy-path" @click="handleCopyPath(drawerStreamer, row.name)" title="复制录像相对文件路径">
-                    <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    <span>复制</span>
                   </button>
                   <button class="play-btn-sm btn-del-video" @click="handleDeleteFile(row)" title="从磁盘永久删除该录像文件">
                     <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -615,10 +611,6 @@ function isStreamerActive(row: StreamerInfo): boolean {
   return (Date.now() / 1000 - row.mtime) < 1800;
 }
 
-async function handleCopyPath(streamer: string, fileName: string) {
-  const relPath = `${streamer}/${fileName}`;
-  await copyToClipboard(relPath, `已复制录像路径: ${relPath}`);
-}
 
 async function openDrawer(row: StreamerInfo) {
   drawerStreamer.value = row.name;
@@ -1720,10 +1712,7 @@ html.dark .streamer-meta-stat .meta-dot {
 }
 
 /* Max-width Guard & Live Dot & Copy Path Button (A3, B2, B4) */
-.streamers {
-  max-width: 1400px;
-  margin: 0 auto;
-}
+
 
 .live-status-dot {
   width: 7px;
@@ -1748,12 +1737,4 @@ html.dark .streamer-meta-stat .meta-dot {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-.btn-copy-path:hover {
-  background: rgba(56, 189, 248, 0.12) !important;
-  color: #0284c7 !important;
-  border-color: rgba(56, 189, 248, 0.3) !important;
-}
-html.dark .btn-copy-path:hover {
-  color: #38bdf8 !important;
-}
 </style>

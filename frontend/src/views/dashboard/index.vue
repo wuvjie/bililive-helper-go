@@ -559,33 +559,37 @@ onActivated(async () => {
 .env-divider { width: 1px; height: 12px; background: var(--hairline); }
 
 /* Stat cards with Notion pastel tints */
-/* Stat cards with Bento Ribbon layout (A2) */
+/* Stat cards with clean breathing gaps */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-md);
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  gap: 14px;
 }
 
 .stat-card {
-  padding: 18px 22px;
+  border-radius: var(--r-md);
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  background: transparent;
-  border: none;
-  border-right: 1px solid var(--hairline);
-  position: relative;
-  transition: background 0.15s ease;
-}
-.stat-card:last-child {
-  border-right: none;
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+  transition: all 0.15s ease;
 }
 .stat-card:hover {
-  background: rgba(125, 125, 125, 0.03);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.stat-peach { background: var(--tint-peach); border: 1px solid #f5d4b8; }
+.stat-mint { background: var(--tint-mint); border: 1px solid #b8e6c8; }
+.stat-sky { background: var(--tint-sky); border: 1px solid #b8d8f5; }
+.stat-lavender { background: var(--tint-lavender); border: 1px solid #d0c8e8; }
+
+html.dark .stat-peach,
+html.dark .stat-mint,
+html.dark .stat-sky,
+html.dark .stat-lavender {
+  background: var(--surface-card) !important;
+  border-color: var(--hairline) !important;
 }
 
 .stat-card {

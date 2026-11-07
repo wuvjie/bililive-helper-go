@@ -171,6 +171,10 @@ onUnmounted(() => {
 }
 
 .terminal-header {
+  background: #18181b !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: #18181b !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
   background: #252526;
   padding: 8px 14px;
   display: flex;
@@ -195,6 +199,10 @@ onUnmounted(() => {
 }
 
 .terminal-badge-count {
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   font-size: 12px;
   color: #888888;
   background: #1e1e1e;
@@ -251,6 +259,12 @@ onUnmounted(() => {
 }
 
 .terminal-action-btn {
+  color: #e4e4e7 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #e4e4e7 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #cccccc;
