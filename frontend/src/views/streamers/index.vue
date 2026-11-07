@@ -166,22 +166,122 @@
             <div class="time-range-group">
               <div class="time-box">
                 <span class="time-label">开始时间</span>
-                <el-input v-model="formRule.trim_start" placeholder="00:00:00" class="mono-input" />
+                <el-input
+                  v-model="formRule.trim_start"
+                  placeholder="00:00:00"
+                  class="mono-input"
+                  @blur="normalizeTrimField('trim_start')"
+                />
               </div>
               <span class="range-arrow">至</span>
               <div class="time-box">
                 <span class="time-label">结束时间</span>
-                <el-input v-model="formRule.trim_end" placeholder="留空截到结束" class="mono-input" />
+                <el-input
+                  v-model="formRule.trim_end"
+                  placeholder="留空截到结束"
+                  class="mono-input"
+                  @blur="normalizeTrimField('trim_end')"
+                />
               </div>
             </div>
-            <div class="trim-quick-presets">
-              <span class="preset-label">快捷填入:</span>
-              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '00:30:00')">前 30 分钟</button>
-              <button type="button" class="preset-pill" @click="fillTrimPreset('00:00:00', '01:00:00')">前 1 小时</button>
-              <button type="button" class="preset-pill preset-pill-clear" @click="fillTrimPreset('00:00:00', '')">清空结束</button>
+
+            <!-- 场景化快捷填入预设 -->
+            <div class="trim-presets-container">
+              <div class="preset-group">
+                <span class="preset-label">跳过片头暖场:</span>
+                <button
+                  type="button"
+                  class="preset-pill"
+                  :class="{ 'is-active': isTrimActive('00:05:00', '') }"
+                  @click="fillTrimPreset('00:05:00', '')"
+                >
+                  <span v-if="isTrimActive('00:05:00', '')" class="pill-check">✓</span>
+                  前 5 分钟
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill"
+                  :class="{ 'is-active': isTrimActive('00:10:00', '') }"
+                  @click="fillTrimPreset('00:10:00', '')"
+                >
+                  <span v-if="isTrimActive('00:10:00', '')" class="pill-check">✓</span>
+                  前 10 分钟
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill"
+                  :class="{ 'is-active': isTrimActive('00:15:00', '') }"
+                  @click="fillTrimPreset('00:15:00', '')"
+                >
+                  <span v-if="isTrimActive('00:15:00', '')" class="pill-check">✓</span>
+                  前 15 分钟
+                </button>
+              </div>
+
+              <div class="preset-group">
+                <span class="preset-label">精选前半场:</span>
+                <button
+                  type="button"
+                  class="preset-pill"
+                  :class="{ 'is-active': isTrimActive('00:00:00', '00:30:00') }"
+                  @click="fillTrimPreset('00:00:00', '00:30:00')"
+                >
+                  <span v-if="isTrimActive('00:00:00', '00:30:00')" class="pill-check">✓</span>
+                  前 30 分钟
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill"
+                  :class="{ 'is-active': isTrimActive('00:00:00', '01:00:00') }"
+                  @click="fillTrimPreset('00:00:00', '01:00:00')"
+                >
+                  <span v-if="isTrimActive('00:00:00', '01:00:00')" class="pill-check">✓</span>
+                  前 1 小时
+                </button>
+                <button
+                  type="button"
+                  class="preset-pill"
+                  :class="{ 'is-active': isTrimActive('00:00:00', '02:00:00') }"
+                  @click="fillTrimPreset('00:00:00', '02:00:00')"
+                >
+                  <span v-if="isTrimActive('00:00:00', '02:00:00')" class="pill-check">✓</span>
+                  前 2 小时
+                </button>
+              </div>
+
+              <div class="preset-group preset-group-actions">
+                <button
+                  type="button"
+                  class="preset-pill preset-pill-reset"
+                  :class="{ 'is-active': isTrimActive('00:00:00', '') }"
+                  @click="fillTrimPreset('00:00:00', '')"
+                  title="保留整场视频不进行裁剪"
+                >
+                  <span v-if="isTrimActive('00:00:00', '')" class="pill-check">✓</span>
+                  完整录像 (不裁剪)
+                </button>
+              </div>
             </div>
+
+            <!-- 实时语义解算卡片 -->
+            <div class="trim-semantic-card" :class="{ 'is-invalid': trimSemanticInfo.isInvalid }">
+              <div class="semantic-icon-row">
+                <svg v-if="!trimSemanticInfo.isInvalid" class="semantic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <svg v-else class="semantic-svg svg-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span class="semantic-text">{{ trimSemanticInfo.text }}</span>
+              </div>
+              <span v-if="trimSemanticInfo.durationText" class="semantic-badge">
+                {{ trimSemanticInfo.durationText }}
+              </span>
+            </div>
+
             <div class="form-tip">
-              * 结束时间留空表示截取到最后；时间格式为 <code>时:分:秒</code>（如 00:30:00）。
+              * 时间格式支持 <code>时:分:秒</code>（如 00:05:00）或简写（如 5:00 失焦自动规整）；结束时间留空表示截取到最后。
             </div>
           </div>
         </div>
@@ -231,6 +331,46 @@
                 />
                 <span class="unit-lbl">场</span>
               </div>
+            </div>
+            <!-- 保留场次快捷填入 -->
+            <div class="minkeep-presets">
+              <span class="preset-label">快捷填入:</span>
+              <button
+                type="button"
+                class="preset-pill"
+                :class="{ 'is-active': formRule.min_keep === 0 }"
+                @click="formRule.min_keep = 0"
+              >
+                <span v-if="formRule.min_keep === 0" class="pill-check">✓</span>
+                遵循全局 (0)
+              </button>
+              <button
+                type="button"
+                class="preset-pill"
+                :class="{ 'is-active': formRule.min_keep === 3 }"
+                @click="formRule.min_keep = 3"
+              >
+                <span v-if="formRule.min_keep === 3" class="pill-check">✓</span>
+                保留 3 场
+              </button>
+              <button
+                type="button"
+                class="preset-pill"
+                :class="{ 'is-active': formRule.min_keep === 5 }"
+                @click="formRule.min_keep = 5"
+              >
+                <span v-if="formRule.min_keep === 5" class="pill-check">✓</span>
+                保留 5 场
+              </button>
+              <button
+                type="button"
+                class="preset-pill"
+                :class="{ 'is-active': formRule.min_keep === 10 }"
+                @click="formRule.min_keep = 10"
+              >
+                <span v-if="formRule.min_keep === 10" class="pill-check">✓</span>
+                保留 10 场
+              </button>
             </div>
             <div class="form-tip">
               <strong>【覆盖全局】</strong>设为 0 时遵循全局策略；设为大于 0 则优先覆盖全局，无论空间多么紧张始终保底保留该主播最新的 N 场录播。
@@ -403,10 +543,138 @@ const formRule = ref<StreamerRule>({
   protected: false,
 });
 
-function fillQuick30() {
-  formRule.value.trim_start = "00:00:00";
-  formRule.value.trim_end = "00:30:00";
+function fillTrimPreset(start: string, end: string) {
+  formRule.value.trim_start = start;
+  formRule.value.trim_end = end;
 }
+
+function isTrimActive(start: string, end: string): boolean {
+  const curStart = (formRule.value.trim_start || "00:00:00").trim();
+  const curEnd = (formRule.value.trim_end || "").trim();
+  const targetStart = (start || "00:00:00").trim();
+  const targetEnd = (end || "").trim();
+  return curStart === targetStart && curEnd === targetEnd;
+}
+
+// 解析 "HH:mm:ss" 或 "mm:ss" 为总秒数
+function parseSeconds(val: string): number | null {
+  if (!val || !val.trim()) return null;
+  const parts = val.trim().split(":").map(p => Number(p));
+  if (parts.some(n => isNaN(n) || n < 0)) return null;
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  } else if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  } else if (parts.length === 1) {
+    return parts[0];
+  }
+  return null;
+}
+
+// 秒数格式化为易读中文时长
+function formatFriendlyDuration(totalSec: number): string {
+  if (totalSec <= 0) return "0 秒";
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h} 小时`);
+  if (m > 0) parts.push(`${m} 分钟`);
+  if (s > 0 && h === 0) parts.push(`${s} 秒`);
+  return parts.join(" ") || "0 秒";
+}
+
+// 规范化输入的时间字符串为 "HH:mm:ss"
+function normalizeTimeString(val: string): string {
+  if (!val || !val.trim()) return "";
+  const cleaned = val.trim();
+  const parts = cleaned.split(":").map(p => p.trim());
+  if (parts.length === 3) {
+    const h = String(parseInt(parts[0], 10) || 0).padStart(2, "0");
+    const m = String(parseInt(parts[1], 10) || 0).padStart(2, "0");
+    const s = String(parseInt(parts[2], 10) || 0).padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  } else if (parts.length === 2) {
+    const m = String(parseInt(parts[0], 10) || 0).padStart(2, "0");
+    const s = String(parseInt(parts[1], 10) || 0).padStart(2, "0");
+    return `00:${m}:${s}`;
+  } else if (parts.length === 1 && !isNaN(Number(parts[0]))) {
+    const num = parseInt(parts[0], 10);
+    if (num <= 180) {
+      const h = String(Math.floor(num / 60)).padStart(2, "0");
+      const m = String(num % 60).padStart(2, "0");
+      return `${h}:${m}:00`;
+    }
+  }
+  return cleaned;
+}
+
+function normalizeTrimField(field: "trim_start" | "trim_end") {
+  if (field === "trim_start") {
+    if (!formRule.value.trim_start || !formRule.value.trim_start.trim()) {
+      formRule.value.trim_start = "00:00:00";
+    } else {
+      formRule.value.trim_start = normalizeTimeString(formRule.value.trim_start);
+    }
+  } else {
+    if (formRule.value.trim_end && formRule.value.trim_end.trim()) {
+      formRule.value.trim_end = normalizeTimeString(formRule.value.trim_end);
+    }
+  }
+}
+
+// 实时解算当前裁剪规则的语义提示
+const trimSemanticInfo = computed(() => {
+  const startSec = parseSeconds(formRule.value.trim_start) ?? 0;
+  const endSec = parseSeconds(formRule.value.trim_end);
+
+  if (endSec !== null && endSec <= startSec) {
+    return {
+      isInvalid: true,
+      text: `结束时间 (${formRule.value.trim_end}) 必须晚于开始时间 (${formRule.value.trim_start || "00:00:00"})`,
+      durationText: "区间无效"
+    };
+  }
+
+  if (startSec === 0 && endSec === null) {
+    return {
+      isInvalid: false,
+      text: "完整录制：不裁剪视频时段，从头到尾完整保留录播内容",
+      durationText: "全场保留"
+    };
+  }
+
+  if (startSec > 0 && endSec === null) {
+    return {
+      isInvalid: false,
+      text: `跳过暖场：自动跳过开播前 ${formatFriendlyDuration(startSec)}，截取至录像结束`,
+      durationText: `跳过前 ${formatFriendlyDuration(startSec)}`
+    };
+  }
+
+  if (startSec === 0 && endSec !== null) {
+    return {
+      isInvalid: false,
+      text: `保留开播精选：截取开播前 ${formatFriendlyDuration(endSec)}，后续内容自动丢弃`,
+      durationText: `时长 ${formatFriendlyDuration(endSec)}`
+    };
+  }
+
+  if (startSec > 0 && endSec !== null) {
+    const diff = endSec - startSec;
+    return {
+      isInvalid: false,
+      text: `选定时段：从 ${formRule.value.trim_start} 截取至 ${formRule.value.trim_end}`,
+      durationText: `有效时长 ${formatFriendlyDuration(diff)}`
+    };
+  }
+
+  return {
+    isInvalid: false,
+    text: "自定义裁剪时段",
+    durationText: ""
+  };
+});
 
 function openRuleDialog(row: StreamerInfo) {
   currentStreamer.value = row.name;
@@ -431,6 +699,10 @@ function openRuleDialog(row: StreamerInfo) {
 }
 
 async function handleSaveRule() {
+  if (formRule.value.trim_enabled && trimSemanticInfo.value.isInvalid) {
+    ElMessage.warning(trimSemanticInfo.value.text);
+    return;
+  }
   savingRule.value = true;
   try {
     await saveStreamerRule(currentStreamer.value, formRule.value);
@@ -1156,32 +1428,49 @@ onActivated(() => loadData());
   padding: 0 4px;
   margin-top: 18px;
 }
-.trim-quick-presets {
+.trim-presets-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: var(--bg-hover, #f8fafc);
+  border-radius: var(--r-sm, 6px);
+  border: 1px dashed var(--hairline-strong, #cbd5e1);
+}
+.preset-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin: 4px 0;
+}
+.preset-group-actions {
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hairline, #e2e8f0);
 }
 .preset-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--steel, #64748b);
-  font-weight: 500;
+  font-weight: 600;
+  min-width: 82px;
+  letter-spacing: 0.2px;
 }
 .preset-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #f8fafc;
+  background: #ffffff;
   border: 1px solid var(--hairline-strong, #cbd5e1);
   color: var(--charcoal, #334155);
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 12px;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  line-height: 1.3;
 }
 .preset-pill:hover {
   background: #eff6ff;
@@ -1189,13 +1478,96 @@ onActivated(() => loadData());
   color: #2563eb;
   transform: translateY(-1px);
 }
-.preset-pill-clear {
-  color: var(--steel, #64748b);
+.preset-pill.is-active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  font-weight: 600;
 }
-.preset-pill-clear:hover {
+.preset-pill.is-active .pill-check {
+  font-weight: 700;
+  font-size: 11px;
+}
+.preset-pill-reset {
+  color: var(--steel, #64748b);
+  border-style: dashed;
+}
+.preset-pill-reset:hover {
+  background: #f1f5f9;
+  border-color: var(--steel, #64748b);
+  color: var(--charcoal, #334155);
+}
+.preset-pill-reset.is-active {
+  background: #475569;
+  border-color: #475569;
+  border-style: solid;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(71, 85, 105, 0.25);
+}
+.minkeep-presets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* 实时语义解算卡片 */
+.trim-semantic-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--r-sm, 6px);
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  font-size: 12px;
+  color: #1e40af;
+  margin-top: 6px;
+  transition: all 0.2s ease;
+}
+.trim-semantic-card.is-invalid {
   background: #fef2f2;
-  border-color: #f87171;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.semantic-icon-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.semantic-svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.svg-warn {
   color: #dc2626;
+}
+.semantic-text {
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.semantic-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.trim-semantic-card.is-invalid .semantic-badge {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 .rule-item-block {
   background: #ffffff;
