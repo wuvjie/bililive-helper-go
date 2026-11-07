@@ -1004,7 +1004,7 @@ onActivated(() => loadData());
   margin-top: 14px;
 }
 .quick-pill-btn {
-  background: #fff;
+  background: var(--surface-card);
   border: 1px solid var(--hairline-strong);
   color: var(--charcoal);
   border-radius: var(--r-sm);
@@ -1400,7 +1400,7 @@ onActivated(() => loadData());
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--hairline, #e2e8f0);
   border-radius: var(--r-sm, 6px);
   padding: 12px;
@@ -1460,7 +1460,7 @@ onActivated(() => loadData());
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #ffffff;
+  background: var(--surface-card);
   border: 1px solid var(--hairline-strong, #cbd5e1);
   color: var(--charcoal, #334155);
   border-radius: 14px;
@@ -1570,7 +1570,7 @@ onActivated(() => loadData());
   color: #b91c1c;
 }
 .rule-item-block {
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--hairline, #e2e8f0);
   border-radius: var(--r-sm, 6px);
   padding: 12px;

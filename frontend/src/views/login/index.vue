@@ -500,7 +500,7 @@ html.dark {
     box-shadow: 0 0 0 1px #3f3f46 inset !important;
   }
   .password-input :deep(.el-input__wrapper.is-focus) {
-    background: #1f1f23;
+    background: #1f1f23 !important;
     box-shadow: 0 0 0 1.5px #2563eb inset, 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
   }
   .password-input :deep(.el-input__inner) {

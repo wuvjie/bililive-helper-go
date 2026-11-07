@@ -1118,6 +1118,16 @@ html.dark {
     background: #18181b;
     border-color: var(--hairline);
     color: #a1a1aa;
+    &.tag-running {
+      background: rgba(245, 158, 11, 0.12) !important;
+      border-color: rgba(245, 158, 11, 0.25) !important;
+      color: #fbbf24 !important;
+    }
+    &.tag-in-service {
+      background: rgba(16, 185, 129, 0.12) !important;
+      border-color: rgba(16, 185, 129, 0.25) !important;
+      color: #34d399 !important;
+    }
   }
   .data-grid {
     border-color: var(--hairline);

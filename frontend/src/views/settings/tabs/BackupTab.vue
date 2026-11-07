@@ -231,7 +231,7 @@ function onFileChange(e: Event) {
   font-size: 12px;
   border: 1px solid var(--hairline);
   border-radius: var(--r-md);
-  background: #fff;
+  background: var(--surface-control, var(--surface));
   color: var(--ink);
   resize: vertical;
   margin-top: 8px;
