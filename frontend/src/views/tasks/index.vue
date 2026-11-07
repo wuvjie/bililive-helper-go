@@ -79,17 +79,17 @@
       </div>
     </div>
 
-    <!-- 2. Middle Section: 定向主播临时维护 (单行紧凑工具栏，不与后台常驻服务混淆) -->
-    <div class="card targeted-card">
-      <div class="targeted-bar">
-        <div class="targeted-left">
-          <div class="targeted-label-wrap">
-            <div class="ui-icon-box icon-box-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
-            <span class="targeted-label">定向主播临时维护:</span>
+        <!-- 2. Integrated Execution Workbench (定向主播维护与实时终端一体化融合控制台) -->
+    <div class="terminal-workbench-card">
+      <div class="workbench-action-bar">
+        <div class="action-bar-left">
+          <div class="ui-icon-box icon-box-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
           </div>
+          <span class="action-bar-title">定向主播维护</span>
           <el-select
             v-model="selectedStreamer"
-            placeholder="选择特定主播..."
+            placeholder="选择特定主播发起维护..."
             filterable
             clearable
             class="targeted-select"
@@ -107,18 +107,20 @@
               :disabled="!selectedStreamer || sse.isRunning.value"
               @click="handleTargetedMerge"
             >
-              合并该主播
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span>合并该主播</span>
             </button>
             <button
               class="btn-targeted btn-targeted-clean"
               :disabled="!selectedStreamer || sse.isRunning.value"
               @click="handleTargetedClean"
             >
-              清理该主播旧录像
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>清理旧录像</span>
             </button>
           </div>
         </div>
-        <div class="targeted-right">
+        <div class="action-bar-right">
           <router-link
             :to="selectedStreamer ? ('/streamers?streamer=' + encodeURIComponent(selectedStreamer)) : '/streamers'"
             class="link-to-streamers"
@@ -127,36 +129,32 @@
           </router-link>
         </div>
       </div>
-    </div>
 
-    <!-- 3. Bottom Section: 实时执行终端 (高光高对比清晰展示) -->
-    <div class="terminal-container-card">
-      <ReTerminal
-        :lines="displayedLines"
-        :title="currentTerminalTitle"
-        :empty-text="currentEmptyText"
-        height="500px"
-        @clear="handleClear"
-      >
-        <template #title>
-          <div class="term-title-wrapper">
-            <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }" />
-            <span class="term-title-text">实时执行终端</span>
-            <span v-if="sse.isRunning.value" class="term-badge-tag tag-running">运行中</span>
-            <span v-else class="term-badge-tag tag-idle">空闲待命</span>
-            <router-link to="/history" class="term-history-link" title="前往操作日志页面查看已归档的全部历史任务与日志">
-              查看历史日志 ↗
-            </router-link>
-          </div>
-        </template>
-      </ReTerminal>
+      <div class="workbench-terminal-wrap">
+        <ReTerminal
+          :lines="displayedLines"
+          :title="currentTerminalTitle"
+          :empty-text="currentEmptyText"
+          height="480px"
+          @clear="handleClear"
+        >
+          <template #title>
+            <div class="term-title-wrapper">
+              <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }" />
+              <span class="term-title-text">实时执行终端</span>
+              <span v-if="sse.isRunning.value" class="term-badge-tag tag-running">运行中</span>
+              <span v-else class="term-badge-tag tag-idle">空闲待命</span>
+            </div>
+          </template>
+        </ReTerminal>
 
-      <!-- Reconnect bar if SSE errored -->
-      <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value " class="retry-bar">
-        <button class="ops-action ops-retry" @click="sse.retryLast()">
-          <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-          <span>重新连接</span>
-        </button>
+        <!-- Reconnect bar if SSE errored -->
+        <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value" class="retry-bar">
+          <button class="ops-action ops-retry" @click="sse.retryLast()">
+            <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <span>重新连接</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1061,220 +1059,144 @@ html.dark {
   border: 1px solid var(--border-light);
 }
 
-.term-history-link {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--brand-accent);
-  text-decoration: none;
-  display: inline-flex;
+
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.targeted-card {
+  margin-bottom: 16px;
+  padding: 12px 18px;
+}
+.targeted-bar {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-hover);
-  border: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.targeted-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.targeted-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.targeted-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--charcoal);
+  white-space: nowrap;
+}
+.targeted-select {
+  width: 250px;
+}
+.targeted-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Terminal High-contrast Title Bar */
+.term-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.term-title-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff !important;
+  letter-spacing: 0.2px;
+}
+.term-badge-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+.term-badge-tag.tag-running {
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+}
+.term-badge-tag.tag-idle {
+  background: rgba(148, 163, 184, 0.2) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* Unified Execution Workbench Card (定向维护与实时终端融合工作台) */
+.terminal-workbench-card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md, 8px);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   transition: all 0.2s ease;
-
-  &:hover {
-    color: #fff;
-    background: var(--brand-accent);
-    border-color: var(--brand-accent);
-  }
 }
 
-
-.tasks-terminal-panel .terminal-container-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-.tasks-terminal-panel :deep(.re-terminal) {
-  flex: 1;
-  height: 100% !important;
-}
-
-.schedule-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-@media (max-width: 900px) {
-  .schedule-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.targeted-card {
-  margin-bottom: 16px;
+.workbench-action-bar {
   padding: 12px 18px;
-}
-.targeted-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
 }
-.targeted-left {
+
+.action-bar-left {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
-.targeted-label-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.targeted-label {
+
+.action-bar-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--charcoal);
   white-space: nowrap;
 }
-.targeted-select {
-  width: 250px;
-}
-.targeted-buttons {
-  display: flex;
-  gap: 8px;
+
+.action-bar-right {
+  margin-left: auto;
 }
 
-/* Terminal High-contrast Title Bar */
-.term-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.term-title-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff !important;
-  letter-spacing: 0.2px;
-}
-.term-badge-tag {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-.term-badge-tag.tag-running {
-  background: rgba(16, 185, 129, 0.25) !important;
-  color: #34d399 !important;
-  border: 1px solid rgba(52, 211, 153, 0.4);
-}
-.term-badge-tag.tag-idle {
-  background: rgba(148, 163, 184, 0.2) !important;
-  color: #cbd5e1 !important;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-.term-history-link {
-  font-size: 12px;
-  color: #38bdf8 !important;
-  text-decoration: none;
-  font-weight: 500;
-  margin-left: 6px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 0.15s;
-}
-.term-history-link:hover {
-  color: #7dd3fc !important;
-  background: rgba(56, 189, 248, 0.12);
-  text-decoration: underline;
-}
+.workbench-terminal-wrap {
+  color-scheme: dark;
+  background: #18181b;
 
-.schedule-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-@media (max-width: 900px) {
-  .schedule-grid {
-    grid-template-columns: 1fr;
+  :deep(.re-terminal) {
+    border: none !important;
+    border-radius: 0 !important;
   }
 }
 
-.targeted-card {
-  margin-bottom: 16px;
-  padding: 12px 18px;
+html.dark .terminal-workbench-card {
+  background: #18181b;
+  border-color: #27272a;
 }
-.targeted-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+html.dark .workbench-action-bar {
+  background: #141416;
+  border-color: #27272a;
 }
-.targeted-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.targeted-label-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.targeted-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--charcoal);
-  white-space: nowrap;
-}
-.targeted-select {
-  width: 250px;
-}
-.targeted-buttons {
-  display: flex;
-  gap: 8px;
+html.dark .action-bar-title {
+  color: #f4f4f5;
 }
 
-/* Terminal High-contrast Title Bar */
-.term-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.term-title-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff !important;
-  letter-spacing: 0.2px;
-}
-.term-badge-tag {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-.term-badge-tag.tag-running {
-  background: rgba(16, 185, 129, 0.25) !important;
-  color: #34d399 !important;
-  border: 1px solid rgba(52, 211, 153, 0.4);
-}
-.term-badge-tag.tag-idle {
-  background: rgba(148, 163, 184, 0.2) !important;
-  color: #cbd5e1 !important;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-.term-history-link {
-  font-size: 12px;
-  color: #38bdf8 !important;
-  text-decoration: none;
-  font-weight: 500;
-  margin-left: 6px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 0.15s;
-}
-.term-history-link:hover {
-  color: #7dd3fc !important;
-  background: rgba(56, 189, 248, 0.12);
-  text-decoration: underline;
-}
 </style>

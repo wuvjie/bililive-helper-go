@@ -8,7 +8,6 @@
             <span>{{ title || "任务输出" }}</span>
           </span>
         </slot>
-        <span class="terminal-badge-count">{{ filteredLines.length }} 行</span>
         <span v-if="errorCount > 0" class="terminal-badge-stat badge-stat-err">{{ errorCount }} 错误</span>
         <span v-if="warnCount > 0" class="terminal-badge-stat badge-stat-warn">{{ warnCount }} 警告</span>
       </div>
