@@ -1710,6 +1710,58 @@ html.dark {
     background: #18181b !important;
     border-color: #27272a !important;
   }
+  .trim-presets-container {
+    background: rgba(24, 24, 27, 0.8) !important;
+    border-color: #27272a !important;
+  }
+  .preset-pill {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #e4e4e7 !important;
+    &:hover {
+      background: rgba(59, 130, 246, 0.15) !important;
+      border-color: #3b82f6 !important;
+      color: #93c5fd !important;
+    }
+    &.is-active {
+      background: #2563eb !important;
+      border-color: #3b82f6 !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4) !important;
+    }
+  }
+  .preset-pill-reset {
+    background: transparent !important;
+    border-color: #3f3f46 !important;
+    color: #a1a1aa !important;
+    &:hover {
+      background: #27272a !important;
+      color: #f4f4f5 !important;
+    }
+    &.is-active {
+      background: #3f3f46 !important;
+      border-color: #52525b !important;
+      color: #ffffff !important;
+    }
+  }
+  .trim-semantic-card {
+    background: rgba(59, 130, 246, 0.10) !important;
+    border-color: rgba(59, 130, 246, 0.25) !important;
+    color: #93c5fd !important;
+    .semantic-badge {
+      background: rgba(59, 130, 246, 0.22) !important;
+      color: #bfdbfe !important;
+    }
+    &.is-invalid {
+      background: rgba(220, 38, 38, 0.12) !important;
+      border-color: rgba(239, 68, 68, 0.3) !important;
+      color: #fca5a5 !important;
+      .semantic-badge {
+        background: rgba(220, 38, 38, 0.22) !important;
+        color: #fca5a5 !important;
+      }
+    }
+  }
   .header-refresh-btn {
     background: #18181b;
     border-color: #27272a;
