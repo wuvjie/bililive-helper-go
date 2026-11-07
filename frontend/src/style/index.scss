@@ -1,5 +1,7 @@
 @use "./element-overrides.scss";
 @use "./components.scss";
+@use "./responsive.scss";
+@use "./_toolbar.scss";
 
 // Notion & Linear-inspired design system — ink-on-paper aesthetic with modern depth
 :root {
@@ -51,17 +53,20 @@
   // Typography
   --font-sans: "Inter", -apple-system, system-ui, "Segoe UI", Helvetica, sans-serif;
   --font-mono: "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  // Font tiers (7-Tier Typographic Scale - Spec Aligned)
+  --font-tier-1: 28px; // Hero Metric
+  --font-tier-2: 20px; // Page Title
+  --font-tier-3: 16px; // Section / Modal Header / Mobile Input
+  --font-tier-4: 14px; // Card Title / Primary CTA
+  --font-tier-5: 13px; // Body / Control / Popper
+  --font-tier-6: 12px; // Caption / CJK Badge (Protection line)
+  --font-tier-7: 11px; // Micro Latin / Unit
 
-  // Font tiers
-  --font-tier-1: 28px;
-  --font-tier-2: 24px;
-  --font-tier-3: 20px;
-  --font-tier-4: 18px;
-  --font-tier-5: 16px;
-  --font-tier-6: 14px;
-  --font-tier-7: 12px;
+  // Modern Frosted Glass Tokens
+  --glass-bg: color-mix(in srgb, var(--surface-card) 85%, transparent);
+  --glass-border: var(--hairline);
+  --glass-blur: blur(12px);
 
-  // Radius (tight Notion micro-round)
   --r-xs: 3px;
   --r-sm: 4px;
   --r-md: 6px;
@@ -148,6 +153,15 @@ html.dark {
   --tint-sky: rgba(96, 165, 250, 0.12);
 
   --highlight: #27272a;
+
+  // Dark Mode Frosted Glass
+  --glass-bg: color-mix(in srgb, var(--surface-card) 80%, transparent);
+  --glass-border: var(--hairline);
+  --glass-blur: blur(14px);
 }
-@use "./responsive.scss";
-@use "./_toolbar.scss";
+// Universal focus-visible accessibility halo
+:focus-visible {
+  outline: 2px solid var(--hairline-focus);
+  outline-offset: 2px;
+}
+

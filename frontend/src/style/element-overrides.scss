@@ -222,43 +222,87 @@
 }
 
 
-/* ── Button Matrix ── */
+/* ── 4-Tier Button Matrix (Spec-Aligned) ── */
 .btn-tier-1 {
   @extend .el-button--primary;
   background: var(--primary) !important;
   border-color: var(--primary) !important;
   color: var(--on-primary) !important;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.18);
+  &:hover {
+    background: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 25%, transparent) !important;
+  }
+  &:active {
+    background: var(--primary-pressed) !important;
+    border-color: var(--primary-pressed) !important;
+  }
 }
+
 .btn-tier-2 {
   @extend .el-button;
-  background: var(--primary-hover) !important;
-  border-color: var(--primary-hover) !important;
-  color: var(--on-primary) !important;
+  background: color-mix(in srgb, var(--primary) 8%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent) !important;
+  color: var(--primary) !important;
+  font-weight: 500;
+  &:hover {
+    background: color-mix(in srgb, var(--primary) 14%, transparent) !important;
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
+    color: var(--primary-hover) !important;
+  }
+  &:active {
+    background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
+  }
 }
+
 .btn-tier-3 {
   @extend .el-button;
-  background: var(--surface) !important;
-  border-color: var(--hairline) !important;
+  background: var(--surface-card, #ffffff) !important;
+  border: 1px solid var(--hairline-strong) !important;
   color: var(--charcoal) !important;
+  font-weight: 500;
+  &:hover {
+    background: var(--highlight) !important;
+    color: var(--ink) !important;
+    border-color: var(--stone) !important;
+  }
 }
+
 .btn-tier-4 {
   @extend .el-button;
   background: transparent !important;
-  border: 1px solid var(--danger);
-  color: var(--danger) !important;
+  border: 1px solid transparent !important;
+  color: var(--steel) !important;
+  font-weight: 500;
+  &:hover {
+    background: var(--highlight) !important;
+    color: var(--ink) !important;
+  }
+  &.is-danger, &.btn-tier-4-danger {
+    color: var(--error) !important;
+    &:hover {
+      background: color-mix(in srgb, var(--error) 10%, transparent) !important;
+      color: var(--error) !important;
+    }
+  }
 }
 
-/* ── Motion Variables ── */
+/* ── Motion & Animation Variables ── */
 :root {
   --transition-enter: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-leave: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Icon Utility Classes ── */
-.icon-micro { width: 12px; height: 12px; }
-.icon-standard { width: 16px; height: 16px; }
-.icon-medium { width: 20px; height: 20px; }
-.icon-macro { width: 24px; height: 24px; }
+.el-dialog, .el-drawer, .el-popper, .el-select-dropdown {
+  transition: var(--transition-enter);
+}
+
+/* ── Icon Utility Classes (Spec 4-Tier Scale) ── */
+.icon-micro    { width: 12px; height: 12px; }
+.icon-standard { width: 15px; height: 15px; }
+.icon-medium   { width: 18px; height: 18px; }
+.icon-macro    { width: 24px; height: 24px; }
 
 /* ── Table Action Column Rules ── */
 .el-table .action-cell {
@@ -454,6 +498,34 @@
 
 // Element Plus Dark Mode Overrides
 html.dark {
+  // Buttons in dark mode (Button Matrix)
+  .btn-tier-2 {
+    background: color-mix(in srgb, var(--primary) 14%, transparent) !important;
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
+    color: var(--link) !important;
+    &:hover {
+      background: color-mix(in srgb, var(--primary) 22%, transparent) !important;
+      color: #ffffff !important;
+    }
+  }
+  .btn-tier-3 {
+    background: #18181b !important;
+    border-color: #27272a !important;
+    color: #e4e4e7 !important;
+    &:hover {
+      background: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #f4f4f5 !important;
+    }
+  }
+  .btn-tier-4 {
+    color: #a1a1aa !important;
+    &:hover {
+      background: #222226 !important;
+      color: #f4f4f5 !important;
+    }
+  }
+
   // 表格在暗黑模式下柔化边框噪点
   .el-table {
     th.el-table__cell.is-leaf,

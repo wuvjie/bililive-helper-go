@@ -1,13 +1,95 @@
-/* Responsive Breakpoints */
-@media (max-width: 640px) {
-  /* Mobile */
+/* ── Responsive Breakpoints & Mixins (Notion & Linear Ergonomics) ── */
+
+@mixin mobile {
+  @media (max-width: 640px) {
+    @content;
+  }
 }
-@media (min-width: 641px) and (max-width: 768px) {
-  /* Tablet */
+
+@mixin tablet {
+  @media (min-width: 641px) and (max-width: 768px) {
+    @content;
+  }
 }
-@media (min-width: 769px) and (max-width: 1024px) {
-  /* Small Desktop */
+
+@mixin small-desktop {
+  @media (min-width: 769px) and (max-width: 1024px) {
+    @content;
+  }
 }
-@media (min-width: 1025px) {
-  /* Large Desktop */
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+@mixin max-tablet {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+/* ── Utility Classes for Responsive Layout ── */
+.hide-on-mobile {
+  @include mobile {
+    display: none !important;
+  }
+}
+
+.show-on-mobile {
+  display: none !important;
+  @include mobile {
+    display: block !important;
+  }
+}
+
+.hide-on-tablet {
+  @include max-tablet {
+    display: none !important;
+  }
+}
+
+.flex-col-mobile {
+  @include mobile {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+}
+
+.stack-on-mobile {
+  @include mobile {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+}
+
+.w-full-mobile {
+  @include mobile {
+    width: 100% !important;
+  }
+}
+
+/* ── Modern Table Responsive Container ── */
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--r-md);
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--hairline-strong);
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--stone);
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
