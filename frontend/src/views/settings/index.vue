@@ -18,82 +18,90 @@
         </div>
       </template>
 
-      <el-tabs v-model="activeTab" :tab-position="tabPosition" class="settings-tabs">
-        <!-- Tab 1: 全局策略 -->
-        <el-tab-pane name="policy">
-          <template #label>
-            <span class="settings-tab-label">
-              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-              <span>全局策略</span>
-            </span>
-          </template>
-          <div v-loading="configLoading" class="tab-pane-wrap">
-            <PolicyTab
-              :config="config"
-              :saving="savingConfig"
-              :total-disk-gb="totalDiskGb"
-              @update:config="config = $event"
-              @reset-defaults="handleResetDefaults"
-            />
-          </div>
-        </el-tab-pane>
+      <!-- Continuous Scroll Layout with Sticky Anchor Sidebar -->
+      <div class="settings-layout">
+        <!-- Left: Sticky Anchor Navigation -->
+        <aside class="settings-sidebar">
+          <nav class="settings-nav">
+            <button
+              v-for="item in navSections"
+              :key="item.id"
+              type="button"
+              class="nav-anchor-btn"
+              :class="{ active: activeSectionId === item.id }"
+              @click="scrollToSection(item.id)"
+            >
+              <span class="nav-btn-icon">
+                <svg v-if="item.id === 'policy'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                <svg v-else-if="item.id === 'schedule'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <svg v-else-if="item.id === 'backup'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <svg v-else-if="item.id === 'security'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <span class="nav-btn-text">{{ item.label }}</span>
+            </button>
+          </nav>
+        </aside>
 
-        <!-- Tab 2: 任务调度 -->
-        <el-tab-pane name="schedule">
-          <template #label>
-            <span class="settings-tab-label">
-              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>定时调度</span>
-            </span>
-          </template>
-          <div v-loading="scheduleLoading" class="tab-pane-wrap">
-            <ScheduleTab
-              :form="scheduleForm"
-              :backup-start="backupStart"
-              :backup-end="backupEnd"
-              :saving="savingSchedule"
-              :loading="scheduleLoading"
-              @update:form="Object.assign(scheduleForm, $event)"
-              @update:backup-start="backupStart = $event"
-              @update:backup-end="backupEnd = $event"
+        <!-- Right: Continuous Stream of Sections -->
+        <main class="settings-content" ref="contentRef">
+          <!-- 1. 全局策略 -->
+          <section id="section-policy" class="settings-section" data-section="policy">
+            <div v-loading="configLoading" class="section-pane-wrap">
+              <PolicyTab
+                :config="config"
+                :saving="savingConfig"
+                :total-disk-gb="totalDiskGb"
+                @update:config="config = $event"
+                @reset-defaults="handleResetDefaults"
               />
-          </div>
-        </el-tab-pane>
+            </div>
+          </section>
 
-        <!-- Tab 3: 配置备份与恢复 -->
-        <el-tab-pane name="backup">
-          <template #label>
-            <span class="settings-tab-label">
-              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>配置备份</span>
-            </span>
-          </template>
-          <div class="tab-pane-wrap">
-            <BackupTab
-              :selected-file-name="selectedImportFileName"
-              :import-json="importJson"
-              @export-file="handleExport"
-              @copy-json="handleCopyConfig"
-              @file-selected="handleFileSelect"
-              @update:import-json="importJson = $event"
-              @apply-import="handleImport"
-            />
-          </div>
-        </el-tab-pane>
+          <div class="section-divider" />
 
-        <!-- Tab 4: 安全与密码 -->
-        <el-tab-pane name="security">
-          <template #label>
-            <span class="settings-tab-label">
-              <svg class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <span>安全设置</span>
-            </span>
-          </template>
-          <div class="tab-pane-wrap">
-            <SecurityTab />
-          </div>
-        </el-tab-pane>
-      </el-tabs>
+          <!-- 2. 任务调度 -->
+          <section id="section-schedule" class="settings-section" data-section="schedule">
+            <div v-loading="scheduleLoading" class="section-pane-wrap">
+              <ScheduleTab
+                :form="scheduleForm"
+                :backup-start="backupStart"
+                :backup-end="backupEnd"
+                :saving="savingSchedule"
+                :loading="scheduleLoading"
+                @update:form="Object.assign(scheduleForm, $event)"
+                @update:backup-start="backupStart = $event"
+                @update:backup-end="backupEnd = $event"
+              />
+            </div>
+          </section>
+
+          <div class="section-divider" />
+
+          <!-- 3. 配置备份与恢复 -->
+          <section id="section-backup" class="settings-section" data-section="backup">
+            <div class="section-pane-wrap">
+              <BackupTab
+                :selected-file-name="selectedImportFileName"
+                :import-json="importJson"
+                @export-file="handleExport"
+                @copy-json="handleCopyConfig"
+                @file-selected="handleFileSelect"
+                @update:import-json="importJson = $event"
+                @apply-import="handleImport"
+              />
+            </div>
+          </section>
+
+          <div class="section-divider" />
+
+          <!-- 4. 安全设置 -->
+          <section id="section-security" class="settings-section" data-section="security">
+            <div class="section-pane-wrap">
+              <SecurityTab />
+            </div>
+          </section>
+        </main>
+      </div>
     </el-card>
 
     <!-- Floating Sticky Save Bar (吸底浮动保存栏) -->
@@ -122,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted, onActivated } from "vue";
+import { ref, reactive, computed, watch, onMounted, onUnmounted, onActivated, nextTick } from "vue";
 import { useRoute, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
@@ -138,7 +146,80 @@ import BackupTab from "./tabs/BackupTab.vue";
 import SecurityTab from "./tabs/SecurityTab.vue";
 
 const route = useRoute();
-const activeTab = ref(typeof route.query.tab === "string" ? route.query.tab : "policy");
+
+const navSections = [
+  { id: "policy", label: "全局策略" },
+  { id: "schedule", label: "定时调度" },
+  { id: "backup", label: "配置备份" },
+  { id: "security", label: "安全设置" }
+];
+
+const activeSectionId = ref<string>(
+  typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)
+    ? (route.query.tab as string)
+    : "policy"
+);
+
+let isUserClicking = false;
+let userClickTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scrollToSection(id: string) {
+  activeSectionId.value = id;
+  isUserClicking = true;
+  if (userClickTimer) clearTimeout(userClickTimer);
+
+  const el = document.getElementById(`section-${id}`);
+  if (el) {
+    const headerOffset = 70;
+    const elementPosition = el.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: "smooth"
+    });
+  }
+
+  userClickTimer = setTimeout(() => {
+    isUserClicking = false;
+  }, 750);
+}
+
+// ScrollSpy via IntersectionObserver
+let observer: IntersectionObserver | null = null;
+
+function setupScrollSpy() {
+  if (observer) {
+    observer.disconnect();
+  }
+  const sections = document.querySelectorAll(".settings-section");
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (isUserClicking) return;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const sec = entry.target.getAttribute("data-section");
+          if (sec) {
+            activeSectionId.value = sec;
+          }
+        }
+      });
+    },
+    {
+      rootMargin: "-15% 0px -70% 0px",
+      threshold: 0
+    }
+  );
+  sections.forEach((sec) => observer?.observe(sec));
+}
+
+function handleWindowScroll() {
+  if (isUserClicking) return;
+  // If scrolled close to bottom of page, highlight the last section
+  if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
+    activeSectionId.value = "security";
+  }
+}
+
 const savingConfig = ref(false);
 const savingSchedule = ref(false);
 const configLoading = ref(false);
@@ -158,13 +239,6 @@ const backupEnd = ref("");
 
 const selectedImportFileName = ref("");
 const importJson = ref("");
-
-// Responsive tab position (Desktop: left, Mobile/Vertical: top)
-const isMobile = ref(typeof window !== "undefined" ? window.innerWidth < 768 : false);
-function handleResize() {
-  isMobile.value = window.innerWidth < 768;
-}
-const tabPosition = computed(() => (isMobile.value ? "top" : "left"));
 
 // Baseline Snapshot System (数学级快照比对，杜绝误报)
 const initialPolicySnapshot = ref("");
@@ -218,31 +292,60 @@ function isFormDirty(): boolean {
   return false;
 }
 
-onBeforeRouteLeave(async (_to, _from, next) => {
-  if (!isFormDirty()) { next(); return; }
-  try {
-    await ElMessageBox.confirm("您有未保存的配置变更，确定要离开吗？", "未保存的变更", {
-      confirmButtonText: "离开",
-      cancelButtonText: "取消",
-      type: "warning"
-    });
+function isPolicyDirty(): boolean {
+  return Boolean(initialPolicySnapshot.value && serializePolicyConfig(config.value) !== initialPolicySnapshot.value);
+}
+
+function isScheduleDirty(): boolean {
+  return Boolean(initialScheduleSnapshot.value && serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value) !== initialScheduleSnapshot.value);
+}
+
+function handleDiscardChanges() {
+  if (initialPolicySnapshot.value) {
+    try {
+      loadConfigData();
+    } catch {
+      // ignore
+    }
+  }
+  if (initialScheduleSnapshot.value) {
+    try {
+      loadScheduleData();
+    } catch {
+      // ignore
+    }
+  }
+  ElMessage.info("已放弃未保存的配置更改，恢复为上次保存状态");
+}
+
+// 离开路由守卫：若有未保存改动弹窗拦截
+onBeforeRouteLeave((to, from, next) => {
+  if (isFormDirty()) {
+    ElMessageBox.confirm(
+      "您在当前设置页面有未保存的配置变更，离开后变更将会丢失，是否确认离开？",
+      "未保存配置提示",
+      {
+        confirmButtonText: "离开页面",
+        cancelButtonText: "留在此页",
+        confirmButtonClass: "el-button--danger",
+        type: "warning"
+      }
+    )
+      .then(() => next())
+      .catch(() => next(false));
+  } else {
     next();
-  } catch {
-    next(false);
   }
 });
 
-// Loaders
 async function loadConfigData() {
   configLoading.value = true;
   try {
-    const c = await getConfig();
-    // 兼容历史配置：若从旧环境加载出的单次删除上限仍为旧版默认的 10，自动升级为标准推荐值 50
-    if (c.MAX_DELETE_PER_RUN === 10 || !c.MAX_DELETE_PER_RUN) {
-      c.MAX_DELETE_PER_RUN = 50;
-    }
-    config.value = c;
-    initialPolicySnapshot.value = serializePolicyConfig(c);
+    const data = await getConfig();
+    config.value = { ...data };
+    initialPolicySnapshot.value = serializePolicyConfig(data);
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.error || err?.message || "加载全局策略失败");
   } finally {
     configLoading.value = false;
   }
@@ -251,22 +354,22 @@ async function loadConfigData() {
 async function loadScheduleData() {
   scheduleLoading.value = true;
   try {
-    const s: ScheduleStatus = await getSchedule();
-    scheduleForm.merge_enabled = s.merge.enabled;
-    scheduleForm.clean_enabled = s.clean.enabled;
-    scheduleForm.merge_interval = s.merge.interval;
-    scheduleForm.clean_interval = s.clean.interval;
-    let start = "";
-    let end = "";
-    if (s.backup_start_hour !== undefined && s.backup_start_minute !== undefined) {
-      start = `${String(s.backup_start_hour).padStart(2, '0')}:${String(s.backup_start_minute).padStart(2, '0')}`;
+    const data: ScheduleStatus = await getSchedule();
+    scheduleForm.merge_enabled = data.merge.enabled;
+    scheduleForm.clean_enabled = data.clean.enabled;
+    scheduleForm.merge_interval = data.merge.interval;
+    scheduleForm.clean_interval = data.clean.interval;
+
+    if (data.backup?.start_hour !== undefined && data.backup?.start_minute !== undefined) {
+      backupStart.value = `${String(data.backup.start_hour).padStart(2, "0")}:${String(data.backup.start_minute).padStart(2, "0")}`;
     }
-    if (s.backup_end_hour !== undefined && s.backup_end_minute !== undefined) {
-      end = `${String(s.backup_end_hour).padStart(2, '0')}:${String(s.backup_end_minute).padStart(2, '0')}`;
+    if (data.backup?.end_hour !== undefined && data.backup?.end_minute !== undefined) {
+      backupEnd.value = `${String(data.backup.end_hour).padStart(2, "0")}:${String(data.backup.end_minute).padStart(2, "0")}`;
     }
-    backupStart.value = start;
-    backupEnd.value = end;
-    initialScheduleSnapshot.value = serializeScheduleConfig(scheduleForm, start, end);
+
+    initialScheduleSnapshot.value = serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value);
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.error || err?.message || "加载任务调度设置失败");
   } finally {
     scheduleLoading.value = false;
   }
@@ -274,70 +377,12 @@ async function loadScheduleData() {
 
 async function loadDiskStatus() {
   try {
-    const detail = await getStatusDetail();
-    if (detail?.disk?.total_gb) {
-      totalDiskGb.value = detail.disk.total_gb;
+    const res = await getStatusDetail();
+    if (res?.disk?.total_gb) {
+      totalDiskGb.value = res.disk.total_gb;
     }
   } catch {
-    // Non-critical
-  }
-}
-
-// Handlers
-async function handleSaveConfig() {
-  if (config.value.TRIGGER_THRESHOLD <= config.value.TARGET_THRESHOLD) {
-    ElMessage.error("触发阈值必须大于目标阈值");
-    throw new Error("Validation failed");
-  }
-
-  savingConfig.value = true;
-  try {
-    const payload = { ...config.value };
-    if (typeof payload.WHITELIST_KEYWORDS === "string") {
-      payload.WHITELIST_KEYWORDS = (payload.WHITELIST_KEYWORDS as string)
-        .split(/[,，]/)
-        .map((s: string) => s.trim())
-        .filter(Boolean);
-    }
-    await saveConfig(payload);
-    ElMessage.success("全局策略已成功保存");
-    initialPolicySnapshot.value = serializePolicyConfig(config.value);
-    await loadConfigData();
-  } finally {
-    savingConfig.value = false;
-  }
-}
-
-async function handleSaveSchedule() {
-  savingSchedule.value = true;
-  try {
-    const payload: Record<string, unknown> = {
-      merge_enabled: scheduleForm.merge_enabled,
-      clean_enabled: scheduleForm.clean_enabled,
-      merge_interval: scheduleForm.merge_interval,
-      clean_interval: scheduleForm.clean_interval,
-    };
-    if (backupStart.value) {
-      const [h, m] = backupStart.value.split(":").map(Number);
-      payload.backup_start_hour = h;
-      payload.backup_start_minute = m;
-    } else {
-      payload.backup_start_hour = 0;
-      payload.backup_start_minute = 0;
-    }
-    if (backupEnd.value) {
-      const [h, m] = backupEnd.value.split(":").map(Number);
-      payload.backup_end_hour = h;
-      payload.backup_end_minute = m;
-    } else {
-      payload.backup_end_hour = 0;
-      payload.backup_end_minute = 0;
-    }
-    await saveSchedule(payload);
-    ElMessage.success("任务调度设置已保存");
-    initialScheduleSnapshot.value = serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value);
-  } finally {
-    savingSchedule.value = false;
+    // optional status
   }
 }
 
@@ -346,9 +391,9 @@ const OFFICIAL_RECOMMENDED_POLICY = {
   MERGE_AGE_MINUTES: 30,
   TRIGGER_THRESHOLD: 80,
   TARGET_THRESHOLD: 60,
-  SAFE_MODE: "hours",
-  SAFE_AGE_MINUTES: 120,
-  SAFE_DAYS: 1,
+  SAFE_MODE: "days",
+  SAFE_AGE_MINUTES: 1440 * 3,
+  SAFE_DAYS: 3,
   MIN_KEEP_PER_STREAMER: 3,
   MAX_DELETE_PER_RUN: 50,
   WHITELIST_KEYWORDS: ["留存", "纪念", "高能", "生日", "勿删"]
@@ -363,51 +408,31 @@ async function handleResetDefaults() {
   const currentFormSerialized = serializePolicyConfig(config.value);
   const initialSavedSerialized = initialPolicySnapshot.value;
 
-  // 1. 若当前表单值已完全等于官方预设：
   if (currentFormSerialized === targetSerialized) {
     if (currentFormSerialized === initialSavedSerialized) {
       ElMessage.info("当前配置已是官方推荐预设，无需更改");
     } else {
-      ElMessage.info("当前表单已是官方推荐预设，请点击底部「立即保存配置」生效");
+      ElMessage.info("表单已应用官方推荐预设，请点击下方保存按钮提交生效");
     }
     return;
   }
 
-  // 2. 当前表单值与官方预设不同，弹出确认提示：
   try {
     await ElMessageBox.confirm(
-      "是否将全局合并与磁盘清理策略重置为系统官方推荐参数？（断流 30 分钟、静置 30 分钟、水位 80%/60%、免删 2 小时、保底 3 场、单次最大 50 个）",
-      "恢复推荐预设",
-      { confirmButtonText: "确认恢复", cancelButtonText: "取消", type: "warning" }
+      "是否将全局合并与磁盘清理策略重置为系统官方推荐参数？（断流 30 分钟、静置 30 分钟、水位 80%/60%、免删 3 天、白名单保护关键词）\n\n重置后需点击下方保存按钮生效。",
+      "恢复官方推荐预设",
+      {
+        confirmButtonText: "确认应用预设",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
     );
   } catch {
     return;
   }
 
   config.value = targetConfig;
-
-  // 3. 应用预设后，比对新表单与数据库基准快照的状态闭环（三态自适应反馈律）：
-  if (targetSerialized === initialSavedSerialized) {
-    // 恰好还原回数据库原值（草稿被抵消，保存栏自动平滑收起）
-    ElMessage.info("已还原为已保存的推荐预设");
-  } else {
-    // 产生实际配置变更，保存栏平滑升起，正面引导保存
-    ElMessage.success("已恢复官方推荐预设，请点击底部「立即保存配置」生效");
-  }
-}
-
-function handleDiscardChanges() {
-  loadConfigData();
-  loadScheduleData();
-  ElMessage.info("已放弃并还原未保存的更改");
-}
-
-function isPolicyDirty(): boolean {
-  return Boolean(initialPolicySnapshot.value && serializePolicyConfig(config.value) !== initialPolicySnapshot.value);
-}
-
-function isScheduleDirty(): boolean {
-  return Boolean(initialScheduleSnapshot.value && serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value) !== initialScheduleSnapshot.value);
+  ElMessage.success("已载入官方推荐策略预设，请检查并点击下方保存按钮生效");
 }
 
 async function handleSaveSettings() {
@@ -467,15 +492,7 @@ async function handleSaveSettings() {
     }
 
     await Promise.all(promises);
-
-    // Guaranteed EXACTLY ONE Toast authority
-    if (policyDirty && scheduleDirty) {
-      ElMessage.success("全局策略与调度设置已成功保存");
-    } else if (policyDirty) {
-      ElMessage.success("全局策略已成功保存");
-    } else {
-      ElMessage.success("任务调度设置已保存");
-    }
+    ElMessage.success("系统配置已成功保存生效");
 
     // Refresh snapshots
     if (policyDirty) {
@@ -530,22 +547,19 @@ function handleFileSelect(file: File) {
       ElMessage.success(`已读取文件: ${file.name}`);
     }
   };
-  reader.onerror = () => {
-    ElMessage.error("文件读取失败");
-  };
   reader.readAsText(file);
 }
 
 async function handleImport() {
   if (!importJson.value.trim()) {
-    ElMessage.warning("请粘贴配置内容或选择文件");
+    ElMessage.warning("请先选择备份文件或粘贴配置 JSON");
     return;
   }
   try {
     const data = JSON.parse(importJson.value);
     try {
       await ElMessageBox.confirm(
-        "导入将完全覆盖当前所有系统策略与主播规则，是否继续？",
+        "导入备份将完全覆盖当前的合并策略、清理阈值和调度周期，是否继续？",
         "确认导入配置",
         { confirmButtonText: "确认导入", cancelButtonText: "取消", type: "warning" }
       );
@@ -563,20 +577,19 @@ async function handleImport() {
   }
 }
 
-
-// Tab synchronization with route query (?tab=schedule / ?tab=policy / etc.)
+// Watch route query to jump to section
 watch(
   () => route.query.tab,
   (newTab) => {
     if (typeof newTab === "string" && ["policy", "schedule", "backup", "security"].includes(newTab)) {
-      activeTab.value = newTab;
+      scrollToSection(newTab);
     }
   }
 );
 
 onActivated(() => {
   if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
-    activeTab.value = route.query.tab;
+    nextTick(() => scrollToSection(route.query.tab as string));
   }
   loadConfigData();
   loadScheduleData();
@@ -584,27 +597,35 @@ onActivated(() => {
 });
 
 onMounted(() => {
-  window.addEventListener("resize", handleResize);
+  window.addEventListener("scroll", handleWindowScroll, { passive: true });
   loadConfigData();
   loadScheduleData();
   loadDiskStatus();
+  nextTick(() => {
+    setupScrollSpy();
+    if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
+      scrollToSection(route.query.tab);
+    }
+  });
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
+  window.removeEventListener("scroll", handleWindowScroll);
+  if (observer) observer.disconnect();
+  if (userClickTimer) clearTimeout(userClickTimer);
 });
 </script>
 
 <style scoped>
 .settings {
-  max-width: 1040px;
+  max-width: 1080px;
   margin: 0 auto;
   position: relative;
-  padding-bottom: 60px;
+  padding-bottom: 80px;
 }
 
 .settings-card {
-  border-radius: 12px;
+  border-radius: var(--r-lg, 12px);
   border: 1px solid var(--hairline);
   background: var(--surface-card);
 }
@@ -621,6 +642,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.title-group-flex {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .settings-title {
@@ -653,29 +680,103 @@ onUnmounted(() => {
   background: #b45309;
 }
 
-.settings-tabs {
-  min-height: 540px;
-  padding: 12px 0;
-}
-.settings-tab-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-.tab-svg-ico {
-  width: 14px;
-  height: 14px;
-  stroke-width: 2;
-  flex-shrink: 0;
-  opacity: 0.85;
-}
-.el-tabs__item:hover .tab-svg-ico,
-.el-tabs__item.is-active .tab-svg-ico {
-  opacity: 1;
+/* Two-column Continuous Scroll Layout */
+.settings-layout {
+  display: flex;
+  gap: 24px;
+  padding: 16px 0 24px 0;
+  align-items: flex-start;
 }
 
-.tab-pane-wrap {
-  padding: 0 16px 20px 24px;
+/* Sticky Left Sidebar Navigation */
+.settings-sidebar {
+  width: 180px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 80px;
+  z-index: 10;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-hover, #f4f4f5);
+  padding: 6px;
+  border-radius: var(--r-md, 8px);
+  border: 1px solid var(--hairline, #e4e4e7);
+}
+
+.nav-anchor-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--slate, #71717a);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  width: 100%;
+
+  .nav-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tab-svg-ico {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+    opacity: 0.8;
+  }
+
+  &:hover {
+    color: var(--charcoal, #18181b);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &.active {
+    background: var(--surface, #ffffff);
+    color: #4f46e5;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+    .tab-svg-ico {
+      opacity: 1;
+      color: #4f46e5;
+    }
+  }
+}
+
+/* Right Content Stream */
+.settings-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.settings-section {
+  scroll-margin-top: 80px;
+}
+
+.section-pane-wrap {
+  width: 100%;
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--hairline, #e4e4e7);
+  margin: 4px 0;
 }
 
 /* Floating Sticky Save Bar (吸底保存条) */
@@ -698,19 +799,19 @@ onUnmounted(() => {
   padding: 10px 18px;
   border-radius: var(--r-xl, 14px);
   backdrop-filter: blur(12px);
-  color: #fff;
 }
 .save-bar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .save-bar-pulse-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #b45309;
-  box-shadow: 0 0 0 2px rgba(217, 115, 13, 0.4);
+  background: #f59e0b;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  animation: pulse-amber 2s infinite;
 }
 .save-bar-title {
   font-size: 13px;
@@ -719,46 +820,49 @@ onUnmounted(() => {
 }
 .save-bar-sub {
   font-size: 12px;
-  color: #888888;
+  color: #a1a1aa;
 }
 .save-bar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 .btn-bar-ghost {
-  background: transparent;
-  border: 1px solid #555555;
-  color: #cccccc;
+  height: 32px;
+  padding: 0 14px;
   font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #d4d4d8;
+  border-radius: var(--r-sm, 6px);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 .btn-bar-ghost:hover {
-  background: #333333;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
 }
 .btn-bar-primary {
-  background: #448361;
-  border: 1px solid #448361;
-  color: #ffffff;
+  height: 32px;
+  padding: 0 16px;
   font-size: 12px;
   font-weight: 600;
-  padding: 5px 16px;
-  border-radius: 6px;
+  background: #4f46e5;
+  border: 1px solid #4338ca;
+  color: #ffffff;
+  border-radius: var(--r-sm, 6px);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 .btn-bar-primary:hover:not(:disabled) {
-  background: #36694e;
+  background: #4338ca;
 }
 .btn-bar-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
+/* Animations */
 .save-bar-slide-enter-active,
 .save-bar-slide-leave-active {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -769,9 +873,61 @@ onUnmounted(() => {
   transform: translate(-50%, 20px);
 }
 
+@keyframes pulse-amber {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* Dark Mode Overrides */
+html.dark {
+  .settings-nav {
+    background: #18181b;
+    border-color: #27272a;
+  }
+  .nav-anchor-btn {
+    color: #a1a1aa;
+
+    &:hover {
+      color: #f4f4f5;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &.active {
+      background: #27272a;
+      color: #818cf8;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+
+      .tab-svg-ico {
+        color: #818cf8;
+      }
+    }
+  }
+  .section-divider {
+    background: #27272a;
+  }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .tab-pane-wrap {
-    padding: 12px 4px 16px 4px;
+  .settings-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .settings-sidebar {
+    width: 100%;
+    position: sticky;
+    top: 60px;
+  }
+  .settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 4px;
+    gap: 4px;
+  }
+  .nav-anchor-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .save-bar-sub {
     display: none;
@@ -780,32 +936,4 @@ onUnmounted(() => {
     padding: 8px 12px;
   }
 }
-
-.title-group-flex {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.unsaved-badge .badge-dot {
-  animation: livePulseWarning 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-
-html.dark {
-  .settings-card {
-    background: var(--surface-card);
-    border-color: var(--hairline);
-  }
-  .unsaved-badge {
-    background: rgba(245, 158, 11, 0.12) !important;
-    border-color: rgba(245, 158, 11, 0.25) !important;
-    color: #fbbf24 !important;
-  }
-  .save-bar-inner {
-    background: #1c1c20;
-    border-color: #2e2e33;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  }
-}
-
 </style>
