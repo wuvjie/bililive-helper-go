@@ -758,6 +758,7 @@ onUnmounted(() => {
 
 /* Right Content Stream */
 .settings-content {
+  max-width: 860px;
   flex: 1;
   min-width: 0;
   display: flex;

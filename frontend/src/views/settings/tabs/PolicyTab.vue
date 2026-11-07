@@ -68,7 +68,12 @@
               />
               <span class="slider-value mono-val">{{ config.TRIGGER_THRESHOLD }}%</span>
             </div>
-            <div class="field-hint">磁盘使用率达到此警戒水位时，定时清理任务将正式启动。</div>
+            <div class="field-hint">
+              磁盘使用率达到此警戒水位时，定时清理任务将正式启动。
+              <span v-if="triggerFreeGB" class="hint-highlight-tag">
+                相当于总容量 {{ totalDiskGb?.toFixed(0) }} GB 中剩余低于 <strong>{{ triggerFreeGB }} GB</strong> 时触发
+              </span>
+            </div>
           </el-form-item>
 
           <el-form-item label="目标清理阈值">
@@ -263,6 +268,12 @@ const safeAgeHours = computed(() => {
 });
 
 // Buffer calculations
+const triggerFreeGB = computed(() => {
+  if (!props.totalDiskGb || props.totalDiskGb <= 0) return null;
+  const trig = Number(props.config.TRIGGER_THRESHOLD || 80);
+  return ((props.totalDiskGb * (100 - trig)) / 100).toFixed(1);
+});
+
 const bufferPct = computed(() => {
   const trig = Number(props.config.TRIGGER_THRESHOLD || 80);
   const targ = Number(props.config.TARGET_THRESHOLD || 60);
@@ -822,4 +833,18 @@ html.dark .btn-reset-defaults {
   }
 }
 
+
+.hint-highlight-tag {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--color-warning, #d97706);
+  font-feature-settings: "tnum";
+}
+.hint-highlight-tag strong {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+html.dark .hint-highlight-tag {
+  color: #fbbf24;
+}
 </style>

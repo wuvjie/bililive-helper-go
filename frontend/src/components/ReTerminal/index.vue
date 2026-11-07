@@ -62,6 +62,19 @@
         <span class="terminal-text">{{ line.text }}</span>
       </div>
     </div>
+
+    <!-- 浮动回到底部控制药丸 (防滚脱手保护触发时可见) -->
+    <transition name="fade">
+      <button
+        v-if="!autoScroll && filteredLines.length > 0"
+        class="terminal-scroll-bottom-btn"
+        @click="scrollToBottom"
+        title="恢复自动吸底跟随"
+      >
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        <span>回到底部</span>
+      </button>
+    </transition>
   </div>
 </template>
 
@@ -110,6 +123,15 @@ function isAtBottom(): boolean {
   return el.scrollHeight - el.scrollTop - el.clientHeight < 30;
 }
 
+function scrollToBottom() {
+  autoScroll.value = true;
+  nextTick(() => {
+    if (bodyRef.value) {
+      bodyRef.value.scrollTop = bodyRef.value.scrollHeight;
+    }
+  });
+}
+
 function onScroll() {
   autoScroll.value = isAtBottom();
 }
@@ -137,6 +159,7 @@ onUnmounted(() => {
 
 <style scoped>
 .re-terminal {
+  position: relative;
   color-scheme: dark;
   background: #191919;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -340,4 +363,31 @@ onUnmounted(() => {
   vertical-align: -1px;
 }
 
+
+.terminal-scroll-bottom-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(24, 24, 27, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+  user-select: none;
+}
+.terminal-scroll-bottom-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
 </style>

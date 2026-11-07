@@ -559,7 +559,34 @@ onActivated(async () => {
 .env-divider { width: 1px; height: 12px; background: var(--hairline); }
 
 /* Stat cards with Notion pastel tints */
-.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+/* Stat cards with Bento Ribbon layout (A2) */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.stat-card {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--hairline);
+  position: relative;
+  transition: background 0.15s ease;
+}
+.stat-card:last-child {
+  border-right: none;
+}
+.stat-card:hover {
+  background: rgba(125, 125, 125, 0.03);
+}
 
 .stat-card {
   border-radius: var(--r-md); padding: 20px;

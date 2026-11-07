@@ -55,6 +55,11 @@
         <el-table-column prop="name" label="主播" min-width="260" show-overflow-tooltip sortable>
           <template #default="{ row }">
             <div class="streamer-name-cell">
+              <span
+                class="live-status-dot"
+                :class="isStreamerActive(row) ? 'dot-recording' : 'dot-idle'"
+                :title="isStreamerActive(row) ? '近期活跃/录制中' : '空闲'"
+              />
               <span class="streamer-name">{{ row.name }}</span>
               <span v-if="row.rule?.protected" class="badge-pill badge-protected">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -316,12 +321,16 @@
                 </el-tooltip>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="155" align="center" fixed="right">
+            <el-table-column label="操作" width="220" align="center" fixed="right">
               <template #default="{ row }">
                 <div class="drawer-file-actions">
                   <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
                     <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <span>播放</span>
+                  </button>
+                  <button class="play-btn-sm btn-copy-path" @click="handleCopyPath(drawerStreamer, row.name)" title="复制录像相对文件路径">
+                    <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span>复制</span>
                   </button>
                   <button class="play-btn-sm btn-del-video" @click="handleDeleteFile(row)" title="从磁盘永久删除该录像文件">
                     <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -599,6 +608,17 @@ const drawerVisible = ref(false);
 const drawerLoading = ref(false);
 const drawerStreamer = ref("");
 const drawerFiles = ref<StreamerFile[]>([]);
+
+function isStreamerActive(row: StreamerInfo): boolean {
+  if (!row.mtime) return false;
+  // 最近 30 分钟内有新录像文件写入，视为正在活跃录制
+  return (Date.now() / 1000 - row.mtime) < 1800;
+}
+
+async function handleCopyPath(streamer: string, fileName: string) {
+  const relPath = `${streamer}/${fileName}`;
+  await copyToClipboard(relPath, `已复制录像路径: ${relPath}`);
+}
 
 async function openDrawer(row: StreamerInfo) {
   drawerStreamer.value = row.name;
@@ -1697,5 +1717,43 @@ html.dark .streamer-meta-stat .meta-unit {
 }
 html.dark .streamer-meta-stat .meta-dot {
   color: #52525b;
+}
+
+/* Max-width Guard & Live Dot & Copy Path Button (A3, B2, B4) */
+.streamers {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.live-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  margin-right: 3px;
+}
+.dot-recording {
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: pulse-red-dot 2s infinite;
+}
+.dot-idle {
+  background: var(--hairline, #a1a1aa);
+  opacity: 0.5;
+}
+@keyframes pulse-red-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.btn-copy-path:hover {
+  background: rgba(56, 189, 248, 0.12) !important;
+  color: #0284c7 !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+html.dark .btn-copy-path:hover {
+  color: #38bdf8 !important;
 }
 </style>

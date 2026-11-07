@@ -1,168 +1,170 @@
 <template>
   <div class="tasks">
-    <!-- 1. Top Section: 调度状态与全局控制 -->
-    <div class="schedule-grid">
-      <!-- Card 1: 自动合并 -->
-      <div class="card">
-        <div class="card-title card-title-flex">
-          <div class="title-left">
-            <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-            <span class="title-text">自动分片合并</span>
+    <div class="tasks-workspace">
+      <!-- 1. Left Control Panel (工控面板 340px) -->
+      <aside class="tasks-control-panel">
+        <!-- Card 1: 自动合并 -->
+        <div class="card sched-card sched-card-merge">
+          <div class="card-title card-title-flex">
+            <div class="title-left">
+              <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <span class="title-text">自动分片合并</span>
+            </div>
+            <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
+              <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
+              {{ schedule?.merge?.is_running ? '正在合并...' : schedule?.merge?.enabled ? '已启用' : '已暂停' }}
+            </span>
           </div>
-          <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
-            <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
-            {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '定时调度已启用' : '定时调度已暂停' }}
-          </span>
+          <div class="card-body sched-body">
+            <div class="sched-row">
+              <span class="sched-label">调度周期</span>
+              <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} <span class="unit-lbl">分钟</span></span>
+            </div>
+            <div class="sched-row">
+              <span class="sched-label">上次运行</span>
+              <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
+            </div>
+            <div class="sched-row">
+              <span class="sched-label">下次预计</span>
+              <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.next_run) }}</span>
+            </div>
+            <div class="sched-action-row">
+              <button
+                class="btn-task-action btn-merge-action"
+                :disabled="sse.isRunning.value"
+                @click="handleRunGlobal('merge')"
+              >
+                <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>立即全局合并</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="card-body sched-body">
-          <div class="sched-row">
-            <span class="sched-label">调度周期</span>
-            <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} <span class="unit-lbl">分钟</span></span>
-          </div>
-          <div class="sched-row">
-            <span class="sched-label">上次运行</span>
-            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
-          </div>
-          <div class="sched-row">
-            <span class="sched-label">下次预计</span>
-            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.next_run) }}</span>
-          </div>
-          <div class="sched-action-row">
-            <button
-              class="btn-task-action btn-merge-action"
-              :disabled="sse.isRunning.value"
-              @click="handleRunGlobal('merge')"
-            >
-              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span>立即全局合并</span>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Card 2: 自动清理 -->
-      <div class="card">
-        <div class="card-title card-title-flex">
-          <div class="title-left">
-            <div class="ui-icon-box icon-box-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
-            <span class="title-text">自动磁盘清理</span>
+        <!-- Card 2: 自动清理 -->
+        <div class="card sched-card sched-card-clean">
+          <div class="card-title card-title-flex">
+            <div class="title-left">
+              <div class="ui-icon-box icon-box-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+              <span class="title-text">自动磁盘清理</span>
+            </div>
+            <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
+              <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
+              {{ schedule?.clean?.is_running ? '正在清理...' : schedule?.clean?.enabled ? '已开启' : '未开启' }}
+            </span>
           </div>
-          <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
-            <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
-            {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '磁盘巡检已开启' : '巡检保护未开启' }}
-          </span>
+          <div class="card-body sched-body">
+            <div class="sched-row">
+              <span class="sched-label">巡检周期</span>
+              <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} <span class="unit-lbl">分钟</span></span>
+            </div>
+            <div class="sched-row">
+              <span class="sched-label">上次运行</span>
+              <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
+            </div>
+            <div class="sched-row">
+              <span class="sched-label">下次预计</span>
+              <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.next_run) }}</span>
+            </div>
+            <div class="sched-action-row">
+              <button
+                class="btn-task-action btn-clean-action"
+                :disabled="sse.isRunning.value"
+                @click="handleRunGlobal('clean')"
+              >
+                <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                <span>立即全局清理</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="card-body sched-body">
-          <div class="sched-row">
-            <span class="sched-label">巡检周期</span>
-            <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} <span class="unit-lbl">分钟</span></span>
-          </div>
-          <div class="sched-row">
-            <span class="sched-label">上次运行</span>
-            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
-          </div>
-          <div class="sched-row">
-            <span class="sched-label">下次预计</span>
-            <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.next_run) }}</span>
-          </div>
-          <div class="sched-action-row">
-            <button
-              class="btn-task-action btn-clean-action"
-              :disabled="sse.isRunning.value"
-              @click="handleRunGlobal('clean')"
-            >
-              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-              <span>立即全局清理</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 2. Middle Section: 定向主播快捷快跑 -->
-    <div class="card targeted-card">
-      <div class="targeted-bar">
-        <div class="targeted-left">
-          <div class="targeted-label-wrap">
-            <div class="ui-icon-box icon-box-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
-            <span class="targeted-label">定向主播快捷任务:</span>
+        <!-- Card 3: 定向主播快捷快跑 -->
+        <div class="card targeted-card">
+          <div class="card-title card-title-flex">
+            <div class="title-left">
+              <div class="ui-icon-box icon-box-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+              <span class="title-text">定向主播维护</span>
+            </div>
           </div>
-          <el-select
-            v-model="selectedStreamer"
-            placeholder="选择特定主播..."
-            filterable
-            clearable
-            class="targeted-select"
+          <div class="card-body targeted-vertical-body">
+            <el-select
+              v-model="selectedStreamer"
+              placeholder="选择特定主播..."
+              filterable
+              clearable
+              class="targeted-select-block"
+            >
+              <el-option
+                v-for="s in streamers"
+                :key="s.name"
+                :label="`${s.name} (${s.files} 个 · ${s.size_gb?.toFixed(1)} GB)`"
+                :value="s.name"
+              />
+            </el-select>
+            <div class="targeted-buttons-vertical">
+              <button
+                class="btn-targeted"
+                :disabled="!selectedStreamer || sse.isRunning.value"
+                @click="handleTargetedMerge"
+              >
+                合并该主播
+              </button>
+              <button
+                class="btn-targeted"
+                :disabled="!selectedStreamer || sse.isRunning.value"
+                @click="handleTargetedClean"
+              >
+                清理该主播旧录像
+              </button>
+            </div>
+            <div class="targeted-link-wrap">
+              <router-link
+                :to="selectedStreamer ? ('/streamers?streamer=' + encodeURIComponent(selectedStreamer)) : '/streamers'"
+                class="link-to-streamers"
+              >
+                前往主播管理查看切片详情 ↗
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 2. Right Terminal Panel (实时终端视窗) -->
+      <main class="tasks-terminal-panel">
+        <div class="terminal-container-card">
+          <ReTerminal
+            :lines="displayedLines"
+            :title="currentTerminalTitle"
+            :empty-text="currentEmptyText"
+            height="100%"
+            @clear="handleClear"
           >
-            <el-option
-              v-for="s in streamers"
-              :key="s.name"
-              :label="`${s.name} (${s.files} 个录像 · ${s.size_gb?.toFixed(1)} GB)`"
-              :value="s.name"
-            />
-          </el-select>
-          <div class="targeted-buttons">
-            <button
-              class="btn-targeted btn-targeted-merge"
-              :disabled="!selectedStreamer || sse.isRunning.value"
-              @click="handleTargetedMerge"
-            >
-              合并该主播
-            </button>
-            <button
-              class="btn-targeted btn-targeted-clean"
-              :disabled="!selectedStreamer || sse.isRunning.value"
-              @click="handleTargetedClean"
-            >
-              清理该主播旧录像
+            <template #title>
+              <div class="term-title-wrapper">
+                <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }" />
+                <span class="term-title-text">实时执行终端</span>
+                <span v-if="sse.isRunning.value" class="term-badge-tag tag-running">运行中</span>
+                <span v-else class="term-badge-tag tag-idle">空闲待命</span>
+                <router-link to="/history" class="term-history-link" title="前往操作日志页面查看已归档的全部历史任务与日志">
+                  查看历史日志 ↗
+                </router-link>
+              </div>
+            </template>
+          </ReTerminal>
+
+          <!-- Reconnect bar if SSE errored -->
+          <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value " class="retry-bar">
+            <button class="ops-action ops-retry" @click="sse.retryLast()">
+              <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              <span>重新连接</span>
             </button>
           </div>
         </div>
-        <div class="targeted-right">
-          <router-link
-            :to="selectedStreamer ? ('/streamers?streamer=' + encodeURIComponent(selectedStreamer)) : '/streamers'"
-            class="link-to-streamers"
-          >
-            前往主播管理查看切片详情 ↗
-          </router-link>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. Bottom Section: 实时执行终端 -->
-    <div class="terminal-container-card">
-      <!-- ReTerminal Component with integrated command bar -->
-      <ReTerminal
-        :lines="displayedLines"
-        :title="currentTerminalTitle"
-        :empty-text="currentEmptyText"
-        height="480px"
-        @clear="handleClear"
-      >
-        <template #title>
-          <div class="term-title-wrapper">
-            <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }" />
-            <span class="term-title-text">实时执行终端</span>
-            <span v-if="sse.isRunning.value" class="term-badge-tag tag-running">运行中</span>
-            <span v-else class="term-badge-tag tag-idle">空闲待命</span>
-            <router-link to="/history" class="term-history-link" title="前往操作日志页面查看已归档的全部历史任务与日志">
-              查看历史日志 ↗
-            </router-link>
-          </div>
-        </template>
-      </ReTerminal>
-
-      <!-- Reconnect bar if SSE errored -->
-      <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value " class="retry-bar">
-        <button class="ops-action ops-retry" @click="sse.retryLast()">
-            <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            <span>重新连接</span>
-          </button>
-      </div>
+      </main>
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onActivated, onDeactivated } from "vue";
 import { useRoute } from "vue-router";
@@ -1084,4 +1086,61 @@ html.dark {
   }
 }
 
+
+/* Tasks Split Workspace Layout (A1) */
+.tasks-workspace {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 16px;
+  align-items: stretch;
+  min-height: calc(100vh - 140px);
+}
+@media (max-width: 960px) {
+  .tasks-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tasks-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.targeted-vertical-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.targeted-select-block {
+  width: 100%;
+}
+.targeted-buttons-vertical {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.targeted-buttons-vertical .btn-targeted {
+  width: 100%;
+}
+.targeted-link-wrap {
+  text-align: right;
+  margin-top: 2px;
+}
+
+.tasks-terminal-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 580px;
+}
+.tasks-terminal-panel .terminal-container-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.tasks-terminal-panel :deep(.re-terminal) {
+  flex: 1;
+  height: 100% !important;
+}
 </style>
