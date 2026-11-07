@@ -30,7 +30,9 @@
 
   --el-font-family: var(--font-sans);
   --el-font-size-base: 14px;
+
 }
+
 
 // ── Cards ──
 .el-card {
@@ -39,8 +41,12 @@
   border: 1px solid var(--hairline) !important;
   box-shadow: var(--shadow-card) !important;
   border-radius: var(--r-md) !important;
+
 }
-.el-card.is-hover-shadow:hover { box-shadow: var(--shadow-card-hover) !important; }
+
+.el-card.is-hover-shadow:hover { box-shadow: var(--shadow-card-hover) !important; 
+}
+
 
 // ── Dialogs ──
 .el-dialog {
@@ -48,7 +54,9 @@
   border: 1px solid var(--hairline);
   border-radius: var(--r-md) !important;
   box-shadow: 0 16px 48px -8px rgba(15, 15, 15, 0.12) !important;
+
 }
+
 
 // ── Tables (minimal borders, warm hover) ──
 .el-table {
@@ -60,16 +68,22 @@
   --el-table-header-text-color: #787671;
   --el-table-text-color: #37352f;
   font-size: 13px;
+
 }
+
 .el-table th.el-table__cell {
   font-weight: 500;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+
 }
+
 .el-table td.el-table__cell {
   padding: 14px 0;
+
 }
+
 
 // ── Left-side tabs (Notion sidebar-menu style) ──
 .el-tabs--left {
@@ -77,8 +91,12 @@
     margin-right: 0;
     .el-tabs__nav-wrap.is-left {
       padding: 4px 0;
-    }
-  }
+    
+}
+
+  
+}
+
   .el-tabs__item {
     height: 34px;
     line-height: 34px;
@@ -93,26 +111,44 @@
       background: var(--highlight);
       color: var(--ink);
       font-weight: 500;
-    }
+    
+}
+
     &:hover {
       background: var(--highlight);
       color: var(--charcoal);
-    }
-  }
+    
+}
+
+  
+}
+
   .el-tabs__active-bar {
     display: none;
-  }
+  
 }
+
+
+}
+
 
 // ── Regular tabs ──
 .el-tabs__item {
   color: var(--steel);
-  &.is-active { color: var(--ink); font-weight: 500; }
-  &:hover { color: var(--charcoal); }
+  &.is-active { color: var(--ink); font-weight: 500; 
 }
+
+  &:hover { color: var(--charcoal); 
+}
+
+
+}
+
 .el-tabs__active-bar {
   background-color: var(--ink);
+
 }
+
 
 // ── Menu ──
 .el-menu {
@@ -121,7 +157,9 @@
   --el-menu-active-color: #0a0a0a;
   --el-menu-text-color: #787671;
   --el-menu-item-height: 36px;
+
 }
+
 
 // ── Inputs (充足内边距与舒适呼吸感，告别文字紧贴边框) ──
 .el-input {
@@ -130,42 +168,106 @@
   --el-input-hover-border-color: #a4a097;
   --el-input-focus-border-color: #2f80ed;
   --el-input-text-color: #37352f;
+
 }
+
 .el-input__wrapper {
   padding: 4px 12px !important;
   border-radius: var(--r-sm) !important;
   box-shadow: 0 0 0 1px #d3d1cb inset;
   transition: all 0.15s ease;
+
 }
+
 .el-input--small .el-input__wrapper {
   padding: 2px 10px !important;
+
 }
+
 .el-input__inner {
   padding-left: 2px;
+
 }
+
 // Kill purple/blue focus ring on all input variants
 .el-input__wrapper.is-focus,
 .el-input.is-focus .el-input__wrapper,
 .el-textarea.is-focus .el-textarea__inner,
 .el-select .el-input.is-focus .el-input__inner {
   box-shadow: 0 0 0 1px #2f80ed inset !important;
+
 }
+
 
 // ── Buttons ──
 .el-button {
   border-radius: var(--r-sm) !important;
   font-weight: 500;
   font-size: 14px;
+
 }
+
 .el-button--primary {
   background: var(--primary) !important;
   border-color: var(--primary) !important;
   color: var(--on-primary) !important;
+
 }
+
 .el-button--primary:hover {
   background: var(--primary-pressed) !important;
   border-color: var(--primary-pressed) !important;
   color: var(--on-primary) !important;
+
+}
+
+
+/* ── Button Matrix ── */
+.btn-tier-1 {
+  @extend .el-button--primary;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+.btn-tier-2 {
+  @extend .el-button;
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  color: var(--on-primary) !important;
+}
+.btn-tier-3 {
+  @extend .el-button;
+  background: var(--surface) !important;
+  border-color: var(--hairline) !important;
+  color: var(--charcoal) !important;
+}
+.btn-tier-4 {
+  @extend .el-button;
+  background: transparent !important;
+  border: 1px solid var(--danger);
+  color: var(--danger) !important;
+}
+
+/* ── Motion Variables ── */
+:root {
+  --transition-enter: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-leave: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Icon Utility Classes ── */
+.icon-micro { width: 12px; height: 12px; }
+.icon-standard { width: 16px; height: 16px; }
+.icon-medium { width: 20px; height: 20px; }
+.icon-macro { width: 24px; height: 24px; }
+
+/* ── Table Action Column Rules ── */
+.el-table .action-cell {
+  min-width: 150px;
+  white-space: nowrap;
+  color: var(--steel);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 // ── Progress (desaturated green, warm track) ──
@@ -173,8 +275,12 @@
   --el-progress-border-radius: var(--r-xs);
   .el-progress-bar__outer {
     background-color: #f1f1ef;
-  }
+  
 }
+
+
+}
+
 
 // ── Slider (thin track, ink thumb) ──
 .el-slider {
@@ -184,15 +290,21 @@
   .el-slider__runway {
     height: 4px;
     border-radius: 2px;
-  }
+  
+}
+
   .el-slider__bar {
     height: 4px;
     border-radius: 2px;
     background-color: #2563eb;
-  }
+  
+}
+
   .el-slider__button-wrapper {
     top: -16px;
-  }
+  
+}
+
   .el-slider__button {
     width: 16px;
     height: 16px;
@@ -202,14 +314,22 @@
     transition: box-shadow 0.15s;
     &:hover {
       box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
-    }
-  }
+    
 }
+
+  
+}
+
+
+}
+
 
 // ── Descriptions ──
 .el-descriptions {
   --el-descriptions-item-bordered-label-background: #f7f6f3;
+
 }
+
 
 // ── Breadcrumb ──
 .el-breadcrumb {
@@ -218,15 +338,21 @@
   .el-breadcrumb__separator {
     margin: 0 8px;
     color: #c7c7cc;
-  }
+  
 }
+
+
+}
+
 
 // ── Pagination ──
 .el-pagination {
   --el-pagination-bg-color: transparent;
   --el-pagination-button-bg-color: #ffffff;
   --el-pagination-hover-color: #1c1c1e;
+
 }
+
 
 // ── Input Number (rounded buttons, warm gray) ──
 .el-input-number {
@@ -239,12 +365,20 @@
     &:hover {
       color: var(--ink) !important;
       background-color: var(--highlight) !important;
-    }
-  }
+    
+}
+
+  
+}
+
   .el-input__wrapper {
     border-radius: var(--r-sm) !important;
-  }
+  
 }
+
+
+}
+
 
 // ── Switch (inactive = subtle gray, active = system primary) ──
 .el-switch {
@@ -252,20 +386,30 @@
   --el-switch-on-color: #2563eb;
   .el-switch__core {
     border-radius: 12px;
-  }
+  
 }
+
+
+}
+
 
 // ── Select (consistent font) ──
 .el-select {
   .el-input__inner {
     font-size: 13px;
     color: var(--charcoal);
-  }
+  
+}
+
   .el-input__inner::placeholder {
     color: var(--stone);
     font-size: 13px;
-  }
+  
 }
+
+
+}
+
 
 // 统一约束 Element Plus 下拉菜单项字号，根治弹层字号(14px)大于外层表单标签(13px)的层级倒挂问题
 .el-select-dropdown__item {
@@ -274,14 +418,20 @@
   line-height: 32px !important;
   padding: 0 12px !important;
   text-align: left !important;
+
 }
+
 .el-select-dropdown.is-multiple .el-select-dropdown__item {
   height: 32px !important;
   line-height: 32px !important;
+
 }
+
 .el-select-dropdown .el-select-dropdown__item.is-selected {
   font-weight: 600;
+
 }
+
 .el-select--small .el-select-dropdown__item,
 .el-select-dropdown--small .el-select-dropdown__item,
 .el-popper.select-popper-small .el-select-dropdown__item,
@@ -290,13 +440,17 @@
   height: 28px !important;
   line-height: 28px !important;
   padding: 0 10px !important;
+
 }
+
 
 // ── Time Picker icon (thinner stroke) ──
 .el-input__prefix .el-icon,
 .el-input__suffix .el-icon {
   color: var(--steel);
+
 }
+
 
 // Element Plus Dark Mode Overrides
 html.dark {
@@ -305,30 +459,44 @@ html.dark {
     th.el-table__cell.is-leaf,
     td.el-table__cell {
       border-bottom-color: rgba(255, 255, 255, 0.075) !important;
-    }
+    
+}
+
     &::before,
     .el-table__inner-wrapper::before {
       background-color: rgba(255, 255, 255, 0.075) !important;
-    }
-  }
+    
+}
+
+  
+}
+
 
   // 下拉选择器在暗黑模式下的色彩与选项高亮
   .el-select-dropdown {
     background-color: #18181b !important;
     border-color: #27272a !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-  }
+  
+}
+
   .el-select-dropdown__item {
     color: #e4e4e7 !important;
     &.hover, &:hover {
       background-color: #222226 !important;
       color: #ffffff !important;
-    }
+    
+}
+
     &.is-selected {
       color: #60a5fa !important;
       background-color: rgba(59, 130, 246, 0.12) !important;
-    }
-  }
+    
+}
+
+  
+}
+
 
   --el-color-primary: #2563eb;
   --el-color-primary-light-3: #3b82f6;
@@ -369,16 +537,24 @@ html.dark {
     &:hover {
       background: var(--highlight);
       color: var(--charcoal);
-    }
+    
+}
+
     &.is-active {
       background: var(--highlight);
       color: var(--ink);
-    }
-  }
+    
+}
+
+  
+}
+
 
   .el-loading-mask {
     background-color: rgba(9, 9, 11, 0.7) !important;
-  }
+  
+}
+
   // Buttons in dark mode (Sapphire Blue CTA eliminates blinding white glare)
   .el-button--primary {
     background: #2563eb !important;
@@ -390,16 +566,24 @@ html.dark {
       background: #1d4ed8 !important;
       border-color: #2563eb !important;
       color: #ffffff !important;
-    }
+    
+}
+
     &:active {
       background: #1e40af !important;
-    }
+    
+}
+
     &.is-disabled, &:disabled {
       background: #1e293b !important;
       border-color: #334155 !important;
       color: #64748b !important;
-    }
-  }
+    
+}
+
+  
+}
+
   .el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--success):not(.el-button--warning) {
     background-color: #18181b !important;
     border-color: #27272a !important;
@@ -408,13 +592,19 @@ html.dark {
       background-color: #27272a !important;
       border-color: #3f3f46 !important;
       color: #f4f4f5 !important;
-    }
+    
+}
+
     &.is-disabled, &:disabled {
       background-color: #141416 !important;
       border-color: #222226 !important;
       color: #52525b !important;
-    }
-  }
+    
+}
+
+  
+}
+
   .el-button--success {
     background-color: rgba(52, 211, 153, 0.15) !important;
     border-color: rgba(52, 211, 153, 0.35) !important;
@@ -423,8 +613,12 @@ html.dark {
       background-color: #059669 !important;
       border-color: #059669 !important;
       color: #ffffff !important;
-    }
-  }
+    
+}
+
+  
+}
+
   .el-button--warning {
     background-color: rgba(251, 191, 36, 0.15) !important;
     border-color: rgba(251, 191, 36, 0.35) !important;
@@ -433,8 +627,12 @@ html.dark {
       background-color: #b45309 !important;
       border-color: #b45309 !important;
       color: #ffffff !important;
-    }
-  }
+    
+}
+
+  
+}
+
   .el-button--danger {
     background-color: rgba(239, 68, 68, 0.15) !important;
     border-color: rgba(239, 68, 68, 0.35) !important;
@@ -443,8 +641,12 @@ html.dark {
       background-color: #ef4444 !important;
       border-color: #ef4444 !important;
       color: #ffffff !important;
-    }
-  }
+    
+}
+
+  
+}
+
 
   // Sliders in dark mode
   .el-slider {
@@ -452,16 +654,24 @@ html.dark {
     --el-slider-main-bg-color: #3b82f6 !important;
     .el-slider__runway {
       background-color: #27272a !important;
-    }
+    
+}
+
     .el-slider__bar {
       background-color: #3b82f6 !important;
-    }
+    
+}
+
     .el-slider__button {
       border: 2px solid #3b82f6 !important;
       background-color: #ffffff !important;
       box-shadow: 0 0 8px rgba(59, 130, 246, 0.4) !important;
-    }
-  }
+    
+}
+
+  
+}
+
 
   // Switches in dark mode
   .el-switch {
@@ -472,23 +682,37 @@ html.dark {
       border-color: #3f3f46 !important;
       .el-switch__action {
         background-color: #a1a1aa !important;
-      }
-    }
+      
+}
+
+    
+}
+
     &.is-checked .el-switch__core {
       background-color: #3b82f6 !important;
       border-color: #3b82f6 !important;
       .el-switch__action {
         background-color: #ffffff !important;
-      }
-    }
-  }
+      
+}
+
+    
+}
+
+  
+}
+
 
   // Progress bars in dark mode
   .el-progress {
     .el-progress-bar__outer {
       background-color: #27272a !important;
-    }
-  }
+    
+}
+
+  
+}
+
 
   // Steppers (Input Number) in dark mode — eliminate blinding white +/- boxes
   .el-input-number {
@@ -500,24 +724,38 @@ html.dark {
       &:hover {
         background-color: #27272a !important;
         color: #f4f4f5 !important;
-      }
+      
+}
+
       &.is-disabled {
         background-color: #141416 !important;
         border-color: #222226 !important;
         color: #52525b !important;
-      }
-    }
+      
+}
+
+    
+}
+
     .el-input__wrapper {
       background-color: #141416 !important;
       box-shadow: 0 0 0 1px #27272a inset !important;
       &:hover {
         box-shadow: 0 0 0 1px #3f3f46 inset !important;
-      }
+      
+}
+
       &.is-focus {
         box-shadow: 0 0 0 1px #3b82f6 inset !important;
-      }
-    }
-  }
+      
+}
+
+    
+}
+
+  
+}
+
 
   // Time Picker Panel in dark mode
   .el-time-panel {
@@ -527,29 +765,45 @@ html.dark {
     .el-time-panel__content::after,
     .el-time-panel__content::before {
       border-color: #27272a !important;
-    }
+    
+}
+
     .el-time-panel__footer {
       border-color: #27272a !important;
-    }
+    
+}
+
     .el-time-spinner__item {
       color: #a1a1aa !important;
       &:hover:not(.is-disabled):not(.is-active) {
         background: #27272a !important;
         color: #f4f4f5 !important;
-      }
+      
+}
+
       &.is-active:not(.is-disabled) {
         color: #ffffff !important;
         font-weight: 600;
-      }
-    }
+      
+}
+
+    
+}
+
     .el-time-panel__btn {
       color: #a1a1aa !important;
       &.confirm {
         color: #60a5fa !important;
         font-weight: 600;
-      }
-    }
-  }
+      
+}
+
+    
+}
+
+  
+}
+
 
   // Light poppers / tooltips in dark mode
   .el-popper.is-light {
@@ -559,13 +813,19 @@ html.dark {
     .el-popper__arrow::before {
       background-color: #1c1c20 !important;
       border-color: #27272a !important;
-    }
-  }
+    
+}
+
+  
+}
+
 
   // Descriptions in dark mode
   .el-descriptions {
     --el-descriptions-item-bordered-label-background: #141416;
-  }
+  
+}
+
 
   // Inputs & Selects in dark mode
   .el-input__wrapper, .el-textarea__inner {
@@ -574,33 +834,51 @@ html.dark {
     color: #f4f4f5 !important;
     &:hover {
       box-shadow: 0 0 0 1px #3f3f46 inset !important;
-    }
+    
+}
+
     &.is-focus, &:focus {
       box-shadow: 0 0 0 1px #3b82f6 inset !important;
-    }
-  }
+    
+}
+
+  
+}
+
   .el-input__inner {
     color: #f4f4f5 !important;
     &::placeholder {
       color: #71717a !important;
-    }
-  }
+    
+}
+
+  
+}
+
 
   // Dialog & Drawer in dark mode
   .el-dialog {
     background-color: #18181b !important;
     border-color: #27272a !important;
-  }
+  
+}
+
   .el-dialog__title {
     color: #f4f4f5 !important;
-  }
+  
+}
+
   .el-drawer {
     background-color: #141416 !important;
     border-left-color: #27272a !important;
-  }
+  
+}
+
   .el-drawer__title {
     color: #f4f4f5 !important;
-  }
+  
+}
+
 
   // Dropdowns in dark mode
   .el-dropdown-menu {
@@ -611,12 +889,20 @@ html.dark {
       &:hover, &:focus {
         background: #27272a !important;
         color: #ffffff !important;
-      }
+      
+}
+
       &.divided {
         border-top-color: #27272a !important;
-      }
-    }
-  }
+      
+}
+
+    
+}
+
+  
+}
+
 
   // Pagination in dark mode
   .el-pagination {
@@ -629,32 +915,48 @@ html.dark {
       &:hover {
         color: #ffffff !important;
         border-color: #3f3f46 !important;
-      }
+      
+}
+
       &.is-active {
         background-color: #27272a !important;
         color: #f4f4f5 !important;
         border-color: #3f3f46 !important;
         font-weight: 600;
-      }
-    }
-  }
+      
+}
+
+    
+}
+
+  
+}
+
+
 
 }
+
 
 .el-loading-mask {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   background-color: rgba(251, 251, 250, 0.65);
   transition: opacity 0.2s ease;
+
 }
+
 .el-loading-spinner .circular {
   width: 32px;
   height: 32px;
+
 }
+
 .el-loading-spinner .path {
   stroke: var(--ink);
   stroke-width: 3.5;
+
 }
+
 
 
 // 键盘可访问性与输入控件聚焦隔离铁律 (Input Focus Isolation vs. Keyboard Focus Ring)
@@ -665,7 +967,9 @@ textarea,
 .el-textarea__inner {
   outline: none !important;
   outline-offset: 0 !important;
+
 }
+
 
 // 仅在纯键盘导航聚焦时，对无边框交互元素展现 2px 双层聚焦外框
 button:focus-visible,
@@ -678,7 +982,9 @@ a:focus-visible,
 .el-radio:focus-visible {
   outline: 2px solid var(--hairline-focus, #2563eb) !important;
   outline-offset: 2px !important;
+
 }
+
 
 // Windows 高对比度模式下确保键盘焦点与输入框不丢失 (WCAG 2.4.7 Forced Colors Safeguard)
 @media (forced-colors: active) {
@@ -697,12 +1003,18 @@ a:focus-visible,
   .el-select.is-focus .el-select__wrapper {
     outline: 2px solid Highlight !important;
     outline-offset: 2px !important;
-  }
+  
 }
+
+
+}
+
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   outline: none !important;
+
 }
+
 
 // 物理动效降级兼容 (Accessibility Reduced Motion)
 @media (prefers-reduced-motion: reduce) {
@@ -711,20 +1023,28 @@ a:focus:not(:focus-visible) {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
+  
 }
+
+
+}
+
 
 
 // 物理动效：进出场差异化（出场比入场快 30% 黄金法则）
 .el-dialog,
 .el-drawer {
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+
 }
+
 .el-dialog-fade-leave-active,
 .el-drawer-fade-leave-active {
   transition-duration: 0.16s !important;
   transition-timing-function: cubic-bezier(0.4, 0, 1, 1) !important;
+
 }
+
 
 // 移动端 iOS Safari 防视口自动放大基准 (Font size >= 16px on < 640px)
 @media (max-width: 640px) {
@@ -732,8 +1052,12 @@ a:focus:not(:focus-visible) {
   .el-textarea__inner,
   .el-select .el-input__inner {
     font-size: 16px !important;
-  }
+  
 }
+
+
+}
+
 
 // ── 终端控制栏历史归档下拉选择器（全场景强穿透深色隔离）──
 .history-quick-select {
@@ -754,7 +1078,9 @@ a:focus:not(:focus-visible) {
     min-height: 28px !important;
     line-height: 26px !important;
     border-radius: var(--r-sm, 4px) !important;
-  }
+  
+}
+
 
   .el-select__placeholder,
   .el-select__selected-item,
@@ -764,14 +1090,20 @@ a:focus:not(:focus-visible) {
     color: #e4e4e7 !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
-  }
+  
+}
+
 
   .el-select__caret,
   .el-select__suffix,
   .el-icon {
     color: #a1a1aa !important;
-  }
+  
 }
+
+
+}
+
 
 // 终端历史归档下拉弹出层（全场景暗黑沉浸隔离，彻底根除浅色/白底漏洞）
 .el-popper.history-select-popper,
@@ -798,19 +1130,25 @@ a:focus:not(:focus-visible) {
   .el-select-dropdown__list {
     background: #18181b !important;
     background-color: #18181b !important;
-  }
+  
+}
+
 
   .el-popper__arrow::before {
     background: #18181b !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
-  }
+  
+}
+
 
   .el-select-dropdown__empty {
     color: #a1a1aa !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
     background: transparent !important;
-  }
+  
+}
+
 
   .el-select-dropdown__item {
     background: transparent !important;
@@ -826,7 +1164,9 @@ a:focus:not(:focus-visible) {
       background: rgba(255, 255, 255, 0.08) !important;
       background-color: rgba(255, 255, 255, 0.08) !important;
       color: #ffffff !important;
-    }
+    
+}
+
 
     // 已选中态（无论鼠标是否悬浮，绝不允许出现白底）
     &.is-selected,
@@ -843,7 +1183,38 @@ a:focus:not(:focus-visible) {
         background: rgba(59, 130, 246, 0.28) !important;
         background-color: rgba(59, 130, 246, 0.28) !important;
         color: #93c5fd !important;
-      }
-    }
-  }
+      
 }
+
+    
+}
+
+  
+}
+
+
+}
+
+
+/* ==== Extended Palette ==== */
+:root {
+  /* Brand primary variants */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-active: #1e40af;
+  --primary-disabled: rgba(37,99,235,0.2);
+
+  /* Semantic colors */
+  --success: #48b06b;
+  --success-hover: #3a945b;
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+  --danger: #e03131;
+  --danger-hover: #c81e1e;
+
+  /* Dark‑mode foregrounds */
+  --text-on-dark: #e0e0e0;
+  --text-on-dark-muted: #b0b0b0;
+
+}
+

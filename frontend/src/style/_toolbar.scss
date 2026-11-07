@@ -1,0 +1,13 @@
+// Toolbar baseline SCSS
+.toolbar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  gap: 8px;
+}
+
+.toolbar .el-select,
+.toolbar .el-input,
+.toolbar .el-button {
+  height: 32px;
+}

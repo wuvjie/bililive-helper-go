@@ -52,6 +52,15 @@
   --font-sans: "Inter", -apple-system, system-ui, "Segoe UI", Helvetica, sans-serif;
   --font-mono: "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
 
+  // Font tiers
+  --font-tier-1: 28px;
+  --font-tier-2: 24px;
+  --font-tier-3: 20px;
+  --font-tier-4: 18px;
+  --font-tier-5: 16px;
+  --font-tier-6: 14px;
+  --font-tier-7: 12px;
+
   // Radius (tight Notion micro-round)
   --r-xs: 3px;
   --r-sm: 4px;
@@ -140,3 +149,5 @@ html.dark {
 
   --highlight: #27272a;
 }
+@use "./responsive.scss";
+@use "./_toolbar.scss";
