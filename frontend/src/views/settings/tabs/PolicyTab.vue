@@ -110,34 +110,18 @@
           </div>
 
           <el-form-item label="新录像免删保护">
-            <div class="safe-age-group">
-              <div v-if="config.SAFE_MODE === 'hours'" class="inline-unit-row">
-                <el-input-number
-                  :model-value="safeAgeHours"
-                  :min="1" :max="168" :step="1" class="compact-counter"
-                  @update:model-value="updateField('SAFE_AGE_MINUTES', (Number($event) || 1) * 60)"
-                />
-              </div>
-              <div v-if="config.SAFE_MODE === 'days'" class="inline-unit-row">
-                <el-input-number
-                  :model-value="config.SAFE_DAYS"
-                  :min="1"
-                  :max="365"
-                  class="compact-counter"
-                  @update:model-value="updateField('SAFE_DAYS', Number($event))"
-                />
-              </div>
-              <el-select
-                :model-value="config.SAFE_MODE"
-                class="compact-select"
-                style="width: 86px; flex-shrink: 0;"
-                @update:model-value="onSafeModeChange"
-              >
-                <el-option label="小时" value="hours" />
-                <el-option label="天" value="days" />
-              </el-select>
+            <div class="inline-unit-row">
+              <el-input-number
+                :model-value="config.SAFE_DAYS || 3"
+                :min="1"
+                :max="365"
+                :step="1"
+                class="compact-counter"
+                @update:model-value="onSafeDaysChange(Number($event))"
+              />
+              <span class="unit-text">天</span>
             </div>
-            <div class="field-hint">在此保护期内生成的最新录像享有免删保护，即使磁盘水位达到警戒线，清理任务也绝不会删除保护期内的文件。</div>
+            <div class="field-hint">在此保护天数内生成的最新录像享有免删保护，即使磁盘水位达到警戒线，清理任务也绝不删除保护期内的录像。</div>
           </el-form-item>
 
           <el-form-item label="每主播最少保留">
@@ -152,17 +136,7 @@
             <div class="field-hint">每个主播至少保留最近的场次数，无论磁盘空间多么紧张也不会被全删。</div>
           </el-form-item>
 
-          <el-form-item label="单次最大删除数">
-            <div class="inline-unit-row">
-              <el-input-number
-                :model-value="config.MAX_DELETE_PER_RUN || 50"
-                :min="5" :max="500" :step="10" class="compact-counter"
-                @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
-              />
-              <span class="unit-text">个</span>
-            </div>
-            <div class="field-hint">限制单次清理任务允许删除的文件上限，避免引起磁盘长时间高负荷 I/O 抖动（默认 50 个）。</div>
-          </el-form-item>
+
 
           <!-- 白名单关键词 Tag 交互 -->
           <el-form-item label="免清理白名单">

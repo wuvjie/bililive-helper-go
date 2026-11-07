@@ -8,6 +8,7 @@
           <div class="title-left">
             <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
             <span class="title-text">自动分片合并</span>
+            <router-link to="/settings?tab=schedule" class="card-header-action" title="前往系统设置修改合并调度参数">配置 ⚙️</router-link>
           </div>
           <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
@@ -46,6 +47,7 @@
           <div class="title-left">
             <div class="ui-icon-box icon-box-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
             <span class="title-text">自动磁盘清理</span>
+            <router-link to="/settings?tab=schedule" class="card-header-action" title="前往系统设置修改清理巡检参数">配置 ⚙️</router-link>
           </div>
           <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
@@ -131,70 +133,24 @@
 
     <!-- 3. Bottom Section: 智能控制台与日志查看 (双模智能终端) -->
     <div class="terminal-container-card">
-      <!-- Terminal Tab Switcher -->
+      <!-- Terminal Ctrl Bar (Focused on Real-time execution) -->
       <div class="terminal-ctrl-bar">
         <div class="terminal-tabs">
-          <button
-            class="term-tab-btn"
-            :class="{ active: activeLogTab === 'live' }"
-            @click="activeLogTab = 'live'"
-          >
+          <div class="term-title-box">
             <span class="tab-indicator dot-live" :class="{ 'pulse-dot': sse.isRunning.value }"></span>
-            实时终端
+            <span class="term-title-text">实时执行终端</span>
             <span v-if="sse.isRunning.value" class="tab-tag-live">运行中</span>
-          </button>
-          <button
-            class="term-tab-btn"
-            :class="{ active: activeLogTab === 'recent_merge' }"
-            @click="switchRecentTab('merge')"
-          >
-            <svg class="tab-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>最近合并日志</span>
-          </button>
-          <button
-            class="term-tab-btn"
-            :class="{ active: activeLogTab === 'recent_clean' }"
-            @click="switchRecentTab('clean')"
-          >
-            <svg class="tab-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg><span>最近清理日志</span>
-          </button>
-
-          <!-- History dropdown selection -->
-          <div class="history-select-wrap" v-if="historyOptions.length > 0">
-            <el-select
-              v-model="selectedHistoryId"
-              placeholder="选择查看历史任务归档..."
-              size="small"
-              popper-class="select-popper-small history-select-popper"
-              class="history-quick-select"
-              :style="{
-                '--el-fill-color-blank': '#18181b',
-                '--el-border-color': 'rgba(255, 255, 255, 0.15)',
-                '--el-border-color-hover': 'rgba(255, 255, 255, 0.3)',
-                '--el-text-color-regular': '#e4e4e7',
-                '--el-text-color-placeholder': '#a1a1aa'
-              }"
-              @change="onHistorySelect"
-            >
-              <el-option
-                v-for="h in historyOptions"
-                :key="h.id"
-                :label="`[${h.task === 'merge' ? '合并' : '清理'}] ${h.streamer || '全局'} (${formatShortTime(h.time)})`"
-                :value="h.log_id || ''"
-              />
-            </el-select>
+            <span v-else class="tab-tag-idle">空闲待命</span>
           </div>
         </div>
 
         <div class="terminal-meta-right">
-          <span v-if="logLoading" class="meta-status meta-loading">
-            ⏳ 读取日志中...
-          </span>
-          <span v-else-if="activeLogTab === 'live' && sse.isRunning.value" class="meta-status meta-live">
+          <span v-if="sse.isRunning.value" class="meta-status meta-live">
             <span class="status-pulse-dot dot-active"></span> 正在接收实时输出
           </span>
-          <span v-else-if="activeLogTab !== 'live' && activeLogMeta" class="meta-status meta-archive" :title="activeLogMeta">
-            <svg class="meta-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> {{ activeLogMeta }}
-          </span>
+          <router-link to="/history" class="term-history-link" title="前往操作日志页面查看已归档的全部历史任务与日志">
+            查看历史操作日志 ↗
+          </router-link>
         </div>
       </div>
 
@@ -208,7 +164,7 @@
       />
 
       <!-- Reconnect bar if SSE errored -->
-      <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value && activeLogTab === 'live'" class="retry-bar">
+      <div v-if="sse.lastRequest.value && sse.error.value && !sse.isRunning.value " class="retry-bar">
         <button class="ops-action ops-retry" @click="sse.retryLast()">
             <svg class="ops-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
             <span>重新连接</span>
@@ -224,11 +180,10 @@ import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getStreamers } from "@/api/status";
 import { getSchedule } from "@/api/schedule";
-import { getHistory, getLogContent } from "@/api/history";
-import { useSSE, classifyLine, type SSELine } from "@/utils/sse";
+import { useSSE } from "@/utils/sse";
 import { formatTime } from "@/utils/format";
 import ReTerminal from "@/components/ReTerminal/index.vue";
-import type { ScheduleStatus, StreamerInfo, HistoryRecord } from "@/api/types";
+import type { ScheduleStatus, StreamerInfo } from "@/api/types";
 
 const route = useRoute();
 const schedule = ref<ScheduleStatus>();
@@ -393,8 +348,7 @@ async function handleRunGlobal(task: "merge" | "clean") {
         { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
       );
     }
-    activeLogTab.value = "live";
-    sse.startSSE(task === "merge" ? "/api/merge" : "/api/clean", {});
+      sse.startSSE(task === "merge" ? "/api/merge" : "/api/clean", {});
   } catch {
     // User cancelled
   }
@@ -403,7 +357,6 @@ async function handleRunGlobal(task: "merge" | "clean") {
 // 2. 定向主播合并
 async function handleTargetedMerge() {
   if (!selectedStreamer.value) return;
-  activeLogTab.value = "live";
   sse.startSSE("/api/merge", { streamer: selectedStreamer.value });
 }
 
@@ -416,8 +369,7 @@ async function handleTargetedClean() {
       "清理确认",
       { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
     );
-    activeLogTab.value = "live";
-    sse.startSSE("/api/clean", { streamer: selectedStreamer.value });
+      sse.startSSE("/api/clean", { streamer: selectedStreamer.value });
   } catch {
     // User cancelled
   }
@@ -426,16 +378,12 @@ async function handleTargetedClean() {
 // Refresh schedules and history list
 async function loadBaseData() {
   try {
-    const [sc, st, hist] = await Promise.allSettled([
+    const [sc, st] = await Promise.allSettled([
       getSchedule(),
-      getStreamers(),
-      getHistory({ page: 1, per_page: 8 })
+      getStreamers()
     ]);
     if (sc.status === "fulfilled") schedule.value = sc.value;
     if (st.status === "fulfilled") streamers.value = st.value;
-    if (hist.status === "fulfilled") {
-      historyOptions.value = (hist.value.items || []).filter(h => !!h.log_id);
-    }
 
     const queryStreamer = route.query.streamer as string;
     if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
@@ -463,11 +411,6 @@ watch(() => sse.isRunning.value, async (running, wasRunning) => {
 
 onMounted(async () => {
   await loadBaseData();
-  // If no live task is running, automatically load the most recent task log
-  if (!sse.isRunning.value) {
-    activeLogTab.value = "recent_merge";
-    await fetchAndShowLog("merge");
-  }
 });
 
 watch(() => route.query.streamer, (val) => {
@@ -1087,6 +1030,68 @@ html.dark {
       color: #fbbf24 !important;
       border-color: rgba(245, 158, 11, 0.3) !important;
     }
+  }
+}
+
+
+.card-header-action {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  padding: 1px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+  margin-left: 6px;
+
+  &:hover {
+    color: var(--brand-accent);
+    border-color: var(--brand-accent);
+    background: var(--bg-active);
+  }
+}
+
+.term-title-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.term-title-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tab-tag-idle {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: var(--bg-hover);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-light);
+}
+
+.term-history-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--brand-accent);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #fff;
+    background: var(--brand-accent);
+    border-color: var(--brand-accent);
   }
 }
 

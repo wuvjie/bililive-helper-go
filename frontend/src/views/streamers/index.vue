@@ -28,6 +28,7 @@
           <div class="header-right">
             <div class="search-input-wrap">
               <el-input
+                ref="searchInputRef"
                 v-model="searchQuery"
                 placeholder="搜索主播名..."
                 :prefix-icon="Search"
@@ -48,6 +49,7 @@
       <div class="table-responsive-wrapper">
       <el-table
         :data="filteredStreamers"
+        :tooltip-options="{ enterable: false, showAfter: 500, placement: 'top' }"
         v-loading="loading"
         style="width: 100%"
         class="streamer-table"
@@ -71,7 +73,7 @@
 
         <el-table-column prop="files" label="录制文件数" width="130" align="right" header-align="right" sortable :sort-orders="['descending', 'ascending']">
           <template #header>
-            <el-tooltip content="该主播名下的视频总数（含未合并分段与已合并成品）" placement="top">
+            <el-tooltip content="该主播名下的视频总数（含未合并分段与已合并成品）" placement="top" :show-after="500">
               <span class="col-header-tip">录制文件数 ⓘ</span>
             </el-tooltip>
           </template>
@@ -101,7 +103,7 @@
           :sort-method="sortMtime"
         >
           <template #default="{ row }">
-            <el-tooltip v-if="row.mtime" :content="formatExactTime(row.mtime)" placement="top">
+            <el-tooltip v-if="row.mtime" :content="formatExactTime(row.mtime)" placement="top" :show-after="500">
               <span class="mono-val cursor-help">{{ formatRelativeTime(row.mtime, tick) }}</span>
             </el-tooltip>
             <span v-else class="mono-val">-</span>
@@ -256,7 +258,7 @@
     <el-drawer
       v-model="drawerVisible"
       :title="`录像文件清单 · ${drawerStreamer}`"
-      size="740px"
+      size="780px"
       destroy-on-close
     >
       <div v-loading="drawerLoading" class="drawer-content">
@@ -268,12 +270,13 @@
         <div class="table-responsive-wrapper">
           <el-table
             :data="drawerFiles"
+            :tooltip-options="{ enterable: false, showAfter: 500, placement: 'top' }"
             size="small"
             max-height="650"
             class="drawer-table"
             :default-sort="{ prop: 'mtime', order: 'descending' }"
           >
-            <el-table-column prop="name" label="文件名" min-width="240" show-overflow-tooltip sortable>
+            <el-table-column prop="name" label="文件名" min-width="200" show-overflow-tooltip sortable>
               <template #default="{ row }">
                 <span class="drawer-file-name">{{ row.name }}</span>
               </template>
@@ -300,9 +303,9 @@
                 <span class="mono-val">{{ row.size_str }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="is_merged" label="状态" width="105" align="center" sortable>
+            <el-table-column prop="is_merged" label="状态" width="95" align="center" sortable>
               <template #default="{ row }">
-                <el-tooltip :content="row.is_merged ? '已通过系统合并处理的完整录播视频' : '录播工具生成的原始录像文件（待合并或独立单场录像）'" placement="top">
+                <el-tooltip :content="row.is_merged ? '已通过系统合并处理的完整录播视频' : '录播工具生成的原始录像文件（待合并或独立单场录像）'" placement="top" :show-after="500">
                   <span class="file-status-badge" :class="row.is_merged ? 'status-merged' : 'status-raw'">
                     <span class="badge-dot"></span>
                     {{ row.is_merged ? '已合并' : '原始录像' }}
@@ -310,7 +313,7 @@
                 </el-tooltip>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" align="center">
+            <el-table-column label="操作" width="155" align="center" fixed="right">
               <template #default="{ row }">
                 <div class="drawer-file-actions">
                   <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
@@ -371,6 +374,13 @@ import type { StreamerInfo, StreamerFile, StreamerRule } from "@/api/types";
 const router = useRouter();
 const streamers = ref<StreamerInfo[]>([]);
 const loading = ref(true);
+const searchInputRef = ref();
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+    e.preventDefault();
+    searchInputRef.value?.focus();
+  }
+}
 const searchQuery = ref("");
 
 const totalFiles = computed(() => streamers.value.reduce((acc, s) => acc + (s.files || 0), 0));
