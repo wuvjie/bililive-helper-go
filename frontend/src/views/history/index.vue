@@ -1117,54 +1117,65 @@ html.dark {
 .task-segmented-pills {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-  padding: 0;
+  gap: 2px;
+  background: var(--surface, #f4f3f0);
+  border: 1px solid var(--hairline, #e6e4df);
+  padding: 2px;
+  border-radius: 7px;
+  height: 28px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .seg-pill {
-  border: 1px solid transparent;
+  border: none;
   background: transparent;
-  padding: 5px 12px;
-  font-size: 13px;
+  height: 22px;
+  line-height: 22px;
+  padding: 0 10px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--steel, #64748b);
-  border-radius: var(--r-sm, 6px);
+  color: var(--steel, #787671);
+  border-radius: 5px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .seg-pill:hover {
-  color: var(--ink, #18181b);
-  background: var(--highlight, rgba(0, 0, 0, 0.04));
+  color: var(--ink, #1a1a1a);
+  background: rgba(0, 0, 0, 0.035);
 }
 
 .seg-pill.active {
   background: var(--surface-card, #ffffff);
-  border-color: var(--hairline, #e4e4e7);
-  color: var(--color-primary, #4f46e5);
+  color: var(--ink, #1a1a1a);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 .header-right-tools {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-clear-history {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   height: 28px;
   padding: 0 10px;
-  border: 1px solid var(--hairline, #e4e4e7);
+  border: 1px solid var(--hairline, #e6e4df);
   background: var(--surface-card, #ffffff);
-  color: var(--steel, #64748b);
+  color: var(--steel, #787671);
   font-size: 12px;
+  font-weight: 500;
   border-radius: var(--r-sm, 6px);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1176,23 +1187,27 @@ html.dark {
   background: rgba(239, 68, 68, 0.05);
 }
 
+html.dark .task-segmented-pills {
+  background: var(--surface, #141416);
+  border-color: var(--hairline, #27272a);
+}
+
 html.dark .seg-pill {
-  color: #94a3b8;
+  color: var(--steel, #a1a1aa);
 }
 html.dark .seg-pill:hover {
-  color: #f1f5f9;
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink, #f4f4f5);
+  background: rgba(255, 255, 255, 0.04);
 }
 html.dark .seg-pill.active {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #818cf8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  background: var(--highlight, #27272a);
+  color: var(--ink, #f4f4f5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 html.dark .btn-clear-history {
-  background: var(--surface-card);
-  border-color: var(--hairline);
-  color: #94a3b8;
+  background: var(--surface-card, #18181b);
+  border-color: var(--hairline, #27272a);
+  color: var(--steel, #a1a1aa);
 }
 html.dark .btn-clear-history:hover {
   color: #f87171;
