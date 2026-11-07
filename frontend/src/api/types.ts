@@ -113,6 +113,8 @@ export interface HistoryResponse {
 
 export interface StreamerFile {
   name: string;
+  path?: string;
+  rel_path?: string;
   size: number;
   size_str: string;
   mtime: number;

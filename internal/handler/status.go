@@ -334,6 +334,8 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 		}
 		files = append(files, gin.H{
 			"name":      name,
+			"path":      filepath.Join(folder, name),
+			"rel_path":  filepath.Join(streamer, name),
 			"size":      info.Size(),
 			"size_str":  utils.FormatSize(info.Size()),
 			"mtime":     fileTime.Unix(),

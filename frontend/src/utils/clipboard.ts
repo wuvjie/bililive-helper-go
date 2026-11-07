@@ -22,14 +22,21 @@ export async function copyToClipboard(text: string, successMsg = "已复制到�
       const textArea = document.createElement("textarea");
       textArea.value = text;
       textArea.style.position = "fixed";
-      textArea.style.top = "-9999px";
       textArea.style.left = "-9999px";
+      textArea.style.top = "0";
       textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.focus();
+      textArea.setAttribute("readonly", "");
+
+      // If inside an active el-drawer or el-dialog, mount inside it so focus trap doesn't break copy
+      const activeModal = document.querySelector(".el-drawer:not([style*='display: none'])") ||
+                          document.querySelector(".el-dialog:not([style*='display: none'])") ||
+                          document.body;
+      activeModal.appendChild(textArea);
+      textArea.focus({ preventScroll: true });
       textArea.select();
+      textArea.setSelectionRange(0, text.length);
       success = document.execCommand("copy");
-      document.body.removeChild(textArea);
+      activeModal.removeChild(textArea);
     } catch {
       success = false;
     }

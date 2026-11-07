@@ -117,7 +117,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="200" align="right" header-align="right">
+        <el-table-column label="操作" width="185" align="left" header-align="left">
           <template #default="{ row }">
             <div class="action-btn-group">
               <button class="ghost-action" @click="openDrawer(row)">
@@ -265,7 +265,7 @@
     <el-drawer
       v-model="drawerVisible"
       :title="`录像文件清单 · ${drawerStreamer}`"
-      size="780px"
+      size="840px"
       destroy-on-close
     >
       <div v-loading="drawerLoading" class="drawer-content">
@@ -283,7 +283,7 @@
             class="drawer-table"
             :default-sort="{ prop: 'mtime', order: 'descending' }"
           >
-            <el-table-column prop="name" label="文件名" min-width="200" show-overflow-tooltip sortable>
+            <el-table-column prop="name" label="文件名" min-width="210" align="left" header-align="left" show-overflow-tooltip sortable>
               <template #default="{ row }">
                 <span class="drawer-file-name">{{ row.name }}</span>
               </template>
@@ -291,9 +291,9 @@
             <el-table-column
               prop="mtime"
               label="录制时间"
-              width="145"
-              align="right"
-              header-align="right"
+              width="150"
+              align="left"
+              header-align="left"
               sortable
               :sort-orders="['descending', 'ascending']"
               :sort-method="(a: any, b: any) => (a.mtime || 0) - (b.mtime || 0)"
@@ -311,12 +311,12 @@
                 <span v-else class="mono-val">-</span>
               </template>
             </el-table-column>
-            <el-table-column prop="size" label="大小" width="85" align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
+            <el-table-column prop="size" label="大小" width="85" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
               <template #default="{ row }">
                 <span class="mono-val">{{ row.size_str }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="is_merged" label="状态" width="95" align="center" sortable>
+            <el-table-column prop="is_merged" label="状态" width="95" align="center" header-align="center" sortable>
               <template #default="{ row }">
                 <el-tooltip :content="row.is_merged ? '已通过系统合并处理的完整录播视频' : '录播工具生成的原始录像文件（待合并或独立单场录像）'" placement="top" :show-after="500">
                   <span class="file-status-badge" :class="row.is_merged ? 'status-merged' : 'status-raw'">
@@ -326,12 +326,16 @@
                 </el-tooltip>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="135" align="center">
+            <el-table-column label="操作" width="205" align="center" header-align="center">
               <template #default="{ row }">
                 <div class="drawer-file-actions">
                   <button class="play-btn-sm" @click="openPlayer(drawerStreamer, row.name)" title="在浏览器中播放预览">
                     <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <span>播放</span>
+                  </button>
+                  <button class="play-btn-sm btn-copy-path" @click="handleCopyPath(row)" :title="`复制服务端物理路径: ${row.path || (drawerStreamer + '/' + row.name)}`">
+                    <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span>复制</span>
                   </button>
                   <button class="play-btn-sm btn-del-video" @click="handleDeleteFile(row)" title="从磁盘永久删除该录像文件">
                     <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -380,6 +384,7 @@
 import { ref, computed, onMounted, onUnmounted, onActivated } from "vue";
 import { useRouter } from "vue-router";
 import { getStreamers, getStreamerFiles, saveStreamerRule, getVideoPlayUrl, deleteStreamerFile } from "@/api/status";
+import { copyToClipboard } from "@/utils/clipboard";
 import { Search } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { StreamerInfo, StreamerFile, StreamerRule } from "@/api/types";
@@ -639,6 +644,13 @@ async function openDrawer(row: StreamerInfo) {
   }
 }
 
+async function handleCopyPath(row: StreamerFile) {
+  const targetPath = row.path || `${drawerStreamer.value}/${row.name}`;
+  const isAbs = targetPath.startsWith("/") || /^[a-zA-Z]:[\\/]/.test(targetPath);
+  const msg = isAbs ? `已复制文件物理路径: ${targetPath}` : `已复制录像相对路径: ${targetPath}`;
+  await copyToClipboard(targetPath, msg);
+}
+
 async function handleDeleteFile(row: StreamerFile) {
   try {
     await ElMessageBox.confirm(
@@ -716,7 +728,11 @@ onActivated(() => loadData());
   min-width: 880px;
 }
 :deep(.drawer-table) {
-  min-width: 660px;
+  min-width: 745px;
+}
+:deep(.drawer-table .el-scrollbar__bar.is-vertical) {
+  right: 2px;
+  width: 6px;
 }
 .card-header {
   display: flex;
@@ -817,9 +833,9 @@ onActivated(() => loadData());
 .action-btn-group {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 8px;
-  padding-right: 8px;
+  padding-left: 2px;
 }
 .action-sep {
   color: var(--hairline-strong);
@@ -1238,12 +1254,18 @@ onActivated(() => loadData());
 :deep(.rule-dialog) {
   border-radius: var(--r-md, 8px);
   overflow: hidden;
+  padding: 0 !important;
+}
+:deep(.rule-dialog .el-dialog__header) {
+  padding: 20px 24px 12px 24px !important;
+  margin-right: 0 !important;
 }
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
+  width: 100%;
 
   :deep(.el-button) {
     min-width: 84px;
@@ -1253,7 +1275,11 @@ onActivated(() => loadData());
   }
 }
 :deep(.rule-dialog .el-dialog__body) {
-  padding: 16px 20px 20px !important;
+  padding: 12px 24px !important;
+}
+:deep(.rule-dialog .el-dialog__footer) {
+  padding: 12px 24px 20px 24px !important;
+  box-sizing: border-box;
 }
 .rule-dialog-body {
   display: flex;
@@ -1532,6 +1558,15 @@ onActivated(() => loadData());
   gap: 6px;
   white-space: nowrap !important;
   flex-wrap: nowrap !important;
+  padding-right: 6px;
+}
+.btn-copy-path:hover {
+  background: rgba(56, 189, 248, 0.12) !important;
+  color: #0284c7 !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+html.dark .btn-copy-path:hover {
+  color: #38bdf8 !important;
 }
 .btn-del-video {
   color: #dc2626 !important;
