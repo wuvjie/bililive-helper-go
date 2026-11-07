@@ -104,6 +104,11 @@
           :sort-orders="['descending', 'ascending']"
           :sort-method="sortMtime"
         >
+          <template #header>
+            <el-tooltip content="该主播名下最近录像文件的录制/修改时间" placement="top" :show-after="500">
+              <span class="col-header-tip">最新视频 ⓘ</span>
+            </el-tooltip>
+          </template>
           <template #default="{ row }">
             <el-tooltip v-if="row.mtime" :content="`${formatExactTime(row.mtime)} (${formatRelativeTime(row.mtime, tick)})`" placement="top" :show-after="800" :enterable="false">
               <span class="mono-val cursor-help">{{ formatRelativeTime(row.mtime, tick) }}</span>
@@ -398,6 +403,13 @@ function formatExactTime(ts: number): string {
   const d = new Date(ts * 1000);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function formatDisplayDateTime(ts: number): string {
+  if (!ts || isNaN(ts)) return "-";
+  const d = new Date(ts * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 const filteredStreamers = computed(() => {
