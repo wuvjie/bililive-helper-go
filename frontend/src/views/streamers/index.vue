@@ -251,7 +251,7 @@
     <el-drawer
       v-model="drawerVisible"
       :title="`录像文件清单 · ${drawerStreamer}`"
-      size="680px"
+      size="740px"
       destroy-on-close
     >
       <div v-loading="drawerLoading" class="drawer-content">
@@ -261,13 +261,36 @@
         </div>
 
         <div class="table-responsive-wrapper">
-          <el-table :data="drawerFiles" size="small" max-height="650" class="drawer-table">
-            <el-table-column prop="name" label="文件名" min-width="280" show-overflow-tooltip sortable>
+          <el-table
+            :data="drawerFiles"
+            size="small"
+            max-height="650"
+            class="drawer-table"
+            :default-sort="{ prop: 'mtime', order: 'descending' }"
+          >
+            <el-table-column prop="name" label="文件名" min-width="240" show-overflow-tooltip sortable>
               <template #default="{ row }">
                 <span class="drawer-file-name">{{ row.name }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="size" label="大小" width="90" align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
+            <el-table-column
+              prop="mtime"
+              label="录制时间"
+              width="135"
+              align="right"
+              header-align="right"
+              sortable
+              :sort-orders="['descending', 'ascending']"
+              :sort-method="(a: any, b: any) => (a.mtime || 0) - (b.mtime || 0)"
+            >
+              <template #default="{ row }">
+                <el-tooltip v-if="row.mtime" :content="formatExactTime(row.mtime)" placement="top">
+                  <span class="mono-val cursor-help">{{ formatRelativeTime(row.mtime, tick) }}</span>
+                </el-tooltip>
+                <span v-else class="mono-val">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="size" label="大小" width="85" align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
               <template #default="{ row }">
                 <span class="mono-val">{{ row.size_str }}</span>
               </template>
@@ -436,11 +459,35 @@ async function openDrawer(row: StreamerInfo) {
   drawerVisible.value = true;
   drawerLoading.value = true;
   try {
-    drawerFiles.value = await getStreamerFiles(row.name);
+    const files = await getStreamerFiles(row.name);
+    // 默认按录制/修改时间倒序排列（最新的录像文件排在最前）
+    drawerFiles.value = (files || []).slice().sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
   } catch {
     ElMessage.error("获取文件列表失败");
   } finally {
     drawerLoading.value = false;
+  }
+}
+
+async function handleDeleteFile(row: StreamerFile) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要永久删除录像文件 "${row.name}" 吗？此操作无法撤销。`,
+      "确认删除",
+      {
+        confirmButtonText: "确定删除",
+        cancelButtonText: "取消",
+        type: "warning",
+      }
+    );
+    await deleteStreamerFile(drawerStreamer.value, row.name);
+    ElMessage.success("录像文件已删除");
+    drawerFiles.value = drawerFiles.value.filter(f => f.name !== row.name);
+    loadData();
+  } catch (err: any) {
+    if (err !== "cancel") {
+      ElMessage.error(err.message || "删除文件失败");
+    }
   }
 }
 
@@ -499,7 +546,7 @@ onActivated(() => loadData());
   min-width: 880px;
 }
 :deep(.drawer-table) {
-  min-width: 580px;
+  min-width: 660px;
 }
 .card-header {
   display: flex;

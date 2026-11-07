@@ -340,6 +340,17 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 			"is_merged": utils.IsMergedFile(name),
 		})
 	}
+	// 按修改/录制时间倒序排列（最新的录像文件排在最前）
+	sort.Slice(files, func(i, j int) bool {
+		mtimeI, _ := files[i]["mtime"].(int64)
+		mtimeJ, _ := files[j]["mtime"].(int64)
+		if mtimeI != mtimeJ {
+			return mtimeI > mtimeJ
+		}
+		nameI, _ := files[i]["name"].(string)
+		nameJ, _ := files[j]["name"].(string)
+		return nameI > nameJ
+	})
 	ok(c, files)
 }
 
