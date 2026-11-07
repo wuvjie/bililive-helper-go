@@ -1,5 +1,17 @@
 <template>
   <div class="policy-tab">
+    <!-- Top Policy Scope Banner with Global Reset Action -->
+    <div class="policy-header-bar">
+      <div class="policy-header-info">
+        <span class="policy-header-title">全局合并与清理策略</span>
+        <span class="policy-header-desc">控制录播分片合并静置容差时间、磁盘巡检保护水位以及新录像免删天数。</span>
+      </div>
+      <button type="button" class="btn-reset-defaults" @click="emit('reset-defaults')" title="一键将全局策略恢复为官方推荐预设">
+        <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <span>恢复推荐预设</span>
+      </button>
+    </div>
+
     <el-form label-width="160px" label-position="left" class="settings-form">
       <!-- Section 1: 录制与合并规则 -->
       <div class="form-section-card">
@@ -8,10 +20,7 @@
             <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
             <span>录制与合并规则</span>
           </div>
-          <button type="button" class="btn-ghost-header" @click="emit('reset-defaults')" title="恢复官方推荐预设配置">
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            <span>恢复推荐预设</span>
-          </button>
+
         </div>
         <div class="section-body">
           <el-form-item label="断流重连容差">
@@ -737,4 +746,80 @@ html.dark {
     }
   }
 }
+
+.policy-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-hover, #f4f4f5);
+  border: 1px solid var(--hairline, #e4e4e7);
+  border-radius: var(--r-sm, 6px);
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.policy-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.policy-header-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal, #18181b);
+}
+
+.policy-header-desc {
+  font-size: 12px;
+  color: var(--slate, #71717a);
+}
+
+.btn-reset-defaults {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--r-sm, 4px);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--hairline, #d4d4d8);
+  color: var(--charcoal, #18181b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: #4f46e5;
+    border-color: #4f46e5;
+    background: var(--bg-active, #f5f3ff);
+  }
+}
+
+html.dark .policy-header-bar {
+  background: #18181b;
+  border-color: #27272a;
+}
+html.dark .policy-header-title {
+  color: #f4f4f5;
+}
+html.dark .policy-header-desc {
+  color: #a1a1aa;
+}
+html.dark .btn-reset-defaults {
+  background: #27272a;
+  border-color: #3f3f46;
+  color: #e4e4e7;
+
+  &:hover {
+    color: #818cf8;
+    border-color: #818cf8;
+    background: #312e81;
+  }
+}
+
 </style>

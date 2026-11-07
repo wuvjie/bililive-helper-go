@@ -11,21 +11,49 @@
           </div>
           <div class="header-actions">
             <div class="header-filters">
-              <el-select
-                v-model="filterTask"
-                placeholder="全部任务类型"
-                clearable
-                size="small"
-                popper-class="select-popper-small"
-                style="width: 140px"
-                @change="loadHistory(1)"
-              >
-                <el-option label="全部任务" value="" />
-                <el-option label="分片合并" value="merge" />
-                <el-option label="磁盘清理" value="clean" />
-                <el-option label="配置变更" value="config" />
-                <el-option label="调度事件" value="schedule" />
-              </el-select>
+              <div class="task-segmented-pills">
+                <button
+                  type="button"
+                  class="seg-pill"
+                  :class="{ active: filterTask === '' }"
+                  @click="setTaskFilter('')"
+                >
+                  全部
+                </button>
+                <button
+                  type="button"
+                  class="seg-pill"
+                  :class="{ active: filterTask === 'merge' }"
+                  @click="setTaskFilter('merge')"
+                >
+                  分片合并
+                </button>
+                <button
+                  type="button"
+                  class="seg-pill"
+                  :class="{ active: filterTask === 'clean' }"
+                  @click="setTaskFilter('clean')"
+                >
+                  磁盘清理
+                </button>
+                <button
+                  type="button"
+                  class="seg-pill"
+                  :class="{ active: filterTask === 'config' }"
+                  @click="setTaskFilter('config')"
+                >
+                  配置变更
+                </button>
+                <button
+                  type="button"
+                  class="seg-pill"
+                  :class="{ active: filterTask === 'schedule' }"
+                  @click="setTaskFilter('schedule')"
+                >
+                  调度事件
+                </button>
+              </div>
+
               <div class="search-input-wrap">
                 <el-input
                   ref="streamerSearchRef"
@@ -33,7 +61,7 @@
                   placeholder="搜索主播名..."
                   clearable
                   size="small"
-                  style="width: 220px"
+                  style="width: 200px"
                   @input="onStreamerSearch"
                   @clear="loadHistory(1)"
                 />
@@ -147,44 +175,35 @@
         <div class="log-modal-bar">
           <div class="log-bar-left">
             <span
-              class="log-meta-tag log-meta-id"
-              :title="`任务 ID: ${activeLogId || activeLogMeta} (点击复制)`"
-              @click="copyToClipboard(activeLogId, '已复制任务 ID')"
-            >
-              <span class="meta-label">ID:</span> {{ activeLogId || activeLogMeta }}
-            </span>
-            <span
               v-if="activeLogStatus"
               class="log-meta-status"
               :class="activeLogStatus === 'success' ? 'status-ok' : (activeLogStatus === 'partial' ? 'status-warn' : 'status-fail')"
             >
               {{ activeLogStatus === 'success' ? '成功' : (activeLogStatus === 'partial' ? '部分' : '失败') }}
             </span>
-            <span v-if="activeLogTime" class="log-meta-time" :title="`执行时间: ${activeLogTime}`">
-              {{ activeLogTime }}
+            <span
+              class="log-meta-tag log-meta-id"
+              :title="`任务 ID: ${activeLogId || activeLogMeta} (点击复制)`"
+              @click="copyToClipboard(activeLogId, '已复制任务 ID')"
+            >
+              <span class="meta-label">ID:</span> {{ activeLogId || activeLogMeta }}
             </span>
-            <span class="log-lines-count">{{ formattedLogLines.length }} 行</span>
           </div>
           <div class="log-modal-actions">
-            <input
-              v-model="logFilter"
-              placeholder="过滤本日志..."
-              class="log-filter-box"
-            />
             <button class="btn-copy-log" @click="downloadRawLog" title="下载完整原始日志 (.log)">
               <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>下载</span>
+              <span>下载日志</span>
             </button>
             <button class="btn-copy-log" @click="copyLogContent" title="复制全部内容到剪贴板">
               <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              <span>复制</span>
+              <span>复制日志</span>
             </button>
           </div>
         </div>
 
         <div class="log-terminal-lines">
           <div v-if="filteredLogLines.length === 0" class="log-empty-lines">
-            {{ logFilter ? '未匹配到包含搜索词的日志行' : '日志内容为空' }}
+            日志内容为空
           </div>
           <div
             v-for="(line, idx) in filteredLogLines"
@@ -295,6 +314,11 @@ async function copyLogContent() {
 
 let loadSeq = 0;
 let streamerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+function setTaskFilter(task: string) {
+  filterTask.value = task;
+  loadHistory(1);
+}
 
 function onStreamerSearch() {
   if (streamerDebounceTimer) clearTimeout(streamerDebounceTimer);
@@ -1088,6 +1112,62 @@ html.dark {
     background: rgba(239, 68, 68, 0.12);
     color: #f87171;
     border-color: rgba(239, 68, 68, 0.25);
+  }
+}
+
+
+.task-segmented-pills {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-hover, #f4f4f5);
+  border: 1px solid var(--hairline, #e4e4e7);
+  padding: 2px;
+  border-radius: var(--r-sm, 6px);
+  gap: 2px;
+}
+
+.seg-pill {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--slate, #71717a);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--charcoal, #18181b);
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &.active {
+    background: var(--surface, #ffffff);
+    color: #4f46e5;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+html.dark .task-segmented-pills {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+html.dark .seg-pill {
+  color: #a1a1aa;
+
+  &:hover {
+    color: #f4f4f5;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.active {
+    background: #27272a;
+    color: #818cf8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 }
 
