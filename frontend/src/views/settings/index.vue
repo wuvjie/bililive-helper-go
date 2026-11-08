@@ -1,41 +1,41 @@
 <template>
   <div class="settings">
-    <!-- Main Two-Column Layout -->
-    <div class="settings-layout">
-      <!-- Left: Sticky Sidebar Navigation (190px) -->
-      <aside class="settings-sidebar">
-        <div class="sidebar-sticky-inner">
-          <nav class="settings-nav">
-            <button
-              v-for="item in navSections"
-              :key="item.id"
-              type="button"
-              class="nav-tab-btn"
-              :class="{ active: activeSectionId === item.id }"
-              @click="handleSidebarTabClick(item.id)"
-            >
-              <span class="nav-btn-icon">
-                <svg v-if="item.id === 'policy'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                <svg v-else-if="item.id === 'schedule'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <svg v-else-if="item.id === 'backup'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              </span>
-              <span class="nav-btn-text">{{ item.label }}</span>
-              <span v-if="item.id === 'policy' && isPolicyDirty()" class="nav-tab-dirty-dot" title="包含未保存的策略更改" />
-              <span v-if="item.id === 'schedule' && isScheduleDirty()" class="nav-tab-dirty-dot" title="包含未保存的调度更改" />
-            </button>
-          </nav>
-        </div>
-      </aside>
+    <!-- Sticky Top UnderlineNav Header (GitHub Primer 规范横向导航栏) -->
+    <div class="settings-top-nav-bar">
+      <div class="top-nav-inner">
+        <nav class="settings-nav-underline" role="tablist" aria-label="系统设置分类导航">
+          <button
+            v-for="item in navSections"
+            :key="item.id"
+            type="button"
+            role="tab"
+            :aria-selected="activeSectionId === item.id"
+            class="nav-underline-item"
+            :class="{ active: activeSectionId === item.id }"
+            @click="handleTabClick(item.id)"
+          >
+            <span class="nav-item-icon">
+              <svg v-if="item.id === 'policy'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              <svg v-else-if="item.id === 'schedule'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <svg v-else-if="item.id === 'backup'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </span>
+            <span class="nav-item-text">{{ item.label }}</span>
+            <span v-if="item.id === 'policy' && isPolicyDirty()" class="nav-tab-dirty-dot" title="包含未保存的策略更改" />
+            <span v-if="item.id === 'schedule' && isScheduleDirty()" class="nav-tab-dirty-dot" title="包含未保存的调度更改" />
+          </button>
+        </nav>
+      </div>
+    </div>
 
-      <!-- Right: Focused Section Card with Directional Turn & Elastic Resistance -->
-      <main
-        class="settings-content"
-        ref="contentRef"
-        :style="{
-          transform: pullOffset ? `translateY(${pullOffset}px)` : '',
-          transition: pullOffset ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
-        }"
-      >
+    <!-- Main Full-Width Content Stream with Directional Turn & Elastic Resistance -->
+    <main
+      class="settings-content"
+      ref="contentRef"
+      :style="{
+        transform: pullOffset ? `translateY(${pullOffset}px)` : '',
+        transition: pullOffset ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
+      }"
+    >
         <Transition :name="slideDirection === 'next' ? 'slide-down-page' : 'slide-up-page'" mode="out-in">
           <!-- 1. 全局策略 -->
           <section
@@ -186,7 +186,6 @@
           
         </Transition>
       </main>
-    </div>
 
     <!-- Floating Sticky Save Bar (吸底浮动保存栏) -->
     <transition name="save-bar-slide">
@@ -329,6 +328,10 @@ function switchToSection(id: string, direction?: "next" | "prev") {
   activeSectionId.value = id;
   updateRouteQuery(id);
   resetScrollToTop();
+}
+
+function handleTabClick(id: string) {
+  switchToSection(id);
 }
 
 function handleSidebarTabClick(id: string) {
@@ -786,7 +789,7 @@ onMounted(() => {
 
 <style scoped>
 .settings {
-  max-width: 1100px;
+  max-width: 980px;
   margin: 0 auto;
   position: relative;
   padding-bottom: 90px;
@@ -794,7 +797,7 @@ onMounted(() => {
 
 /* Page Level Header */
 .settings-page-header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 .page-title {
   font-size: 20px;
@@ -809,113 +812,115 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Layout */
-.settings-layout {
-  display: flex;
-  gap: 28px;
-  align-items: flex-start;
-}
-@media (max-width: 860px) {
-  .settings-layout {
-    flex-direction: column;
-  }
-  .settings-sidebar {
-    width: 100% !important;
-    position: static !important;
-  }
-  .settings-nav {
-    display: flex !important;
-    flex-direction: row !important;
-    overflow-x: auto;
-    padding-bottom: 6px;
-  }
-}
-
-/* Sticky Sidebar (190px) */
-.settings-sidebar {
-  width: 190px;
-  flex-shrink: 0;
+/* Sticky Top UnderlineNav (GitHub Primer 规范横向导航栏) */
+.settings-top-nav-bar {
   position: sticky;
   top: 0;
+  z-index: 15;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 22px;
+  padding-top: 2px;
 }
-.sidebar-sticky-inner {
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-.sidebar-caption {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--muted);
-  letter-spacing: 0.8px;
-  padding-left: 12px;
-}
-.settings-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.nav-tab-btn {
-  position: relative;
+
+.top-nav-inner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 38px;
-  padding: 0 12px 0 14px;
-  border-radius: var(--r-sm, 4px);
-  border: none;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.settings-nav-underline {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  height: 44px;
+  user-select: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: -1px; /* Overlap border */
+}
+
+.settings-nav-underline::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-underline-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 4px;
   background: transparent;
-  color: var(--steel);
-  font-size: 13px;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
   font-weight: 500;
+  color: var(--steel);
   cursor: pointer;
-  text-align: left;
-  transition: all 0.15s ease;
   white-space: nowrap;
+  outline: none;
+  transition: color 0.15s ease;
 }
-.nav-tab-btn:hover:not(.active) {
+
+.nav-underline-item:hover {
   color: var(--charcoal);
-  background: var(--surface-secondary);
 }
-.nav-tab-btn.active {
+
+.nav-underline-item.active {
   color: var(--ink);
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
   font-weight: 600;
 }
-.nav-tab-btn.active::before {
+
+.nav-underline-item.active::after {
   content: "";
   position: absolute;
+  bottom: 0;
   left: 0;
-  top: 6px;
-  bottom: 6px;
-  width: 3px;
-  border-radius: 2px;
+  right: 0;
+  height: 2px;
   background: var(--primary);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 -1px 3px color-mix(in srgb, var(--primary) 30%, transparent);
 }
-.nav-tab-btn.active .tab-svg-ico {
+
+.nav-underline-item.active .tab-svg-ico {
   color: var(--primary);
 }
+
+.nav-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-svg-ico {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: inherit;
+  transition: color 0.15s ease;
+}
+
+.nav-item-text {
+  line-height: 1;
+}
+
 .nav-tab-dirty-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #f59e0b;
-  margin-left: auto;
+  margin-left: 2px;
   flex-shrink: 0;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-}
-.tab-svg-ico {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+  animation: livePulseWarning 2.4s infinite;
 }
 
-/* Right Content Main Stream */
+/* Settings Content Main Stream */
 .settings-content {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -1165,18 +1170,16 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
 }
 
 /* Dark mode tweaks */
-html.dark .nav-tab-btn {
+html.dark .nav-underline-item {
   color: var(--steel);
 }
-html.dark .nav-tab-btn:hover:not(.active) {
-  color: var(--ink);
-  background: var(--highlight);
+html.dark .nav-underline-item:hover {
+  color: var(--charcoal);
 }
-html.dark .nav-tab-btn.active {
+html.dark .nav-underline-item.active {
   color: var(--ink);
-  background: rgba(88, 166, 255, 0.12);
 }
-html.dark .nav-tab-btn.active::before {
+html.dark .nav-underline-item.active::after {
   background: var(--primary);
 }
 html.dark .section-card-header {
