@@ -252,8 +252,11 @@
                   <span class="recent-tag" :class="'tag-' + row.task">
                     {{ row.task === 'merge' ? '合并' : row.task === 'clean' ? '清理' : row.task === 'config' ? '配置' : '调度' }}
                   </span>
-                  <span class="recent-who">{{ row.streamer || '全局' }}</span>
-                  <span class="recent-action desktop-action" :title="cleanDetailText(row.detail || formatDetail(row), row.task)">
+                  <span class="recent-who">
+                    <span v-if="!row.streamer || row.streamer === '全局'" class="pill-scope-global">全局</span>
+                    <span v-else class="streamer-text" :title="row.streamer">{{ row.streamer }}</span>
+                  </span>
+                  <span class="recent-action" :title="cleanDetailText(row.detail || formatDetail(row), row.task)">
                     {{ cleanDetailText(row.detail || formatDetail(row), row.task) }}
                   </span>
                 </div>
@@ -261,9 +264,6 @@
                   <span class="recent-status-dot" :class="row.status === 'fail' ? 'dot-fail' : 'dot-emerald'"></span>
                   <span class="recent-time">{{ formatShortTime(row.time) }}</span>
                 </div>
-              </div>
-              <div class="recent-action mobile-action" :title="cleanDetailText(row.detail || formatDetail(row), row.task)">
-                {{ cleanDetailText(row.detail || formatDetail(row), row.task) }}
               </div>
             </div>
           </div>
@@ -970,12 +970,7 @@ html.dark .stat-lavender {
   justify-content: space-between;
   width: 100%;
 }
-.desktop-action {
-  display: inline;
-}
-.mobile-action {
-  display: none;
-}
+
 
 .recent-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -1018,7 +1013,20 @@ html.dark {
   .tag-schedule { background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.25); color: #94a3b8; }
 }
 
-.recent-who { color: var(--steel); flex-shrink: 0; min-width: 48px; font-size: 12px; }
+.recent-who {
+  width: 82px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+}
+.streamer-text {
+  color: var(--steel);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
 .recent-action { color: var(--charcoal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
 .recent-right { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .recent-status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; margin: 0; }

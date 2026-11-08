@@ -96,7 +96,12 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="streamer" label="主播" width="145" show-overflow-tooltip sortable />
+        <el-table-column prop="streamer" label="主播" width="145" show-overflow-tooltip sortable>
+          <template #default="{ row }">
+            <span v-if="!row.streamer || row.streamer === '全局'" class="pill-scope-global">全局</span>
+            <span v-else>{{ row.streamer }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="详情" min-width="260">
           <template #default="{ row }">
             <span class="detail-text">{{ cleanDetailText(row.detail || formatDetail(row), row.task) }}</span>
