@@ -214,13 +214,15 @@ function serializePolicy(c: ConfigDTO): string {
 }
 
 function serializeSchedule(form: ScheduleForm, start: string, end: string): string {
+  const normStart = start && end && start !== end ? start : "";
+  const normEnd = start && end && start !== end ? end : "";
   return JSON.stringify({
     merge_enabled: Boolean(form.merge_enabled),
     clean_enabled: Boolean(form.clean_enabled),
     merge_interval: Number(form.merge_interval || 360),
     clean_interval: Number(form.clean_interval || 720),
-    start: start || "",
-    end: end || ""
+    start: normStart,
+    end: normEnd
   });
 }
 
@@ -262,17 +264,21 @@ async function loadScheduleData() {
 
     const sh = data.backup_start_hour ?? data.backup?.start_hour;
     const sm = data.backup_start_minute ?? data.backup?.start_minute;
-    if (sh !== undefined && sm !== undefined) {
-      backupStart.value = `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`;
-    } else {
-      backupStart.value = "";
-    }
-
     const eh = data.backup_end_hour ?? data.backup?.end_hour;
     const em = data.backup_end_minute ?? data.backup?.end_minute;
-    if (eh !== undefined && em !== undefined) {
+
+    if (
+      sh !== undefined &&
+      sm !== undefined &&
+      eh !== undefined &&
+      em !== undefined &&
+      (sh !== 0 || sm !== 0 || eh !== 0 || em !== 0) &&
+      (sh !== eh || sm !== em)
+    ) {
+      backupStart.value = `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`;
       backupEnd.value = `${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`;
     } else {
+      backupStart.value = "";
       backupEnd.value = "";
     }
 
@@ -335,19 +341,16 @@ async function handleSaveAll() {
         merge_interval: scheduleForm.merge_interval,
         clean_interval: scheduleForm.clean_interval,
       };
-      if (backupStart.value) {
-        const [h, m] = backupStart.value.split(":").map(Number);
-        payload.backup_start_hour = h;
-        payload.backup_start_minute = m;
+      if (backupStart.value && backupEnd.value && backupStart.value !== backupEnd.value) {
+        const [sh, sm] = backupStart.value.split(":").map(Number);
+        const [eh, em] = backupEnd.value.split(":").map(Number);
+        payload.backup_start_hour = sh;
+        payload.backup_start_minute = sm;
+        payload.backup_end_hour = eh;
+        payload.backup_end_minute = em;
       } else {
         payload.backup_start_hour = 0;
         payload.backup_start_minute = 0;
-      }
-      if (backupEnd.value) {
-        const [h, m] = backupEnd.value.split(":").map(Number);
-        payload.backup_end_hour = h;
-        payload.backup_end_minute = m;
-      } else {
         payload.backup_end_hour = 0;
         payload.backup_end_minute = 0;
       }

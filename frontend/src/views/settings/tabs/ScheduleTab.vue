@@ -92,15 +92,31 @@
           <svg class="box-header-icon icon-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
-          <h2 class="box-title">避让时间窗口</h2>
+          <div class="box-header-title-group">
+            <h2 class="box-title">每日任务避让时段</h2>
+            <span class="status-pill" :class="isQuietEnabled ? 'pill-active' : 'pill-inactive'">
+              {{ isQuietEnabled ? '已启用' : '已停用' }}
+            </span>
+          </div>
+          <el-switch
+            :model-value="isQuietEnabled"
+            class="primer-switch"
+            @update:model-value="toggleQuiet(Boolean($event))"
+          />
         </div>
       </header>
 
       <div class="primer-box-body">
-        <div class="quiet-window-grid">
+        <!-- 未启用状态：直接干脆展示全天候说明，不显示虚假的 00:00 与状态呼吸灯 -->
+        <div v-if="!isQuietEnabled" class="quiet-disabled-notice">
+          未开启避让时段，所有自动化流水线全天候 24 小时正常调度运行。
+        </div>
+
+        <!-- 已启用状态：对称双列网格（左侧时间范围，右侧实时运行状态） -->
+        <div v-else class="quiet-window-grid">
           <!-- 1. 避让时间范围选择 -->
           <div class="quiet-field-cell">
-            <label class="field-label">每日任务避让时段</label>
+            <label class="field-label-sm">避让时间范围</label>
             <div class="window-picker-flow">
               <div class="time-range-group">
                 <el-time-picker
@@ -110,7 +126,7 @@
                   placeholder="开始时间"
                   size="default"
                   class="time-picker-item"
-                  @update:model-value="$emit('update:backupStart', $event || '')"
+                  @update:model-value="onStartTimeChange"
                 />
                 <span class="range-separator">至</span>
                 <el-time-picker
@@ -120,25 +136,15 @@
                   placeholder="结束时间"
                   size="default"
                   class="time-picker-item"
-                  @update:model-value="$emit('update:backupEnd', $event || '')"
+                  @update:model-value="onEndTimeChange"
                 />
               </div>
-
-              <button
-                v-if="backupStart || backupEnd"
-                type="button"
-                class="btn-reset-window"
-                title="清除避让时段，恢复全天候正常调度"
-                @click="clearQuietWindow"
-              >
-                <span>恢复全天候运行</span>
-              </button>
             </div>
           </div>
 
           <!-- 2. 实时窗口运行状态指示 -->
           <div class="quiet-field-cell">
-            <label class="field-label">当前调度运行状态</label>
+            <label class="field-label-sm">当前调度运行状态</label>
             <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
               <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
               <span class="status-main-text">{{ windowStatusTitle }}</span>
@@ -151,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 export interface ScheduleForm {
   merge_enabled: boolean;
@@ -181,14 +187,52 @@ function updateField<K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K
   });
 }
 
-function clearQuietWindow() {
-  emit("update:backupStart", "");
-  emit("update:backupEnd", "");
+const isQuietEnabled = computed(() => {
+  return Boolean(props.backupStart && props.backupEnd && props.backupStart !== props.backupEnd);
+});
+
+const lastValidStart = ref(props.backupStart || "02:00");
+const lastValidEnd = ref(props.backupEnd || "06:00");
+
+function toggleQuiet(enabled: boolean) {
+  if (enabled) {
+    const s = lastValidStart.value && lastValidEnd.value && lastValidStart.value !== lastValidEnd.value
+      ? lastValidStart.value
+      : "02:00";
+    const e = lastValidStart.value && lastValidEnd.value && lastValidStart.value !== lastValidEnd.value
+      ? lastValidEnd.value
+      : "06:00";
+    emit("update:backupStart", s);
+    emit("update:backupEnd", e);
+  } else {
+    if (props.backupStart && props.backupEnd && props.backupStart !== props.backupEnd) {
+      lastValidStart.value = props.backupStart;
+      lastValidEnd.value = props.backupEnd;
+    }
+    emit("update:backupStart", "");
+    emit("update:backupEnd", "");
+  }
+}
+
+function onStartTimeChange(val: string | null) {
+  const newStart = val || "";
+  emit("update:backupStart", newStart);
+  if (newStart && props.backupEnd && newStart !== props.backupEnd) {
+    lastValidStart.value = newStart;
+  }
+}
+
+function onEndTimeChange(val: string | null) {
+  const newEnd = val || "";
+  emit("update:backupEnd", newEnd);
+  if (props.backupStart && newEnd && props.backupStart !== newEnd) {
+    lastValidEnd.value = newEnd;
+  }
 }
 
 // 避让窗口状态计算
 const isQuietActive = computed(() => {
-  if (!props.backupStart || !props.backupEnd) return false;
+  if (!isQuietEnabled.value) return false;
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -205,9 +249,6 @@ const isQuietActive = computed(() => {
 });
 
 const windowStatusTitle = computed(() => {
-  if (!props.backupStart || !props.backupEnd) {
-    return "全天候 24 小时正常调度运行中（无避让窗口）";
-  }
   if (isQuietActive.value) {
     return `当前处于避让休眠时段（${props.backupStart} ~ ${props.backupEnd}），任务挂起顺延`;
   }
@@ -241,6 +282,12 @@ const windowStatusTitle = computed(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.box-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .box-header-icon {
@@ -419,25 +466,11 @@ const windowStatusTitle = computed(() => {
   color: var(--steel, #787671);
 }
 
-.btn-reset-window {
-  display: inline-flex;
-  align-items: center;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: var(--r-sm, 4px);
-  border: 1px solid var(--hairline-strong, #c8c4be);
-  background: transparent;
-  color: var(--slate, #5d5b54);
-  font-size: 11.5px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.btn-reset-window:hover {
-  border-color: var(--primary, #2563eb);
-  color: var(--primary, #2563eb);
-  background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent);
+.quiet-disabled-notice {
+  padding: 14px 18px;
+  font-size: 13px;
+  color: var(--steel, #787671);
+  line-height: 1.5;
 }
 
 .window-status-card {
