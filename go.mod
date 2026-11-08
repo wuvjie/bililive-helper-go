@@ -1,4 +1,3 @@
-// Package bililive-helper-go definition.
 module bililive-helper-go
 
 go 1.25.0

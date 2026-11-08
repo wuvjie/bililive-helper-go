@@ -1,6 +1,6 @@
 # Binaries
-bililive-helper-go
-server
+/bililive-helper-go
+/server
 *.exe
 *.exe~
 *.dll
