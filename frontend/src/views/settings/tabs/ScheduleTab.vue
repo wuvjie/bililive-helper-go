@@ -1,96 +1,99 @@
 <template>
   <div class="schedule-tab" v-loading="loading">
-    <!-- Group 1: 自动分片合并计划 -->
-    <div class="setting-group">
-      <div class="subhead">
-        <h3 class="subhead-title">自动分片合并计划</h3>
-      </div>
+    <!-- Dual Schedule Plans (2-Column Responsive Grid) -->
+    <div class="schedule-two-col-grid">
+      <!-- Card 1: 自动分片合并计划 -->
+      <div class="setting-group sched-panel-card">
+        <div class="subhead">
+          <h3 class="subhead-title">自动分片合并计划</h3>
+        </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>开启自动合并</span>
-            <el-tooltip content="主调度器周期性激活录像分片合并流水线任务" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">
+              <span>开启自动合并</span>
+              <el-tooltip content="主调度器周期性激活录像分片合并流水线任务" placement="top" :show-after="300">
+                <span class="label-help-ico">?</span>
+              </el-tooltip>
+            </div>
           </div>
-        </div>
-        <div class="setting-control">
-          <el-switch
-            :model-value="form.merge_enabled"
-            @update:model-value="emit('update:form', { ...form, merge_enabled: !!$event })"
-          />
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>合并调度周期</span>
-            <el-tooltip content="任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟 / 6 小时）" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
-          </div>
-        </div>
-        <div class="setting-control">
-          <div class="inline-unit-row">
-            <el-input-number
-              :model-value="form.merge_interval"
-              :min="10"
-              :max="1440"
-              :step="15"
-              class="compact-counter"
-              @update:model-value="emit('update:form', { ...form, merge_interval: Number($event) })"
+          <div class="setting-control">
+            <el-switch
+              :model-value="form.merge_enabled"
+              @update:model-value="emit('update:form', { ...form, merge_enabled: !!$event })"
             />
-            <span class="unit-text">分钟</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">
+              <span>合并调度周期</span>
+              <el-tooltip content="任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟 / 6 小时）" placement="top" :show-after="300">
+                <span class="label-help-ico">?</span>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="setting-control">
+            <div class="inline-unit-row">
+              <el-input-number
+                :model-value="form.merge_interval"
+                :min="10"
+                :max="1440"
+                :step="15"
+                class="compact-counter"
+                @update:model-value="emit('update:form', { ...form, merge_interval: Number($event) })"
+              />
+              <span class="unit-text">分钟</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Group 2: 自动磁盘巡检与清理计划 -->
-    <div class="setting-group">
-      <div class="subhead">
-        <h3 class="subhead-title">自动磁盘巡检与清理计划</h3>
-      </div>
+      <!-- Card 2: 自动磁盘巡检与清理计划 -->
+      <div class="setting-group sched-panel-card">
+        <div class="subhead">
+          <h3 class="subhead-title">自动磁盘巡检与清理计划</h3>
+        </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>开启自动清理</span>
-            <el-tooltip content="定期巡检磁盘可用率，若触达警戒线则自动启动清理" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">
+              <span>开启自动清理</span>
+              <el-tooltip content="定期巡检磁盘可用率，若触达警戒线则自动启动清理" placement="top" :show-after="300">
+                <span class="label-help-ico">?</span>
+              </el-tooltip>
+            </div>
           </div>
-        </div>
-        <div class="setting-control">
-          <el-switch
-            :model-value="form.clean_enabled"
-            @update:model-value="emit('update:form', { ...form, clean_enabled: !!$event })"
-          />
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>巡检调度周期</span>
-            <el-tooltip content="巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟 / 12 小时）" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
-          </div>
-        </div>
-        <div class="setting-control">
-          <div class="inline-unit-row">
-            <el-input-number
-              :model-value="form.clean_interval"
-              :min="10"
-              :max="1440"
-              :step="30"
-              class="compact-counter"
-              @update:model-value="emit('update:form', { ...form, clean_interval: Number($event) })"
+          <div class="setting-control">
+            <el-switch
+              :model-value="form.clean_enabled"
+              @update:model-value="emit('update:form', { ...form, clean_enabled: !!$event })"
             />
-            <span class="unit-text">分钟</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">
+              <span>巡检调度周期</span>
+              <el-tooltip content="巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟 / 12 小时）" placement="top" :show-after="300">
+                <span class="label-help-ico">?</span>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="setting-control">
+            <div class="inline-unit-row">
+              <el-input-number
+                :model-value="form.clean_interval"
+                :min="10"
+                :max="1440"
+                :step="30"
+                class="compact-counter"
+                @update:model-value="emit('update:form', { ...form, clean_interval: Number($event) })"
+              />
+              <span class="unit-text">分钟</span>
+            </div>
           </div>
         </div>
       </div>
@@ -385,4 +388,39 @@ html.dark .status-badge-neutral {
   background: rgba(255, 255, 255, 0.08);
   color: #a1a1aa;
 }
+
+.schedule-two-col-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sched-panel-card {
+  background: var(--color-canvas-subtle, #f6f8fa);
+  border: 1px solid var(--color-border-subtle, #d0d7de);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 0 !important;
+
+  .subhead {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
+  }
+}
+
+html.dark .sched-panel-card {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #30363d;
+
+  .subhead {
+    border-bottom-color: #30363d;
+  }
+}
+
 </style>

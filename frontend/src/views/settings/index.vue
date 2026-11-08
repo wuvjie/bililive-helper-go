@@ -17,7 +17,6 @@
             <span class="nav-item-icon">
               <svg v-if="item.id === 'policy'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
               <svg v-else-if="item.id === 'schedule'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <svg v-else-if="item.id === 'backup'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </span>
             <span class="nav-item-text">{{ item.label }}</span>
             <span v-if="item.id === 'policy' && isPolicyDirty()" class="nav-tab-dirty-dot" title="包含未保存的策略更改" />
@@ -139,49 +138,7 @@
             />
           </section>
 
-          <!-- 3. 配置备份与恢复 -->
-          <section
-            v-else-if="activeSectionId === 'backup'"
-            key="backup"
-            id="section-backup"
-            class="settings-section-card"
-          >
-            <div class="section-card-header">
-              <div class="section-header-title-row">
-                <div class="ui-icon-box icon-box-purple">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                </div>
-                <h2 class="section-main-title">配置备份与恢复</h2>
-              </div>
-            </div>
-            <div class="section-card-body">
-              <BackupTab
-                :selected-file-name="selectedImportFileName"
-                :import-json="importJson"
-                @export-file="handleExport"
-                @copy-json="handleCopyConfig"
-                @file-selected="handleFileSelect"
-                @clear-file="selectedImportFileName = ''; importJson = ''"
-                @update:import-json="importJson = $event"
-                @apply-import="handleImport"
-              />
-            </div>
-            <ModuleCardFooter
-              :sections="navSections"
-              :active-id="activeSectionId"
-              :current-index="currentModuleIndex"
-              :current-label="currentModuleLabel"
-              :prev-section="prevModule"
-              :next-section="nextModule"
-              :is-pulling-next="isPullingNext"
-              :is-pulling-prev="isPullingPrev"
-              :pull-progress="pullProgress"
-              @switch="handleSidebarTabClick"
-              @next="goToNextModule"
-              @prev="goToPrevModule"
-              @loop="switchToSection('policy', 'prev')"
-            />
-          </section>
+
 
           
         </Transition>
@@ -216,17 +173,15 @@
 import { ref, reactive, computed, watch, onMounted, onActivated, nextTick } from "vue";
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
+import { getConfig, saveConfig } from "@/api/config";
 import { getSchedule, saveSchedule } from "@/api/schedule";
 import { getStatusDetail } from "@/api/status";
-import { copyToClipboard } from "@/utils/clipboard";
 import { useWheelOverscroll } from "@/composables/useWheelOverscroll";
 import type { ScheduleStatus, ConfigDTO } from "@/api/types";
 
 import PolicyTab from "./tabs/PolicyTab.vue";
 import ScheduleTab from "./tabs/ScheduleTab.vue";
 import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
-import BackupTab from "./tabs/BackupTab.vue";
 import ModuleCardFooter from "./components/ModuleCardFooter.vue";
 
 const route = useRoute();
@@ -234,12 +189,11 @@ const router = useRouter();
 
 const navSections = [
   { id: "policy", label: "全局策略" },
-  { id: "schedule", label: "定时调度" },
-  { id: "backup", label: "配置备份" }
+  { id: "schedule", label: "定时调度" }
 ];
 
 const activeSectionId = ref<string>(
-  typeof route.query.tab === "string" && ["policy", "schedule", "backup"].includes(route.query.tab)
+  typeof route.query.tab === "string" && ["policy", "schedule"].includes(route.query.tab)
     ? (route.query.tab as string)
     : "policy"
 );
@@ -365,9 +319,6 @@ const scheduleForm = reactive<ScheduleForm>({
 const backupStart = ref("");
 const backupEnd = ref("");
 
-const selectedImportFileName = ref("");
-const importJson = ref("");
-
 // Baseline Snapshot System
 const initialPolicySnapshot = ref("");
 const initialScheduleSnapshot = ref("");
@@ -488,11 +439,16 @@ async function loadScheduleData() {
     scheduleForm.merge_interval = data.merge.interval;
     scheduleForm.clean_interval = data.clean.interval;
 
-    if (data.backup?.start_hour !== undefined && data.backup?.start_minute !== undefined) {
-      backupStart.value = `${String(data.backup.start_hour).padStart(2, "0")}:${String(data.backup.start_minute).padStart(2, "0")}`;
+    const startHour = data.backup_start_hour ?? data.backup?.start_hour;
+    const startMinute = data.backup_start_minute ?? data.backup?.start_minute;
+    if (startHour !== undefined && startMinute !== undefined) {
+      backupStart.value = `${String(startHour).padStart(2, "0")}:${String(startMinute).padStart(2, "0")}`;
     }
-    if (data.backup?.end_hour !== undefined && data.backup?.end_minute !== undefined) {
-      backupEnd.value = `${String(data.backup.end_hour).padStart(2, "0")}:${String(data.backup.end_minute).padStart(2, "0")}`;
+
+    const endHour = data.backup_end_hour ?? data.backup?.end_hour;
+    const endMinute = data.backup_end_minute ?? data.backup?.end_minute;
+    if (endHour !== undefined && endMinute !== undefined) {
+      backupEnd.value = `${String(endHour).padStart(2, "0")}:${String(endMinute).padStart(2, "0")}`;
     }
 
     initialScheduleSnapshot.value = serializeScheduleConfig(scheduleForm, backupStart.value, backupEnd.value);
@@ -685,80 +641,11 @@ async function handleSaveSettings() {
   }
 }
 
-async function handleCopyConfig() {
-  try {
-    const res = await getConfigExport();
-    const jsonStr = JSON.stringify(res, null, 2);
-    await copyToClipboard(jsonStr, "已复制配置 JSON 到剪贴板");
-  } catch {
-    ElMessage.error("复制配置失败");
-  }
-}
-
-async function handleExport() {
-  try {
-    const data = await getConfigExport();
-    const exportStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([exportStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `config-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    ElMessage.success("配置备份已导出");
-  } catch {
-    // Handled by HTTP interceptor
-  }
-}
-
-function handleFileSelect(file: File) {
-  selectedImportFileName.value = file.name;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const text = e.target?.result;
-    if (typeof text === "string") {
-      importJson.value = text;
-      ElMessage.success(`已读取文件: ${file.name}`);
-    }
-  };
-  reader.readAsText(file);
-}
-
-async function handleImport() {
-  if (!importJson.value.trim()) {
-    ElMessage.warning("请先选择备份文件或粘贴配置 JSON");
-    return;
-  }
-  try {
-    const data = JSON.parse(importJson.value);
-    try {
-      await ElMessageBox.confirm(
-        "导入备份将完全覆盖当前的合并策略、清理阈值和调度周期，是否继续？",
-        "确认导入配置",
-        { confirmButtonText: "确认导入", cancelButtonText: "取消", type: "warning" }
-      );
-    } catch {
-      return;
-    }
-    await apiImportConfig(data);
-    ElMessage.success("配置导入恢复成功");
-    selectedImportFileName.value = "";
-    importJson.value = "";
-    await loadConfigData();
-    await loadScheduleData();
-  } catch (e: any) {
-    if (e instanceof SyntaxError) {
-      ElMessage.error("JSON 格式错误，请检查配置内容");
-    }
-  }
-}
-
 // Watch route query to jump to section
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (typeof newTab === "string" && ["policy", "schedule", "backup", "security"].includes(newTab)) {
+    if (typeof newTab === "string" && ["policy", "schedule"].includes(newTab)) {
       if (activeSectionId.value !== newTab) {
         switchToSection(newTab);
       }
@@ -767,7 +654,7 @@ watch(
 );
 
 onActivated(() => {
-  if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
+  if (typeof route.query.tab === "string" && ["policy", "schedule"].includes(route.query.tab)) {
     if (activeSectionId.value !== route.query.tab) {
       activeSectionId.value = route.query.tab;
     }
@@ -781,7 +668,7 @@ onMounted(() => {
   loadConfigData();
   loadScheduleData();
   loadDiskStatus();
-  if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
+  if (typeof route.query.tab === "string" && ["policy", "schedule"].includes(route.query.tab)) {
     activeSectionId.value = route.query.tab;
   }
 });

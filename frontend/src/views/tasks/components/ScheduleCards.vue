@@ -5,31 +5,45 @@
       <div class="card-title card-title-flex">
         <div class="title-left">
           <div class="ui-icon-box icon-box-emerald">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="18" r="3"/>
+              <circle cx="6" cy="6" r="3"/>
+              <path d="M6 21V9a9 9 0 0 0 9 9"/>
             </svg>
           </div>
           <div class="title-text-group">
             <span class="title-text">自动分片合并</span>
-            <span class="sched-policy-pill">每 {{ schedule?.merge?.interval || 360 }} 分钟</span>
+            <span class="sched-policy-meta">每 {{ schedule?.merge?.interval || 360 }} 分钟</span>
           </div>
           <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
             {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '调度生效中' : '定时已暂停' }}
           </span>
         </div>
-        <button
-          class="btn-task-action btn-merge-action"
-          :disabled="isRunning"
-          @click="$emit('run-global', 'merge')"
-          title="立即启动一次全局分片合并任务"
-        >
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-          <span>立即执行合并</span>
-        </button>
+        <div class="title-right-actions">
+          <router-link
+            to="/settings?tab=schedule"
+            class="sched-jump-link"
+            title="前往定时调度配置合并运行周期与避让时段"
+          >
+            <svg class="sched-jump-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span>配置调度</span>
+          </router-link>
+          <button
+            class="btn-task-action btn-merge-action"
+            :disabled="isRunning"
+            @click="$emit('run-global', 'merge')"
+            title="立即启动一次全局分片合并任务"
+          >
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span>立即执行合并</span>
+          </button>
+        </div>
       </div>
 
       <div class="sched-metric-grid">
@@ -55,24 +69,37 @@
           </div>
           <div class="title-text-group">
             <span class="title-text">自动磁盘清理</span>
-            <span class="sched-policy-pill">每 {{ schedule?.clean?.interval || 720 }} 分钟</span>
+            <span class="sched-policy-meta">每 {{ schedule?.clean?.interval || 720 }} 分钟</span>
           </div>
           <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
             {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '巡检生效中' : '保护未开启' }}
           </span>
         </div>
-        <button
-          class="btn-task-action btn-clean-action"
-          :disabled="isRunning"
-          @click="$emit('run-global', 'clean')"
-          title="立即启动一次全局磁盘巡检与清理"
-        >
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-          </svg>
-          <span>立即执行清理</span>
-        </button>
+        <div class="title-right-actions">
+          <router-link
+            to="/settings?tab=schedule"
+            class="sched-jump-link"
+            title="前往定时调度配置巡检运行周期与避让时段"
+          >
+            <svg class="sched-jump-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span>配置调度</span>
+          </router-link>
+          <button
+            class="btn-task-action btn-clean-action"
+            :disabled="isRunning"
+            @click="$emit('run-global', 'clean')"
+            title="立即启动一次全局磁盘巡检与清理"
+          >
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            <span>立即执行清理</span>
+          </button>
+        </div>
       </div>
 
       <div class="sched-metric-grid">
@@ -150,21 +177,58 @@ function formatDisplayTime(ts?: number): string {
   letter-spacing: -0.2px;
 }
 
-.sched-policy-pill {
-  font-size: 11px;
-  color: var(--steel);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
-  padding: 1px 7px;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--hairline);
+.sched-policy-meta {
+  font-size: 12px;
+  color: var(--color-fg-muted, #57606a);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
   font-weight: 500;
   white-space: nowrap;
 }
 
-html.dark .sched-policy-pill {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #a1a1aa;
+html.dark .sched-policy-meta {
+  color: #8b949e;
+}
+
+.title-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sched-jump-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-fg-muted, #57606a);
+  background: transparent;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--color-accent-fg, #0969da);
+    background: var(--color-canvas-subtle, #f6f8fa);
+    border-color: var(--color-border-subtle, #d0d7de);
+  }
+
+  .sched-jump-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+html.dark .sched-jump-link {
+  color: #8b949e;
+
+  &:hover {
+    color: #58a6ff;
+    background: #21262d;
+    border-color: #30363d;
+  }
 }
 
 .badge-status {
@@ -225,40 +289,61 @@ html.dark .sched-policy-pill {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 14px;
-  border-radius: var(--r-sm);
-  font-size: 12.5px;
-  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  border-width: 1px;
-  border-style: solid;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  line-height: 1.4;
+  background: var(--color-btn-bg, #ffffff);
+  color: var(--color-btn-text, #24292f);
+  border: 1px solid var(--color-btn-border, #d0d7de);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 20px;
+
+  &:hover:not(:disabled) {
+    background: var(--color-btn-hover-bg, #f3f4f6);
+    border-color: var(--color-btn-hover-border, #d0d7de);
+    color: var(--color-btn-text, #24292f);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--color-btn-active-bg, #ebecf0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
-.btn-merge-action {
-  background: color-mix(in srgb, #059669 12%, transparent);
-  color: #047857;
-  border-color: color-mix(in srgb, #059669 35%, transparent);
-}
-.btn-merge-action:hover:not(:disabled) {
-  background: #059669;
-  border-color: #047857;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+.btn-merge-action .btn-svg-sm {
+  color: #1a7f37;
 }
 
-.btn-clean-action {
-  background: color-mix(in srgb, #d97706 12%, transparent);
-  color: #b45309;
-  border-color: color-mix(in srgb, #d97706 35%, transparent);
+.btn-clean-action .btn-svg-sm {
+  color: #9a6700;
 }
-.btn-clean-action:hover:not(:disabled) {
-  background: #d97706;
-  border-color: #b45309;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+
+html.dark .btn-task-action {
+  background: #21262d;
+  color: #c9d1d9;
+  border-color: #30363d;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+
+  &:hover:not(:disabled) {
+    background: #30363d;
+    border-color: #8b949e;
+    color: #f0f6fc;
+  }
+
+  .btn-merge-action .btn-svg-sm {
+    color: #3fb950;
+  }
+
+  .btn-clean-action .btn-svg-sm {
+    color: #d29922;
+  }
 }
 
 .btn-task-action:disabled {

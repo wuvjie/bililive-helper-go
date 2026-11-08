@@ -126,6 +126,16 @@
                     <span>修改管理密码</span>
                   </span>
                 </el-dropdown-item>
+                <el-dropdown-item command="config-backup">
+                  <span class="dropdown-item-flex">
+                    <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    <span>配置备份与恢复</span>
+                  </span>
+                </el-dropdown-item>
                 <el-dropdown-item command="logout" divided>
                   <span class="dropdown-item-flex text-danger">
                     <svg class="dropdown-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -158,6 +168,9 @@
 
     <!-- Password change dialog -->
     <PasswordDialog v-model:visible="pwDialogVisible" v-model:saving="pwSaving" />
+
+    <!-- Configuration backup & restore dialog -->
+    <BackupDialog v-model:visible="backupDialogVisible" />
   </div>
 </template>
 
@@ -169,6 +182,7 @@ import { logout } from "@/api/auth";
 import { getStatusDetail } from "@/api/status";
 import { Monitor, User, VideoPlay, Document, Setting, Refresh, FullScreen } from "@element-plus/icons-vue";
 import PasswordDialog from "./components/PasswordDialog.vue";
+import BackupDialog from "./components/BackupDialog.vue";
 import DiskAlert from "./components/DiskAlert.vue";
 
 const route = useRoute();
@@ -225,9 +239,12 @@ function refreshPage() {
     window.location.reload();
   }, 250);
 }
+const backupDialogVisible = ref(false);
+
 function handleCommand(cmd: string) {
   if (cmd === "logout") logout();
   if (cmd === "change-password") pwDialogVisible.value = true;
+  if (cmd === "config-backup") backupDialogVisible.value = true;
 }
 
 // Disk usage alert

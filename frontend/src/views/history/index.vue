@@ -66,9 +66,10 @@
             <template #default="{ row }">
               <span class="type-label">
                 <span class="task-type-pill" :class="'type-' + row.task">
-                  <svg v-if="row.task === 'merge'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  <svg v-if="row.task === 'merge'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="18" r="3"/>
+                    <circle cx="6" cy="6" r="3"/>
+                    <path d="M6 21V9a9 9 0 0 0 9 9"/>
                   </svg>
                   <svg v-else-if="row.task === 'clean'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -88,8 +89,8 @@
 
           <el-table-column prop="streamer" label="主播" width="145" show-overflow-tooltip sortable>
             <template #default="{ row }">
-              <span v-if="!row.streamer || row.streamer === '全局'" class="pill-scope-global">全局</span>
-              <span v-else>{{ row.streamer }}</span>
+              <span v-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">全局</span>
+              <span v-else class="streamer-name-text">{{ row.streamer }}</span>
             </template>
           </el-table-column>
 

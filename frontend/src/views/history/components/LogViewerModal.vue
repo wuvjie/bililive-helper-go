@@ -21,18 +21,20 @@
             </span>
           </div>
           <div class="header-title-right">
-            <button class="btn-ghost-action" @click="downloadRawLog" title="下载完整原始日志 (.log)">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              <span>下载</span>
-            </button>
-            <button class="btn-ghost-action" @click="handleCopyContent" title="复制全部内容到剪贴板">
-              <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-              <span>复制</span>
-            </button>
+            <div class="header-action-group">
+              <button class="btn-group-action" @click="downloadRawLog" title="下载完整原始日志 (.log)">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>下载</span>
+              </button>
+              <button class="btn-group-action" @click="handleCopyContent" title="复制全部内容到剪贴板">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>复制</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -334,4 +336,66 @@ html.dark .line-warn { color: #fbbf24; }
 html.dark .line-success { color: #4ade80; }
 html.dark .line-divider { color: #30363d; }
 html.dark .line-header { color: #58a6ff; font-weight: 600; }
+
+.header-action-group {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--color-btn-border, #d0d7de);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
+
+  .btn-group-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-btn-text, #24292f);
+    background: var(--color-btn-bg, #ffffff);
+    border: none;
+    cursor: pointer;
+    line-height: 18px;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:not(:last-child) {
+      border-right: 1px solid var(--color-btn-border, #d0d7de);
+    }
+
+    &:hover {
+      background: var(--color-btn-hover-bg, #f3f4f6);
+      color: var(--color-accent-fg, #0969da);
+    }
+
+    &:active {
+      background: var(--color-btn-active-bg, #ebecf0);
+    }
+
+    .action-icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+html.dark .header-action-group {
+  border-color: #30363d;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+
+  .btn-group-action {
+    color: #c9d1d9;
+    background: #21262d;
+
+    &:not(:last-child) {
+      border-right-color: #30363d;
+    }
+
+    &:hover {
+      background: #30363d;
+      color: #58a6ff;
+    }
+  }
+}
+
 </style>

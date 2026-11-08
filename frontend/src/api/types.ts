@@ -76,6 +76,16 @@ export interface ScheduleStatus {
   merge_interval: number;
   clean_enabled: boolean;
   clean_interval: number;
+  backup_start_hour?: number;
+  backup_start_minute?: number;
+  backup_end_hour?: number;
+  backup_end_minute?: number;
+  backup?: {
+    start_hour?: number;
+    start_minute?: number;
+    end_hour?: number;
+    end_minute?: number;
+  };
   merge: TaskStatus;
   clean: TaskStatus;
 }

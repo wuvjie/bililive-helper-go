@@ -6,44 +6,52 @@
         <h3 class="subhead-title">录制与合并规则</h3>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>断流重连容差</span>
-            <el-tooltip content="主播在此时间差内断流重连，自动合并为整段视频" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
+      <div class="policy-two-col-grid">
+        <div class="setting-grid-card">
+          <div class="grid-card-main">
+            <div class="grid-card-info">
+              <div class="setting-title">
+                <span>断流重连容差</span>
+                <el-tooltip content="主播在此时间差内断流重连，自动合并为整段视频" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </div>
+              <div class="setting-desc">偶发网络抖动断流时，此容差内的切片自动无缝合并为同一场直播。</div>
+            </div>
+            <div class="grid-card-control">
+              <div class="inline-unit-row">
+                <el-input-number
+                  :model-value="config.GAP_MINUTES"
+                  :min="1" :max="120" :step="5" class="compact-counter"
+                  @update:model-value="updateField('GAP_MINUTES', Number($event))"
+                />
+                <span class="unit-text">分钟</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="setting-control">
-          <div class="inline-unit-row">
-            <el-input-number
-              :model-value="config.GAP_MINUTES"
-              :min="1" :max="120" :step="5" class="compact-counter"
-              @update:model-value="updateField('GAP_MINUTES', Number($event))"
-            />
-            <span class="unit-text">分钟</span>
-          </div>
-        </div>
-      </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>完播静置等待</span>
-            <el-tooltip content="录播关播后的静置缓冲期，防止误读正在写入的活动切片" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
-          </div>
-        </div>
-        <div class="setting-control">
-          <div class="inline-unit-row">
-            <el-input-number
-              :model-value="config.MERGE_AGE_MINUTES"
-              :min="5" :max="1440" :step="5" class="compact-counter"
-              @update:model-value="updateField('MERGE_AGE_MINUTES', Number($event))"
-            />
-            <span class="unit-text">分钟</span>
+        <div class="setting-grid-card">
+          <div class="grid-card-main">
+            <div class="grid-card-info">
+              <div class="setting-title">
+                <span>完播静置等待</span>
+                <el-tooltip content="录播关播后的静置缓冲期，防止误读正在写入的活动切片" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </div>
+              <div class="setting-desc">关播后的观察静置期，确保文件完全落盘，防止误读取写入中的切片。</div>
+            </div>
+            <div class="grid-card-control">
+              <div class="inline-unit-row">
+                <el-input-number
+                  :model-value="config.MERGE_AGE_MINUTES"
+                  :min="5" :max="1440" :step="5" class="compact-counter"
+                  @update:model-value="updateField('MERGE_AGE_MINUTES', Number($event))"
+                />
+                <span class="unit-text">分钟</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -148,65 +156,81 @@
         </div>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>新录像免删保护</span>
-            <el-tooltip content="保护期内新录像享有免删特权，即使达到警戒线也绝对保留" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
-          </div>
-        </div>
-        <div class="setting-control">
-          <div class="inline-unit-row">
-            <el-input-number
-              :model-value="config.SAFE_DAYS || 3"
-              :min="1" :max="365" :step="1" class="compact-counter"
-              @update:model-value="onSafeDaysChange(Number($event))"
-            />
-            <span class="unit-text">天</span>
-          </div>
-        </div>
+      <div class="subhead subhead-inset">
+        <h4 class="subhead-subtitle">安全保留防线</h4>
+        <p class="subhead-desc">即使磁盘空间达到警戒水位，以下三项防御限制仍受硬性保护。</p>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>每主播最少保留</span>
-            <el-tooltip content="每个主播强制保留的最低场次数，无论空间多么紧张绝不全删" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
+      <div class="policy-three-col-grid">
+        <div class="setting-grid-card">
+          <div class="grid-card-main">
+            <div class="grid-card-info">
+              <div class="setting-title">
+                <span>免删保护天数</span>
+                <el-tooltip content="保护期内新录像享有免删特权，即使达到警戒线也绝对保留" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </div>
+              <div class="setting-desc">保护期内新录像豁免清理。</div>
+            </div>
+            <div class="grid-card-control">
+              <div class="inline-unit-row">
+                <el-input-number
+                  :model-value="config.SAFE_DAYS || 3"
+                  :min="1" :max="365" :step="1" class="compact-counter"
+                  @update:model-value="onSafeDaysChange(Number($event))"
+                />
+                <span class="unit-text">天</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="setting-control">
-          <div class="inline-unit-row">
-            <el-input-number
-              :model-value="config.MIN_KEEP_PER_STREAMER"
-              :min="1" :max="50" :step="1" class="compact-counter"
-              @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
-            />
-            <span class="unit-text">场</span>
-          </div>
-        </div>
-      </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>单次最多清理</span>
-            <el-tooltip content="每次清理任务允许删除的文件上限，防止极端突发异常大量删除" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
+        <div class="setting-grid-card">
+          <div class="grid-card-main">
+            <div class="grid-card-info">
+              <div class="setting-title">
+                <span>每主播底线保留</span>
+                <el-tooltip content="每个主播强制保留的最低场次数，无论空间多么紧张绝不全删" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </div>
+              <div class="setting-desc">每位主播强制保留场次数。</div>
+            </div>
+            <div class="grid-card-control">
+              <div class="inline-unit-row">
+                <el-input-number
+                  :model-value="config.MIN_KEEP_PER_STREAMER"
+                  :min="1" :max="50" :step="1" class="compact-counter"
+                  @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
+                />
+                <span class="unit-text">场</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="setting-control">
-          <div class="inline-unit-row">
-            <el-input-number
-              :model-value="config.MAX_DELETE_PER_RUN || 50"
-              :min="5" :max="500" :step="10" class="compact-counter"
-              @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
-            />
-            <span class="unit-text">个</span>
+
+        <div class="setting-grid-card">
+          <div class="grid-card-main">
+            <div class="grid-card-info">
+              <div class="setting-title">
+                <span>单次清理上限</span>
+                <el-tooltip content="每次清理任务允许删除的文件上限，防止极端突发异常大量删除" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </div>
+              <div class="setting-desc">单次巡检最多清理文件数。</div>
+            </div>
+            <div class="grid-card-control">
+              <div class="inline-unit-row">
+                <el-input-number
+                  :model-value="config.MAX_DELETE_PER_RUN || 50"
+                  :min="5" :max="500" :step="10" class="compact-counter"
+                  @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
+                />
+                <span class="unit-text">个</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -866,4 +890,102 @@ html.dark .hint-free-gb {
   cursor: not-allowed;
   border-style: solid;
 }
+
+.policy-two-col-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.policy-three-col-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.setting-grid-card {
+  background: var(--color-canvas-subtle, #f6f8fa);
+  border: 1px solid var(--color-border-subtle, #d0d7de);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-border-default, #afb8c1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+}
+
+html.dark .setting-grid-card {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #30363d;
+
+  &:hover {
+    border-color: #484f58;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.grid-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grid-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .setting-desc {
+    font-size: 12px;
+    color: var(--color-fg-muted, #57606a);
+    line-height: 1.4;
+  }
+}
+
+html.dark .grid-card-info .setting-desc {
+  color: #8b949e;
+}
+
+.grid-card-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 4px;
+}
+
+.subhead-inset {
+  margin-top: 22px;
+  margin-bottom: 6px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.subhead-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-fg-default, #24292f);
+  margin: 0;
+}
+
+html.dark .subhead-subtitle {
+  color: #c9d1d9;
+}
+
 </style>

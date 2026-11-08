@@ -30,9 +30,10 @@
             :disabled="!selectedStreamer || isRunning"
             @click="$emit('targeted-merge')"
           >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="18" r="3"/>
+              <circle cx="6" cy="6" r="3"/>
+              <path d="M6 21V9a9 9 0 0 0 9 9"/>
             </svg>
             <span>合并该主播</span>
           </button>

@@ -1,58 +1,51 @@
 <template>
-  <div class="backup-tab">
-    <!-- Group 1: 导出配置备份 -->
-    <div class="setting-group">
-      <div class="subhead">
-        <h3 class="subhead-title">导出配置备份</h3>
+  <el-dialog
+    :model-value="visible"
+    title="配置备份与恢复"
+    width="min(600px, 94vw)"
+    top="7vh"
+    destroy-on-close
+    class="backup-dialog"
+    @update:model-value="$emit('update:visible', $event)"
+  >
+    <div class="backup-modal-content">
+      <!-- Section 1: 导出配置备份 -->
+      <div class="backup-section">
+        <div class="section-meta">
+          <span class="section-title">导出配置备份</span>
+          <p class="section-desc">将系统策略、定时调度与主播专属规则导出为标准 JSON 备份留底。</p>
+        </div>
+        <div class="export-actions-row">
+          <button type="button" class="btn-action btn-export" @click="handleExport">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>下载配置文件</span>
+          </button>
+          <button type="button" class="btn-action btn-copy" @click="handleCopy">
+            <svg v-if="!copiedRecently" class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <svg v-else class="btn-svg copied-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>{{ copiedRecently ? '已复制到剪贴板' : '复制配置代码' }}</span>
+          </button>
+        </div>
       </div>
-      <p class="group-desc">
-        将当前系统策略、定时调度参数与主播个性化规则导出为标准 JSON 配置文件，用于跨设备迁移或灾备留底。
-      </p>
 
-      <div class="export-actions-row">
-        <!-- 下载配置文件按钮 -->
-        <button
-          type="button"
-          class="btn-action btn-export"
-          @click="emit('export-file')"
-        >
-          <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span>下载配置文件</span>
-        </button>
+      <div class="section-divider"></div>
 
-        <!-- 复制配置代码按钮 -->
-        <button
-          type="button"
-          class="btn-action btn-copy"
-          @click="handleCopy"
-        >
-          <svg v-if="!copiedRecently" class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-          <svg v-else class="btn-svg copied-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span>{{ copiedRecently ? '已复制到剪贴板' : '复制配置代码' }}</span>
-        </button>
-      </div>
-    </div>
+      <!-- Section 2: 导入配置恢复 -->
+      <div class="backup-section">
+        <div class="section-meta">
+          <span class="section-title">导入配置恢复</span>
+          <p class="section-desc">选择或拖拽备份 JSON 文件，校验通过后将直接覆盖当前系统设置。</p>
+        </div>
 
-    <!-- Group 2: 导入配置恢复 -->
-    <div class="setting-group">
-      <div class="subhead">
-        <h3 class="subhead-title">导入配置恢复</h3>
-      </div>
-      <p class="group-desc">
-        选择导出的 JSON 备份文件或直接粘贴配置代码，校验通过后将覆盖并应用至系统。
-      </p>
-
-      <div class="import-form-container">
-        <!-- 安全提示卡片 (GitHub Callout) -->
         <div class="backup-callout">
           <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
@@ -60,11 +53,11 @@
             <line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
           <span class="callout-text">
-            导入配置将直接覆盖现有的全局合并规则与定时清理调度。建议在导入前先导出备份以防配置丢失。
+            导入将覆盖当前的全局合并规则与定时清理调度，建议在导入前先导出备份以防配置丢失。
           </span>
         </div>
 
-        <!-- 隐藏的真实原生文件输入框 -->
+        <!-- 真实文件输入框 -->
         <input
           ref="importFileRef"
           type="file"
@@ -73,7 +66,7 @@
           @change="onFileChange"
         />
 
-        <!-- 1. 未选择文件时的拖拽与点击上传区 (Dropzone) -->
+        <!-- 拖拽/点击上传区 (未选文件) -->
         <div
           v-if="!selectedFileName"
           class="dropzone-box"
@@ -99,7 +92,7 @@
           </div>
         </div>
 
-        <!-- 2. 已选择文件卡片 (Selected File Asset Card) -->
+        <!-- 已选文件资产卡片 -->
         <div v-else class="selected-file-card">
           <div class="file-icon-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -115,20 +108,8 @@
             <span class="file-status">已读取待应用</span>
           </div>
           <div class="file-card-actions">
-            <button
-              type="button"
-              class="btn-ghost-sm"
-              title="重新选择其他文件"
-              @click="importFileRef?.click()"
-            >
-              重新选择
-            </button>
-            <button
-              type="button"
-              class="btn-ghost-remove"
-              title="清除已选文件"
-              @click="handleRemoveFile"
-            >
+            <button type="button" class="btn-ghost-sm" title="重新选择" @click="importFileRef?.click()">重新选择</button>
+            <button type="button" class="btn-ghost-remove" title="清除文件" @click="handleRemoveFile">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
@@ -137,13 +118,9 @@
           </div>
         </div>
 
-        <!-- 3. 手动粘贴 JSON 折叠展开区 -->
+        <!-- 手动粘贴折叠区 -->
         <div class="import-manual-section">
-          <button
-            type="button"
-            class="toggle-paste-btn"
-            @click="showManualPaste = !showManualPaste"
-          >
+          <button type="button" class="toggle-paste-btn" @click="showManualPaste = !showManualPaste">
             <svg class="toggle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'rotate-open': showManualPaste }">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
@@ -157,75 +134,93 @@
                 :value="importJson"
                 placeholder="在此直接粘贴导出的 JSON 配置字符串..."
                 spellcheck="false"
-                @input="emit('update:import-json', ($event.target as HTMLTextAreaElement).value)"
+                @input="importJson = ($event.target as HTMLTextAreaElement).value"
               />
               <div v-if="importJson" class="paste-clear-row">
-                <button type="button" class="btn-clear-text" @click="emit('update:import-json', '')">清空内容</button>
+                <button type="button" class="btn-clear-text" @click="importJson = ''">清空内容</button>
               </div>
             </div>
           </transition>
         </div>
 
-        <!-- 4. 提交导入动作栏 (Submit Action Bar) -->
+        <!-- 提交导入动作栏 -->
         <div class="import-submit-row">
           <button
             type="button"
             class="btn-primary-import"
-            :disabled="!hasValidImportContent"
-            @click="emit('apply-import')"
+            :disabled="!hasValidImportContent || importing"
+            @click="handleApplyImport"
           >
             <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span>导入并应用配置</span>
+            <span>{{ importing ? '正在导入应用...' : '导入并应用配置' }}</span>
           </button>
-          <span v-if="!hasValidImportContent" class="import-hint-disabled">
-            请先选择备份文件或粘贴配置代码
-          </span>
+          <span v-if="!hasValidImportContent" class="import-hint-disabled">请先选择备份文件或粘贴配置代码</span>
         </div>
       </div>
     </div>
-  </div>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { getConfigExport, importConfig as apiImportConfig } from "@/api/config";
+import { copyToClipboard } from "@/utils/clipboard";
 
-const props = defineProps<{
-  selectedFileName: string;
-  importJson: string;
-}>();
-
+defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
-  "export-file": [];
-  "copy-json": [];
-  "file-selected": [file: File];
-  "clear-file": [];
-  "update:import-json": [val: string];
-  "apply-import": [];
+  "update:visible": [value: boolean];
+  "imported": [];
 }>();
 
+const selectedFileName = ref("");
+const importJson = ref("");
 const showManualPaste = ref(false);
 const importFileRef = ref<HTMLInputElement | null>(null);
 const isDragOver = ref(false);
 const copiedRecently = ref(false);
+const importing = ref(false);
 
 const hasValidImportContent = computed(() => {
-  return Boolean(props.selectedFileName || props.importJson.trim());
+  return Boolean(selectedFileName.value || importJson.value.trim());
 });
 
-function handleCopy() {
-  emit("copy-json");
-  copiedRecently.value = true;
-  setTimeout(() => {
-    copiedRecently.value = false;
-  }, 2000);
+async function handleExport() {
+  try {
+    const data = await getConfigExport();
+    const exportStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([exportStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `config-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    ElMessage.success("配置备份已导出");
+  } catch {
+    ElMessage.error("导出配置备份失败");
+  }
+}
+
+async function handleCopy() {
+  try {
+    const res = await getConfigExport();
+    const jsonStr = JSON.stringify(res, null, 2);
+    await copyToClipboard(jsonStr, "已复制配置 JSON 到剪贴板");
+    copiedRecently.value = true;
+    setTimeout(() => {
+      copiedRecently.value = false;
+    }, 2000);
+  } catch {
+    ElMessage.error("复制配置代码失败");
+  }
 }
 
 function handleRemoveFile() {
-  emit("clear-file");
-  emit("update:import-json", "");
+  selectedFileName.value = "";
+  importJson.value = "";
   if (importFileRef.value) {
     importFileRef.value.value = "";
   }
@@ -240,7 +235,7 @@ function onFileChange(e: Event) {
       input.value = "";
       return;
     }
-    emit("file-selected", file);
+    processFile(file);
   }
   input.value = "";
 }
@@ -254,54 +249,106 @@ function onDrop(e: DragEvent) {
     ElMessage.warning("请选择 .json 格式的配置文件");
     return;
   }
-  emit("file-selected", file);
+  processFile(file);
+}
+
+function processFile(file: File) {
+  selectedFileName.value = file.name;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target?.result;
+    if (typeof text === "string") {
+      importJson.value = text;
+      ElMessage.success(`已读取文件: ${file.name}`);
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function handleApplyImport() {
+  if (!importJson.value.trim()) {
+    ElMessage.warning("请先选择备份文件或粘贴配置代码");
+    return;
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(importJson.value);
+  } catch {
+    ElMessage.error("JSON 格式错误，请检查配置内容");
+    return;
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      "导入配置将直接覆盖当前的录制合并策略、清理阈值与定时调度，是否确认覆盖？",
+      "确认导入配置",
+      { confirmButtonText: "确认导入", cancelButtonText: "取消", type: "warning" }
+    );
+  } catch {
+    return;
+  }
+
+  importing.value = true;
+  try {
+    await apiImportConfig(data);
+    ElMessage.success("系统配置导入恢复成功");
+    emit("imported");
+    emit("update:visible", false);
+    handleRemoveFile();
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.error || err?.message || "导入配置失败");
+  } finally {
+    importing.value = false;
+  }
 }
 </script>
 
 <style scoped>
-.backup-tab {
+.backup-modal-content {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  width: 100%;
+  gap: 20px;
 }
 
-.setting-group {
+.backup-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.subhead {
+.section-meta {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--hairline);
+  flex-direction: column;
+  gap: 4px;
 }
 
-.subhead-title {
+.section-title {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal);
-  margin: 0;
   letter-spacing: -0.01em;
 }
 
-.group-desc {
-  font-size: 12.5px;
+.section-desc {
+  font-size: 12px;
   color: var(--steel);
-  line-height: 1.5;
+  line-height: 1.45;
   margin: 0;
 }
 
-/* Group 1: 导出按钮行 */
+.section-divider {
+  height: 1px;
+  background: var(--hairline);
+  margin: 2px 0;
+}
+
+/* 导出操作行 */
 .export-actions-row {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 2px;
 }
 
 .btn-action {
@@ -329,12 +376,7 @@ function onDrop(e: DragEvent) {
   color: var(--ink);
 }
 
-.btn-action:active {
-  transform: translateY(0.5px);
-}
-
 .btn-export {
-  /* Subtle primary accent tint for main export action */
   background: color-mix(in srgb, var(--primary) 8%, var(--surface));
   color: var(--charcoal);
   border-color: color-mix(in srgb, var(--primary) 25%, var(--hairline-strong));
@@ -357,21 +399,12 @@ function onDrop(e: DragEvent) {
   flex-shrink: 0;
 }
 
-/* Group 2: 导入容器 (最大宽度受限在 520px，避免宽屏无限横向拉伸) */
-.import-form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 520px;
-  width: 100%;
-}
-
-/* 提示卡片 (Callout Banner) */
+/* 提示卡片 */
 .backup-callout {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  padding: 9px 12px;
+  padding: 8px 12px;
   background: color-mix(in srgb, var(--primary) 5%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--hairline));
   border-radius: var(--r-sm, 4px);
@@ -388,10 +421,10 @@ function onDrop(e: DragEvent) {
 .callout-text {
   font-size: 11.5px;
   color: var(--charcoal);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
-/* 拖拽与点击上传区 (Dropzone) */
+/* 拖拽上传区 */
 .dropzone-box {
   display: flex;
   align-items: center;
@@ -421,13 +454,6 @@ function onDrop(e: DragEvent) {
   justify-content: center;
   flex-shrink: 0;
   color: var(--steel);
-  transition: all 0.15s ease;
-}
-
-.dropzone-box:hover .dropzone-icon-wrap,
-.dropzone-box.is-dragover .dropzone-icon-wrap {
-  background: color-mix(in srgb, var(--primary) 14%, transparent);
-  color: var(--primary);
 }
 
 .dropzone-svg {
@@ -446,7 +472,6 @@ function onDrop(e: DragEvent) {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--charcoal);
-  line-height: 1.4;
 }
 
 .dropzone-browse-link {
@@ -459,10 +484,9 @@ function onDrop(e: DragEvent) {
 .dropzone-secondary-text {
   font-size: 11px;
   color: var(--steel);
-  line-height: 1.3;
 }
 
-/* 已选择文件资产卡片 (Selected File Asset Card) */
+/* 已选文件资产卡片 */
 .selected-file-card {
   display: flex;
   align-items: center;
@@ -561,11 +585,11 @@ function onDrop(e: DragEvent) {
   height: 14px;
 }
 
-/* 手动粘贴 JSON 折叠区 */
+/* 手动粘贴折叠区 */
 .import-manual-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .toggle-paste-btn {
@@ -579,7 +603,6 @@ function onDrop(e: DragEvent) {
   color: var(--steel);
   cursor: pointer;
   width: fit-content;
-  transition: color 0.15s ease;
   user-select: none;
 }
 
@@ -606,23 +629,21 @@ function onDrop(e: DragEvent) {
 .backup-textarea {
   width: 100%;
   box-sizing: border-box;
-  min-height: 110px;
-  padding: 10px 12px;
+  min-height: 95px;
+  padding: 8px 12px;
   border-radius: var(--r-sm, 4px);
   border: 1px solid var(--hairline-strong);
   background: var(--surface);
   color: var(--charcoal);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1.5;
   resize: vertical;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .backup-textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 15%, transparent);
 }
 
 .paste-clear-row {
@@ -637,14 +658,13 @@ function onDrop(e: DragEvent) {
   color: var(--steel);
   cursor: pointer;
   padding: 2px 4px;
-  transition: color 0.15s ease;
 }
 
 .btn-clear-text:hover {
   color: var(--error, #e03131);
 }
 
-/* 提交导入动作栏 (Submit Action Bar) */
+/* 提交导入动作栏 */
 .import-submit-row {
   display: flex;
   align-items: center;
@@ -685,7 +705,6 @@ function onDrop(e: DragEvent) {
   color: var(--steel);
 }
 
-/* 动效过渡 */
 .paste-collapse-enter-active,
 .paste-collapse-leave-active {
   transition: all 0.2s ease;
