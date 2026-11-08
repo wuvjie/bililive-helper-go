@@ -145,38 +145,17 @@
           <!-- 字段 1: 最近录像免删保护期 -->
           <div class="field-cell">
             <label class="field-label">最近录像免删保护期</label>
-            <div class="field-control safe-mode-group">
-              <el-radio-group
-                :model-value="safeMode"
-                size="small"
-                class="mode-radio-group"
-                @update:model-value="onSafeModeChange"
-              >
-                <el-radio-button label="days">按天</el-radio-button>
-                <el-radio-button label="hours">按小时</el-radio-button>
-              </el-radio-group>
-
+            <div class="field-control">
               <el-input-number
-                v-if="safeMode === 'days'"
                 :model-value="config.SAFE_DAYS ?? 3"
                 :min="1"
                 :max="365"
                 :step="1"
                 size="default"
                 class="stepper-compact"
-                @update:model-value="updateField('SAFE_DAYS', Number($event))"
+                @update:model-value="updateSafeDays(Number($event))"
               />
-              <el-input-number
-                v-else
-                :model-value="safeHours"
-                :min="1"
-                :max="720"
-                :step="1"
-                size="default"
-                class="stepper-compact"
-                @update:model-value="onSafeHoursChange(Number($event))"
-              />
-              <span class="unit-text">{{ safeMode === 'days' ? '天' : '小时' }}</span>
+              <span class="unit-text">天</span>
             </div>
           </div>
 
@@ -317,16 +296,13 @@ function onTargetChange(val: any) {
   emit("update:config", next);
 }
 
-// 免删模式
-const safeMode = computed(() => props.config.SAFE_MODE || "days");
-const safeHours = computed(() => Math.round((props.config.SAFE_AGE_MINUTES ?? 120) / 60) || 1);
-
-function onSafeModeChange(val: any) {
-  updateField("SAFE_MODE", val as string);
-}
-
-function onSafeHoursChange(hours: number) {
-  updateField("SAFE_AGE_MINUTES", hours * 60);
+function updateSafeDays(days: number) {
+  emit("update:config", {
+    ...props.config,
+    SAFE_DAYS: days,
+    SAFE_MODE: "days",
+    SAFE_AGE_MINUTES: days * 1440
+  });
 }
 
 // 白名单标签
@@ -433,7 +409,7 @@ function removeTag(idx: number) {
 }
 
 .fields-grid-3 {
-  grid-template-columns: 1.3fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   border-bottom: 1px solid var(--hairline, #e5e3df);
 }
 
@@ -624,13 +600,6 @@ function removeTag(idx: number) {
   background: var(--success, #059669);
 }
 
-/* 免删保护模式切换 */
-.safe-mode-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
 /* 白名单区域 */
 .whitelist-section {
   padding: 16px 18px;
@@ -699,9 +668,6 @@ function removeTag(idx: number) {
   }
   .gauge-sliders-grid {
     grid-template-columns: 1fr;
-  }
-  .safe-mode-group {
-    flex-wrap: wrap;
   }
 }
 </style>

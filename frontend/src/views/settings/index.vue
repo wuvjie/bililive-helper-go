@@ -206,9 +206,7 @@ function serializePolicy(c: ConfigDTO): string {
     mergeAge: Number(c.MERGE_AGE_MINUTES ?? 30),
     trigger: Number(c.TRIGGER_THRESHOLD ?? 80),
     target: Number(c.TARGET_THRESHOLD ?? 60),
-    safeMode: c.SAFE_MODE || "days",
     safeDays: Number(c.SAFE_DAYS ?? 3),
-    safeAgeMinutes: Number(c.SAFE_AGE_MINUTES ?? 120),
     minKeep: Number(c.MIN_KEEP_PER_STREAMER ?? 3),
     maxDelete: Number(c.MAX_DELETE_PER_RUN ?? 50),
     whitelist: wl
@@ -318,6 +316,9 @@ async function handleSaveAll() {
 
     if (isPolicyDirty.value) {
       const payload = { ...config.value };
+      payload.SAFE_MODE = "days";
+      payload.SAFE_DAYS = Number(payload.SAFE_DAYS ?? 3);
+      payload.SAFE_AGE_MINUTES = payload.SAFE_DAYS * 1440;
       if (typeof payload.WHITELIST_KEYWORDS === "string") {
         payload.WHITELIST_KEYWORDS = (payload.WHITELIST_KEYWORDS as string)
           .split(/[,，]/)
