@@ -32,15 +32,15 @@
       <div class="data-grid">
         <div class="data-cell">
           <span class="data-label">总容量</span>
-          <span class="mono-val">{{ detail?.disk?.total_gb?.toFixed(1) }} GB</span>
+          <span class="mono-val">{{ detail?.disk?.total_gb != null ? (detail.disk.total_gb.toFixed(1) + ' GB') : '-' }}</span>
         </div>
         <div class="data-cell">
           <span class="data-label">已用</span>
-          <span class="mono-val">{{ detail?.disk?.used_gb?.toFixed(1) }} GB</span>
+          <span class="mono-val">{{ detail?.disk?.used_gb != null ? (detail.disk.used_gb.toFixed(1) + ' GB') : '-' }}</span>
         </div>
         <div class="data-cell">
           <span class="data-label">剩余</span>
-          <span class="mono-val">{{ detail?.disk?.free_gb?.toFixed(1) }} GB</span>
+          <span class="mono-val">{{ detail?.disk?.free_gb != null ? (detail.disk.free_gb.toFixed(1) + ' GB') : '-' }}</span>
         </div>
         <div class="data-cell">
           <span class="data-label">
@@ -49,7 +49,7 @@
               <span class="label-help-ico">?</span>
             </el-tooltip>
           </span>
-          <span class="mono-val">{{ totalRecordingsGB }} GB</span>
+          <span class="mono-val">{{ totalRecordingsGB ? (totalRecordingsGB + ' GB') : '-' }}</span>
         </div>
       </div>
     </div>
@@ -94,6 +94,7 @@ const totalRecordingsGB = computed(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  min-height: 32px;
 }
 
 .card-title-left {
@@ -114,6 +115,8 @@ const totalRecordingsGB = computed(() => {
   margin-bottom: 16px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--hairline);
+  min-height: 52px;
+  box-sizing: border-box;
 }
 
 .disk-top {
@@ -148,6 +151,7 @@ const totalRecordingsGB = computed(() => {
   flex-direction: column;
   gap: 4px;
   box-sizing: border-box;
+  min-height: 54px;
 }
 
 .data-cell:nth-child(odd) {
@@ -174,6 +178,7 @@ const totalRecordingsGB = computed(() => {
   display: flex;
   align-items: center;
   gap: 4px;
+  line-height: 1.4;
 }
 
 .label-help-ico {

@@ -39,20 +39,28 @@
 
       <div class="data-grid">
         <div class="data-cell">
-          <span class="data-label">自动合并周期</span>
-          <span class="mono-val">{{ detail?.schedule?.merge_enabled ? ('每 ' + (detail?.schedule?.merge_interval || 360) + ' 分钟') : '已暂停' }}</span>
+          <span class="data-label">合并周期</span>
+          <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.merge_enabled }">
+            {{ detail?.schedule?.merge_enabled ? ('每 ' + (detail?.schedule?.merge_interval || 360) + ' 分钟') : '已暂停' }}
+          </span>
         </div>
         <div class="data-cell">
-          <span class="data-label">下次合并预计</span>
-          <span class="mono-val">{{ formatNextTime(detail?.schedule?.merge?.next_run) }}</span>
+          <span class="data-label">下次合并</span>
+          <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.merge_enabled }">
+            {{ detail?.schedule?.merge_enabled ? formatNextTime(detail?.schedule?.merge?.next_run) : '-' }}
+          </span>
         </div>
         <div class="data-cell">
-          <span class="data-label">自动清理周期</span>
-          <span class="mono-val">{{ detail?.schedule?.clean_enabled ? ('每 ' + (detail?.schedule?.clean_interval || 720) + ' 分钟') : '未开启' }}</span>
+          <span class="data-label">清理周期</span>
+          <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.clean_enabled }">
+            {{ detail?.schedule?.clean_enabled ? ('每 ' + (detail?.schedule?.clean_interval || 720) + ' 分钟') : '未开启' }}
+          </span>
         </div>
         <div class="data-cell">
-          <span class="data-label">下次清理预计</span>
-          <span class="mono-val">{{ formatNextTime(detail?.schedule?.clean?.next_run) }}</span>
+          <span class="data-label">下次清理</span>
+          <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.clean_enabled }">
+            {{ detail?.schedule?.clean_enabled ? formatNextTime(detail?.schedule?.clean?.next_run) : '-' }}
+          </span>
         </div>
       </div>
     </div>
@@ -76,14 +84,6 @@ const isTaskRunning = computed(() => {
   );
 });
 
-const streamerCount = computed(() => {
-  return props.setup?.streamer_count ?? props.detail?.streamers?.length ?? 0;
-});
-
-const videoCount = computed(() => {
-  return props.setup?.video_count ?? props.detail?.streamers?.reduce((acc, s) => acc + (s.files || 0), 0) ?? 0;
-});
-
 function formatNextTime(ts?: number): string {
   if (!ts || ts <= 0) return "未安排";
   const date = new Date(ts * 1000);
@@ -91,9 +91,19 @@ function formatNextTime(ts?: number): string {
   const diffMinutes = Math.round((date.getTime() - now.getTime()) / 60000);
   if (diffMinutes <= 0) return "即将执行";
   if (diffMinutes < 60) return `${diffMinutes} 分钟后`;
+
   const hours = String(date.getHours()).padStart(2, "0");
   const mins = String(date.getMinutes()).padStart(2, "0");
-  return `${hours}:${mins}`;
+  const timeStr = `${hours}:${mins}`;
+
+  const isToday = date.toDateString() === now.toDateString();
+  if (isToday) return `今日 ${timeStr}`;
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (date.toDateString() === tomorrow.toDateString()) return `明日 ${timeStr}`;
+
+  return `${date.getMonth() + 1}/${date.getDate()} ${timeStr}`;
 }
 </script>
 
@@ -109,6 +119,7 @@ function formatNextTime(ts?: number): string {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  min-height: 32px;
 }
 
 .card-title-left {
@@ -180,15 +191,20 @@ function formatNextTime(ts?: number): string {
 /* Deconstructed top metric - hairline underline, no box */
 .card-top-metric {
   margin-bottom: 16px;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--hairline);
+  min-height: 52px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .runtime-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 28px;
+  min-height: 38px;
 }
 
 .runtime-top.has-substrip {
@@ -254,6 +270,7 @@ function formatNextTime(ts?: number): string {
   flex-direction: column;
   gap: 4px;
   box-sizing: border-box;
+  min-height: 54px;
 }
 
 .data-cell:nth-child(odd) {
@@ -280,5 +297,10 @@ function formatNextTime(ts?: number): string {
   display: flex;
   align-items: center;
   gap: 4px;
+  line-height: 1.4;
+}
+
+.val-disabled {
+  color: var(--stone);
 }
 </style>
