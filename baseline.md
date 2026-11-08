@@ -1,8 +1,12 @@
 # Baseline
 
 - **v3.8.0** (Current Active):
-  - Git Commits: `5d25259` ~ `HEAD` (`5b0a9f8` / `3a79e35`)
+  - Git Commits: `5d25259` ~ `HEAD` (`e8feb00` / `7122b31`)
   - Release Highlights:
+    - **系统设置视窗全通栏贯通（根除 960px 缩进孤岛，对齐全站宽度体系）**：
+      - 彻底修复系统设置页面此前人为限制 `max-width: 960px` 与多重左右边距导致的“页面整体比概览/主播/任务/日志小了一大圈”的断层视效；
+      - 将 `.settings-view` 宽度升级为标准的 `width: 100%; display: flex; flex-direction: column; gap: 20px;`，使其与系统概览、主播管理、任务中心、操作审计在全屏/宽屏环境下 100% 保持完全相同的视窗边界与内衬边距（`padding: 24px`）；
+      - 底部悬浮吸底保存栏 `.save-bar-inner` 宽度同步铺满并对齐工作区内衬，左右文本与按钮与上方卡片保持物理像素级同轴。
     - **设置页面文案去伪技术化与标题人话标准确立 (Natural Human Chinese Copywriting & Title Standards)**：
       - 彻底清除生搬硬造的机械翻译与伪技术行话（如：“清理冲程”、“水位深度控制台”、“完播静置等待”、“断流重连容差”、“安全回落线”等），全站回归清晰地道、通俗合乎直觉的现代工程中文；
       - 确立统一的标题字数与语义平衡标准：
