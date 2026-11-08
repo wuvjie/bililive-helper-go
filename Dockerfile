@@ -5,7 +5,7 @@ ARG GO_PROXY=https://proxy.golang.org,direct
 ARG NPM_REGISTRY=https://registry.npmjs.org
 
 # Stage 1: Build frontend
-FROM ${REGISTRY}/library/node:20-alpine AS frontend-builder
+FROM --platform=$BUILDPLATFORM ${REGISTRY}/library/node:20-alpine AS frontend-builder
 ARG NPM_REGISTRY
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
@@ -13,10 +13,12 @@ RUN npm config set registry ${NPM_REGISTRY} && npm ci
 COPY frontend/ ./
 RUN npm run build
 
-# Stage 2: Build Go binary
-FROM ${REGISTRY}/library/golang:1.25-alpine AS builder
+# Stage 2: Build Go binary (使用宿主机原生架构通过 GOARCH 极速交叉编译)
+FROM --platform=$BUILDPLATFORM ${REGISTRY}/library/golang:1.25-alpine AS builder
 ARG ALPINE_MIRROR
 ARG GO_PROXY
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
 RUN sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_MIRROR}/g" /etc/apk/repositories
 RUN apk add --no-cache git
@@ -26,9 +28,9 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bililive-helper-go ./cmd/server
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o bililive-helper-go ./cmd/server
 
-# Stage 3: Minimal runtime image with ffmpeg
+# Stage 3: Minimal runtime image with ffmpeg (针对目标架构生成精简运行时)
 FROM ${REGISTRY}/library/alpine:3.21
 ARG ALPINE_MIRROR
 
