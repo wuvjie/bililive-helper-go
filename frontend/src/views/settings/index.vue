@@ -70,53 +70,21 @@
                 @update:config="config = $event"
               />
             </div>
-            <!-- Card Footer Navigation with Elastic Cues -->
-            <div class="module-card-footer">
-              <div class="footer-left">
-                <div class="module-step-indicator" role="tablist">
-                  <button
-                    v-for="(item, idx) in navSections"
-                    :key="item.id"
-                    type="button"
-                    class="step-dot-btn"
-                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
-                    :title="`切换至：${item.label}`"
-                    @click="handleSidebarTabClick(item.id)"
-                  />
-                </div>
-                <span class="module-step-text">
-                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
-                </span>
-              </div>
-              <div class="footer-right">
-                <button
-                  type="button"
-                  class="btn-module-nav btn-module-next"
-                  @click="goToNextModule"
-                  title="前往下一模块「定时调度」"
-                >
-                  <span>下一模块：定时调度</span>
-                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-                <div
-                  class="wheel-hint-pill"
-                  :class="{ 'pulling-active': isPullingNext || isPullingPrev }"
-                >
-                  <div
-                    v-if="isPullingNext || isPullingPrev"
-                    class="pull-progress-fill"
-                    :style="{ width: pullProgress + '%' }"
-                  />
-                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="6" y="3" width="12" height="18" rx="6" />
-                    <line x1="12" y1="7" x2="12" y2="11" />
-                  </svg>
-                  <span v-if="isPullingNext">继续下滑前往「定时调度」</span>
-                  <span v-else-if="isPullingPrev">继续上滑返回「{{ prevModule?.label }}」</span>
-                  <span v-else>触底滚轮快速切换</span>
-                </div>
-              </div>
-            </div>
+            <ModuleCardFooter
+              :sections="navSections"
+              :active-id="activeSectionId"
+              :current-index="currentModuleIndex"
+              :current-label="currentModuleLabel"
+              :prev-section="prevModule"
+              :next-section="nextModule"
+              :is-pulling-next="isPullingNext"
+              :is-pulling-prev="isPullingPrev"
+              :pull-progress="pullProgress"
+              @switch="handleSidebarTabClick"
+              @next="goToNextModule"
+              @prev="goToPrevModule"
+              @loop="switchToSection('policy', 'prev')"
+            />
           </section>
 
           <!-- 2. 定时调度 -->
@@ -155,62 +123,21 @@
                 @update:backup-end="backupEnd = $event"
               />
             </div>
-            <!-- Card Footer Navigation with Elastic Cues -->
-            <div class="module-card-footer">
-              <div class="footer-left">
-                <div class="module-step-indicator" role="tablist">
-                  <button
-                    v-for="(item, idx) in navSections"
-                    :key="item.id"
-                    type="button"
-                    class="step-dot-btn"
-                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
-                    :title="`切换至：${item.label}`"
-                    @click="handleSidebarTabClick(item.id)"
-                  />
-                </div>
-                <span class="module-step-text">
-                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
-                </span>
-              </div>
-              <div class="footer-right">
-                <button
-                  type="button"
-                  class="btn-module-nav btn-module-prev"
-                  @click="goToPrevModule"
-                  title="返回上一模块「全局策略」"
-                >
-                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  <span>上一模块：全局策略</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn-module-nav btn-module-next"
-                  @click="goToNextModule"
-                  title="前往下一模块「配置备份」"
-                >
-                  <span>下一模块：配置备份</span>
-                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-                <div
-                  class="wheel-hint-pill"
-                  :class="{ 'pulling-active': isPullingNext || isPullingPrev }"
-                >
-                  <div
-                    v-if="isPullingNext || isPullingPrev"
-                    class="pull-progress-fill"
-                    :style="{ width: pullProgress + '%' }"
-                  />
-                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="6" y="3" width="12" height="18" rx="6" />
-                    <line x1="12" y1="7" x2="12" y2="11" />
-                  </svg>
-                  <span v-if="isPullingNext">继续下滑前往「配置备份」</span>
-                  <span v-else-if="isPullingPrev">继续上滑返回「全局策略」</span>
-                  <span v-else>触底滚轮快速切换</span>
-                </div>
-              </div>
-            </div>
+            <ModuleCardFooter
+              :sections="navSections"
+              :active-id="activeSectionId"
+              :current-index="currentModuleIndex"
+              :current-label="currentModuleLabel"
+              :prev-section="prevModule"
+              :next-section="nextModule"
+              :is-pulling-next="isPullingNext"
+              :is-pulling-prev="isPullingPrev"
+              :pull-progress="pullProgress"
+              @switch="handleSidebarTabClick"
+              @next="goToNextModule"
+              @prev="goToPrevModule"
+              @loop="switchToSection('policy', 'prev')"
+            />
           </section>
 
           <!-- 3. 配置备份与恢复 -->
@@ -239,62 +166,21 @@
                 @apply-import="handleImport"
               />
             </div>
-            <!-- Card Footer Navigation with Elastic Cues -->
-            <div class="module-card-footer">
-              <div class="footer-left">
-                <div class="module-step-indicator" role="tablist">
-                  <button
-                    v-for="(item, idx) in navSections"
-                    :key="item.id"
-                    type="button"
-                    class="step-dot-btn"
-                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
-                    :title="`切换至：${item.label}`"
-                    @click="handleSidebarTabClick(item.id)"
-                  />
-                </div>
-                <span class="module-step-text">
-                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
-                </span>
-              </div>
-              <div class="footer-right">
-                <button
-                  type="button"
-                  class="btn-module-nav btn-module-prev"
-                  @click="goToPrevModule"
-                  title="返回上一模块「定时调度」"
-                >
-                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  <span>上一模块：定时调度</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn-module-nav btn-module-next"
-                  @click="goToNextModule"
-                  title="前往下一模块「安全设置」"
-                >
-                  <span>下一模块：安全设置</span>
-                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-                <div
-                  class="wheel-hint-pill"
-                  :class="{ 'pulling-active': isPullingNext || isPullingPrev }"
-                >
-                  <div
-                    v-if="isPullingNext || isPullingPrev"
-                    class="pull-progress-fill"
-                    :style="{ width: pullProgress + '%' }"
-                  />
-                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="6" y="3" width="12" height="18" rx="6" />
-                    <line x1="12" y1="7" x2="12" y2="11" />
-                  </svg>
-                  <span v-if="isPullingNext">继续下滑前往「安全设置」</span>
-                  <span v-else-if="isPullingPrev">继续上滑返回「定时调度」</span>
-                  <span v-else>触底滚轮快速切换</span>
-                </div>
-              </div>
-            </div>
+            <ModuleCardFooter
+              :sections="navSections"
+              :active-id="activeSectionId"
+              :current-index="currentModuleIndex"
+              :current-label="currentModuleLabel"
+              :prev-section="prevModule"
+              :next-section="nextModule"
+              :is-pulling-next="isPullingNext"
+              :is-pulling-prev="isPullingPrev"
+              :pull-progress="pullProgress"
+              @switch="handleSidebarTabClick"
+              @next="goToNextModule"
+              @prev="goToPrevModule"
+              @loop="switchToSection('policy', 'prev')"
+            />
           </section>
 
           <!-- 4. 安全设置 -->
@@ -315,61 +201,21 @@
             <div class="section-card-body">
               <SecurityTab />
             </div>
-            <!-- Card Footer Navigation with Elastic Cues -->
-            <div class="module-card-footer">
-              <div class="footer-left">
-                <div class="module-step-indicator" role="tablist">
-                  <button
-                    v-for="(item, idx) in navSections"
-                    :key="item.id"
-                    type="button"
-                    class="step-dot-btn"
-                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
-                    :title="`切换至：${item.label}`"
-                    @click="handleSidebarTabClick(item.id)"
-                  />
-                </div>
-                <span class="module-step-text">
-                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
-                </span>
-              </div>
-              <div class="footer-right">
-                <button
-                  type="button"
-                  class="btn-module-nav btn-module-prev"
-                  @click="goToPrevModule"
-                  title="返回上一模块「配置备份」"
-                >
-                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                  <span>上一模块：配置备份</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn-module-nav btn-module-loop"
-                  @click="switchToSection('policy', 'prev')"
-                  title="已至末页，点击返回首项「全局策略」"
-                >
-                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                  <span>已至末页 · 返回首项</span>
-                </button>
-                <div
-                  class="wheel-hint-pill"
-                  :class="{ 'pulling-active': isPullingPrev }"
-                >
-                  <div
-                    v-if="isPullingPrev"
-                    class="pull-progress-fill"
-                    :style="{ width: pullProgress + '%' }"
-                  />
-                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="6" y="3" width="12" height="18" rx="6" />
-                    <line x1="12" y1="7" x2="12" y2="11" />
-                  </svg>
-                  <span v-if="isPullingPrev">继续上滑返回「配置备份」</span>
-                  <span v-else>已至末页（触顶可上滑回退）</span>
-                </div>
-              </div>
-            </div>
+            <ModuleCardFooter
+              :sections="navSections"
+              :active-id="activeSectionId"
+              :current-index="currentModuleIndex"
+              :current-label="currentModuleLabel"
+              :prev-section="prevModule"
+              :next-section="nextModule"
+              :is-pulling-next="isPullingNext"
+              :is-pulling-prev="isPullingPrev"
+              :pull-progress="pullProgress"
+              @switch="handleSidebarTabClick"
+              @next="goToNextModule"
+              @prev="goToPrevModule"
+              @loop="switchToSection('policy', 'prev')"
+            />
           </section>
         </Transition>
       </main>
@@ -401,13 +247,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted, onActivated, onDeactivated, nextTick } from "vue";
+import { ref, reactive, computed, watch, onMounted, onActivated, nextTick } from "vue";
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
 import { getSchedule, saveSchedule } from "@/api/schedule";
 import { getStatusDetail } from "@/api/status";
 import { copyToClipboard } from "@/utils/clipboard";
+import { useWheelOverscroll } from "@/composables/useWheelOverscroll";
 import type { ScheduleStatus, ConfigDTO } from "@/api/types";
 
 import PolicyTab from "./tabs/PolicyTab.vue";
@@ -415,6 +262,7 @@ import ScheduleTab from "./tabs/ScheduleTab.vue";
 import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
 import BackupTab from "./tabs/BackupTab.vue";
 import SecurityTab from "./tabs/SecurityTab.vue";
+import ModuleCardFooter from "./components/ModuleCardFooter.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -431,21 +279,6 @@ const activeSectionId = ref<string>(
     ? (route.query.tab as string)
     : "policy"
 );
-
-// Direction-aware transitions & elastic pull feedback
-const slideDirection = ref<"next" | "prev">("next");
-const pullOffset = ref(0);
-const pullProgress = ref(0);
-const isPullingNext = ref(false);
-const isPullingPrev = ref(false);
-const isTransitioning = ref(false);
-
-let accumulatedDeltaYDown = 0;
-let accumulatedDeltaYUp = 0;
-let resetTimer: ReturnType<typeof setTimeout> | null = null;
-
-const WHEEL_THRESHOLD = 70;
-const PULL_MAX_OFFSET = 16;
 
 const currentModuleIndex = computed(() => {
   return navSections.findIndex((s) => s.id === activeSectionId.value);
@@ -479,21 +312,7 @@ function updateRouteQuery(tabId: string) {
   }
 }
 
-function switchToSection(id: string, direction?: "next" | "prev") {
-  if (activeSectionId.value === id) return;
-  const oldIdx = navSections.findIndex((s) => s.id === activeSectionId.value);
-  const newIdx = navSections.findIndex((s) => s.id === id);
-
-  slideDirection.value = direction || (newIdx > oldIdx ? "next" : "prev");
-  isTransitioning.value = true;
-  pullOffset.value = 0;
-  pullProgress.value = 0;
-  isPullingNext.value = false;
-  isPullingPrev.value = false;
-
-  activeSectionId.value = id;
-  updateRouteQuery(id);
-
+function resetScrollToTop() {
   const container = getScrollContainer();
   if (container) {
     container.scrollTop = 0;
@@ -502,17 +321,21 @@ function switchToSection(id: string, direction?: "next" | "prev") {
     const c = getScrollContainer();
     if (c) c.scrollTop = 0;
   });
+}
 
-  setTimeout(() => {
-    isTransitioning.value = false;
-  }, 440);
+function switchToSection(id: string, direction?: "next" | "prev") {
+  if (activeSectionId.value === id) return;
+  const oldIdx = navSections.findIndex((s) => s.id === activeSectionId.value);
+  const newIdx = navSections.findIndex((s) => s.id === id);
+
+  activeSectionId.value = id;
+  updateRouteQuery(id);
+  resetScrollToTop();
+
+  triggerTransition(direction || (newIdx > oldIdx ? "next" : "prev"));
 }
 
 function handleSidebarTabClick(id: string) {
-  switchToSection(id);
-}
-
-function scrollToSection(id: string) {
   switchToSection(id);
 }
 
@@ -526,90 +349,33 @@ function goToPrevModule() {
   switchToSection(prevModule.value.id, "prev");
 }
 
-function scheduleAccumulatorReset() {
-  if (resetTimer) clearTimeout(resetTimer);
-  resetTimer = setTimeout(() => {
-    accumulatedDeltaYDown = 0;
-    accumulatedDeltaYUp = 0;
-    pullOffset.value = 0;
-    pullProgress.value = 0;
-    isPullingNext.value = false;
-    isPullingPrev.value = false;
-  }, 220);
-}
-
-function handleWheel(e: WheelEvent) {
-  if (isTransitioning.value) {
-    e.preventDefault();
-    return;
-  }
-
-  const container = getScrollContainer();
-  if (!container) return;
-
-  const { scrollTop, clientHeight, scrollHeight } = container;
-  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 6;
-  const isAtTop = scrollTop <= 6;
-
-  // Downward wheel at bottom -> Pull towards next tab
-  if (e.deltaY > 0 && isAtBottom) {
-    if (canGoNext.value) {
-      accumulatedDeltaYDown += e.deltaY;
-      pullOffset.value = -Math.min(PULL_MAX_OFFSET, Math.round(Math.sqrt(accumulatedDeltaYDown) * 1.8));
-      pullProgress.value = Math.min(100, Math.round((accumulatedDeltaYDown / WHEEL_THRESHOLD) * 100));
-      isPullingNext.value = true;
-      scheduleAccumulatorReset();
-
-      if (accumulatedDeltaYDown >= WHEEL_THRESHOLD) {
-        e.preventDefault();
-        accumulatedDeltaYDown = 0;
-        accumulatedDeltaYUp = 0;
-        goToNextModule();
-      }
+// Extracted Composable for Wheel Overscroll Engine
+const {
+  slideDirection,
+  pullOffset,
+  pullProgress,
+  isPullingNext,
+  isPullingPrev,
+  triggerTransition
+} = useWheelOverscroll({
+  getContainer: getScrollContainer,
+  canGoNext,
+  canGoPrev,
+  onNext: () => {
+    if (nextModule.value) {
+      activeSectionId.value = nextModule.value.id;
+      updateRouteQuery(nextModule.value.id);
+      resetScrollToTop();
+    }
+  },
+  onPrev: () => {
+    if (prevModule.value) {
+      activeSectionId.value = prevModule.value.id;
+      updateRouteQuery(prevModule.value.id);
+      resetScrollToTop();
     }
   }
-  // Upward wheel at top -> Pull towards prev tab
-  else if (e.deltaY < 0 && isAtTop) {
-    if (canGoPrev.value) {
-      accumulatedDeltaYUp += Math.abs(e.deltaY);
-      pullOffset.value = Math.min(PULL_MAX_OFFSET, Math.round(Math.sqrt(accumulatedDeltaYUp) * 1.8));
-      pullProgress.value = Math.min(100, Math.round((accumulatedDeltaYUp / WHEEL_THRESHOLD) * 100));
-      isPullingPrev.value = true;
-      scheduleAccumulatorReset();
-
-      if (accumulatedDeltaYUp >= WHEEL_THRESHOLD) {
-        e.preventDefault();
-        accumulatedDeltaYDown = 0;
-        accumulatedDeltaYUp = 0;
-        goToPrevModule();
-      }
-    }
-  } else {
-    // Normal scrolling within page
-    accumulatedDeltaYDown = 0;
-    accumulatedDeltaYUp = 0;
-    pullOffset.value = 0;
-    pullProgress.value = 0;
-    isPullingNext.value = false;
-    isPullingPrev.value = false;
-  }
-}
-
-function attachWheelListener() {
-  const container = getScrollContainer();
-  if (container) {
-    container.removeEventListener("wheel", handleWheel);
-    container.addEventListener("wheel", handleWheel, { passive: false });
-  }
-}
-
-function detachWheelListener() {
-  const container = getScrollContainer();
-  if (container) {
-    container.removeEventListener("wheel", handleWheel);
-  }
-  if (resetTimer) clearTimeout(resetTimer);
-}
+});
 
 const savingConfig = ref(false);
 const savingSchedule = ref(false);
@@ -1028,7 +794,6 @@ watch(
 );
 
 onActivated(() => {
-  attachWheelListener();
   if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
     if (activeSectionId.value !== route.query.tab) {
       activeSectionId.value = route.query.tab;
@@ -1039,22 +804,13 @@ onActivated(() => {
   loadDiskStatus();
 });
 
-onDeactivated(() => {
-  detachWheelListener();
-});
-
 onMounted(() => {
-  attachWheelListener();
   loadConfigData();
   loadScheduleData();
   loadDiskStatus();
   if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
     activeSectionId.value = route.query.tab;
   }
-});
-
-onUnmounted(() => {
-  detachWheelListener();
 });
 </script>
 
@@ -1274,164 +1030,6 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
   padding: 22px;
 }
 
-/* Card Module Footer Navigation with Elastic Cues */
-.module-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 22px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
-  border-top: 1px solid var(--hairline, #e4e4e7);
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.footer-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.module-step-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.step-dot-btn {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: var(--hairline-strong, #d4d4d8);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.step-dot-btn:hover {
-  background: var(--slate, #71717a);
-  transform: scale(1.2);
-}
-
-.step-dot-btn.passed {
-  background: color-mix(in srgb, var(--primary, #2563eb) 40%, var(--hairline-strong, #d4d4d8));
-}
-
-.step-dot-btn.active {
-  width: 20px;
-  border-radius: 4px;
-  background: var(--primary, #2563eb);
-}
-
-.module-step-text {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--steel, #71717a);
-  font-variant-numeric: tabular-nums;
-}
-
-.footer-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-module-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: var(--r-sm, 6px);
-  border: 1px solid var(--hairline, #e4e4e7);
-  background: var(--surface-card, #ffffff);
-  color: var(--charcoal, #27272a);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-module-nav:hover {
-  border-color: var(--border-hover, #a1a1aa);
-  background: var(--surface-hover, rgba(0, 0, 0, 0.03));
-  color: var(--ink, #09090b);
-}
-
-.btn-module-prev {
-  background: var(--surface-card, #ffffff);
-  border-color: var(--hairline, #e4e4e7);
-  color: var(--charcoal, #27272a);
-}
-
-.btn-module-next {
-  background: var(--primary, #2563eb);
-  border-color: var(--primary, #2563eb);
-  color: #ffffff;
-}
-
-.btn-module-next:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-  color: #ffffff;
-}
-
-.btn-module-loop {
-  background: var(--surface-card, #ffffff);
-  border-color: var(--hairline, #e4e4e7);
-  color: var(--steel, #71717a);
-}
-
-.btn-module-loop:hover {
-  color: var(--primary, #2563eb);
-  border-color: var(--primary, #2563eb);
-}
-
-.nav-arrow-svg {
-  width: 13px;
-  height: 13px;
-}
-
-.wheel-hint-pill {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  color: var(--muted, #a1a1aa);
-  background: var(--surface-card, #ffffff);
-  border: 1px dashed var(--hairline, #e4e4e7);
-  padding: 3px 10px;
-  border-radius: var(--r-xs, 4px);
-  user-select: none;
-  overflow: hidden;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.wheel-hint-pill.pulling-active {
-  border-color: var(--primary, #2563eb);
-  color: var(--primary, #2563eb);
-  font-weight: 600;
-}
-
-.pull-progress-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: color-mix(in srgb, var(--primary, #2563eb) 12%, transparent);
-  transition: width 0.05s linear;
-  pointer-events: none;
-}
-
-.mouse-icon-svg {
-  width: 12px;
-  height: 12px;
-  color: currentColor;
-}
-
 /* Direction-Aware Page Slide Transitions */
 /* 1. Downward Slide (Next): leaves UP, enters from DOWN */
 .slide-down-page-leave-active,
@@ -1602,60 +1200,5 @@ html.dark .nav-tab-btn.active {
 }
 html.dark .section-card-header {
   background: rgba(255, 255, 255, 0.02);
-}
-html.dark .module-card-footer {
-  background: rgba(255, 255, 255, 0.02);
-  border-top-color: rgba(255, 255, 255, 0.08);
-}
-html.dark .step-dot-btn {
-  background: rgba(255, 255, 255, 0.2);
-}
-html.dark .step-dot-btn:hover {
-  background: rgba(255, 255, 255, 0.4);
-}
-html.dark .step-dot-btn.passed {
-  background: color-mix(in srgb, #60a5fa 40%, rgba(255, 255, 255, 0.2));
-}
-html.dark .step-dot-btn.active {
-  background: #60a5fa;
-}
-html.dark .btn-module-nav {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #e4e4e7;
-}
-html.dark .btn-module-nav:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-}
-html.dark .btn-module-next {
-  background: #2563eb;
-  border-color: #3b82f6;
-  color: #ffffff;
-}
-html.dark .btn-module-next:hover {
-  background: #1d4ed8;
-}
-html.dark .btn-module-loop {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #a1a1aa;
-}
-html.dark .btn-module-loop:hover {
-  color: #60a5fa;
-  border-color: #60a5fa;
-}
-html.dark .wheel-hint-pill {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #71717a;
-}
-html.dark .wheel-hint-pill.pulling-active {
-  border-color: #60a5fa;
-  color: #60a5fa;
-}
-html.dark .pull-progress-fill {
-  background: rgba(96, 165, 250, 0.18);
 }
 </style>
