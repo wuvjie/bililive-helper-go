@@ -119,8 +119,8 @@
             <div class="preset-item"><span class="k">主播关播后的合并等待时间</span><span class="v">30 分钟</span></div>
             <div class="preset-item"><span class="k">磁盘空间清理阈值</span><span class="v">达到 80% 启动 · 降到 60% 停止</span></div>
             <div class="preset-item"><span class="k">新录像的免删保护天数</span><span class="v">3 天</span></div>
-            <div class="preset-item"><span class="k">每位主播的最少保留场次</span><span class="v">3 场录像</span></div>
-            <div class="preset-item"><span class="k">单次清理最多删除的文件数</span><span class="v">50 个文件</span></div>
+            <div class="preset-item"><span class="k">每位主播的最少保留场次</span><span class="v">3 场</span></div>
+            <div class="preset-item"><span class="k">单次清理最多删除的文件数</span><span class="v">50 个</span></div>
           </div>
           <div v-else class="preset-items-grid">
             <div class="preset-item"><span class="k">自动合并视频分片</span><span class="v">启用 · 每 360 分钟（每 6.0 小时执行一次）</span></div>

@@ -46,9 +46,9 @@
       <span class="stat-sub">按近 7 天录像体积日均增长估算</span>
     </div>
 
-    <!-- Card 5: 磁盘预计可用天数 (容量安全) -->
+    <!-- Card 5: 磁盘空间预计可用 (容量安全) -->
     <div class="stat-card" :class="isRunwayUrgent ? 'accent-amber' : 'accent-indigo'">
-      <span class="stat-label">磁盘预计可用天数</span>
+      <span class="stat-label">磁盘空间预计可用</span>
       <div class="stat-value-row">
         <span class="stat-value">{{ runwayDisplay.val }}</span>
         <span v-if="runwayDisplay.unit" class="stat-unit">{{ runwayDisplay.unit }}</span>

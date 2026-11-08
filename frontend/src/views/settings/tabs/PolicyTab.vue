@@ -216,7 +216,6 @@
                   class="stepper-compact"
                   @update:model-value="updateSafeDays(Number($event))"
                 />
-                <span class="unit-text">天</span>
               </div>
             </div>
 
@@ -234,7 +233,6 @@
                   class="stepper-compact"
                   @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
                 />
-                <span class="unit-text">场录像</span>
               </div>
             </div>
 
@@ -252,7 +250,6 @@
                   class="stepper-compact"
                   @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
                 />
-                <span class="unit-text">个文件</span>
               </div>
             </div>
           </div>
