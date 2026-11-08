@@ -20,13 +20,13 @@
 
       <div class="primer-box-body">
         <div class="rule-cards-grid">
-          <!-- 模块 1: 断流重连合并等待 -->
+          <!-- 模块 1: 直播断流后的合并等待时间 -->
           <div class="rule-card">
             <div class="rule-card-header">
-              <span class="rule-card-title">断流重连合并等待</span>
+              <span class="rule-card-title">直播断流后的合并等待时间</span>
             </div>
             <p class="rule-card-desc">
-              直播异常中断或掉线时，在此时间内重新开播将自动合并为同一场录像
+              直播意外掉线后，若在此时间内重新开播，将自动合并为同一场录像
             </p>
             <div class="rule-card-control">
               <el-input-number
@@ -43,13 +43,13 @@
             </div>
           </div>
 
-          <!-- 模块 2: 主播关播延迟合并 -->
+          <!-- 模块 2: 主播关播后的合并等待时间 -->
           <div class="rule-card">
             <div class="rule-card-header">
-              <span class="rule-card-title">主播关播延迟合并</span>
+              <span class="rule-card-title">主播关播后的合并等待时间</span>
             </div>
             <p class="rule-card-desc">
-              主播关播后静置等待此时间，确认录制彻底结束不再开播后再启动合并
+              主播关播后静置等待此时间，确认不再重新开播后再启动录像合并
             </p>
             <div class="rule-card-control">
               <el-input-number
@@ -69,7 +69,7 @@
       </div>
     </section>
 
-    <!-- Box 2: 磁盘空间自动清理与保护 -->
+    <!-- Box 2: 磁盘空间清理与录像保留规则 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -78,17 +78,17 @@
             <path d="M12 8v4"/>
             <path d="M12 16h.01"/>
           </svg>
-          <h2 class="box-title">磁盘空间自动清理与保护</h2>
+          <h2 class="box-title">磁盘空间清理与录像保留规则</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
-        <!-- 区域 1: 磁盘容量清理阈值控制器 -->
+        <!-- 区域 1: 磁盘空间清理阈值 -->
         <div class="gauge-section">
           <div class="gauge-console">
             <!-- 仪表盘顶栏读数 -->
             <div class="gauge-header">
-              <span class="gauge-label">磁盘空间自动清理阈值</span>
+              <span class="gauge-label">磁盘空间清理阈值</span>
               <span class="gauge-summary">
                 使用率达到 <strong class="text-warn">{{ triggerVal }}%</strong> 启动清理
                 <span v-if="triggerFreeGB" class="text-sub">（剩余空间不足 {{ triggerFreeGB }} GB 时启动）</span>
@@ -97,6 +97,10 @@
                 <span v-if="strokeGB" class="text-sub">（约 {{ strokeGB }} GB 空间）</span>
               </span>
             </div>
+
+            <p class="gauge-desc">
+              当磁盘使用率超过触发阈值时自动开始清理，直至降到停止阈值后恢复正常
+            </p>
 
             <!-- 三色连续标尺槽轨 -->
             <div class="gauge-track-wrap">
@@ -119,7 +123,7 @@
                 <div class="slider-meta">
                   <span class="slider-title">
                     <span class="dot-indicator dot-warn"></span>
-                    磁盘使用率达到此值时启动清理
+                    磁盘使用率达到此数值时启动清理
                   </span>
                   <span class="slider-val mono-val">{{ triggerVal }}%</span>
                 </div>
@@ -136,7 +140,7 @@
                 <div class="slider-meta">
                   <span class="slider-title">
                     <span class="dot-indicator dot-target"></span>
-                    磁盘使用率降至此值时停止清理
+                    磁盘使用率降至此数值时停止清理
                   </span>
                   <span class="slider-val mono-val">{{ targetVal }}%</span>
                 </div>
@@ -152,19 +156,19 @@
           </div>
         </div>
 
-        <!-- 区域 2: 录像免删与保留保护规则 -->
+        <!-- 区域 2: 录像保留与免删保护规则 -->
         <div class="protection-section">
           <div class="section-sub-header">
             <span class="sub-header-title">录像保留与免删保护规则</span>
-            <span class="sub-header-desc">磁盘清理时系统将优先保留符合以下规则的录像文件</span>
+            <span class="sub-header-desc">磁盘清理时优先保留符合以下条件的录像文件，防止重要内容被误删</span>
           </div>
 
           <!-- 三微卡保护规则网格 -->
           <div class="protect-cards-grid">
-            <!-- 保护卡 1: 新录像免删保护天数 -->
+            <!-- 保护卡 1: 新录像的免删保护天数 -->
             <div class="protect-card">
-              <span class="protect-card-title">新录像免删保护天数</span>
-              <p class="protect-card-desc">生成未满此天数的新录像绝对不被删除</p>
+              <span class="protect-card-title">新录像的免删保护天数</span>
+              <p class="protect-card-desc">刚录制未满此天数的录像，无论磁盘多满都绝对不删</p>
               <div class="protect-card-control">
                 <el-input-number
                   :model-value="config.SAFE_DAYS ?? 3"
@@ -179,10 +183,10 @@
               </div>
             </div>
 
-            <!-- 保护卡 2: 每位主播最少保留场次 -->
+            <!-- 保护卡 2: 每位主播的最少保留场次 -->
             <div class="protect-card">
-              <span class="protect-card-title">每位主播最少保留场次</span>
-              <p class="protect-card-desc">空间紧张时为每位主播保留的最近场次数</p>
+              <span class="protect-card-title">每位主播的最少保留场次</span>
+              <p class="protect-card-desc">无论空间多紧张，始终为每位主播保留最近这几场录像</p>
               <div class="protect-card-control">
                 <el-input-number
                   :model-value="config.MIN_KEEP_PER_STREAMER ?? 3"
@@ -197,10 +201,10 @@
               </div>
             </div>
 
-            <!-- 保护卡 3: 单次清理最多删除文件数 -->
+            <!-- 保护卡 3: 单次清理最多删除的文件数 -->
             <div class="protect-card">
-              <span class="protect-card-title">单次清理最多删除文件</span>
-              <p class="protect-card-desc">限制单次清理的文件数，防止长时间卡顿</p>
+              <span class="protect-card-title">单次清理最多删除的文件数</span>
+              <p class="protect-card-desc">限制单次任务删除的文件总量，防止大量 IO 导致磁盘卡顿</p>
               <div class="protect-card-control">
                 <el-input-number
                   :model-value="config.MAX_DELETE_PER_RUN ?? 50"
@@ -219,8 +223,8 @@
           <!-- 白名单关键词卡片 -->
           <div class="whitelist-card">
             <div class="whitelist-header">
-              <span class="whitelist-title">永久免删关键词（白名单）</span>
-              <span class="whitelist-desc">当录像标题或主播名称包含以下任意关键词时，清理任务将始终跳过</span>
+              <span class="whitelist-title">永久免删的关键词白名单</span>
+              <span class="whitelist-desc">录像标题或主播名称包含任意这些关键词时，清理时始终跳过不删</span>
             </div>
             <div class="tags-flex-wrap">
               <el-tag
@@ -499,7 +503,7 @@ function removeTag(idx: number) {
   color: var(--steel, #787671);
 }
 
-/* 水位深度控制台专有样式 */
+/* 磁盘清理控制台专有样式 */
 .gauge-section {
   padding: 16px 18px;
   border-bottom: 1px solid var(--hairline, #e5e3df);
@@ -523,6 +527,13 @@ function removeTag(idx: number) {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal, #37352f);
+}
+
+.gauge-desc {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  line-height: 1.4;
+  margin: 0;
 }
 
 .gauge-summary {

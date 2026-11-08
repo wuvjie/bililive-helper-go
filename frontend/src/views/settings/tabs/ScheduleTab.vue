@@ -1,6 +1,6 @@
 <template>
   <div class="settings-tab-pane">
-    <!-- Box 1: 自动化定时调度任务 -->
+    <!-- Box 1: 后台定时任务与执行周期 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -8,7 +8,7 @@
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
-          <h2 class="box-title">自动化定时调度任务</h2>
+          <h2 class="box-title">后台定时任务与执行周期</h2>
         </div>
       </header>
 
@@ -29,6 +29,9 @@
                 @update:model-value="updateField('merge_enabled', Boolean($event))"
               />
             </div>
+            <p class="task-card-desc">
+              按设定的周期自动扫描并合并因断流等原因产生的录像分片
+            </p>
             <div class="task-card-body">
               <label class="field-label-sm">任务执行周期</label>
               <div class="interval-input-row">
@@ -43,7 +46,7 @@
                   @update:model-value="updateField('merge_interval', Number($event))"
                 />
                 <span class="unit-text">分钟</span>
-                <span class="interval-hint mono-val">（每 {{ (form.merge_interval / 60).toFixed(1) }} 小时）</span>
+                <span class="interval-hint mono-val">（每 {{ (form.merge_interval / 60).toFixed(1) }} 小时执行一次）</span>
               </div>
             </div>
           </div>
@@ -63,6 +66,9 @@
                 @update:model-value="updateField('clean_enabled', Boolean($event))"
               />
             </div>
+            <p class="task-card-desc">
+              按设定的周期自动检查磁盘容量，超标时自动触发安全清理
+            </p>
             <div class="task-card-body">
               <label class="field-label-sm">任务执行周期</label>
               <div class="interval-input-row">
@@ -77,7 +83,7 @@
                   @update:model-value="updateField('clean_interval', Number($event))"
                 />
                 <span class="unit-text">分钟</span>
-                <span class="interval-hint mono-val">（每 {{ (form.clean_interval / 60).toFixed(1) }} 小时）</span>
+                <span class="interval-hint mono-val">（每 {{ (form.clean_interval / 60).toFixed(1) }} 小时执行一次）</span>
               </div>
             </div>
           </div>
@@ -85,7 +91,7 @@
       </div>
     </section>
 
-    <!-- Box 2: 定时任务避让时段 -->
+    <!-- Box 2: 后台任务每日避让时段 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -93,7 +99,7 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
           <div class="box-header-title-group">
-            <h2 class="box-title">定时任务避让时段</h2>
+            <h2 class="box-title">后台任务每日避让时段</h2>
             <span class="status-pill" :class="isQuietEnabled ? 'pill-active' : 'pill-inactive'">
               {{ isQuietEnabled ? '已启用' : '已停用' }}
             </span>
@@ -109,45 +115,51 @@
       <div class="primer-box-body">
         <!-- 未启用状态：直接干脆展示全天候说明，不显示虚假的 00:00 与状态呼吸灯 -->
         <div v-if="!isQuietEnabled" class="quiet-disabled-notice">
-          未开启避让时段，所有自动化任务全天候 24 小时正常调度运行。
+          未开启每日避让，所有自动化任务全天候 24 小时正常调度运行。
         </div>
 
-        <!-- 已启用状态：对称双列网格（左侧时间范围，右侧实时运行状态） -->
-        <div v-else class="quiet-window-grid">
-          <!-- 1. 避让时间范围选择 -->
-          <div class="quiet-field-cell">
-            <label class="field-label-sm">每日避让时段范围</label>
-            <div class="window-picker-flow">
-              <div class="time-range-group">
-                <el-time-picker
-                  :model-value="backupStart"
-                  format="HH:mm"
-                  value-format="HH:mm"
-                  placeholder="开始时间"
-                  size="default"
-                  class="time-picker-item"
-                  @update:model-value="onStartTimeChange"
-                />
-                <span class="range-separator">至</span>
-                <el-time-picker
-                  :model-value="backupEnd"
-                  format="HH:mm"
-                  value-format="HH:mm"
-                  placeholder="结束时间"
-                  size="default"
-                  class="time-picker-item"
-                  @update:model-value="onEndTimeChange"
-                />
+        <!-- 已启用状态：提示说明 + 对称双列网格（左侧时间范围，右侧实时运行状态） -->
+        <div v-else>
+          <p class="quiet-desc">
+            在设定的避让时段内，系统将暂停执行自动合并与磁盘清理，避免占用机器性能
+          </p>
+          <div class="quiet-window-grid">
+            <!-- 1. 避让时间范围选择 -->
+            <div class="quiet-field-cell">
+              <label class="field-label-sm">每日避让时段范围</label>
+              <div class="window-picker-flow">
+                <div class="time-range-group">
+                  <el-time-picker
+                    :model-value="backupStart"
+                    format="HH:mm"
+                    value-format="HH:mm"
+                    placeholder="开始时间"
+                    size="default"
+                    class="time-picker-item"
+                    @update:model-value="onStartTimeChange"
+                  />
+                  <span class="range-separator">至</span>
+                  <el-time-picker
+                    :model-value="backupEnd"
+                    format="HH:mm"
+                    value-format="HH:mm"
+                    placeholder="结束时间"
+                    size="default"
+                    class="time-picker-item"
+                    @update:model-value="onEndTimeChange"
+                  />
+                </div>
               </div>
+              <span class="picker-hint">支持跨午夜设置（例如 23:00 至次日 06:00）</span>
             </div>
-          </div>
 
-          <!-- 2. 实时窗口运行状态指示 -->
-          <div class="quiet-field-cell">
-            <label class="field-label-sm">当前实时运行状态</label>
-            <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
-              <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
-              <span class="status-main-text">{{ windowStatusTitle }}</span>
+            <!-- 2. 实时窗口运行状态指示 -->
+            <div class="quiet-field-cell">
+              <label class="field-label-sm">当前实时运行状态</label>
+              <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
+                <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
+                <span class="status-main-text">{{ windowStatusTitle }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -175,84 +187,85 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "update:form", val: ScheduleForm): void;
+  (e: "update:form", val: Partial<ScheduleForm>): void;
   (e: "update:backupStart", val: string): void;
   (e: "update:backupEnd", val: string): void;
+  (e: "save"): void;
 }>();
 
 function updateField<K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K]) {
-  emit("update:form", {
-    ...props.form,
-    [key]: value
-  });
+  emit("update:form", { [key]: value });
 }
 
-const isQuietEnabled = computed(() => {
-  return Boolean(props.backupStart && props.backupEnd && props.backupStart !== props.backupEnd);
-});
+// 缓存上一次用户设置的有效时间，关闭开关时记录，再次打开时恢复
+const cachedStart = ref("02:00");
+const cachedEnd = ref("08:00");
 
-const lastValidStart = ref(props.backupStart || "02:00");
-const lastValidEnd = ref(props.backupEnd || "06:00");
+// 判断避让时段是否处于启用状态
+const isQuietEnabled = computed(() => {
+  const s = props.backupStart?.trim();
+  const e = props.backupEnd?.trim();
+  if (!s || !e) return false;
+  return !(s === "00:00" && e === "00:00");
+});
 
 function toggleQuiet(enabled: boolean) {
   if (enabled) {
-    const s = lastValidStart.value && lastValidEnd.value && lastValidStart.value !== lastValidEnd.value
-      ? lastValidStart.value
-      : "02:00";
-    const e = lastValidStart.value && lastValidEnd.value && lastValidStart.value !== lastValidEnd.value
-      ? lastValidEnd.value
-      : "06:00";
-    emit("update:backupStart", s);
-    emit("update:backupEnd", e);
+    const nextStart = cachedStart.value && cachedStart.value !== "00:00" ? cachedStart.value : "02:00";
+    const nextEnd = cachedEnd.value && cachedEnd.value !== "00:00" ? cachedEnd.value : "08:00";
+    emit("update:backupStart", nextStart);
+    emit("update:backupEnd", nextEnd);
   } else {
-    if (props.backupStart && props.backupEnd && props.backupStart !== props.backupEnd) {
-      lastValidStart.value = props.backupStart;
-      lastValidEnd.value = props.backupEnd;
+    if (props.backupStart && props.backupStart !== "00:00") {
+      cachedStart.value = props.backupStart;
     }
-    emit("update:backupStart", "");
-    emit("update:backupEnd", "");
+    if (props.backupEnd && props.backupEnd !== "00:00") {
+      cachedEnd.value = props.backupEnd;
+    }
+    emit("update:backupStart", "00:00");
+    emit("update:backupEnd", "00:00");
   }
 }
 
-function onStartTimeChange(val: string | null) {
-  const newStart = val || "";
-  emit("update:backupStart", newStart);
-  if (newStart && props.backupEnd && newStart !== props.backupEnd) {
-    lastValidStart.value = newStart;
-  }
+function onStartTimeChange(val: string) {
+  const nextVal = val || "00:00";
+  if (nextVal !== "00:00") cachedStart.value = nextVal;
+  emit("update:backupStart", nextVal);
 }
 
-function onEndTimeChange(val: string | null) {
-  const newEnd = val || "";
-  emit("update:backupEnd", newEnd);
-  if (props.backupStart && newEnd && props.backupStart !== newEnd) {
-    lastValidEnd.value = newEnd;
-  }
+function onEndTimeChange(val: string) {
+  const nextVal = val || "00:00";
+  if (nextVal !== "00:00") cachedEnd.value = nextVal;
+  emit("update:backupEnd", nextVal);
 }
 
-// 避让窗口状态计算
+// 判断当前物理时间是否正处于避让时段中
 const isQuietActive = computed(() => {
   if (!isQuietEnabled.value) return false;
+  const start = props.backupStart;
+  const end = props.backupEnd;
+  if (!start || !end || start === end) return false;
+
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const [sh, sm] = props.backupStart.split(":").map(Number);
-  const [eh, em] = props.backupEnd.split(":").map(Number);
-  const startMinutes = sh * 60 + sm;
-  const endMinutes = eh * 60 + em;
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const startMinutes = (sh ?? 0) * 60 + (sm ?? 0);
+  const endMinutes = (eh ?? 0) * 60 + (em ?? 0);
 
-  if (startMinutes <= endMinutes) {
+  if (startMinutes < endMinutes) {
     return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+  } else {
+    // 跨午夜
+    return currentMinutes >= startMinutes || currentMinutes < endMinutes;
   }
-  // 跨午夜
-  return currentMinutes >= startMinutes || currentMinutes < endMinutes;
 });
 
 const windowStatusTitle = computed(() => {
-  if (isQuietActive.value) {
-    return `当前处于避让休眠时段（${props.backupStart} ~ ${props.backupEnd}），暂停后台合并与清理`;
-  }
-  return `当前处于正常运行窗口（每日避让时段: ${props.backupStart} ~ ${props.backupEnd}）`;
+  if (!isQuietEnabled.value) return "全天候正常运行";
+  if (isQuietActive.value) return `当前处于任务避让期（${props.backupStart} ~ ${props.backupEnd}），后台任务已暂停`;
+  return `当前处于正常调度期（避让时段为每日 ${props.backupStart} ~ ${props.backupEnd}）`;
 });
 </script>
 
@@ -331,7 +344,7 @@ const windowStatusTitle = computed(() => {
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   transition: all 0.15s ease;
 }
 
@@ -361,6 +374,16 @@ const windowStatusTitle = computed(() => {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal, #37352f);
+}
+
+.task-card-desc {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  line-height: 1.45;
+  margin: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
 }
 
 .status-pill {
@@ -417,17 +440,25 @@ const windowStatusTitle = computed(() => {
   color: var(--steel, #787671);
   white-space: nowrap;
   display: inline-block;
-  min-width: 96px;
+  min-width: 140px;
   font-variant-numeric: tabular-nums;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 /* 避让时间窗口网格 */
+.quiet-desc {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  padding: 14px 18px 0;
+  margin: 0;
+  line-height: 1.45;
+}
+
 .quiet-window-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  padding: 16px 18px;
+  padding: 14px 18px 16px;
   align-items: start;
 }
 
@@ -466,6 +497,12 @@ const windowStatusTitle = computed(() => {
   color: var(--steel, #787671);
 }
 
+.picker-hint {
+  font-size: 11.5px;
+  color: var(--steel, #787671);
+  margin-top: 2px;
+}
+
 .quiet-disabled-notice {
   padding: 14px 18px;
   font-size: 13px;
@@ -497,6 +534,7 @@ const windowStatusTitle = computed(() => {
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .pulse-emerald {

@@ -100,7 +100,7 @@
     <!-- 恢复预设确认弹窗 -->
     <el-dialog
       v-model="presetModalVisible"
-      :title="presetModalType === 'policy' ? '恢复合并与清理推荐预设' : '恢复定时任务推荐预设'"
+      :title="presetModalType === 'policy' ? '恢复录像合并与磁盘清理推荐预设' : '恢复定时任务与执行周期推荐预设'"
       width="460px"
       destroy-on-close
       class="preset-dialog"
@@ -108,24 +108,24 @@
       <div class="preset-dialog-content">
         <p class="preset-intro-text">
           {{ presetModalType === 'policy'
-            ? '将录像合并规则与磁盘清理阈值恢复为官方推荐默认值：'
-            : '将后台自动合并分片与自动清理磁盘的周期恢复为官方推荐默认值：'
+            ? '将录像合并规则与磁盘空间清理参数恢复为推荐默认值：'
+            : '将后台定时任务与执行周期恢复为推荐默认值：'
           }}
         </p>
 
         <div class="preset-values-box">
           <div v-if="presetModalType === 'policy'" class="preset-items-grid">
-            <div class="preset-item"><span class="k">断流重连合并等待时间</span><span class="v">30 分钟</span></div>
-            <div class="preset-item"><span class="k">主播关播延迟合并时间</span><span class="v">30 分钟</span></div>
-            <div class="preset-item"><span class="k">磁盘清理触发与停止阈值</span><span class="v">达到 80% 启动 · 降到 60% 停止</span></div>
-            <div class="preset-item"><span class="k">新录像免删保护天数</span><span class="v">保留最近 3 天新录像</span></div>
-            <div class="preset-item"><span class="k">每位主播最少保留场次</span><span class="v">3 场录像</span></div>
-            <div class="preset-item"><span class="k">单次清理最多删除文件数</span><span class="v">50 个</span></div>
+            <div class="preset-item"><span class="k">直播断流后的合并等待时间</span><span class="v">30 分钟</span></div>
+            <div class="preset-item"><span class="k">主播关播后的合并等待时间</span><span class="v">30 分钟</span></div>
+            <div class="preset-item"><span class="k">磁盘空间清理阈值</span><span class="v">达到 80% 启动 · 降到 60% 停止</span></div>
+            <div class="preset-item"><span class="k">新录像的免删保护天数</span><span class="v">3 天</span></div>
+            <div class="preset-item"><span class="k">每位主播的最少保留场次</span><span class="v">3 场录像</span></div>
+            <div class="preset-item"><span class="k">单次清理最多删除的文件数</span><span class="v">50 个文件</span></div>
           </div>
           <div v-else class="preset-items-grid">
-            <div class="preset-item"><span class="k">自动合并视频分片</span><span class="v">启用 · 每 360 分钟（每 6.0 小时）</span></div>
-            <div class="preset-item"><span class="k">自动清理磁盘空间</span><span class="v">启用 · 每 720 分钟（每 12.0 小时）</span></div>
-            <div class="preset-item"><span class="k">定时任务避让时段</span><span class="v">全天候运行（未开启避让）</span></div>
+            <div class="preset-item"><span class="k">自动合并视频分片</span><span class="v">启用 · 每 360 分钟（每 6.0 小时执行一次）</span></div>
+            <div class="preset-item"><span class="k">自动清理磁盘空间</span><span class="v">启用 · 每 720 分钟（每 12.0 小时执行一次）</span></div>
+            <div class="preset-item"><span class="k">后台任务每日避让时段</span><span class="v">全天候正常运行（未开启避让）</span></div>
           </div>
         </div>
 
@@ -159,8 +159,8 @@ const route = useRoute();
 const router = useRouter();
 
 const navTabs = [
-  { id: "policy", label: "合并与清理规则" },
-  { id: "schedule", label: "定时自动化任务" }
+  { id: "policy", label: "录像合并与磁盘清理" },
+  { id: "schedule", label: "定时任务与执行周期" }
 ];
 
 const activeTab = ref<string>(
@@ -428,12 +428,12 @@ function confirmApplyPreset() {
       ...config.value,
       ...RECOMMENDED_POLICY
     } as ConfigDTO;
-    ElMessage.success("已载入官方推荐策略预设，请检查并点击下方「保存配置」");
+    ElMessage.success("已载入录像合并与磁盘清理推荐预设，点击保存后生效");
   } else {
     Object.assign(scheduleForm, RECOMMENDED_SCHEDULE);
     backupStart.value = "";
     backupEnd.value = "";
-    ElMessage.success("已载入官方推荐调度预设，请检查并点击下方「保存配置」");
+    ElMessage.success("已载入定时任务与执行周期推荐预设，点击保存后生效");
   }
   presetModalVisible.value = false;
 }
