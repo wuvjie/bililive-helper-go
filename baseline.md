@@ -1,8 +1,14 @@
 # Baseline
 
 - **v3.8.0** (Current Active):
-  - Git Commits: `5d25259` ~ `HEAD` (`84f0f1b` / `0f6eddc`)
+  - Git Commits: `5d25259` ~ `HEAD` (`c2bfa1d` / `068916e`)
   - Release Highlights:
+    - **前端死代码彻底清洗、逻辑去重与严格类型硬化 (Dead CSS Purge, Load Deduplication & Strict TypeScript Hardening)**：
+      - 对全部 Vue 视图与组件进行系统级死代码审计，彻底清除所有孤立无引用的 Scoped CSS 类选择器（`.nav-breadcrumb`, `.nav-icon`, `.control-unit-group`, `.drawer-sub`, `.rule-desc`, `.label-help-ico`, `.title-text-group`, `.sched-policy-meta`, `.footer-left-info`, `.header-actions`, `.action-retry` 等），实现样式表零死重；
+      - 重构系统概览大盘 `dashboard/index.vue` 的 `loadData(isInitial)` 逻辑，消除 `onMounted` 与 `onActivated` 之间的重复请求模板代码，统一请求生命周期；
+      - 修正历史记录分页属性潜在类型 Bug（`res.pages` 正确映射服务端协议，替代原误写的 `res.total_pages`）；
+      - 解决 Element Plus 表格槽位行参数弱类型引发的类型推导缺失问题，补充强类型定义，使 `vue-tsc --noEmit`（`npm run type-check`）达到 **0 错误 100% 洁净通过**；
+      - Vitest 全套自动化测试（13/13）与 Vite 生产构建打包持续 100% 顺利通过。
     - **避让时间窗口开关化与矛盾状态根除 (Quiet Window Switch & Zero 00:00 Confusion)**：
       - 彻底根除「上面写 00:00~00:00 不运行避让，下面却亮大绿灯显示正在运行」的主客体颠倒与精神分裂体验；
       - 引入标准的「每日任务避让时段」启闭开关（`el-switch`）与 `[已启用 / 已停用]` 状态胶囊，与上方卡片保持绝对统一；
