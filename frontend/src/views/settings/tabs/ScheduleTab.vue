@@ -299,6 +299,11 @@ const windowStatusTitle = computed(() => {
   justify-content: space-between;
 }
 
+.primer-switch {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .task-card-title-group {
   display: flex;
   align-items: center;
@@ -364,13 +369,17 @@ const windowStatusTitle = computed(() => {
   font-size: 12px;
   color: var(--steel, #787671);
   white-space: nowrap;
+  display: inline-block;
+  min-width: 96px;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 /* 避让时间窗口网格 */
 .quiet-window-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
   padding: 16px 18px;
   align-items: start;
 }
