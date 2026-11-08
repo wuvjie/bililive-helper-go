@@ -26,7 +26,7 @@
         <button
           type="button"
           class="btn-primer-outline"
-          :title="activeTab === 'policy' ? '将录播合并与磁盘清理策略恢复为官方推荐预设' : '将自动化合并与磁盘巡检调度恢复为官方推荐预设'"
+          :title="activeTab === 'policy' ? '将录像合并规则与磁盘清理阈值恢复为官方推荐默认值' : '将自动合并分片与自动清理磁盘周期恢复为官方推荐默认值'"
           @click="handleOpenPresetModal"
         >
           <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -100,7 +100,7 @@
     <!-- 恢复预设确认弹窗 -->
     <el-dialog
       v-model="presetModalVisible"
-      :title="presetModalType === 'policy' ? '恢复策略推荐预设' : '恢复调度推荐预设'"
+      :title="presetModalType === 'policy' ? '恢复合并与清理推荐预设' : '恢复定时任务推荐预设'"
       width="460px"
       destroy-on-close
       class="preset-dialog"
@@ -108,24 +108,24 @@
       <div class="preset-dialog-content">
         <p class="preset-intro-text">
           {{ presetModalType === 'policy'
-            ? '将全局录播合并规则与磁盘清理水位恢复为官方推荐基准：'
-            : '将后台自动化分片合并与磁盘巡检调度恢复为官方推荐基准：'
+            ? '将录像合并规则与磁盘清理阈值恢复为官方推荐默认值：'
+            : '将后台自动合并分片与自动清理磁盘的周期恢复为官方推荐默认值：'
           }}
         </p>
 
         <div class="preset-values-box">
           <div v-if="presetModalType === 'policy'" class="preset-items-grid">
-            <div class="preset-item"><span class="k">断流重连容差</span><span class="v">30 分钟</span></div>
-            <div class="preset-item"><span class="k">完播静置等待</span><span class="v">30 分钟</span></div>
-            <div class="preset-item"><span class="k">触发清理水位</span><span class="v">80% 触发 · 降至 60%</span></div>
-            <div class="preset-item"><span class="k">免删保护底线</span><span class="v">保留最近 3 天录像</span></div>
-            <div class="preset-item"><span class="k">每主播最少保留</span><span class="v">3 场</span></div>
-            <div class="preset-item"><span class="k">单次最多清理</span><span class="v">50 个</span></div>
+            <div class="preset-item"><span class="k">断流重连合并等待时间</span><span class="v">30 分钟</span></div>
+            <div class="preset-item"><span class="k">主播关播延迟合并时间</span><span class="v">30 分钟</span></div>
+            <div class="preset-item"><span class="k">磁盘清理触发与停止阈值</span><span class="v">达到 80% 启动 · 降到 60% 停止</span></div>
+            <div class="preset-item"><span class="k">新录像免删保护天数</span><span class="v">保留最近 3 天新录像</span></div>
+            <div class="preset-item"><span class="k">每位主播最少保留场次</span><span class="v">3 场录像</span></div>
+            <div class="preset-item"><span class="k">单次清理最多删除文件数</span><span class="v">50 个</span></div>
           </div>
           <div v-else class="preset-items-grid">
-            <div class="preset-item"><span class="k">自动分片合并</span><span class="v">启用 · 每 360 分钟</span></div>
-            <div class="preset-item"><span class="k">自动磁盘清理</span><span class="v">启用 · 每 720 分钟</span></div>
-            <div class="preset-item"><span class="k">避让时间窗口</span><span class="v">全天候运行（无避让）</span></div>
+            <div class="preset-item"><span class="k">自动合并视频分片</span><span class="v">启用 · 每 360 分钟（每 6.0 小时）</span></div>
+            <div class="preset-item"><span class="k">自动清理磁盘空间</span><span class="v">启用 · 每 720 分钟（每 12.0 小时）</span></div>
+            <div class="preset-item"><span class="k">定时任务避让时段</span><span class="v">全天候运行（未开启避让）</span></div>
           </div>
         </div>
 
@@ -159,8 +159,8 @@ const route = useRoute();
 const router = useRouter();
 
 const navTabs = [
-  { id: "policy", label: "全局策略" },
-  { id: "schedule", label: "定时调度" }
+  { id: "policy", label: "合并与清理规则" },
+  { id: "schedule", label: "定时自动化任务" }
 ];
 
 const activeTab = ref<string>(

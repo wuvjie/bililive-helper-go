@@ -32,7 +32,7 @@
         </div>
         <div class="runtime-subline">
           <span class="runtime-subtext">
-            {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看流式输出' : '后台定时轮询已就绪，按策略周期巡检' }}
+            {{ isTaskRunning ? '后台正在处理视频合并或磁盘清理任务，前往任务中心可查看实时终端输出' : '后台自动化任务已就绪，按设定周期自动执行' }}
           </span>
         </div>
       </div>

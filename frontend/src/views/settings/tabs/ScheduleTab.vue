@@ -1,6 +1,6 @@
 <template>
   <div class="settings-tab-pane">
-    <!-- Box 1: 自动化媒体流水线调度 -->
+    <!-- Box 1: 自动化定时调度任务 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -8,17 +8,17 @@
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
-          <h2 class="box-title">定时流水线调度</h2>
+          <h2 class="box-title">自动化定时调度任务</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
         <div class="schedule-task-grid">
-          <!-- 1. 定时自动合并分片 -->
+          <!-- 1. 自动合并视频分片 -->
           <div class="schedule-task-card" :class="{ 'task-disabled': !form.merge_enabled }">
             <div class="task-card-header">
               <div class="task-card-title-group">
-                <span class="task-card-title">定时自动合并分片</span>
+                <span class="task-card-title">自动合并视频分片</span>
                 <span class="status-pill" :class="form.merge_enabled ? 'pill-active' : 'pill-inactive'">
                   {{ form.merge_enabled ? '已启用' : '已停用' }}
                 </span>
@@ -30,7 +30,7 @@
               />
             </div>
             <div class="task-card-body">
-              <label class="field-label-sm">执行周期</label>
+              <label class="field-label-sm">任务执行周期</label>
               <div class="interval-input-row">
                 <el-input-number
                   :model-value="form.merge_interval"
@@ -48,11 +48,11 @@
             </div>
           </div>
 
-          <!-- 2. 定时巡检磁盘并清理 -->
+          <!-- 2. 自动清理磁盘空间 -->
           <div class="schedule-task-card" :class="{ 'task-disabled': !form.clean_enabled }">
             <div class="task-card-header">
               <div class="task-card-title-group">
-                <span class="task-card-title">定时巡检磁盘并清理</span>
+                <span class="task-card-title">自动清理磁盘空间</span>
                 <span class="status-pill" :class="form.clean_enabled ? 'pill-active' : 'pill-inactive'">
                   {{ form.clean_enabled ? '已启用' : '已停用' }}
                 </span>
@@ -64,7 +64,7 @@
               />
             </div>
             <div class="task-card-body">
-              <label class="field-label-sm">执行周期</label>
+              <label class="field-label-sm">任务执行周期</label>
               <div class="interval-input-row">
                 <el-input-number
                   :model-value="form.clean_interval"
@@ -85,7 +85,7 @@
       </div>
     </section>
 
-    <!-- Box 2: 避让时间窗口 (免打扰时段) -->
+    <!-- Box 2: 定时任务避让时段 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -93,7 +93,7 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
           <div class="box-header-title-group">
-            <h2 class="box-title">每日任务避让时段</h2>
+            <h2 class="box-title">定时任务避让时段</h2>
             <span class="status-pill" :class="isQuietEnabled ? 'pill-active' : 'pill-inactive'">
               {{ isQuietEnabled ? '已启用' : '已停用' }}
             </span>
@@ -109,14 +109,14 @@
       <div class="primer-box-body">
         <!-- 未启用状态：直接干脆展示全天候说明，不显示虚假的 00:00 与状态呼吸灯 -->
         <div v-if="!isQuietEnabled" class="quiet-disabled-notice">
-          未开启避让时段，所有自动化流水线全天候 24 小时正常调度运行。
+          未开启避让时段，所有自动化任务全天候 24 小时正常调度运行。
         </div>
 
         <!-- 已启用状态：对称双列网格（左侧时间范围，右侧实时运行状态） -->
         <div v-else class="quiet-window-grid">
           <!-- 1. 避让时间范围选择 -->
           <div class="quiet-field-cell">
-            <label class="field-label-sm">避让时间范围</label>
+            <label class="field-label-sm">每日避让时段范围</label>
             <div class="window-picker-flow">
               <div class="time-range-group">
                 <el-time-picker
@@ -144,7 +144,7 @@
 
           <!-- 2. 实时窗口运行状态指示 -->
           <div class="quiet-field-cell">
-            <label class="field-label-sm">当前调度运行状态</label>
+            <label class="field-label-sm">当前实时运行状态</label>
             <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
               <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
               <span class="status-main-text">{{ windowStatusTitle }}</span>
@@ -250,7 +250,7 @@ const isQuietActive = computed(() => {
 
 const windowStatusTitle = computed(() => {
   if (isQuietActive.value) {
-    return `当前处于避让休眠时段（${props.backupStart} ~ ${props.backupEnd}），任务挂起顺延`;
+    return `当前处于避让休眠时段（${props.backupStart} ~ ${props.backupEnd}），暂停后台合并与清理`;
   }
   return `当前处于正常运行窗口（每日避让时段: ${props.backupStart} ~ ${props.backupEnd}）`;
 });

@@ -14,15 +14,15 @@
             <path d="M17 7.5h4"/>
             <path d="M17 16.5h4"/>
           </svg>
-          <h2 class="box-title">录播合并规则</h2>
+          <h2 class="box-title">录像合并规则</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
         <div class="fields-grid fields-grid-2">
-          <!-- 1. 断流重连合并时间 -->
+          <!-- 1. 断流重连合并等待时间 -->
           <div class="field-cell">
-            <label class="field-label">断流重连合并时间</label>
+            <label class="field-label">断流重连合并等待时间</label>
             <div class="field-control">
               <el-input-number
                 :model-value="config.GAP_MINUTES ?? 30"
@@ -37,9 +37,9 @@
             </div>
           </div>
 
-          <!-- 2. 关播后等待合并时长 -->
+          <!-- 2. 主播关播延迟合并时间 -->
           <div class="field-cell">
-            <label class="field-label">关播后等待合并时长</label>
+            <label class="field-label">主播关播延迟合并时间</label>
             <div class="field-control">
               <el-input-number
                 :model-value="config.MERGE_AGE_MINUTES ?? 30"
@@ -57,7 +57,7 @@
       </div>
     </section>
 
-    <!-- Box 2: 磁盘自动清理与保护 -->
+    <!-- Box 2: 磁盘空间自动清理与保护 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -66,23 +66,23 @@
             <path d="M12 8v4"/>
             <path d="M12 16h.01"/>
           </svg>
-          <h2 class="box-title">磁盘自动清理与保护</h2>
+          <h2 class="box-title">磁盘空间自动清理与保护</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
-        <!-- 1. 水位深度与清理冲程控制台 -->
+        <!-- 1. 磁盘空间自动清理阈值控制台 -->
         <div class="gauge-section">
           <div class="gauge-console">
             <!-- 仪表盘顶栏读数 -->
             <div class="gauge-header">
-              <span class="gauge-label">磁盘清理警戒线与安全回落线</span>
+              <span class="gauge-label">磁盘空间自动清理阈值</span>
               <span class="gauge-summary">
-                触发清理 <strong class="text-warn">{{ triggerVal }}%</strong>
-                <span v-if="triggerFreeGB" class="text-sub">（余量 &lt; {{ triggerFreeGB }} GB 时启动）</span>
-                · 降至安全线 <strong class="text-target">{{ targetVal }}%</strong>
-                · 单次释放 <strong class="text-blue">{{ strokePct }}%</strong>
-                <span v-if="strokeGB" class="text-sub">（≈ {{ strokeGB }} GB）</span>
+                使用率达到 <strong class="text-warn">{{ triggerVal }}%</strong> 启动清理
+                <span v-if="triggerFreeGB" class="text-sub">（剩余空间不足 {{ triggerFreeGB }} GB 时启动）</span>
+                · 降至 <strong class="text-target">{{ targetVal }}%</strong> 停止清理
+                · 计划释放约 <strong class="text-blue">{{ strokePct }}%</strong>
+                <span v-if="strokeGB" class="text-sub">（约 {{ strokeGB }} GB 空间）</span>
               </span>
             </div>
 
@@ -90,13 +90,13 @@
             <div class="gauge-track-wrap">
               <div class="gauge-track">
                 <div class="track-segment seg-safe" :style="{ width: `${targetVal}%` }">
-                  <span class="seg-label" v-if="targetVal > 15">安全水位 (0% ~ {{ targetVal }}%)</span>
+                  <span class="seg-label" v-if="targetVal > 15">安全使用区间 (0% ~ {{ targetVal }}%)</span>
                 </div>
                 <div class="track-segment seg-stroke" :style="{ width: `${strokePct}%` }">
-                  <span class="seg-label" v-if="strokePct > 12">清理释放冲程 ({{ strokePct }}%)</span>
+                  <span class="seg-label" v-if="strokePct > 12">计划释放空间 ({{ strokePct }}%)</span>
                 </div>
                 <div class="track-segment seg-warn" :style="{ width: `${100 - triggerVal}%` }">
-                  <span class="seg-label" v-if="(100 - triggerVal) > 15">警戒水位 ({{ triggerVal }}% ~ 100%)</span>
+                  <span class="seg-label" v-if="(100 - triggerVal) > 15">超额清理区间 ({{ triggerVal }}% ~ 100%)</span>
                 </div>
               </div>
             </div>
@@ -107,7 +107,7 @@
                 <div class="slider-meta">
                   <span class="slider-title">
                     <span class="dot-indicator dot-warn"></span>
-                    达到警戒线触发清理
+                    磁盘使用率达到此值时启动清理
                   </span>
                   <span class="slider-val mono-val">{{ triggerVal }}%</span>
                 </div>
@@ -124,7 +124,7 @@
                 <div class="slider-meta">
                   <span class="slider-title">
                     <span class="dot-indicator dot-target"></span>
-                    降回安全线停止清理
+                    磁盘使用率降至此值时停止清理
                   </span>
                   <span class="slider-val mono-val">{{ targetVal }}%</span>
                 </div>
@@ -142,9 +142,9 @@
 
         <!-- 2. 清理与保护三参数网格 -->
         <div class="fields-grid fields-grid-3">
-          <!-- 字段 1: 最近录像免删保护期 -->
+          <!-- 字段 1: 新录像免删保护天数 -->
           <div class="field-cell">
-            <label class="field-label">最近录像免删保护期</label>
+            <label class="field-label">新录像免删保护天数</label>
             <div class="field-control">
               <el-input-number
                 :model-value="config.SAFE_DAYS ?? 3"
@@ -159,9 +159,9 @@
             </div>
           </div>
 
-          <!-- 字段 2: 每位主播保底留存场次 -->
+          <!-- 字段 2: 每位主播最少保留场次 -->
           <div class="field-cell">
-            <label class="field-label">每位主播保底留存场次</label>
+            <label class="field-label">每位主播最少保留场次</label>
             <div class="field-control">
               <el-input-number
                 :model-value="config.MIN_KEEP_PER_STREAMER ?? 3"
@@ -176,9 +176,9 @@
             </div>
           </div>
 
-          <!-- 字段 3: 单次清理最多删除文件 -->
+          <!-- 字段 3: 单次清理最多删除文件数 -->
           <div class="field-cell">
-            <label class="field-label">单次清理最多删除文件</label>
+            <label class="field-label">单次清理最多删除文件数</label>
             <div class="field-control">
               <el-input-number
                 :model-value="config.MAX_DELETE_PER_RUN ?? 50"
@@ -194,9 +194,9 @@
           </div>
         </div>
 
-        <!-- 3. 永久免删关键词白名单 -->
+        <!-- 3. 永久免删关键词（白名单） -->
         <div class="whitelist-section">
-          <label class="field-label">永久免删关键词白名单</label>
+          <label class="field-label">永久免删关键词（白名单）</label>
           <div class="tags-flex-wrap">
             <el-tag
               v-for="(tag, idx) in tagList"
