@@ -138,7 +138,7 @@
               :disabled="savingConfig || savingSchedule"
               @click="handleSaveSettings"
             >
-              {{ (savingConfig || savingSchedule) ? '保存中...' : '立即保存配置' }}
+              {{ (savingConfig || savingSchedule) ? '保存中...' : '保存变更' }}
             </button>
           </div>
         </div>

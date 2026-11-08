@@ -91,7 +91,7 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="$emit('update:visible', false)">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave">保存规则</el-button>
+        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
       </div>
     </template>
   </el-dialog>

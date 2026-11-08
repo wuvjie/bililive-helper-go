@@ -75,7 +75,7 @@
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            <span>下载配置文件 (.json)</span>
+            <span>下载配置</span>
           </button>
           <button type="button" class="btn-action-secondary" @click="handleCopy">
             <svg v-if="!copiedRecently" class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,7 +85,7 @@
             <svg v-else class="btn-svg copied-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span>{{ copiedRecently ? '已复制到剪贴板' : '复制配置代码' }}</span>
+            <span>{{ copiedRecently ? '已复制' : '复制配置' }}</span>
           </button>
         </div>
       </div>
@@ -208,7 +208,7 @@
             :disabled="!hasValidImportContent"
             @click="handleApplyImport"
           >
-            确认导入并覆盖
+            导入
           </el-button>
         </div>
       </div>

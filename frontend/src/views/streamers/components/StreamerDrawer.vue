@@ -25,7 +25,7 @@
               <circle cx="6" cy="6" r="3"/>
               <path d="M6 21V9a9 9 0 0 0 9 9"/>
             </svg>
-            <span>合并该主播</span>
+            <span>合并录像</span>
           </button>
         </div>
       </div>

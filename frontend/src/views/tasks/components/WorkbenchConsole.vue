@@ -35,7 +35,7 @@
               <circle cx="6" cy="6" r="3"/>
               <path d="M6 21V9a9 9 0 0 0 9 9"/>
             </svg>
-            <span>合并该主播</span>
+            <span>合并录像</span>
           </button>
           <button
             class="btn-targeted btn-targeted-clean"
@@ -46,7 +46,7 @@
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
             </svg>
-            <span>清理旧录像</span>
+            <span>清理录像</span>
           </button>
         </div>
       </div>

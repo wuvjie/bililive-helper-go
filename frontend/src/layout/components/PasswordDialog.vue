@@ -14,7 +14,7 @@
     <template #footer>
       <div class="pw-footer">
         <el-button @click="$emit('update:visible', false)">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSubmit">确认修改</el-button>
+        <el-button type="primary" :loading="saving" @click="handleSubmit">确认</el-button>
       </div>
     </template>
   </el-dialog>
