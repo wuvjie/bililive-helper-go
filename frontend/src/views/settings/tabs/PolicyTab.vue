@@ -1,9 +1,17 @@
 <template>
   <div class="policy-tab">
-    <!-- Group 1: 录制与合并 -->
+    <!-- Group 1: 录制与合并规则 -->
     <div class="setting-group">
       <div class="category-divider">
-        <span class="category-label">录制与合并</span>
+        <div class="category-badge">
+          <div class="mini-icon-box icon-box-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+          </div>
+          <span class="category-label">录制与合并规则</span>
+        </div>
         <span class="category-line" />
       </div>
 
@@ -27,7 +35,7 @@
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-title">完播静置等待</div>
-          <div class="setting-desc">录播关播后的静置缓冲期，防止误读正在写入的切片</div>
+          <div class="setting-desc">录播关播后的静置缓冲期，防止误读正在写入的活动切片</div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -42,10 +50,17 @@
       </div>
     </div>
 
-    <!-- Group 2: 磁盘自动清理 -->
+    <!-- Group 2: 磁盘自动清理策略 -->
     <div class="setting-group">
       <div class="category-divider">
-        <span class="category-label">磁盘自动清理</span>
+        <div class="category-badge">
+          <div class="mini-icon-box icon-box-amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+          </div>
+          <span class="category-label">磁盘自动清理策略</span>
+        </div>
         <span class="category-line" />
       </div>
 
@@ -90,12 +105,12 @@
         </div>
       </div>
 
-      <!-- 单次冲程预期指示条 -->
+      <!-- 单次冲程预期指示条 (Buffer Zone Live Simulator) -->
       <div class="stroke-summary-banner">
         <div class="stroke-summary-left">
           <svg class="stroke-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           <span class="stroke-label">单次清理冲程：</span>
-          <span class="stroke-val-highlight">预计释放约 {{ bufferPct }}%</span>
+          <span class="stroke-val-highlight">预计释放约 {{ bufferPct }}% 存储深度</span>
           <span v-if="bufferGB" class="stroke-gb-badge">≈ {{ bufferGB }} GB</span>
         </div>
         <span class="stroke-range-text">警戒水位 {{ config.TRIGGER_THRESHOLD }}% → 目标水位 {{ config.TARGET_THRESHOLD }}%</span>
@@ -135,11 +150,28 @@
         </div>
       </div>
 
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">单次最多清理</div>
+          <div class="setting-desc">每次清理任务允许删除的文件上限，防止极端突发异常大量删除</div>
+        </div>
+        <div class="setting-control">
+          <div class="inline-unit-row">
+            <el-input-number
+              :model-value="config.MAX_DELETE_PER_RUN || 50"
+              :min="5" :max="500" :step="10" class="compact-counter"
+              @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
+            />
+            <span class="unit-text">个文件</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 白名单关键词 Tag 交互 -->
       <div class="setting-row setting-row-stack">
         <div class="setting-info">
           <div class="setting-title">免清理白名单</div>
-          <div class="setting-desc">匹配关键词的录像文件或主播目录受永久保护不被清理</div>
+          <div class="setting-desc">匹配关键词的录像文件或主播目录受永久保护不被自动清理</div>
         </div>
         <div class="whitelist-tag-group">
           <div class="tags-container">
@@ -238,42 +270,45 @@ function onTargetChange(val: number) {
   });
 }
 
-function onSafeModeChange(val: string) {
-  const patch: Partial<ConfigDTO> = { SAFE_MODE: val };
-  if (val === "hours" && !props.config.SAFE_AGE_MINUTES) patch.SAFE_AGE_MINUTES = 120;
-  if (val === "days" && !props.config.SAFE_DAYS) patch.SAFE_DAYS = 1;
-  emit("update:config", { ...props.config, ...patch });
+function onSafeDaysChange(days: number) {
+  emit("update:config", {
+    ...props.config,
+    SAFE_DAYS: days,
+    SAFE_MODE: "days",
+    SAFE_AGE_MINUTES: days * 1440
+  });
 }
 
-const safeAgeHours = computed(() => {
-  const mins = props.config.SAFE_AGE_MINUTES ?? 120;
-  return Math.max(1, Math.round(mins / 60));
-});
-
-// Buffer calculations
-const triggerFreeGB = computed(() => {
-  if (!props.totalDiskGb || props.totalDiskGb <= 0) return null;
-  const trig = Number(props.config.TRIGGER_THRESHOLD || 80);
-  return ((props.totalDiskGb * (100 - trig)) / 100).toFixed(1);
-});
-
 const bufferPct = computed(() => {
-  const trig = Number(props.config.TRIGGER_THRESHOLD || 80);
-  const targ = Number(props.config.TARGET_THRESHOLD || 60);
-  return Math.max(0, trig - targ);
+  const trig = props.config.TRIGGER_THRESHOLD ?? 80;
+  const tgt = props.config.TARGET_THRESHOLD ?? 60;
+  return Math.max(0, trig - tgt);
 });
 
 const bufferGB = computed(() => {
   if (!props.totalDiskGb || props.totalDiskGb <= 0) return null;
-  return ((props.totalDiskGb * bufferPct.value) / 100).toFixed(1);
+  const pct = bufferPct.value;
+  return Math.round((props.totalDiskGb * pct) / 100);
 });
 
-// Whitelist Tag list
-const tagList = computed(() => {
+const triggerFreeGB = computed(() => {
+  if (!props.totalDiskGb || props.totalDiskGb <= 0) return null;
+  const trig = props.config.TRIGGER_THRESHOLD ?? 80;
+  const freePct = Math.max(0, 100 - trig);
+  return Math.round((props.totalDiskGb * freePct) / 100);
+});
+
+const tagList = computed<string[]>(() => {
   const raw = props.config.WHITELIST_KEYWORDS;
   if (!raw) return [];
   if (Array.isArray(raw)) return raw;
-  return String(raw).split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  if (typeof raw === "string") {
+    return (raw as string)
+      .split(/[,，]/)
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
 });
 
 const inputTagVisible = ref(false);
@@ -322,6 +357,74 @@ function addTag(keyword: string) {
 }
 .setting-group + .setting-group {
   margin-top: 24px;
+}
+
+/* Category Header with Mini Icon Box */
+.category-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 16px 0;
+}
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  padding: 4px 10px 4px 6px;
+  border-radius: var(--r-sm, 6px);
+  border: 1px solid var(--hairline, #e4e4e7);
+}
+.mini-icon-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mini-icon-box svg {
+  width: 11px;
+  height: 11px;
+}
+.icon-box-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+.icon-box-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+.category-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--charcoal, #27272a);
+  white-space: nowrap;
+}
+.category-line {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline, #e6e4df);
+}
+html.dark .category-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+html.dark .category-label {
+  color: #f4f4f5;
+}
+html.dark .category-line {
+  background: rgba(255, 255, 255, 0.08);
+}
+html.dark .icon-box-emerald {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+html.dark .icon-box-amber {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
 }
 
 .setting-row {
@@ -421,7 +524,7 @@ function addTag(keyword: string) {
   height: 14px !important;
   max-width: 14px !important;
   max-height: 14px !important;
-  color: var(--primary, #059669);
+  color: #059669;
   flex-shrink: 0;
 }
 .stroke-label {
@@ -474,11 +577,12 @@ function addTag(keyword: string) {
   white-space: nowrap;
 }
 
-/* Whitelist Tags */
+/* Whitelist Tag Group */
 .whitelist-tag-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .tags-container {
@@ -490,13 +594,8 @@ function addTag(keyword: string) {
 
 .keyword-tag {
   font-size: 12px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.03)) !important;
-  border-color: var(--hairline-strong) !important;
-  color: var(--charcoal) !important;
+  padding: 3px 8px;
   border-radius: var(--r-xs);
-  padding: 0 8px;
-  height: 26px;
-  line-height: 24px;
 }
 
 .tag-inline-input {

@@ -12,7 +12,7 @@
               type="button"
               class="nav-tab-btn"
               :class="{ active: activeSectionId === item.id }"
-              @click="switchToSection(item.id)"
+              @click="handleSidebarTabClick(item.id)"
             >
               <span class="nav-btn-icon">
                 <svg v-if="item.id === 'policy'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
@@ -28,9 +28,16 @@
         </div>
       </aside>
 
-      <!-- Right: Focused Section Card with Wheel Turn Navigation -->
-      <main class="settings-content" ref="contentRef">
-        <Transition name="module-turn" mode="out-in">
+      <!-- Right: Focused Section Card with Directional Turn & Elastic Resistance -->
+      <main
+        class="settings-content"
+        ref="contentRef"
+        :style="{
+          transform: pullOffset ? `translateY(${pullOffset}px)` : '',
+          transition: pullOffset ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
+        }"
+      >
+        <Transition :name="slideDirection === 'next' ? 'slide-down-page' : 'slide-up-page'" mode="out-in">
           <!-- 1. 全局策略 -->
           <section
             v-if="activeSectionId === 'policy'"
@@ -63,7 +70,7 @@
                 @update:config="config = $event"
               />
             </div>
-            <!-- Card Footer Navigation -->
+            <!-- Card Footer Navigation with Elastic Cues -->
             <div class="module-card-footer">
               <div class="footer-left">
                 <div class="module-step-indicator" role="tablist">
@@ -74,7 +81,7 @@
                     class="step-dot-btn"
                     :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
                     :title="`切换至：${item.label}`"
-                    @click="switchToSection(item.id)"
+                    @click="handleSidebarTabClick(item.id)"
                   />
                 </div>
                 <span class="module-step-text">
@@ -91,12 +98,22 @@
                   <span>下一模块：定时调度</span>
                   <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
-                <div class="wheel-hint-pill">
+                <div
+                  class="wheel-hint-pill"
+                  :class="{ 'pulling-active': isPullingNext || isPullingPrev }"
+                >
+                  <div
+                    v-if="isPullingNext || isPullingPrev"
+                    class="pull-progress-fill"
+                    :style="{ width: pullProgress + '%' }"
+                  />
                   <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="3" width="12" height="18" rx="6" />
                     <line x1="12" y1="7" x2="12" y2="11" />
                   </svg>
-                  <span>触底滚轮快速切换</span>
+                  <span v-if="isPullingNext">继续下滑前往「定时调度」</span>
+                  <span v-else-if="isPullingPrev">继续上滑返回「{{ prevModule?.label }}」</span>
+                  <span v-else>触底滚轮快速切换</span>
                 </div>
               </div>
             </div>
@@ -138,7 +155,7 @@
                 @update:backup-end="backupEnd = $event"
               />
             </div>
-            <!-- Card Footer Navigation -->
+            <!-- Card Footer Navigation with Elastic Cues -->
             <div class="module-card-footer">
               <div class="footer-left">
                 <div class="module-step-indicator" role="tablist">
@@ -149,7 +166,7 @@
                     class="step-dot-btn"
                     :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
                     :title="`切换至：${item.label}`"
-                    @click="switchToSection(item.id)"
+                    @click="handleSidebarTabClick(item.id)"
                   />
                 </div>
                 <span class="module-step-text">
@@ -175,12 +192,22 @@
                   <span>下一模块：配置备份</span>
                   <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
-                <div class="wheel-hint-pill">
+                <div
+                  class="wheel-hint-pill"
+                  :class="{ 'pulling-active': isPullingNext || isPullingPrev }"
+                >
+                  <div
+                    v-if="isPullingNext || isPullingPrev"
+                    class="pull-progress-fill"
+                    :style="{ width: pullProgress + '%' }"
+                  />
                   <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="3" width="12" height="18" rx="6" />
                     <line x1="12" y1="7" x2="12" y2="11" />
                   </svg>
-                  <span>触底滚轮快速切换</span>
+                  <span v-if="isPullingNext">继续下滑前往「配置备份」</span>
+                  <span v-else-if="isPullingPrev">继续上滑返回「全局策略」</span>
+                  <span v-else>触底滚轮快速切换</span>
                 </div>
               </div>
             </div>
@@ -212,7 +239,7 @@
                 @apply-import="handleImport"
               />
             </div>
-            <!-- Card Footer Navigation -->
+            <!-- Card Footer Navigation with Elastic Cues -->
             <div class="module-card-footer">
               <div class="footer-left">
                 <div class="module-step-indicator" role="tablist">
@@ -223,7 +250,7 @@
                     class="step-dot-btn"
                     :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
                     :title="`切换至：${item.label}`"
-                    @click="switchToSection(item.id)"
+                    @click="handleSidebarTabClick(item.id)"
                   />
                 </div>
                 <span class="module-step-text">
@@ -249,12 +276,22 @@
                   <span>下一模块：安全设置</span>
                   <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
-                <div class="wheel-hint-pill">
+                <div
+                  class="wheel-hint-pill"
+                  :class="{ 'pulling-active': isPullingNext || isPullingPrev }"
+                >
+                  <div
+                    v-if="isPullingNext || isPullingPrev"
+                    class="pull-progress-fill"
+                    :style="{ width: pullProgress + '%' }"
+                  />
                   <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="3" width="12" height="18" rx="6" />
                     <line x1="12" y1="7" x2="12" y2="11" />
                   </svg>
-                  <span>触底滚轮快速切换</span>
+                  <span v-if="isPullingNext">继续下滑前往「安全设置」</span>
+                  <span v-else-if="isPullingPrev">继续上滑返回「定时调度」</span>
+                  <span v-else>触底滚轮快速切换</span>
                 </div>
               </div>
             </div>
@@ -278,7 +315,7 @@
             <div class="section-card-body">
               <SecurityTab />
             </div>
-            <!-- Card Footer Navigation -->
+            <!-- Card Footer Navigation with Elastic Cues -->
             <div class="module-card-footer">
               <div class="footer-left">
                 <div class="module-step-indicator" role="tablist">
@@ -289,7 +326,7 @@
                     class="step-dot-btn"
                     :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
                     :title="`切换至：${item.label}`"
-                    @click="switchToSection(item.id)"
+                    @click="handleSidebarTabClick(item.id)"
                   />
                 </div>
                 <span class="module-step-text">
@@ -309,18 +346,27 @@
                 <button
                   type="button"
                   class="btn-module-nav btn-module-loop"
-                  @click="switchToSection('policy')"
+                  @click="switchToSection('policy', 'prev')"
                   title="已至末页，点击返回首项「全局策略」"
                 >
                   <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                   <span>已至末页 · 返回首项</span>
                 </button>
-                <div class="wheel-hint-pill">
+                <div
+                  class="wheel-hint-pill"
+                  :class="{ 'pulling-active': isPullingPrev }"
+                >
+                  <div
+                    v-if="isPullingPrev"
+                    class="pull-progress-fill"
+                    :style="{ width: pullProgress + '%' }"
+                  />
                   <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="6" y="3" width="12" height="18" rx="6" />
                     <line x1="12" y1="7" x2="12" y2="11" />
                   </svg>
-                  <span>触底滚轮快速切换</span>
+                  <span v-if="isPullingPrev">继续上滑返回「配置备份」</span>
+                  <span v-else>已至末页（触顶可上滑回退）</span>
                 </div>
               </div>
             </div>
@@ -386,11 +432,20 @@ const activeSectionId = ref<string>(
     : "policy"
 );
 
+// Direction-aware transitions & elastic pull feedback
+const slideDirection = ref<"next" | "prev">("next");
+const pullOffset = ref(0);
+const pullProgress = ref(0);
+const isPullingNext = ref(false);
+const isPullingPrev = ref(false);
 const isTransitioning = ref(false);
+
 let accumulatedDeltaYDown = 0;
 let accumulatedDeltaYUp = 0;
 let resetTimer: ReturnType<typeof setTimeout> | null = null;
-const WHEEL_THRESHOLD = 50;
+
+const WHEEL_THRESHOLD = 70;
+const PULL_MAX_OFFSET = 16;
 
 const currentModuleIndex = computed(() => {
   return navSections.findIndex((s) => s.id === activeSectionId.value);
@@ -414,7 +469,6 @@ const nextModule = computed(() => {
 const canGoPrev = computed(() => prevModule.value !== null);
 const canGoNext = computed(() => nextModule.value !== null);
 
-// Helper: 获取最外层滚动容器 (.layout-content)
 function getScrollContainer(): HTMLElement | null {
   return document.querySelector(".layout-content") as HTMLElement | null;
 }
@@ -425,9 +479,18 @@ function updateRouteQuery(tabId: string) {
   }
 }
 
-function switchToSection(id: string) {
+function switchToSection(id: string, direction?: "next" | "prev") {
   if (activeSectionId.value === id) return;
+  const oldIdx = navSections.findIndex((s) => s.id === activeSectionId.value);
+  const newIdx = navSections.findIndex((s) => s.id === id);
+
+  slideDirection.value = direction || (newIdx > oldIdx ? "next" : "prev");
   isTransitioning.value = true;
+  pullOffset.value = 0;
+  pullProgress.value = 0;
+  isPullingNext.value = false;
+  isPullingPrev.value = false;
+
   activeSectionId.value = id;
   updateRouteQuery(id);
 
@@ -442,7 +505,11 @@ function switchToSection(id: string) {
 
   setTimeout(() => {
     isTransitioning.value = false;
-  }, 420);
+  }, 440);
+}
+
+function handleSidebarTabClick(id: string) {
+  switchToSection(id);
 }
 
 function scrollToSection(id: string) {
@@ -451,12 +518,12 @@ function scrollToSection(id: string) {
 
 function goToNextModule() {
   if (!canGoNext.value || !nextModule.value) return;
-  switchToSection(nextModule.value.id);
+  switchToSection(nextModule.value.id, "next");
 }
 
 function goToPrevModule() {
   if (!canGoPrev.value || !prevModule.value) return;
-  switchToSection(prevModule.value.id);
+  switchToSection(prevModule.value.id, "prev");
 }
 
 function scheduleAccumulatorReset() {
@@ -464,7 +531,11 @@ function scheduleAccumulatorReset() {
   resetTimer = setTimeout(() => {
     accumulatedDeltaYDown = 0;
     accumulatedDeltaYUp = 0;
-  }, 250);
+    pullOffset.value = 0;
+    pullProgress.value = 0;
+    isPullingNext.value = false;
+    isPullingPrev.value = false;
+  }, 220);
 }
 
 function handleWheel(e: WheelEvent) {
@@ -480,10 +551,13 @@ function handleWheel(e: WheelEvent) {
   const isAtBottom = scrollTop + clientHeight >= scrollHeight - 6;
   const isAtTop = scrollTop <= 6;
 
-  // Downward wheel at bottom -> Switch to next tab
+  // Downward wheel at bottom -> Pull towards next tab
   if (e.deltaY > 0 && isAtBottom) {
     if (canGoNext.value) {
       accumulatedDeltaYDown += e.deltaY;
+      pullOffset.value = -Math.min(PULL_MAX_OFFSET, Math.round(Math.sqrt(accumulatedDeltaYDown) * 1.8));
+      pullProgress.value = Math.min(100, Math.round((accumulatedDeltaYDown / WHEEL_THRESHOLD) * 100));
+      isPullingNext.value = true;
       scheduleAccumulatorReset();
 
       if (accumulatedDeltaYDown >= WHEEL_THRESHOLD) {
@@ -494,10 +568,13 @@ function handleWheel(e: WheelEvent) {
       }
     }
   }
-  // Upward wheel at top -> Switch to prev tab
+  // Upward wheel at top -> Pull towards prev tab
   else if (e.deltaY < 0 && isAtTop) {
     if (canGoPrev.value) {
       accumulatedDeltaYUp += Math.abs(e.deltaY);
+      pullOffset.value = Math.min(PULL_MAX_OFFSET, Math.round(Math.sqrt(accumulatedDeltaYUp) * 1.8));
+      pullProgress.value = Math.min(100, Math.round((accumulatedDeltaYUp / WHEEL_THRESHOLD) * 100));
+      isPullingPrev.value = true;
       scheduleAccumulatorReset();
 
       if (accumulatedDeltaYUp >= WHEEL_THRESHOLD) {
@@ -508,9 +585,13 @@ function handleWheel(e: WheelEvent) {
       }
     }
   } else {
-    // Normal scrolling within module
+    // Normal scrolling within page
     accumulatedDeltaYDown = 0;
     accumulatedDeltaYUp = 0;
+    pullOffset.value = 0;
+    pullProgress.value = 0;
+    isPullingNext.value = false;
+    isPullingPrev.value = false;
   }
 }
 
@@ -940,11 +1021,7 @@ watch(
   (newTab) => {
     if (typeof newTab === "string" && ["policy", "schedule", "backup", "security"].includes(newTab)) {
       if (activeSectionId.value !== newTab) {
-        activeSectionId.value = newTab;
-        const container = getScrollContainer();
-        if (container) {
-          container.scrollTop = 0;
-        }
+        switchToSection(newTab);
       }
     }
   }
@@ -1107,6 +1184,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  transform-origin: center top;
 }
 
 /* Unified Section Card */
@@ -1196,7 +1274,7 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
   padding: 22px;
 }
 
-/* Card Module Footer Navigation */
+/* Card Module Footer Navigation with Elastic Cues */
 .module-card-footer {
   display: flex;
   align-items: center;
@@ -1317,36 +1395,80 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
 }
 
 .wheel-hint-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 11.5px;
   color: var(--muted, #a1a1aa);
   background: var(--surface-card, #ffffff);
   border: 1px dashed var(--hairline, #e4e4e7);
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: var(--r-xs, 4px);
   user-select: none;
+  overflow: hidden;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.wheel-hint-pill.pulling-active {
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+  font-weight: 600;
+}
+
+.pull-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--primary, #2563eb) 12%, transparent);
+  transition: width 0.05s linear;
+  pointer-events: none;
 }
 
 .mouse-icon-svg {
   width: 12px;
   height: 12px;
-  color: var(--muted, #a1a1aa);
+  color: currentColor;
 }
 
-/* Page Turn Animation */
-.module-turn-enter-active,
-.module-turn-leave-active {
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+/* Direction-Aware Page Slide Transitions */
+/* 1. Downward Slide (Next): leaves UP, enters from DOWN */
+.slide-down-page-leave-active,
+.slide-down-page-enter-active {
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.module-turn-enter-from {
+.slide-down-page-leave-to {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(-20px) scale(0.995);
 }
-.module-turn-leave-to {
+.slide-down-page-enter-from {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(24px) scale(0.995);
+}
+.slide-down-page-enter-to,
+.slide-down-page-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* 2. Upward Slide (Prev): leaves DOWN, enters from UP */
+.slide-up-page-leave-active,
+.slide-up-page-enter-active {
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-page-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.995);
+}
+.slide-up-page-enter-from {
+  opacity: 0;
+  transform: translateY(-24px) scale(0.995);
+}
+.slide-up-page-enter-to,
+.slide-up-page-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 /* Form sub-section styling inside cards */
@@ -1361,34 +1483,6 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
   margin-top: 28px !important;
   padding-top: 0 !important;
   border-top: none !important;
-}
-.settings-section-card :deep(.category-divider) {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 4px 0 18px 0;
-}
-.settings-section-card :deep(.category-label) {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  color: var(--steel, #71717a);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
-  padding: 3px 8px;
-  border-radius: var(--r-xs, 4px);
-  white-space: nowrap;
-}
-.settings-section-card :deep(.category-line) {
-  flex: 1;
-  height: 1px;
-  background: var(--hairline, #e6e4df);
-}
-html.dark .settings-section-card :deep(.category-label) {
-  color: #a1a1aa;
-  background: rgba(255, 255, 255, 0.06);
-}
-html.dark .settings-section-card :deep(.category-line) {
-  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Floating Sticky Save Bar (吸底保存条) */
@@ -1557,7 +1651,11 @@ html.dark .wheel-hint-pill {
   border-color: rgba(255, 255, 255, 0.12);
   color: #71717a;
 }
-html.dark .wheel-hint-pill .mouse-icon-svg {
-  color: #71717a;
+html.dark .wheel-hint-pill.pulling-active {
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+html.dark .pull-progress-fill {
+  background: rgba(96, 165, 250, 0.18);
 }
 </style>
