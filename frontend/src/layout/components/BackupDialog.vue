@@ -44,7 +44,7 @@
         <div class="pane-meta-row">
           <span class="pane-title">导出当前系统配置</span>
           <el-tooltip
-            content="将当前录制合并规则、定时巡检周期、存储水位阈值与主播专属配置打包导出为标准 JSON 格式文件。"
+            content="将当前录像合并规则、定时执行周期、磁盘清理阈值以及主播专属规则导出为 JSON 文件备份。"
             placement="top"
             :show-after="200"
           >
@@ -335,9 +335,9 @@ async function handleApplyImport() {
 
   try {
     await ElMessageBox.confirm(
-      "导入配置将直接覆盖当前的录制合并策略、清理阈值与定时调度，是否确认覆盖？",
-      "确认导入配置",
-      { confirmButtonText: "确认导入", cancelButtonText: "取消", type: "warning" }
+      "导入配置文件将直接覆盖当前的录像合并规则、磁盘清理阈值与后台定时任务，是否确认覆盖？",
+      "确认覆盖并导入配置",
+      { confirmButtonText: "确认覆盖导入", cancelButtonText: "取消", type: "warning" }
     );
   } catch {
     return;

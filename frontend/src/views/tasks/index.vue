@@ -78,11 +78,11 @@ async function handleExecuteClean() {
   try {
     if (streamer) {
       await ElMessageBox.confirm(
-        `即将清理主播「${streamer}」的已合并及过期录像，是否确认立即执行？`,
-        "清理确认",
+        `即将清理主播「${streamer}」名下的已合并及过期录像，是否确认立即执行？`,
+        `清理录像确认 · ${streamer}`,
         {
           type: "warning",
-          confirmButtonText: "确认清理",
+          confirmButtonText: "立即清理",
           cancelButtonText: "取消"
         }
       );
@@ -90,10 +90,10 @@ async function handleExecuteClean() {
     } else {
       await ElMessageBox.confirm(
         "即将根据系统配置的清理阈值与保留规则，对所有主播的录像目录执行磁盘清理，是否确认立即执行？",
-        "全局清理确认",
+        "清理所有主播录像确认",
         {
           type: "warning",
-          confirmButtonText: "确认清理",
+          confirmButtonText: "立即清理",
           cancelButtonText: "取消"
         }
       );

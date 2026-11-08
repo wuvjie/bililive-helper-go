@@ -44,7 +44,7 @@
                 {{ row.task === 'merge' ? '合并' : row.task === 'clean' ? '清理' : row.task === 'config' ? '配置' : '调度' }}
               </span>
               <span class="recent-who">
-                <span v-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">全局</span>
+                <span v-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">所有主播</span>
                 <span v-else class="streamer-text" :title="row.streamer">{{ row.streamer }}</span>
               </span>
               <span class="recent-action" :title="cleanDetailText(row.detail || formatDetail(row), row.task)">

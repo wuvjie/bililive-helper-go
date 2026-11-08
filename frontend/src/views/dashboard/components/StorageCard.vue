@@ -9,7 +9,7 @@
             <line x1="10" y1="16" x2="10.01" y2="16"/>
           </svg>
         </div>
-        <span class="card-title-main">存储空间监控</span>
+        <span class="card-title-main">磁盘存储空间</span>
       </div>
     </div>
 
@@ -37,15 +37,15 @@
           <span class="mono-val">{{ detail?.disk?.total_gb != null ? (detail.disk.total_gb.toFixed(1) + ' GB') : '-' }}</span>
         </div>
         <div class="data-cell">
-          <span class="data-label">已用</span>
+          <span class="data-label">已用空间</span>
           <span class="mono-val">{{ detail?.disk?.used_gb != null ? (detail.disk.used_gb.toFixed(1) + ' GB') : '-' }}</span>
         </div>
         <div class="data-cell">
-          <span class="data-label">剩余</span>
+          <span class="data-label">剩余空间</span>
           <span class="mono-val">{{ detail?.disk?.free_gb != null ? (detail.disk.free_gb.toFixed(1) + ' GB') : '-' }}</span>
         </div>
         <div class="data-cell">
-          <span class="data-label">录播占用</span>
+          <span class="data-label">录像文件占用</span>
           <span class="mono-val">{{ totalRecordingsGB ? (totalRecordingsGB + ' GB') : '-' }}</span>
         </div>
       </div>

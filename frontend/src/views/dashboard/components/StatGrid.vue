@@ -1,54 +1,54 @@
 <template>
   <div class="stat-grid">
-    <!-- Card 1: 今日合并 (高频业务) -->
+    <!-- Card 1: 今日合并录像 (高频业务) -->
     <div class="stat-card accent-blue">
-      <span class="stat-label">今日合并</span>
+      <span class="stat-label">今日合并录像</span>
       <div class="stat-value-row">
         <span class="stat-value">{{ stats?.today?.merge_count || 0 }}</span>
         <span class="stat-unit">次</span>
       </div>
       <span class="stat-sub">
-        产出 {{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}
+        生成成片 {{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}
       </span>
     </div>
 
-    <!-- Card 2: 昨日合并 (环比对照) -->
+    <!-- Card 2: 昨日合并录像 (环比对照) -->
     <div class="stat-card accent-green">
-      <span class="stat-label">昨日合并</span>
+      <span class="stat-label">昨日合并录像</span>
       <div class="stat-value-row">
         <span class="stat-value">{{ yesterdayStats?.count || 0 }}</span>
         <span class="stat-unit">次</span>
       </div>
       <span class="stat-sub">
-        产出 {{ yesterdayStats?.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}
+        生成成片 {{ yesterdayStats?.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}
       </span>
     </div>
 
-    <!-- Card 3: 累计合并 (业务产出总值) -->
+    <!-- Card 3: 累计合并录像 (业务产出总值) -->
     <div class="stat-card accent-sky">
-      <span class="stat-label">累计合并</span>
+      <span class="stat-label">累计合并录像</span>
       <div class="stat-value-row">
         <span class="stat-value">{{ totalMergedStats.count }}</span>
         <span class="stat-unit">次</span>
       </div>
       <span class="stat-sub">
-        产出 {{ totalMergedStats.bytes ? formatBytes(totalMergedStats.bytes) : '0.00 GB' }}
+        生成成片 {{ totalMergedStats.bytes ? formatBytes(totalMergedStats.bytes) : '0.00 GB' }}
       </span>
     </div>
 
-    <!-- Card 4: 7 日平均产出 (趋势基线) -->
+    <!-- Card 4: 近 7 天日均生成录像 (趋势基线) -->
     <div class="stat-card accent-teal">
-      <span class="stat-label">7 日平均产出</span>
+      <span class="stat-label">近 7 天日均生成录像</span>
       <div class="stat-value-row">
         <span class="stat-value">{{ stats?.daily_output_gb ? stats.daily_output_gb.toFixed(1) : '0.0' }}</span>
         <span class="stat-unit">GB/天</span>
       </div>
-      <span class="stat-sub">录播日均净增基准</span>
+      <span class="stat-sub">按近 7 天录像体积日均增长估算</span>
     </div>
 
-    <!-- Card 5: 预计可用时长 (容量安全) -->
+    <!-- Card 5: 磁盘预计可用天数 (容量安全) -->
     <div class="stat-card" :class="isRunwayUrgent ? 'accent-amber' : 'accent-indigo'">
-      <span class="stat-label">预计可用时长</span>
+      <span class="stat-label">磁盘预计可用天数</span>
       <div class="stat-value-row">
         <span class="stat-value">{{ runwayDisplay.val }}</span>
         <span v-if="runwayDisplay.unit" class="stat-unit">{{ runwayDisplay.unit }}</span>
@@ -56,15 +56,15 @@
       <span class="stat-sub">{{ runwayDisplay.sub }}</span>
     </div>
 
-    <!-- Card 6: 累计磁盘清理 (运维成效) -->
+    <!-- Card 6: 累计清理磁盘 (运维成效) -->
     <div class="stat-card accent-purple">
-      <span class="stat-label">累计磁盘清理</span>
+      <span class="stat-label">累计清理磁盘</span>
       <div class="stat-value-row">
         <span class="stat-value">{{ totalFreedStats.count }}</span>
         <span class="stat-unit">次</span>
       </div>
       <span class="stat-sub">
-        已腾出 {{ freedSpaceDisplay.val }} {{ freedSpaceDisplay.unit }}
+        已累计释放 {{ freedSpaceDisplay.val }} {{ freedSpaceDisplay.unit }} 磁盘空间
       </span>
     </div>
   </div>
@@ -94,13 +94,13 @@ const runwayDisplay = computed(() => {
     return {
       val: days.toFixed(0),
       unit: "天",
-      sub: days < 7 ? "余量告急 · 关注容量" : "基于 7 日速率推算"
+      sub: days < 7 ? "余量告急 · 建议及时清理" : "按近 7 天录像增长速度估算"
     };
   }
   return {
     val: "充足",
     unit: "",
-    sub: "未检测到耗尽风险"
+    sub: "空间充裕，无耗尽风险"
   };
 });
 </script>

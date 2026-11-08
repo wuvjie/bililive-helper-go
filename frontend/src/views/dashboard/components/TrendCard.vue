@@ -9,10 +9,10 @@
             <line x1="6" y1="20" x2="6" y2="14"/>
           </svg>
         </div>
-        <span class="card-title-main">近 7 天产出与清理趋势</span>
+        <span class="card-title-main">近 7 天录像生成与磁盘清理趋势</span>
       </div>
       <span v-if="hasTrendData" class="trend-sub-summary">
-        累计合并 {{ totalMergeGB }} · 释放 {{ totalCleanGB }}
+        共合并生成 {{ totalMergeGB }} · 清理释放 {{ totalCleanGB }}
       </span>
     </div>
 
@@ -44,17 +44,17 @@
                     <div class="tooltip-header">{{ day.date }}</div>
                     <div class="tooltip-item">
                       <span class="tooltip-dot dot-merge"></span>
-                      <span class="tooltip-lbl">生产合并:</span>
+                      <span class="tooltip-lbl">合并生成:</span>
                       <span class="tooltip-val">{{ formatBytes(day.merge_bytes) }} ({{ day.merge_count || 0 }} 次)</span>
                     </div>
                     <div class="tooltip-item">
                       <span class="tooltip-dot dot-clean"></span>
-                      <span class="tooltip-lbl">释放清理:</span>
+                      <span class="tooltip-lbl">清理释放:</span>
                       <span class="tooltip-val">{{ formatBytes(day.clean_bytes) }} ({{ day.clean_count || 0 }} 次)</span>
                     </div>
                     <div class="tooltip-divider"></div>
                     <div class="tooltip-net">
-                      <span>净空间变化:</span>
+                      <span>磁盘空间净变化:</span>
                       <span :class="getNetDiffClass(day)">{{ getNetDiffText(day) }}</span>
                     </div>
                   </div>
@@ -81,13 +81,13 @@
             <line x1="6" y1="20" x2="6" y2="14"/>
           </svg>
         </div>
-        <span class="empty-title">近 7 天暂无自动化处理数据</span>
-        <span class="empty-desc">当录像分片合并或触发磁盘清理时，每日吞吐量将自动在此展现</span>
+        <span class="empty-title">近 7 天暂无任务执行记录</span>
+        <span class="empty-desc">当后台自动执行录像合并或磁盘清理后，每日的数据变化将在此展示</span>
       </div>
 
       <div class="trend-legend">
-        <span><span class="legend-dot dot-merge" />生产合并</span>
-        <span><span class="legend-dot dot-clean" />释放清理</span>
+        <span><span class="legend-dot dot-merge" />合并生成录像</span>
+        <span><span class="legend-dot dot-clean" />清理释放空间</span>
       </div>
     </div>
   </div>

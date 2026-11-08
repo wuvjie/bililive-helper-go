@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="dashboard" v-loading="loading" element-loading-text="加载中...">
     <!-- Header with inline environment status -->
     <div class="dash-header">
@@ -15,7 +15,7 @@
         <span class="env-divider"></span>
         <div class="env-item">
           <span class="env-dot" :class="setup?.target_dir_exists ? 'dot-ok' : 'dot-err'"></span>
-          <span class="env-label">存储</span>
+          <span class="env-label">录像目录</span>
           <span class="env-val" :class="setup?.target_dir_exists ? 'val-ok' : 'val-err'">{{ setup?.target_dir_exists ? '正常' : '异常' }}</span>
         </div>
       </div>

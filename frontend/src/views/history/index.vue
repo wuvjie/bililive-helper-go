@@ -13,7 +13,7 @@
                   <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
               </div>
-              <span class="title-text">操作审计日志</span>
+              <span class="title-text">系统操作日志</span>
             </div>
 
             <div class="header-right-tools">
@@ -56,13 +56,13 @@
           class="history-table"
           :tooltip-options="{ enterable: false, showAfter: 500, placement: 'top' }"
         >
-          <el-table-column prop="time" label="时间" width="175" sortable>
+          <el-table-column prop="time" label="记录时间" width="175" sortable>
             <template #default="{ row }">
               <span class="mono-time">{{ row.time }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="task" label="类型" width="115" align="center" header-align="center" sortable>
+          <el-table-column prop="task" label="任务类型" width="125" align="center" header-align="center" sortable>
             <template #default="{ row }">
               <span class="type-label">
                 <span class="task-type-pill" :class="'type-' + row.task">
@@ -86,37 +86,37 @@
                   <svg v-else class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  <span>{{ row.task === 'merge' ? '分片合并' : row.task === 'clean' ? '磁盘清理' : row.task === 'config' ? '配置变更' : '调度事件' }}</span>
+                  <span>{{ row.task === 'merge' ? '录像合并' : row.task === 'clean' ? '磁盘清理' : row.task === 'config' ? '系统配置' : '定时调度' }}</span>
                 </span>
               </span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="streamer" label="主播" width="145" show-overflow-tooltip sortable>
+          <el-table-column prop="streamer" label="关联主播" width="145" show-overflow-tooltip sortable>
             <template #default="{ row }">
-              <span v-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">全局</span>
+              <span v-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">所有主播</span>
               <span v-else class="streamer-name-text">{{ row.streamer }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column label="详情" min-width="260">
+          <el-table-column label="执行详情" min-width="260">
             <template #default="{ row }">
               <span class="detail-text">{{ cleanDetailText(row.detail || formatDetail(row as HistoryRecord), row.task) }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="status" label="状态" width="95" align="center" header-align="center" sortable>
+          <el-table-column prop="status" label="执行状态" width="105" align="center" header-align="center" sortable>
             <template #default="{ row }">
               <span
                 class="status-dot-text"
                 :class="row.status === 'success' ? 'dot-success' : (row.status === 'partial' ? 'dot-warn' : 'dot-fail')"
               >
-                {{ row.status === 'success' ? '成功' : (row.status === 'partial' ? '部分' : '失败') }}
+                {{ row.status === 'success' ? '成功' : (row.status === 'partial' ? '部分完成' : '失败') }}
               </span>
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="100" align="center" header-align="center">
+          <el-table-column label="操作" width="110" align="center" header-align="center">
             <template #default="{ row }">
               <div class="row-actions-group">
                 <button
@@ -125,7 +125,7 @@
                   @click="viewLog(row as HistoryRecord)"
                   title="查看详细运行日志"
                 >
-                  查看
+                  查看日志
                 </button>
                 <span v-else class="action-none-placeholder">-</span>
               </div>
@@ -198,11 +198,11 @@ const filterStreamer = ref("");
 const streamerSearchRef = ref();
 
 const taskPillItems = [
-  { label: "全部", value: "" },
-  { label: "分片合并", value: "merge" },
+  { label: "全部日志", value: "" },
+  { label: "录像合并", value: "merge" },
   { label: "磁盘清理", value: "clean" },
-  { label: "配置变更", value: "config" },
-  { label: "调度事件", value: "schedule" }
+  { label: "系统配置", value: "config" },
+  { label: "定时调度", value: "schedule" }
 ];
 
 function handleKeydown(e: KeyboardEvent) {
@@ -261,8 +261,8 @@ async function loadHistory(page = 1) {
 async function handleClearHistory() {
   try {
     await ElMessageBox.confirm(
-      "此操作将永久清空全部历史操作日志记录和相关的任务日志文件，是否继续？",
-      "清空日志确认",
+      "确定要永久清空全部历史操作记录和任务日志文件吗？清空后将无法找回。",
+      "清空全部操作日志",
       {
         type: "warning",
         confirmButtonText: "确定清空",

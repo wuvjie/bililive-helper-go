@@ -11,13 +11,13 @@
       <div class="modal-header-container">
         <div class="modal-header-top-row">
           <div class="header-title-left">
-            <h3 class="modal-title-text">操作审计日志</h3>
+            <h3 class="modal-title-text">任务执行详细日志</h3>
             <span
               v-if="status"
               class="log-meta-status"
               :class="status === 'success' ? 'status-ok' : (status === 'partial' ? 'status-warn' : 'status-fail')"
             >
-              {{ status === 'success' ? '成功' : (status === 'partial' ? '部分' : '失败') }}
+              {{ status === 'success' ? '成功' : (status === 'partial' ? '部分完成' : '失败') }}
             </span>
           </div>
         </div>
@@ -53,13 +53,13 @@
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            <span>复制</span>
+            <span>复制全部日志</span>
           </button>
           <button class="btn-dialog-secondary" @click="downloadRawLog" title="下载完整原始日志 (.log)">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            <span>下载</span>
+            <span>下载日志文件</span>
           </button>
         </div>
         <div class="footer-actions-right">

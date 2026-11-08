@@ -1,14 +1,14 @@
 <template>
   <el-dialog
     :model-value="visible"
-    :title="`个性化规则 · ${streamer}`"
+    :title="`主播个性化规则 · ${streamer}`"
     width="560px"
     destroy-on-close
     class="rule-dialog"
     @update:model-value="$emit('update:visible', $event)"
   >
     <div class="rule-dialog-body">
-      <!-- Section 1: 自动视频时段裁剪 (视音频无损裁剪) -->
+      <!-- Section 1: 录像自动剪辑与截取 (视音频快速无损剪辑) -->
       <div class="rule-section">
         <div class="rule-row-header">
           <div class="rule-title-col">
@@ -21,13 +21,13 @@
                 <line x1="8.12" y1="8.12" x2="12" y2="12"/>
               </svg>
               <span class="rule-title">
-                <span>自动视频时段裁剪</span>
-                <el-tooltip content="分片合并完成后，基于无损流复制截取指定起止时段保留成片" placement="top" :show-after="300">
+                <span>录像自动剪辑与截取</span>
+                <el-tooltip content="在视频分片合并后，自动截取并保留指定时间段内的内容（采用快速无损剪辑，不改变画质）" placement="top" :show-after="300">
                   <span class="label-help-ico">?</span>
                 </el-tooltip>
               </span>
               <span class="status-pill" :class="formRule.trim_enabled ? 'pill-active' : 'pill-default'">
-                {{ formRule.trim_enabled ? '裁剪已启用' : '未开启' }}
+                {{ formRule.trim_enabled ? '已开启自动剪辑' : '未开启' }}
               </span>
             </div>
           </div>
@@ -39,25 +39,25 @@
             <!-- 拟真视频胶片时间轴预览条 (Film Strip Timeline Bar) -->
             <div class="film-timeline-wrap">
               <div class="film-strip-track">
-                <!-- Segment 1: 起始前段剪除 -->
+                <!-- Segment 1: 开播剪除部分 -->
                 <div
                   v-if="timelineSegments.hasLeading"
                   class="film-seg seg-discarded"
                   :style="{ flexGrow: timelineSegments.leadingGrow }"
-                  title="起始前段剪除丢弃"
+                  title="开播剪除部分"
                 >
                   <svg class="seg-mini-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
-                  <span class="seg-text">剪除前段</span>
+                  <span class="seg-text">开播剪除</span>
                 </div>
 
                 <!-- Segment 2: 有效录像保留片段 (核心主体) -->
                 <div
                   class="film-seg seg-retained"
                   :style="{ flexGrow: timelineSegments.retainedGrow }"
-                  title="有效录像保留成片"
+                  title="保留有效录像"
                 >
                   <div class="film-sprockets top"></div>
                   <div class="retained-content">
@@ -67,7 +67,7 @@
                       <line x1="17" y1="2" x2="17" y2="22"/>
                       <line x1="2" y1="12" x2="22" y2="12"/>
                     </svg>
-                    <span class="seg-text-bold">保留片段</span>
+                    <span class="seg-text-bold">保留精彩录像</span>
                     <span v-if="trimSemanticInfo.durationText" class="retained-badge">
                       {{ trimSemanticInfo.durationText }}
                     </span>
@@ -75,26 +75,26 @@
                   <div class="film-sprockets bottom"></div>
                 </div>
 
-                <!-- Segment 3: 出点后段剪除 (若指定了 trim_end) -->
+                <!-- Segment 3: 片尾剪除部分 (若指定了 trim_end) -->
                 <div
                   v-if="timelineSegments.hasTrailing"
                   class="film-seg seg-discarded"
                   :style="{ flexGrow: timelineSegments.trailingGrow }"
-                  title="出点后段剪除丢弃"
+                  title="片尾剪除部分"
                 >
                   <svg class="seg-mini-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
-                  <span class="seg-text">剪除后段</span>
+                  <span class="seg-text">片尾剪除</span>
                 </div>
                 <!-- 或者未指定 trim_end，表示截取至自然结尾 -->
                 <div
                   v-else-if="timelineSegments.isUntilEnd"
                   class="film-seg seg-tail-open"
-                  title="截取至录播自然结束"
+                  title="一直保留到录像结束"
                 >
-                  <span class="seg-text">直至结尾</span>
+                  <span class="seg-text">保留至结尾</span>
                 </div>
               </div>
 
@@ -102,20 +102,20 @@
               <div class="timeline-ticks-row">
                 <span class="tick-node tick-start">00:00:00 录像起点</span>
                 <span class="tick-node tick-in" v-if="timelineSegments.hasLeading">
-                  入点 {{ formRule.trim_start }}
+                  截取起点 {{ formRule.trim_start }}
                 </span>
                 <span class="tick-node tick-out" v-if="timelineSegments.hasTrailing">
-                  出点 {{ formRule.trim_end }}
+                  截取终点 {{ formRule.trim_end }}
                 </span>
                 <span class="tick-node tick-end">录像终点</span>
               </div>
             </div>
 
-            <!-- 剪辑入点与剪辑出点输入行 -->
+            <!-- 剪辑起点与剪辑终点输入行 -->
             <div class="time-inputs-row">
               <div class="time-field">
                 <label class="time-field-label">
-                  <span>剪辑入点（起始时间）</span>
+                  <span>截取起始时间（剪辑起点）</span>
                 </label>
                 <el-input
                   v-model="formRule.trim_start"
@@ -127,11 +127,11 @@
               <span class="time-range-sep">至</span>
               <div class="time-field">
                 <label class="time-field-label">
-                  <span>剪辑出点（结束时间）</span>
+                  <span>截取结束时间（剪辑终点）</span>
                 </label>
                 <el-input
                   v-model="formRule.trim_end"
-                  placeholder="留空保留至录像末尾"
+                  placeholder="留空则默认保留至录像结尾"
                   class="mono-input"
                   @blur="normalizeTrimField('trim_end')"
                 />
@@ -153,7 +153,7 @@
               </span>
             </div>
             <div class="trim-format-hint">
-              * 格式支持 <code>时:分:秒</code>（如 01:30:00）或 <code>分:秒</code>（如 05:00）；出点留空自动保留至录像末尾。
+              * 支持格式：<code>时:分:秒</code>（例如 01:30:00）或 <code>分:秒</code>（例如 05:00）；结束时间留空则自动保留至录像末尾。
             </div>
           </div>
         </transition>
@@ -168,13 +168,13 @@
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
               <span class="rule-title">
-                <span>免清理免删保护</span>
-                <el-tooltip content="最高保护等级：开启后后台自动磁盘清理任务彻底跳过该主播目录，即使磁盘耗尽也绝对保留" placement="top" :show-after="300">
+                <span>录像永久免删保护</span>
+                <el-tooltip content="开启后，后台自动清理磁盘时将彻底跳过该主播的录像目录，任何时候都不会被自动删除。" placement="top" :show-after="300">
                   <span class="label-help-ico">?</span>
                 </el-tooltip>
               </span>
               <span class="status-pill" :class="formRule.protected ? 'pill-exempt' : 'pill-default'">
-                {{ formRule.protected ? '已豁免清理' : '遵循全局' }}
+                {{ formRule.protected ? '已受永久保护' : '遵循全局清理规则' }}
               </span>
             </div>
           </div>

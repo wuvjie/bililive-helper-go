@@ -8,10 +8,10 @@
             <polyline points="12 6 12 12 16 14"/>
           </svg>
         </div>
-        <span class="card-title-main">自动化调度监控</span>
+        <span class="card-title-main">后台定时任务与执行状态</span>
         <span class="monitor-mode-tag" :class="isTaskRunning ? 'tag-running' : 'tag-in-service'">
           <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-in-service'"></span>
-          {{ isTaskRunning ? '任务执行中' : '自动调度生效中' }}
+          {{ isTaskRunning ? '正在执行任务' : '定时调度运行中' }}
         </span>
       </div>
       <router-link to="/tasks" class="card-header-action" title="前往任务中心查看流式终端与执行记录">
@@ -26,38 +26,38 @@
           <div class="runtime-state-indicator">
             <span class="state-dot" :class="isTaskRunning ? 'dot-running' : 'dot-idle'"></span>
             <span class="state-text" :class="{ 'text-running': isTaskRunning }">
-              {{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并视频...' : '正在清理磁盘...') : '待命就绪 · 暂无活动任务' }}
+              {{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并录像分片...' : '正在执行磁盘清理...') : '空闲就绪 · 暂无正在运行的任务' }}
             </span>
           </div>
         </div>
         <div class="runtime-subline">
           <span class="runtime-subtext">
-            {{ isTaskRunning ? '后台正在处理视频合并或磁盘清理任务，前往任务中心可查看实时终端输出' : '后台自动化任务已就绪，按设定周期自动执行' }}
+            {{ isTaskRunning ? '后台正在执行录像合并或磁盘清理任务，前往任务中心可查看实时终端输出' : '后台定时任务已就绪，将按设定的周期自动执行' }}
           </span>
         </div>
       </div>
 
       <div class="data-grid">
         <div class="data-cell">
-          <span class="data-label">合并周期</span>
+          <span class="data-label">自动合并周期</span>
           <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.merge_enabled }">
             {{ detail?.schedule?.merge_enabled ? ('每 ' + (detail?.schedule?.merge_interval || 360) + ' 分钟') : '已暂停' }}
           </span>
         </div>
         <div class="data-cell">
-          <span class="data-label">下次合并</span>
+          <span class="data-label">下次执行合并</span>
           <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.merge_enabled }">
             {{ detail?.schedule?.merge_enabled ? formatNextTime(detail?.schedule?.merge?.next_run) : '-' }}
           </span>
         </div>
         <div class="data-cell">
-          <span class="data-label">清理周期</span>
+          <span class="data-label">自动清理周期</span>
           <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.clean_enabled }">
             {{ detail?.schedule?.clean_enabled ? ('每 ' + (detail?.schedule?.clean_interval || 720) + ' 分钟') : '未开启' }}
           </span>
         </div>
         <div class="data-cell">
-          <span class="data-label">下次清理</span>
+          <span class="data-label">下次执行清理</span>
           <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.clean_enabled }">
             {{ detail?.schedule?.clean_enabled ? formatNextTime(detail?.schedule?.clean?.next_run) : '-' }}
           </span>

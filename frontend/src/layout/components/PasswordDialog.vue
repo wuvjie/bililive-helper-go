@@ -1,20 +1,20 @@
 <template>
-  <el-dialog :model-value="visible" title="修改系统管理密码" width="400px" destroy-on-close @update:model-value="$emit('update:visible', $event)">
+  <el-dialog :model-value="visible" title="修改系统管理员密码" width="400px" destroy-on-close @update:model-value="$emit('update:visible', $event)">
     <el-form label-position="top" @submit.prevent="handleSubmit">
-      <el-form-item label="旧密码">
-        <el-input v-model="form.old_password" type="password" show-password placeholder="输入当前密码" />
+      <el-form-item label="当前密码">
+        <el-input v-model="form.old_password" type="password" show-password placeholder="请输入当前正在使用的密码" />
       </el-form-item>
       <el-form-item label="新密码">
-        <el-input v-model="form.new_password" type="password" show-password placeholder="至少 6 个字符" />
+        <el-input v-model="form.new_password" type="password" show-password placeholder="请输入新密码（至少 6 个字符）" />
       </el-form-item>
       <el-form-item label="确认新密码">
-        <el-input v-model="form.confirm_password" type="password" show-password placeholder="请再次输入新密码" />
+        <el-input v-model="form.confirm_password" type="password" show-password placeholder="请再次输入新密码以确认" />
       </el-form-item>
     </el-form>
     <template #footer>
       <div class="pw-footer">
         <el-button @click="$emit('update:visible', false)">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSubmit">确认</el-button>
+        <el-button type="primary" :loading="saving" @click="handleSubmit">确认修改</el-button>
       </div>
     </template>
   </el-dialog>

@@ -1,7 +1,7 @@
 <template>
   <el-drawer
     :model-value="visible"
-    :title="`录像文件清单 · ${streamer}`"
+    :title="`录像文件列表 · ${streamer}`"
     size="min(660px, 90vw)"
     destroy-on-close
     @update:model-value="$emit('update:visible', $event)"
@@ -74,10 +74,10 @@
             sortable
           >
             <template #default="{ row }">
-              <el-tooltip :content="row.is_merged ? '已通过系统合并处理的完整录播视频' : '录播工具生成的原始录像文件（待合并或独立单场录像）'" placement="top" :show-after="500">
+              <el-tooltip :content="row.is_merged ? '已完成合并的完整录像成片' : '录制生成的原始分片文件，等待后台合并'" placement="top" :show-after="500">
                 <span class="file-status-badge" :class="row.is_merged ? 'status-merged' : 'status-raw'">
                   <span class="badge-dot"></span>
-                  {{ row.is_merged ? '已合并' : '原始录像' }}
+                  {{ row.is_merged ? '已合并成片' : '未合并分片' }}
                 </span>
               </el-tooltip>
             </template>
@@ -115,7 +115,7 @@
                 </svg>
               </div>
               <span class="empty-title">暂无录像文件</span>
-              <span class="empty-desc">该主播录像目录暂未生成切片或录像文件</span>
+              <span class="empty-desc">该主播的录像目录中暂未找到视频文件或分片</span>
             </div>
           </template>
         </el-table>
@@ -149,9 +149,9 @@ const mergedCount = computed(() => props.files.filter(f => f.is_merged).length);
 const rawCount = computed(() => props.files.filter(f => !f.is_merged).length);
 
 const navItems = computed<UnderlineNavItem[]>(() => [
-  { label: "全部", value: "all", count: props.files.length },
-  { label: "已合并", value: "merged", count: mergedCount.value },
-  { label: "原始录像", value: "raw", count: rawCount.value }
+  { label: "全部文件", value: "all", count: props.files.length },
+  { label: "已合并成片", value: "merged", count: mergedCount.value },
+  { label: "未合并分片", value: "raw", count: rawCount.value }
 ]);
 
 const displayFiles = computed(() => {

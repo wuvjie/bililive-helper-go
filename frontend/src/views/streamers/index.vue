@@ -177,8 +177,8 @@ async function openDrawer(row: StreamerInfo) {
 async function handleDeleteFile(row: StreamerFile) {
   try {
     await ElMessageBox.confirm(
-      `确定要永久删除录像文件 "${row.name}" 吗？此操作无法撤销。`,
-      "确认删除",
+      `确定要永久删除录像文件「${row.name}」吗？此操作无法撤销，文件将从磁盘彻底抹除。`,
+      "确认删除录像文件",
       {
         confirmButtonText: "确定删除",
         cancelButtonText: "取消",

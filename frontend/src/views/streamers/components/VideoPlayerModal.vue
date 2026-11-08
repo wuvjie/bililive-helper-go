@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     :model-value="visible"
-    :title="`播放预览: ${fileName}`"
+    :title="`录像播放预览 · ${fileName}`"
     width="800px"
     destroy-on-close
     class="player-dialog"
