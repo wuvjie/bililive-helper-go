@@ -1,4 +1,3 @@
-# 镜像源配置（默认国内源，海外构建传 --build-arg REGISTRY= --build-arg ALPINE_MIRROR=dl-cdn.alpinelinux.org）
 # 镜像源配置（默认使用官方通用标准源，国内构建可通过 --build-arg 传入加速镜像源）
 ARG REGISTRY=docker.io
 ARG ALPINE_MIRROR=dl-cdn.alpinelinux.org
@@ -27,10 +26,10 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o bililive-helper-go ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bililive-helper-go ./cmd/server
 
 # Stage 3: Minimal runtime image with ffmpeg
-FROM ${REGISTRY}/library/alpine:3.19
+FROM ${REGISTRY}/library/alpine:3.21
 ARG ALPINE_MIRROR
 
 LABEL maintainer="wuvjie"

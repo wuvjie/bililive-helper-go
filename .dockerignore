@@ -1,19 +1,40 @@
+# Dependencies
 node_modules/
 frontend/node_modules/
+
+# Local build artifacts
 frontend/dist/
+templates/index.html
+templates/assets/
+bililive-helper-go
+*.exe
+*.test
+*.out
+
+# Git & Tooling
 .git/
 .idea/
 .vscode/
+.claude/
 *.md
+
+# Sensitive environments & credentials (CRITICAL)
+.env
+.env.*
+!.env.example
+.credentials.json
+.salt
+config.json
+schedule.json
+history.json
+
+# Runtime data & logs
 *.log
 clean_log/
 merge_log/
 data/
 videos/
-history.json
-schedule.json
-config.json
-.credentials.json
-.salt
-bililive-helper-go
-*.exe
+
+# OS files
+.DS_Store
+Thumbs.db
