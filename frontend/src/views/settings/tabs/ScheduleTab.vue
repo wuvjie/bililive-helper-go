@@ -1,184 +1,171 @@
 <template>
-  <div class="schedule-tab" v-loading="loading">
-    <!-- Card 1: 自动化任务调度计划 (双列并行对称网格) -->
-    <div class="setting-group-card">
-      <div class="group-card-header">
-        <div class="group-header-text">
-          <h3 class="group-title">自动化任务调度计划</h3>
-          <p class="group-desc">配置录像分片合并与磁盘巡检清理的主定时调度器，后台周期性轮询执行。</p>
+  <div class="settings-tab-pane">
+    <!-- Box 1: 自动化媒体流水线调度 -->
+    <section class="primer-box">
+      <header class="primer-box-header">
+        <div class="box-header-title-row">
+          <svg class="box-header-icon icon-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <div class="box-header-text">
+            <h2 class="box-title">定时流水线调度</h2>
+            <p class="box-desc">配置后台自动化巡检扫描周期，按需静默执行视频分片合并与磁盘空间释放</p>
+          </div>
         </div>
-      </div>
-      <div class="group-card-body">
-        <div class="schedule-tasks-grid">
-          <!-- Task 1: 自动分片合并 -->
-          <div class="task-tile-card" :class="{ 'tile-disabled': !form.merge_enabled }">
-            <div class="tile-card-header">
-              <div class="tile-header-left">
-                <svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
-                  <line x1="7" y1="2" x2="7" y2="22"/>
-                  <line x1="17" y1="2" x2="17" y2="22"/>
-                  <line x1="2" y1="12" x2="22" y2="12"/>
-                  <line x1="2" y1="7" x2="7" y2="7"/>
-                  <line x1="2" y1="17" x2="7" y2="17"/>
-                  <line x1="17" y1="17" x2="22" y2="17"/>
-                  <line x1="17" y1="7" x2="22" y2="7"/>
-                </svg>
-                <span class="tile-title">自动分片合并</span>
-              </div>
+      </header>
+
+      <div class="primer-box-body">
+        <!-- 1. 自动分片合并 -->
+        <div class="primer-row">
+          <div class="row-info">
+            <div class="row-label-row">
+              <label class="row-label">自动分片合并</label>
+              <span class="status-pill" :class="form.merge_enabled ? 'pill-active' : 'pill-inactive'">
+                {{ form.merge_enabled ? '已启用' : '已停用' }}
+              </span>
+            </div>
+            <p class="row-desc">后台定时扫描主播录像目录，将符合静置容差的已完播切片无损合并为完整视频</p>
+          </div>
+          <div class="row-control">
+            <div class="schedule-control-flow">
               <el-switch
                 :model-value="form.merge_enabled"
-                @update:model-value="updateFormField('merge_enabled', !!$event)"
+                class="primer-switch"
+                @update:model-value="updateField('merge_enabled', Boolean($event))"
               />
-            </div>
-
-            <div class="tile-card-body">
-              <div class="tile-field-row">
-                <label class="tile-field-label">
-                  <span>合并调度周期</span>
-                </label>
-                <div class="inline-unit-row">
-                  <el-input-number
-                    :model-value="form.merge_interval"
-                    :min="10"
-                    :max="1440"
-                    :step="15"
-                    class="compact-counter"
-                    :disabled="!form.merge_enabled"
-                    @update:model-value="updateFormField('merge_interval', Number($event))"
-                  />
-                  <span class="unit-text">分钟</span>
-                </div>
-              </div>
-
-              <div class="tile-hint-box">
-                <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="16" x2="12" y2="12"/>
-                  <line x1="12" y1="8" x2="12.01" y2="8"/>
-                </svg>
-                <span>推荐 360 分钟（6小时），任务执行完毕后休眠进入下次循环。</span>
+              <div v-if="form.merge_enabled" class="control-unit-group">
+                <el-input-number
+                  :model-value="form.merge_interval"
+                  :min="10"
+                  :max="10080"
+                  :step="30"
+                  size="default"
+                  class="stepper-compact"
+                  @update:model-value="updateField('merge_interval', Number($event))"
+                />
+                <span class="unit-text">分钟</span>
+                <span class="interval-hint mono-val">（每 {{ (form.merge_interval / 60).toFixed(1) }} 小时）</span>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Task 2: 自动磁盘清理 -->
-          <div class="task-tile-card" :class="{ 'tile-disabled': !form.clean_enabled }">
-            <div class="tile-card-header">
-              <div class="tile-header-left">
-                <svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                <span class="tile-title">自动磁盘清理</span>
-              </div>
+        <!-- 2. 自动磁盘清理 -->
+        <div class="primer-row">
+          <div class="row-info">
+            <div class="row-label-row">
+              <label class="row-label">自动磁盘清理</label>
+              <span class="status-pill" :class="form.clean_enabled ? 'pill-active' : 'pill-inactive'">
+                {{ form.clean_enabled ? '已启用' : '已停用' }}
+              </span>
+            </div>
+            <p class="row-desc">后台定时检查磁盘水位深度，并在达到触发阈值时按策略自动淘汰旧录像</p>
+          </div>
+          <div class="row-control">
+            <div class="schedule-control-flow">
               <el-switch
                 :model-value="form.clean_enabled"
-                @update:model-value="updateFormField('clean_enabled', !!$event)"
+                class="primer-switch"
+                @update:model-value="updateField('clean_enabled', Boolean($event))"
               />
-            </div>
-
-            <div class="tile-card-body">
-              <div class="tile-field-row">
-                <label class="tile-field-label">
-                  <span>巡检调度周期</span>
-                </label>
-                <div class="inline-unit-row">
-                  <el-input-number
-                    :model-value="form.clean_interval"
-                    :min="10"
-                    :max="1440"
-                    :step="30"
-                    class="compact-counter"
-                    :disabled="!form.clean_enabled"
-                    @update:model-value="updateFormField('clean_interval', Number($event))"
-                  />
-                  <span class="unit-text">分钟</span>
-                </div>
-              </div>
-
-              <div class="tile-hint-box">
-                <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="16" x2="12" y2="12"/>
-                  <line x1="12" y1="8" x2="12.01" y2="8"/>
-                </svg>
-                <span>推荐 720 分钟（12小时），定期比对磁盘剩余水位并触发清理。</span>
+              <div v-if="form.clean_enabled" class="control-unit-group">
+                <el-input-number
+                  :model-value="form.clean_interval"
+                  :min="10"
+                  :max="10080"
+                  :step="60"
+                  size="default"
+                  class="stepper-compact"
+                  @update:model-value="updateField('clean_interval', Number($event))"
+                />
+                <span class="unit-text">分钟</span>
+                <span class="interval-hint mono-val">（每 {{ (form.clean_interval / 60).toFixed(1) }} 小时）</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Card 2: 免打扰避让时段 -->
-    <div class="setting-group-card">
-      <div class="group-card-header">
-        <div class="group-header-text">
-          <h3 class="group-title">免打扰避让时段</h3>
-          <p class="group-desc">在此设定时段内自动暂停合并与清理，其余时段恢复正常计划调度（支持跨午夜）。</p>
+    <!-- Box 2: 避让时间窗口 (免打扰时段) -->
+    <section class="primer-box">
+      <header class="primer-box-header">
+        <div class="box-header-title-row">
+          <svg class="box-header-icon icon-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <div class="box-header-text">
+            <h2 class="box-title">避让时间窗口 (免打扰时段)</h2>
+            <p class="box-desc">在设定的时段内自动暂停后台高 I/O 任务，避让业务高峰或夜间数据冷备</p>
+          </div>
         </div>
-      </div>
-      <div class="group-card-body">
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">
-              <span>避让时间范围</span>
+      </header>
+
+      <div class="primer-box-body">
+        <!-- 1. 避让时间范围选择 -->
+        <div class="primer-row">
+          <div class="row-info">
+            <label class="row-label">避让时间范围</label>
+            <p class="row-desc">在此时间段内定时合并与磁盘清理将自动挂起延后；留空表示全天候运行（无避让）</p>
+          </div>
+          <div class="row-control">
+            <div class="window-picker-flow">
+              <div class="time-range-group">
+                <el-time-picker
+                  :model-value="backupStart"
+                  format="HH:mm"
+                  value-format="HH:mm"
+                  placeholder="开始时间"
+                  size="default"
+                  class="time-picker-item"
+                  @update:model-value="$emit('update:backupStart', $event || '')"
+                />
+                <span class="range-separator">至</span>
+                <el-time-picker
+                  :model-value="backupEnd"
+                  format="HH:mm"
+                  value-format="HH:mm"
+                  placeholder="结束时间"
+                  size="default"
+                  class="time-picker-item"
+                  @update:model-value="$emit('update:backupEnd', $event || '')"
+                />
+              </div>
+
+              <button
+                v-if="backupStart || backupEnd"
+                type="button"
+                class="btn-reset-window"
+                title="清除避让时段，恢复全天候正常调度"
+                @click="clearQuietWindow"
+              >
+                <span>恢复全天候运行</span>
+              </button>
             </div>
           </div>
-          <div class="setting-control">
-            <div class="time-range-row">
-              <el-time-picker
-                :model-value="backupStart"
-                format="HH:mm"
-                value-format="HH:mm"
-                placeholder="开始时间"
-                class="time-picker-box"
-                @update:model-value="emit('update:backupStart', $event ?? '')"
-              />
-              <span class="time-sep">至</span>
-              <el-time-picker
-                :model-value="backupEnd"
-                format="HH:mm"
-                value-format="HH:mm"
-                placeholder="结束时间"
-                class="time-picker-box"
-                @update:model-value="emit('update:backupEnd', $event ?? '')"
-              />
+        </div>
+
+        <!-- 2. 实时窗口运行状态指示 -->
+        <div class="primer-row window-status-row">
+          <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
+            <div class="status-icon-col">
+              <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
+            </div>
+            <div class="status-text-col">
+              <span class="status-main-text">{{ windowStatusTitle }}</span>
+              <span class="status-sub-text">{{ windowStatusDesc }}</span>
             </div>
           </div>
         </div>
-
-        <!-- 避让窗口实时状态提示条 -->
-        <div v-if="backupStart && backupEnd" class="schedule-status-banner">
-          <div class="status-banner-left">
-            <svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <span class="status-text">
-              每日 <strong>{{ backupStart }}</strong> 至 <strong>{{ backupEnd }}</strong> 处于静默避让窗口
-            </span>
-          </div>
-          <span class="status-badge">定时避让生效中</span>
-        </div>
-        <div v-else class="schedule-status-banner status-banner-neutral">
-          <div class="status-banner-left">
-            <svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span class="status-text">全天候调度运行中（未设置避让时段）</span>
-          </div>
-          <span class="status-badge-neutral">24h 持续作业</span>
-        </div>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+
 export interface ScheduleForm {
   merge_enabled: boolean;
   clean_enabled: boolean;
@@ -191,427 +178,346 @@ const props = defineProps<{
   backupStart: string;
   backupEnd: string;
   saving?: boolean;
-  loading: boolean;
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
-  "update:form": [value: ScheduleForm];
-  "update:backupStart": [value: string];
-  "update:backupEnd": [value: string];
-  save?: [];
+  (e: "update:form", val: ScheduleForm): void;
+  (e: "update:backupStart", val: string): void;
+  (e: "update:backupEnd", val: string): void;
 }>();
 
-function updateFormField<K extends keyof ScheduleForm>(field: K, val: ScheduleForm[K]) {
+function updateField<K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K]) {
   emit("update:form", {
     ...props.form,
-    [field]: val,
+    [key]: value
   });
 }
+
+function clearQuietWindow() {
+  emit("update:backupStart", "");
+  emit("update:backupEnd", "");
+}
+
+// 避让窗口状态计算
+const isQuietActive = computed(() => {
+  if (!props.backupStart || !props.backupEnd) return false;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const [sh, sm] = props.backupStart.split(":").map(Number);
+  const [eh, em] = props.backupEnd.split(":").map(Number);
+  const startMinutes = sh * 60 + sm;
+  const endMinutes = eh * 60 + em;
+
+  if (startMinutes <= endMinutes) {
+    return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+  }
+  // 跨午夜
+  return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+});
+
+const windowStatusTitle = computed(() => {
+  if (!props.backupStart || !props.backupEnd) {
+    return "全天候 24 小时正常调度运行中";
+  }
+  if (isQuietActive.value) {
+    return "当前处于避让休眠时段（自动化任务已自动顺延挂起）";
+  }
+  return "当前处于正常调度窗口（后台任务按周期正规运行）";
+});
+
+const windowStatusDesc = computed(() => {
+  if (!props.backupStart || !props.backupEnd) {
+    return "未设定避让时间窗口，后台合并与清理任务全天候按各自设定周期自动执行";
+  }
+  if (isQuietActive.value) {
+    return `当前时间命中避让窗口（${props.backupStart} ~ ${props.backupEnd}），所有自动化高 I/O 操作已挂起，到达 ${props.backupEnd} 后自动恢复调度。`;
+  }
+  return `设定避让窗口为每日 ${props.backupStart} ~ ${props.backupEnd}，在进入该时段前后台自动化任务正常调度。`;
+});
 </script>
 
 <style scoped>
-.schedule-tab {
+.settings-tab-pane {
   display: flex;
   flex-direction: column;
-}
-
-/* Unified Group Card (GitHub Primer Section Card) */
-.setting-group-card {
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--hairline, #e4e4e7);
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.setting-group-card:hover {
-  border-color: var(--color-border-default, #afb8c1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-html.dark .setting-group-card {
-  background: #161b22;
-  border-color: #30363d;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-html.dark .setting-group-card:hover {
-  border-color: #484f58;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.group-card-header {
-  padding: 16px 22px;
-  border-bottom: 1px solid var(--hairline, #e4e4e7);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-html.dark .group-card-header {
-  border-bottom-color: #30363d;
-}
-
-.group-header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.group-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--charcoal, #24292f);
-  margin: 0;
-  line-height: 1.3;
-}
-
-html.dark .group-title {
-  color: #f0f6fc;
-}
-
-.group-desc {
-  font-size: 13px;
-  color: var(--color-fg-muted, #57606a);
-  margin: 0;
-  line-height: 1.45;
-}
-
-html.dark .group-desc {
-  color: #8b949e;
-}
-
-.group-card-body {
-  padding: 8px 22px 18px;
-}
-
-/* Symmetrical Dual-Task Grid */
-.schedule-tasks-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-  padding: 12px 0 6px;
-}
-
-@media (max-width: 768px) {
-  .schedule-tasks-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.task-tile-card {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
-  border: 1px solid var(--hairline, #e4e4e7);
-  border-radius: 8px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.task-tile-card:hover {
-  border-color: var(--color-border-default, #afb8c1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-html.dark .task-tile-card {
-  background: #0d1117;
-  border-color: #30363d;
-}
-
-html.dark .task-tile-card:hover {
-  border-color: #484f58;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-}
-
-.task-tile-card.tile-disabled {
-  opacity: 0.72;
-}
-
-.tile-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--hairline, #e4e4e7);
-}
-
-html.dark .tile-card-header {
-  border-bottom-color: #21262d;
-}
-
-.tile-header-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tile-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--color-accent-fg, #0969da);
-  flex-shrink: 0;
-}
-
-html.dark .tile-icon {
-  color: #58a6ff;
-}
-
-.tile-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--charcoal, #24292f);
-}
-
-html.dark .tile-title {
-  color: #f0f6fc;
-}
-
-.tile-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.tile-field-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 36px;
-}
-
-.tile-field-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-fg-default, #24292f);
-}
-
-html.dark .tile-field-label {
-  color: #c9d1d9;
-}
-
-.tile-hint-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--color-fg-muted, #57606a);
-  background: var(--surface-card, #ffffff);
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--hairline, #e4e4e7);
-}
-
-html.dark .tile-hint-box {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: #21262d;
-  color: #8b949e;
-}
-
-.hint-icon {
-  width: 13px;
-  height: 13px;
-  margin-top: 2px;
-  flex-shrink: 0;
-  color: var(--color-fg-muted, #57606a);
-}
-
-html.dark .hint-icon {
-  color: #8b949e;
-}
-
-/* Setting Rows */
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 0;
   gap: 20px;
-  min-height: 44px;
-  box-sizing: border-box;
 }
 
-.setting-info {
+/* GitHub Primer Box Model */
+.primer-box {
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline, #e5e3df);
+  border-radius: var(--r-md, 6px);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.15s ease;
+}
+
+.primer-box-header {
+  padding: 14px 20px;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
+  border-bottom: 1px solid var(--hairline, #e5e3df);
+}
+
+.box-header-title-row {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.box-header-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.icon-blue {
+  color: var(--primary, #2563eb);
+}
+
+.icon-purple {
+  color: #8b5cf6;
+}
+
+.box-header-text {
   flex: 1;
   min-width: 0;
 }
 
-.setting-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
+.box-title {
+  font-size: 14px;
   font-weight: 600;
-  color: var(--charcoal, #24292f);
+  color: var(--ink, #1a1a1a);
+  margin: 0 0 2px 0;
+  line-height: 1.3;
 }
 
-html.dark .setting-title {
-  color: #c9d1d9;
-}
-
-.label-help-ico {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  font-size: 10px;
-  font-weight: 600;
-  background: var(--hairline, #e4e4e7);
-  color: var(--steel, #71717a);
-  cursor: help;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
-.label-help-ico:hover {
-  background: var(--color-accent-fg, #0969da);
-  color: #ffffff;
-}
-
-.setting-control {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-}
-
-.compact-counter {
-  width: 120px;
-  height: 32px !important;
-  line-height: 32px !important;
-}
-
-:deep(.compact-counter .el-input__wrapper) {
-  height: 32px !important;
-  box-sizing: border-box !important;
-}
-
-:deep(.compact-counter .el-input-number__decrease),
-:deep(.compact-counter .el-input-number__increase) {
-  height: 30px !important;
-  line-height: 30px !important;
-}
-
-.inline-unit-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.unit-text {
+.box-desc {
   font-size: 12px;
-  color: var(--color-fg-muted, #57606a);
-  font-weight: 500;
-  white-space: nowrap;
-  min-width: 24px;
+  color: var(--steel, #787671);
+  margin: 0;
+  line-height: 1.4;
 }
 
-html.dark .unit-text {
-  color: #8b949e;
+/* Primer Rows */
+.primer-box-body {
+  padding: 0;
 }
 
-/* Time Picker Range */
-.time-range-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.time-picker-box {
-  width: 124px !important;
-}
-
-.time-sep {
-  font-size: 13px;
-  color: var(--color-fg-muted, #57606a);
-  font-weight: 500;
-}
-
-/* Schedule Status Banner */
-.schedule-status-banner {
-  margin: 6px 0 4px;
-  padding: 10px 14px;
-  border-radius: 6px;
-  background: rgba(9, 105, 218, 0.06);
-  border: 1px solid rgba(9, 105, 218, 0.18);
+.primer-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--hairline, #e5e3df);
+  gap: 24px;
 }
 
-html.dark .schedule-status-banner {
-  background: rgba(56, 139, 253, 0.1);
-  border-color: rgba(56, 139, 253, 0.25);
+.primer-row:last-child {
+  border-bottom: none;
 }
 
-.status-banner-neutral {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
-  border-color: var(--hairline, #e4e4e7);
+.row-info {
+  flex: 1;
+  min-width: 0;
 }
 
-html.dark .status-banner-neutral {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: #30363d;
-}
-
-.status-banner-left {
+.row-label-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12.5px;
-  color: var(--charcoal, #24292f);
+  margin-bottom: 3px;
 }
 
-html.dark .status-banner-left {
-  color: #c9d1d9;
+.row-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--charcoal, #37352f);
+  line-height: 1.35;
 }
 
-.status-svg {
-  width: 15px;
-  height: 15px;
-  color: var(--color-accent-fg, #0969da);
+.row-desc {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.row-control {
   flex-shrink: 0;
 }
 
-.status-banner-neutral .status-svg {
-  color: var(--color-fg-muted, #57606a);
+.status-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: var(--r-full, 9999px);
+  line-height: 1.3;
 }
 
-.status-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: #0969da;
-  color: #ffffff;
+.pill-active {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--success, #059669);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.pill-inactive {
+  background: var(--surface, #f4f3f0);
+  color: var(--stone, #a4a097);
+  border: 1px solid var(--hairline, #e5e3df);
+}
+
+.schedule-control-flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.control-unit-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepper-compact {
+  width: 120px;
+}
+
+.unit-text {
+  font-size: 13px;
+  color: var(--slate, #5d5b54);
   font-weight: 500;
 }
 
-.status-badge-neutral {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--color-fg-muted, #57606a);
-  font-weight: 500;
+.interval-hint {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  white-space: nowrap;
 }
 
-html.dark .status-badge-neutral {
-  background: rgba(255, 255, 255, 0.08);
-  color: #8b949e;
+/* 避让窗口样式 */
+.window-picker-flow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.time-range-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-picker-item {
+  width: 115px !important;
+}
+
+.range-separator {
+  font-size: 12px;
+  color: var(--steel, #787671);
+}
+
+.btn-reset-window {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-sm, 4px);
+  border: 1px solid var(--hairline-strong, #c8c4be);
+  background: transparent;
+  color: var(--slate, #5d5b54);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-reset-window:hover {
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+  background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent);
+}
+
+.window-status-row {
+  display: block;
+  padding: 14px 20px;
+}
+
+.window-status-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--r-md, 6px);
+  border: 1px solid transparent;
+}
+
+.status-card-active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+.status-card-quiet {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.22);
+}
+
+.status-icon-col {
+  padding-top: 3px;
+}
+
+.status-pulse-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.pulse-emerald {
+  background: var(--success, #059669);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.pulse-amber {
+  background: var(--warning, #d97706);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.status-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-main-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--charcoal, #37352f);
+}
+
+.status-sub-text {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .primer-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .schedule-control-flow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .window-picker-flow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
 }
 </style>
