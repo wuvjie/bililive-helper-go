@@ -1,13 +1,15 @@
 # Baseline
 
 - **v3.8.0** (Current Active):
-  - Git Commits: `5d25259` ~ `HEAD` (`a7b9f99` / `7766d38`)
+  - Git Commits: `5d25259` ~ `HEAD` (`64e7ff0` / `d9869d9`)
   - Release Highlights:
-    - **系统设置极简单栏与左对齐表单重构 (Settings Single-Bar Header & Left-Aligned Form Alignment)**：
-      - 彻底清除 `h1 系统设置` 及冗余副标题说明，收敛为极致紧凑的单行顶栏（UnderlineNav 标签导航与「恢复推荐预设」操作同层并列）；
-      - 废除设置卡片标题下方的 4 处多余说明句，彻底移除全部表单项下方的解释小字；
-      - 升级所有配置项标题为“自解释、无歧义”的精准工程术语（`断流重连合并时间`、`关播后等待合并时长`、`最近录像免删保护期`、`每位主播保底留存场次`、`单次清理最多删除文件`、`永久免删关键词白名单`、`定时自动合并分片`、`定时巡检磁盘并清理`、`每日任务避让时段`）；
-      - 根治 `justify-content: space-between` 造成的中间 600px 巨大空白大坑（羽毛球/网球式两端分散）：锁定表单左侧标签列固定宽度 210px，所有输入控件采用 `justify-content: flex-start; gap: 28px;` 紧邻左侧统一纵轴锚定，呈现标准的 GitHub / Linear 专业表单排版。
+    - **系统设置模块化网格重构 (Settings Modular Form Grid Architecture)**：
+      - 彻底摒弃将窄屏移动端 iOS 列表（单项独占整行）生搬硬套到桌面端（960px 宽度卡片）所引发的大面积空白大坑；
+      - 全面重塑为现代化桌面工程表单网格（Multi-Column Form Grids）：
+        - **合并规则双列网格 (`fields-grid-2`)**：断流重连合并时间与关播后等待合并时长对称并排，告别两行单调的巨大虚无；
+        - **清理阈值三列网格 (`fields-grid-3`)**：连续三色标尺仪表盘下方，将「最近录像免删保护期」、「每位主播保底留存场次」、「单次清理最多删除文件」紧凑对齐为 3 列网格，白名单关键词标签通栏自适应平铺；
+        - **定时调度对称卡片网格 (`schedule-task-grid`)**：自动合并分片与自动磁盘清理以对称双卡形式呈现，顶部集成状态胶囊与开关，内部紧凑收拢周期步进与时数换算；
+        - **避让窗口左右平衡网格 (`quiet-window-grid`)**：左侧时间选择器与一键重置，右侧紧贴实时调度状态指示，消除全部死白空隙。
     - **系统概览横向发丝线像素级锁齐 (Pixel-Locked Metric Cross-Card Symmetry)**：
       - 彻底根治存储空间监控 (`StorageCard.vue`) 与自动化调度监控 (`ScheduleMonitorCard.vue`) 并排时的分割线上下错位难题；
       - 确立卡片内部垂直几何尺寸锁定标准：`card-title`（32px）+ `card-top-metric`（56px）+ 顶部发丝线（Y = 124px）+ 2×2 网格显式轨道高 `grid-template-rows: 52px 52px;`（中间横向分割线 Y = 192px 绝对平齐）；
