@@ -453,9 +453,11 @@ onActivated(() => {
 
 <style scoped>
 .settings-view {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 16px 80px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 80px;
   position: relative;
 }
 
@@ -464,8 +466,7 @@ onActivated(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0 0;
-  margin-bottom: 20px;
+  padding: 0;
   border-bottom: 1px solid var(--hairline, #e5e3df);
 }
 
@@ -601,9 +602,7 @@ onActivated(() => {
 
 .save-bar-inner {
   width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
