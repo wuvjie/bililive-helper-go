@@ -433,12 +433,6 @@ function removeTag(idx: number) {
   flex-wrap: wrap;
 }
 
-.control-unit-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .stepper-compact {
   width: 130px;
 }

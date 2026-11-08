@@ -347,10 +347,6 @@ html.dark .line-header { color: #58a6ff; font-weight: 600; }
   }
 }
 
-html.dark .footer-left-info {
-  color: #8b949e;
-}
-
 html.dark .btn-dialog-secondary {
   color: #c9d1d9;
   background: #21262d;

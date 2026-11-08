@@ -198,16 +198,4 @@ const totalRecordingsGB = computed(() => {
   line-height: 1.2;
 }
 
-.label-help-ico {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  font-size: 10px;
-  background: var(--hairline);
-  color: var(--slate);
-  cursor: help;
-}
 </style>

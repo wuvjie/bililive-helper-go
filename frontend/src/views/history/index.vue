@@ -101,7 +101,7 @@
 
           <el-table-column label="详情" min-width="260">
             <template #default="{ row }">
-              <span class="detail-text">{{ cleanDetailText(row.detail || formatDetail(row), row.task) }}</span>
+              <span class="detail-text">{{ cleanDetailText(row.detail || formatDetail(row as HistoryRecord), row.task) }}</span>
             </template>
           </el-table-column>
 
@@ -122,7 +122,7 @@
                 <button
                   v-if="row.log_id && (row.task === 'merge' || row.task === 'clean')"
                   class="row-action-btn action-view"
-                  @click="viewLog(row)"
+                  @click="viewLog(row as HistoryRecord)"
                   title="查看详细运行日志"
                 >
                   查看
@@ -250,7 +250,7 @@ async function loadHistory(page = 1) {
     });
     history.value = res.items || [];
     totalItems.value = res.total || 0;
-    totalPages.value = res.total_pages || 0;
+    totalPages.value = res.pages || 0;
   } catch {
     ElMessage.error("获取操作日志失败");
   } finally {
@@ -383,13 +383,6 @@ onActivated(() => {
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
 }
 
 .header-right-tools {
@@ -565,12 +558,6 @@ onActivated(() => {
   background: color-mix(in srgb, var(--primary) 10%, transparent);
   color: var(--primary-hover, #1d4ed8);
   text-decoration: underline;
-}
-
-.action-retry {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.2);
-  color: var(--error);
 }
 
 .pagination {

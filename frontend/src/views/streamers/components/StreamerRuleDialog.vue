@@ -475,12 +475,6 @@ function handleSave() {
   color: #ffffff;
 }
 
-.rule-desc {
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.45;
-}
-
 .status-pill {
   font-size: 11px;
   padding: 1px 7px;

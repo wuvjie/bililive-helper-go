@@ -92,11 +92,11 @@
           >
             <template #default="{ row }">
               <div class="drawer-file-actions">
-                <button class="play-btn-sm" @click="$emit('play', row)" title="在浏览器中播放预览">
+                <button class="play-btn-sm" @click="$emit('play', row as StreamerFile)" title="在浏览器中播放预览">
                   <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   <span>播放</span>
                 </button>
-                <button class="play-btn-sm btn-del-video" @click="$emit('delete', row)" title="从磁盘永久删除该录像文件">
+                <button class="play-btn-sm btn-del-video" @click="$emit('delete', row as StreamerFile)" title="从磁盘永久删除该录像文件">
                   <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   <span>删除</span>
                 </button>
@@ -201,12 +201,6 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   padding: 0 4px;
   border-bottom: 1px solid var(--hairline);
   margin-bottom: -4px;
-}
-
-.drawer-sub {
-  font-size: 13px;
-  color: var(--slate);
-  font-weight: 500;
 }
 
 .drawer-file-col {

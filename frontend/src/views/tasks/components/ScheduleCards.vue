@@ -147,29 +147,11 @@ function formatDisplayTime(ts?: number): string {
   flex-wrap: wrap;
 }
 
-.title-text-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .title-text {
   font-size: 15px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
-}
-
-.sched-policy-meta {
-  font-size: 12px;
-  color: var(--color-fg-muted, #57606a);
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-html.dark .sched-policy-meta {
-  color: #8b949e;
 }
 
 .badge-status {

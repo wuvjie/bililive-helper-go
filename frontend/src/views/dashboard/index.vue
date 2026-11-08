@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="dashboard" v-loading="loading" element-loading-text="加载中...">
     <!-- Header with inline environment status -->
     <div class="dash-header">
@@ -195,33 +195,28 @@ const todayDate = computed(() =>
   new Date().toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })
 );
 
-async function loadData() {
+async function loadData(isInitial = false) {
   try {
-    const [d, s, h, ck] = await Promise.allSettled([
-      getStatusDetail(), getStats(), getHistory({ per_page: 5 }), setupCheck()
-    ]);
-    if (d.status === "fulfilled") detail.value = d.value;
-    if (s.status === "fulfilled") stats.value = s.value;
-    if (h.status === "fulfilled") recentHistory.value = h.value.items || [];
-    if (ck.status === "fulfilled") setup.value = ck.value;
+    const promises: Promise<any>[] = [
+      getStatusDetail(), getStats(), getHistory({ per_page: 5 })
+    ];
+    if (isInitial) promises.push(setupCheck());
+    const res = await Promise.allSettled(promises);
+    if (res[0].status === "fulfilled") detail.value = res[0].value;
+    if (res[1].status === "fulfilled") stats.value = res[1].value;
+    if (res[2].status === "fulfilled") recentHistory.value = res[2].value.items || [];
+    if (isInitial && res[3]?.status === "fulfilled") setup.value = res[3].value;
   } finally {
     loading.value = false;
   }
 }
 
 onMounted(() => {
-  loadData();
+  loadData(true);
 });
 
-onActivated(async () => {
-  try {
-    const [d, s, h] = await Promise.allSettled([
-      getStatusDetail(), getStats(), getHistory({ per_page: 5 })
-    ]);
-    if (d.status === "fulfilled") detail.value = d.value;
-    if (s.status === "fulfilled") stats.value = s.value;
-    if (h.status === "fulfilled") recentHistory.value = h.value.items || [];
-  } catch { /* ignore */ }
+onActivated(() => {
+  loadData(false);
 });
 </script>
 

@@ -528,12 +528,6 @@ router.afterEach(() => fetchDiskStatus());
   user-select: none;
 }
 
-.nav-breadcrumb {
-  display: flex;
-  align-items: center;
-}
-
-.nav-icon { font-size: 18px; cursor: pointer; color: var(--steel); &:hover { color: var(--ink); } }
 .nav-divider { width: 1px; height: 14px; background: var(--hairline); flex-shrink: 0; }
 
 .nav-btn-icon {
@@ -666,10 +660,6 @@ router.afterEach(() => fetchDiskStatus());
   .layout-content {
     padding: 14px;
     padding-bottom: 36px;
-  }
-
-  .nav-breadcrumb {
-    font-size: 12px;
   }
 }
 

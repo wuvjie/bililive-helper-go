@@ -151,8 +151,8 @@ function onPasswordInput() {
   }
 }
 
-function checkCapsLock(e: KeyboardEvent) {
-  if (e.getModifierState) {
+function checkCapsLock(e: Event | KeyboardEvent) {
+  if ("getModifierState" in e && typeof e.getModifierState === "function") {
     isCapsLock.value = e.getModifierState("CapsLock");
   }
 }

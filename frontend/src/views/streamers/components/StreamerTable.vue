@@ -13,8 +13,8 @@
           <div class="streamer-name-cell">
             <span
               class="live-status-dot"
-              :class="isStreamerActive(row) ? 'dot-recording' : 'dot-idle'"
-              :title="isStreamerActive(row) ? '近期活跃/录制中' : '空闲'"
+              :class="isStreamerActive(row as StreamerInfo) ? 'dot-recording' : 'dot-idle'"
+              :title="isStreamerActive(row as StreamerInfo) ? '近期活跃/录制中' : '空闲'"
             />
             <span class="streamer-name">{{ row.name }}</span>
             <span v-if="row.rule?.protected" class="badge-pill badge-protected">
@@ -105,13 +105,13 @@
       <el-table-column label="操作" width="170" align="left" header-align="left">
         <template #default="{ row }">
           <div class="action-btn-group">
-            <button class="ghost-action" @click="$emit('open-drawer', row)" title="查看该主播全部录像文件">
+            <button class="ghost-action" @click="$emit('open-drawer', row as StreamerInfo)" title="查看该主播全部录像文件">
               <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
               </svg>
               <span>查看</span>
             </button>
-            <button class="ghost-action" @click="$emit('open-rule', row)" title="配置该主播专属剪辑与合并规则">
+            <button class="ghost-action" @click="$emit('open-rule', row as StreamerInfo)" title="配置该主播专属剪辑与合并规则">
               <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
