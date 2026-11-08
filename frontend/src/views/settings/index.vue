@@ -1,18 +1,18 @@
 <template>
   <div class="settings">
-    <!-- Page Header (Top Level, outside card) -->
-        <!-- Main Two-Column Layout -->
+    <!-- Main Two-Column Layout -->
     <div class="settings-layout">
-      <!-- Left: Sticky Sidebar Navigation (200px) -->
+      <!-- Left: Sticky Sidebar Navigation (190px) -->
       <aside class="settings-sidebar">
         <div class="sidebar-sticky-inner">
           <nav class="settings-nav">
             <button
               v-for="item in navSections"
               :key="item.id"
+              type="button"
               class="nav-tab-btn"
               :class="{ active: activeSectionId === item.id }"
-              @click="scrollToSection(item.id)"
+              @click="switchToSection(item.id)"
             >
               <span class="nav-btn-icon">
                 <svg v-if="item.id === 'policy'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
@@ -21,113 +21,311 @@
                 <svg v-else-if="item.id === 'security'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </span>
               <span class="nav-btn-text">{{ item.label }}</span>
-              <span v-if="activeSectionId === item.id" class="nav-active-pill" />
+              <span v-if="item.id === 'policy' && isPolicyDirty()" class="nav-tab-dirty-dot" title="包含未保存的策略更改" />
+              <span v-if="item.id === 'schedule' && isScheduleDirty()" class="nav-tab-dirty-dot" title="包含未保存的调度更改" />
             </button>
           </nav>
         </div>
       </aside>
 
-      <!-- Right: Continuous Flow of Sections (All same width, zero nested border madness) -->
+      <!-- Right: Focused Section Card with Wheel Turn Navigation -->
       <main class="settings-content" ref="contentRef">
-        <!-- 1. 全局策略 -->
-        <section id="section-policy" class="settings-section-card" data-section="policy">
-          <div class="section-card-header">
-            <div class="section-header-title-row">
-              <div class="ui-icon-box icon-box-emerald">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        <Transition name="module-turn" mode="out-in">
+          <!-- 1. 全局策略 -->
+          <section
+            v-if="activeSectionId === 'policy'"
+            key="policy"
+            id="section-policy"
+            class="settings-section-card"
+          >
+            <div class="section-card-header">
+              <div class="section-header-title-row">
+                <div class="ui-icon-box icon-box-emerald">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                </div>
+                <h2 class="section-main-title">全局策略</h2>
               </div>
-              <h2 class="section-main-title">全局策略</h2>
+              <button
+                type="button"
+                class="section-header-action-btn"
+                @click="handleResetPolicyDefaults"
+                title="将全局合并与磁盘清理策略参数恢复为官方推荐预设"
+              >
+                <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span>恢复策略预设</span>
+              </button>
             </div>
-            <button
-              type="button"
-              class="section-header-action-btn"
-              @click="handleResetPolicyDefaults"
-              title="将全局合并与磁盘清理策略参数恢复为官方推荐预设"
-            >
-              <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              <span>恢复策略预设</span>
-            </button>
-          </div>
-          <div class="section-card-body" v-loading="configLoading">
-            <PolicyTab
-              :config="config"
-              :saving="savingConfig"
-              :total-disk-gb="totalDiskGb"
-              @update:config="config = $event"
-            />
-          </div>
-        </section>
+            <div class="section-card-body" v-loading="configLoading">
+              <PolicyTab
+                :config="config"
+                :saving="savingConfig"
+                :total-disk-gb="totalDiskGb"
+                @update:config="config = $event"
+              />
+            </div>
+            <!-- Card Footer Navigation -->
+            <div class="module-card-footer">
+              <div class="footer-left">
+                <div class="module-step-indicator" role="tablist">
+                  <button
+                    v-for="(item, idx) in navSections"
+                    :key="item.id"
+                    type="button"
+                    class="step-dot-btn"
+                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
+                    :title="`切换至：${item.label}`"
+                    @click="switchToSection(item.id)"
+                  />
+                </div>
+                <span class="module-step-text">
+                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
+                </span>
+              </div>
+              <div class="footer-right">
+                <button
+                  type="button"
+                  class="btn-module-nav btn-module-next"
+                  @click="goToNextModule"
+                  title="前往下一模块「定时调度」"
+                >
+                  <span>下一模块：定时调度</span>
+                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div class="wheel-hint-pill">
+                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="3" width="12" height="18" rx="6" />
+                    <line x1="12" y1="7" x2="12" y2="11" />
+                  </svg>
+                  <span>触底滚轮快速切换</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        <!-- 2. 定时调度 -->
-        <section id="section-schedule" class="settings-section-card" data-section="schedule">
-          <div class="section-card-header">
-            <div class="section-header-title-row">
-              <div class="ui-icon-box icon-box-blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <!-- 2. 定时调度 -->
+          <section
+            v-else-if="activeSectionId === 'schedule'"
+            key="schedule"
+            id="section-schedule"
+            class="settings-section-card"
+          >
+            <div class="section-card-header">
+              <div class="section-header-title-row">
+                <div class="ui-icon-box icon-box-blue">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <h2 class="section-main-title">定时调度</h2>
               </div>
-              <h2 class="section-main-title">定时调度</h2>
+              <button
+                type="button"
+                class="section-header-action-btn"
+                @click="handleResetScheduleDefaults"
+                title="将定时调度运行周期与避让窗口恢复为官方推荐预设"
+              >
+                <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span>恢复调度预设</span>
+              </button>
             </div>
-            <button
-              type="button"
-              class="section-header-action-btn"
-              @click="handleResetScheduleDefaults"
-              title="将定时调度运行周期与避让窗口恢复为官方推荐预设"
-            >
-              <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              <span>恢复调度预设</span>
-            </button>
-          </div>
-          <div class="section-card-body" v-loading="scheduleLoading">
-            <ScheduleTab
-              :form="scheduleForm"
-              :backup-start="backupStart"
-              :backup-end="backupEnd"
-              :saving="savingSchedule"
-              :loading="scheduleLoading"
-              @update:form="Object.assign(scheduleForm, $event)"
-              @update:backup-start="backupStart = $event"
-              @update:backup-end="backupEnd = $event"
-            />
-          </div>
-        </section>
+            <div class="section-card-body" v-loading="scheduleLoading">
+              <ScheduleTab
+                :form="scheduleForm"
+                :backup-start="backupStart"
+                :backup-end="backupEnd"
+                :saving="savingSchedule"
+                :loading="scheduleLoading"
+                @update:form="Object.assign(scheduleForm, $event)"
+                @update:backup-start="backupStart = $event"
+                @update:backup-end="backupEnd = $event"
+              />
+            </div>
+            <!-- Card Footer Navigation -->
+            <div class="module-card-footer">
+              <div class="footer-left">
+                <div class="module-step-indicator" role="tablist">
+                  <button
+                    v-for="(item, idx) in navSections"
+                    :key="item.id"
+                    type="button"
+                    class="step-dot-btn"
+                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
+                    :title="`切换至：${item.label}`"
+                    @click="switchToSection(item.id)"
+                  />
+                </div>
+                <span class="module-step-text">
+                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
+                </span>
+              </div>
+              <div class="footer-right">
+                <button
+                  type="button"
+                  class="btn-module-nav btn-module-prev"
+                  @click="goToPrevModule"
+                  title="返回上一模块「全局策略」"
+                >
+                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  <span>上一模块：全局策略</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-module-nav btn-module-next"
+                  @click="goToNextModule"
+                  title="前往下一模块「配置备份」"
+                >
+                  <span>下一模块：配置备份</span>
+                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div class="wheel-hint-pill">
+                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="3" width="12" height="18" rx="6" />
+                    <line x1="12" y1="7" x2="12" y2="11" />
+                  </svg>
+                  <span>触底滚轮快速切换</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        <!-- 3. 配置备份与恢复 (统一整卡) -->
-        <section id="section-backup" class="settings-section-card" data-section="backup">
-          <div class="section-card-header">
-            <div class="section-header-title-row">
-              <div class="ui-icon-box icon-box-purple">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <!-- 3. 配置备份与恢复 -->
+          <section
+            v-else-if="activeSectionId === 'backup'"
+            key="backup"
+            id="section-backup"
+            class="settings-section-card"
+          >
+            <div class="section-card-header">
+              <div class="section-header-title-row">
+                <div class="ui-icon-box icon-box-purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <h2 class="section-main-title">配置备份与恢复</h2>
               </div>
-              <h2 class="section-main-title">配置备份与恢复</h2>
             </div>
-          </div>
-          <div class="section-card-body">
-            <BackupTab
-              :selected-file-name="selectedImportFileName"
-              :import-json="importJson"
-              @export-file="handleExport"
-              @copy-json="handleCopyConfig"
-              @file-selected="handleFileSelect"
-              @update:import-json="importJson = $event"
-              @apply-import="handleImport"
-            />
-          </div>
-        </section>
+            <div class="section-card-body">
+              <BackupTab
+                :selected-file-name="selectedImportFileName"
+                :import-json="importJson"
+                @export-file="handleExport"
+                @copy-json="handleCopyConfig"
+                @file-selected="handleFileSelect"
+                @update:import-json="importJson = $event"
+                @apply-import="handleImport"
+              />
+            </div>
+            <!-- Card Footer Navigation -->
+            <div class="module-card-footer">
+              <div class="footer-left">
+                <div class="module-step-indicator" role="tablist">
+                  <button
+                    v-for="(item, idx) in navSections"
+                    :key="item.id"
+                    type="button"
+                    class="step-dot-btn"
+                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
+                    :title="`切换至：${item.label}`"
+                    @click="switchToSection(item.id)"
+                  />
+                </div>
+                <span class="module-step-text">
+                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
+                </span>
+              </div>
+              <div class="footer-right">
+                <button
+                  type="button"
+                  class="btn-module-nav btn-module-prev"
+                  @click="goToPrevModule"
+                  title="返回上一模块「定时调度」"
+                >
+                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  <span>上一模块：定时调度</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-module-nav btn-module-next"
+                  @click="goToNextModule"
+                  title="前往下一模块「安全设置」"
+                >
+                  <span>下一模块：安全设置</span>
+                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div class="wheel-hint-pill">
+                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="3" width="12" height="18" rx="6" />
+                    <line x1="12" y1="7" x2="12" y2="11" />
+                  </svg>
+                  <span>触底滚轮快速切换</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        <!-- 4. 安全设置 (统一整卡) -->
-        <section id="section-security" class="settings-section-card" data-section="security">
-          <div class="section-card-header">
-            <div class="section-header-title-row">
-              <div class="ui-icon-box icon-box-amber">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <!-- 4. 安全设置 -->
+          <section
+            v-else-if="activeSectionId === 'security'"
+            key="security"
+            id="section-security"
+            class="settings-section-card"
+          >
+            <div class="section-card-header">
+              <div class="section-header-title-row">
+                <div class="ui-icon-box icon-box-amber">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <h2 class="section-main-title">安全设置</h2>
               </div>
-              <h2 class="section-main-title">安全设置</h2>
             </div>
-          </div>
-          <div class="section-card-body">
-            <SecurityTab />
-          </div>
-        </section>
+            <div class="section-card-body">
+              <SecurityTab />
+            </div>
+            <!-- Card Footer Navigation -->
+            <div class="module-card-footer">
+              <div class="footer-left">
+                <div class="module-step-indicator" role="tablist">
+                  <button
+                    v-for="(item, idx) in navSections"
+                    :key="item.id"
+                    type="button"
+                    class="step-dot-btn"
+                    :class="{ active: item.id === activeSectionId, passed: idx < currentModuleIndex }"
+                    :title="`切换至：${item.label}`"
+                    @click="switchToSection(item.id)"
+                  />
+                </div>
+                <span class="module-step-text">
+                  第 {{ currentModuleIndex + 1 }} / {{ navSections.length }} 模块 · {{ currentModuleLabel }}
+                </span>
+              </div>
+              <div class="footer-right">
+                <button
+                  type="button"
+                  class="btn-module-nav btn-module-prev"
+                  @click="goToPrevModule"
+                  title="返回上一模块「配置备份」"
+                >
+                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  <span>上一模块：配置备份</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-module-nav btn-module-loop"
+                  @click="switchToSection('policy')"
+                  title="已至末页，点击返回首项「全局策略」"
+                >
+                  <svg class="nav-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  <span>已至末页 · 返回首项</span>
+                </button>
+                <div class="wheel-hint-pill">
+                  <svg class="mouse-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="3" width="12" height="18" rx="6" />
+                    <line x1="12" y1="7" x2="12" y2="11" />
+                  </svg>
+                  <span>触底滚轮快速切换</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </Transition>
       </main>
     </div>
 
@@ -157,8 +355,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted, onUnmounted, onActivated, nextTick } from "vue";
-import { useRoute, onBeforeRouteLeave } from "vue-router";
+import { ref, reactive, computed, watch, onMounted, onUnmounted, onActivated, onDeactivated, nextTick } from "vue";
+import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig, getConfigExport, importConfig as apiImportConfig } from "@/api/config";
 import { getSchedule, saveSchedule } from "@/api/schedule";
@@ -173,6 +371,7 @@ import BackupTab from "./tabs/BackupTab.vue";
 import SecurityTab from "./tabs/SecurityTab.vue";
 
 const route = useRoute();
+const router = useRouter();
 
 const navSections = [
   { id: "policy", label: "全局策略" },
@@ -187,72 +386,148 @@ const activeSectionId = ref<string>(
     : "policy"
 );
 
-let isUserClicking = false;
-let userClickTimer: ReturnType<typeof setTimeout> | null = null;
+const isTransitioning = ref(false);
+let accumulatedDeltaYDown = 0;
+let accumulatedDeltaYUp = 0;
+let resetTimer: ReturnType<typeof setTimeout> | null = null;
+const WHEEL_THRESHOLD = 50;
+
+const currentModuleIndex = computed(() => {
+  return navSections.findIndex((s) => s.id === activeSectionId.value);
+});
+
+const currentModuleLabel = computed(() => {
+  const cur = navSections.find((s) => s.id === activeSectionId.value);
+  return cur ? cur.label : "";
+});
+
+const prevModule = computed(() => {
+  const idx = currentModuleIndex.value;
+  return idx > 0 ? navSections[idx - 1] : null;
+});
+
+const nextModule = computed(() => {
+  const idx = currentModuleIndex.value;
+  return idx < navSections.length - 1 ? navSections[idx + 1] : null;
+});
+
+const canGoPrev = computed(() => prevModule.value !== null);
+const canGoNext = computed(() => nextModule.value !== null);
 
 // Helper: 获取最外层滚动容器 (.layout-content)
 function getScrollContainer(): HTMLElement | null {
   return document.querySelector(".layout-content") as HTMLElement | null;
 }
 
-function scrollToSection(id: string) {
-  activeSectionId.value = id;
-  isUserClicking = true;
-  if (userClickTimer) clearTimeout(userClickTimer);
-
-  const container = getScrollContainer();
-  const el = document.getElementById(`section-${id}`);
-  if (container && el) {
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const targetScroll = container.scrollTop + (elRect.top - containerRect.top) - 16;
-    container.scrollTo({
-      top: Math.max(0, targetScroll),
-      behavior: "smooth"
-    });
-  } else if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+function updateRouteQuery(tabId: string) {
+  if (route.query.tab !== tabId) {
+    router.replace({ query: { ...route.query, tab: tabId } }).catch(() => {});
   }
-
-  userClickTimer = setTimeout(() => {
-    isUserClicking = false;
-  }, 750);
 }
 
-function handleContainerScroll() {
-  if (isUserClicking) return;
-  const container = getScrollContainer();
-  if (!container) return;
+function switchToSection(id: string) {
+  if (activeSectionId.value === id) return;
+  isTransitioning.value = true;
+  activeSectionId.value = id;
+  updateRouteQuery(id);
 
-  if (container.scrollHeight - container.scrollTop - container.clientHeight < 60) {
-    activeSectionId.value = "security";
+  const container = getScrollContainer();
+  if (container) {
+    container.scrollTop = 0;
+  }
+  nextTick(() => {
+    const c = getScrollContainer();
+    if (c) c.scrollTop = 0;
+  });
+
+  setTimeout(() => {
+    isTransitioning.value = false;
+  }, 420);
+}
+
+function scrollToSection(id: string) {
+  switchToSection(id);
+}
+
+function goToNextModule() {
+  if (!canGoNext.value || !nextModule.value) return;
+  switchToSection(nextModule.value.id);
+}
+
+function goToPrevModule() {
+  if (!canGoPrev.value || !prevModule.value) return;
+  switchToSection(prevModule.value.id);
+}
+
+function scheduleAccumulatorReset() {
+  if (resetTimer) clearTimeout(resetTimer);
+  resetTimer = setTimeout(() => {
+    accumulatedDeltaYDown = 0;
+    accumulatedDeltaYUp = 0;
+  }, 250);
+}
+
+function handleWheel(e: WheelEvent) {
+  if (isTransitioning.value) {
+    e.preventDefault();
     return;
   }
 
-  const sections = [
-    { id: "policy", el: document.getElementById("section-policy") },
-    { id: "schedule", el: document.getElementById("section-schedule") },
-    { id: "backup", el: document.getElementById("section-backup") },
-    { id: "security", el: document.getElementById("section-security") }
-  ];
+  const container = getScrollContainer();
+  if (!container) return;
 
-  const containerRect = container.getBoundingClientRect();
-  const triggerLine = containerRect.top + 140;
+  const { scrollTop, clientHeight, scrollHeight } = container;
+  const isAtBottom = scrollTop + clientHeight >= scrollHeight - 6;
+  const isAtTop = scrollTop <= 6;
 
-  let current = "policy";
-  for (const s of sections) {
-    if (s.el) {
-      const rect = s.el.getBoundingClientRect();
-      if (rect.top <= triggerLine) {
-        current = s.id;
+  // Downward wheel at bottom -> Switch to next tab
+  if (e.deltaY > 0 && isAtBottom) {
+    if (canGoNext.value) {
+      accumulatedDeltaYDown += e.deltaY;
+      scheduleAccumulatorReset();
+
+      if (accumulatedDeltaYDown >= WHEEL_THRESHOLD) {
+        e.preventDefault();
+        accumulatedDeltaYDown = 0;
+        accumulatedDeltaYUp = 0;
+        goToNextModule();
       }
     }
   }
-  activeSectionId.value = current;
+  // Upward wheel at top -> Switch to prev tab
+  else if (e.deltaY < 0 && isAtTop) {
+    if (canGoPrev.value) {
+      accumulatedDeltaYUp += Math.abs(e.deltaY);
+      scheduleAccumulatorReset();
+
+      if (accumulatedDeltaYUp >= WHEEL_THRESHOLD) {
+        e.preventDefault();
+        accumulatedDeltaYDown = 0;
+        accumulatedDeltaYUp = 0;
+        goToPrevModule();
+      }
+    }
+  } else {
+    // Normal scrolling within module
+    accumulatedDeltaYDown = 0;
+    accumulatedDeltaYUp = 0;
+  }
 }
 
-function setupScrollSpy() {
-  // Driven by container scroll listener
+function attachWheelListener() {
+  const container = getScrollContainer();
+  if (container) {
+    container.removeEventListener("wheel", handleWheel);
+    container.addEventListener("wheel", handleWheel, { passive: false });
+  }
+}
+
+function detachWheelListener() {
+  const container = getScrollContainer();
+  if (container) {
+    container.removeEventListener("wheel", handleWheel);
+  }
+  if (resetTimer) clearTimeout(resetTimer);
 }
 
 const savingConfig = ref(false);
@@ -664,42 +939,45 @@ watch(
   () => route.query.tab,
   (newTab) => {
     if (typeof newTab === "string" && ["policy", "schedule", "backup", "security"].includes(newTab)) {
-      scrollToSection(newTab);
+      if (activeSectionId.value !== newTab) {
+        activeSectionId.value = newTab;
+        const container = getScrollContainer();
+        if (container) {
+          container.scrollTop = 0;
+        }
+      }
     }
   }
 );
 
 onActivated(() => {
+  attachWheelListener();
   if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
-    nextTick(() => scrollToSection(route.query.tab as string));
+    if (activeSectionId.value !== route.query.tab) {
+      activeSectionId.value = route.query.tab;
+    }
   }
   loadConfigData();
   loadScheduleData();
   loadDiskStatus();
+});
+
+onDeactivated(() => {
+  detachWheelListener();
 });
 
 onMounted(() => {
-  const container = getScrollContainer();
-  if (container) {
-    container.addEventListener("scroll", handleContainerScroll, { passive: true });
-  }
+  attachWheelListener();
   loadConfigData();
   loadScheduleData();
   loadDiskStatus();
-  nextTick(() => {
-    setupScrollSpy();
-    if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
-      scrollToSection(route.query.tab);
-    }
-  });
+  if (typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)) {
+    activeSectionId.value = route.query.tab;
+  }
 });
 
 onUnmounted(() => {
-  const container = getScrollContainer();
-  if (container) {
-    container.removeEventListener("scroll", handleContainerScroll);
-  }
-  if (userClickTimer) clearTimeout(userClickTimer);
+  detachWheelListener();
 });
 </script>
 
@@ -807,8 +1085,14 @@ onUnmounted(() => {
 .nav-tab-btn.active .tab-svg-ico {
   color: var(--primary, #2563eb);
 }
-.nav-active-pill {
-  display: none;
+.nav-tab-dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  margin-left: auto;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 .tab-svg-ico {
   width: 15px;
@@ -852,21 +1136,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
 }
-.section-header-texts {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
 .section-main-title {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
   color: var(--charcoal);
-}
-.section-sub-title {
-  margin: 0;
-  font-size: 12px;
-  color: var(--steel);
 }
 
 .section-header-action-btn {
@@ -922,6 +1196,159 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
   padding: 22px;
 }
 
+/* Card Module Footer Navigation */
+.module-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 22px;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
+  border-top: 1px solid var(--hairline, #e4e4e7);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.module-step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.step-dot-btn {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--hairline-strong, #d4d4d8);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.step-dot-btn:hover {
+  background: var(--slate, #71717a);
+  transform: scale(1.2);
+}
+
+.step-dot-btn.passed {
+  background: color-mix(in srgb, var(--primary, #2563eb) 40%, var(--hairline-strong, #d4d4d8));
+}
+
+.step-dot-btn.active {
+  width: 20px;
+  border-radius: 4px;
+  background: var(--primary, #2563eb);
+}
+
+.module-step-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel, #71717a);
+  font-variant-numeric: tabular-nums;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-module-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--r-sm, 6px);
+  border: 1px solid var(--hairline, #e4e4e7);
+  background: var(--surface-card, #ffffff);
+  color: var(--charcoal, #27272a);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-module-nav:hover {
+  border-color: var(--border-hover, #a1a1aa);
+  background: var(--surface-hover, rgba(0, 0, 0, 0.03));
+  color: var(--ink, #09090b);
+}
+
+.btn-module-prev {
+  background: var(--surface-card, #ffffff);
+  border-color: var(--hairline, #e4e4e7);
+  color: var(--charcoal, #27272a);
+}
+
+.btn-module-next {
+  background: var(--primary, #2563eb);
+  border-color: var(--primary, #2563eb);
+  color: #ffffff;
+}
+
+.btn-module-next:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
+.btn-module-loop {
+  background: var(--surface-card, #ffffff);
+  border-color: var(--hairline, #e4e4e7);
+  color: var(--steel, #71717a);
+}
+
+.btn-module-loop:hover {
+  color: var(--primary, #2563eb);
+  border-color: var(--primary, #2563eb);
+}
+
+.nav-arrow-svg {
+  width: 13px;
+  height: 13px;
+}
+
+.wheel-hint-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--muted, #a1a1aa);
+  background: var(--surface-card, #ffffff);
+  border: 1px dashed var(--hairline, #e4e4e7);
+  padding: 3px 8px;
+  border-radius: var(--r-xs, 4px);
+  user-select: none;
+}
+
+.mouse-icon-svg {
+  width: 12px;
+  height: 12px;
+  color: var(--muted, #a1a1aa);
+}
+
+/* Page Turn Animation */
+.module-turn-enter-active,
+.module-turn-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.module-turn-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.module-turn-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
 /* Form sub-section styling inside cards */
 .settings-section-card :deep(.form-section-card) {
   border: none !important;
@@ -962,59 +1389,6 @@ html.dark .settings-section-card :deep(.category-label) {
 }
 html.dark .settings-section-card :deep(.category-line) {
   background: rgba(255, 255, 255, 0.08);
-}
-
-.settings-section-card :deep(.form-sub-header) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 8px;
-  margin-bottom: 14px;
-  border-bottom: none !important;
-}
-.settings-section-card :deep(.sub-title-text) {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--charcoal, #18181b);
-  letter-spacing: -0.2px;
-}
-
-/* Header Action Button (e.g. 恢复推荐预设) */
-.btn-header-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--hairline, #e6e4df);
-  background: var(--surface-card, #ffffff);
-  color: var(--steel, #787671);
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: var(--r-sm, 6px);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-.btn-header-action:hover {
-  color: var(--ink, #18181b);
-  background: var(--highlight, rgba(0, 0, 0, 0.04));
-  border-color: var(--hairline-strong, #c8c4be);
-}
-.btn-action-svg {
-  width: 13px;
-  height: 13px;
-}
-
-html.dark .btn-header-action {
-  background: var(--surface-card, #18181b);
-  border-color: var(--hairline, #27272a);
-  color: var(--steel, #a1a1aa);
-}
-html.dark .btn-header-action:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #3f3f46;
 }
 
 /* Floating Sticky Save Bar (吸底保存条) */
@@ -1134,5 +1508,56 @@ html.dark .nav-tab-btn.active {
 }
 html.dark .section-card-header {
   background: rgba(255, 255, 255, 0.02);
+}
+html.dark .module-card-footer {
+  background: rgba(255, 255, 255, 0.02);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+html.dark .step-dot-btn {
+  background: rgba(255, 255, 255, 0.2);
+}
+html.dark .step-dot-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+html.dark .step-dot-btn.passed {
+  background: color-mix(in srgb, #60a5fa 40%, rgba(255, 255, 255, 0.2));
+}
+html.dark .step-dot-btn.active {
+  background: #60a5fa;
+}
+html.dark .btn-module-nav {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e4e4e7;
+}
+html.dark .btn-module-nav:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+html.dark .btn-module-next {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+html.dark .btn-module-next:hover {
+  background: #1d4ed8;
+}
+html.dark .btn-module-loop {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #a1a1aa;
+}
+html.dark .btn-module-loop:hover {
+  color: #60a5fa;
+  border-color: #60a5fa;
+}
+html.dark .wheel-hint-pill {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #71717a;
+}
+html.dark .wheel-hint-pill .mouse-icon-svg {
+  color: #71717a;
 }
 </style>
