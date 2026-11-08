@@ -376,25 +376,22 @@ function addTag(keyword: string) {
   border: 1px solid var(--hairline, #e4e4e7);
 }
 .mini-icon-box {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: transparent !important;
+  border: none;
 }
 .mini-icon-box svg {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
 }
 .icon-box-emerald {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
+  color: var(--success, #059669);
 }
 .icon-box-amber {
-  background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
+  color: var(--warning, #d97706);
 }
 .category-label {
   font-size: 11.5px;

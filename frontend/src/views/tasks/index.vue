@@ -109,6 +109,11 @@ async function loadBaseData() {
     const queryStreamer = route.query.streamer as string;
     if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
       selectedStreamer.value = queryStreamer;
+      if (route.query.auto === "merge" && !sse.isRunning.value) {
+        setTimeout(() => {
+          handleTargetedMerge();
+        }, 100);
+      }
     }
   } catch {
     // ignore

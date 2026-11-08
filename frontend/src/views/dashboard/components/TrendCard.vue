@@ -17,17 +17,59 @@
     </div>
 
     <div class="card-body trend-body">
-      <div v-if="hasTrendData" class="trend-chart">
-        <div v-for="day in stats?.daily" :key="day.date" class="trend-col">
-          <div class="trend-bars">
-            <el-tooltip :content="getMergeTooltip(day)" placement="top">
-              <div class="trend-bar bar-merge" :style="{ height: barHeight(day.merge_bytes) + 'px' }" />
-            </el-tooltip>
-            <el-tooltip :content="getCleanTooltip(day)" placement="top">
-              <div class="trend-bar bar-clean" :style="{ height: barHeight(day.clean_bytes) + 'px' }" />
-            </el-tooltip>
+      <div v-if="hasTrendData" class="trend-chart-wrapper">
+        <!-- Y-Axis 3-tier Hairline Gridlines & Labels -->
+        <div class="trend-y-axis">
+          <span class="y-label">{{ maxLabel }}</span>
+          <span class="y-label">{{ midLabel }}</span>
+          <span class="y-label">0</span>
+        </div>
+
+        <div class="trend-stage">
+          <!-- 3 Hairline Reference Lines -->
+          <div class="gridline gridline-top"></div>
+          <div class="gridline gridline-mid"></div>
+          <div class="gridline gridline-zero"></div>
+
+          <!-- 7 Columns with Column Hover Tracks -->
+          <div class="trend-cols">
+            <div
+              v-for="day in stats?.daily"
+              :key="day.date"
+              class="trend-col-track"
+            >
+              <el-tooltip placement="top" :show-after="80">
+                <template #content>
+                  <div class="trend-tooltip">
+                    <div class="tooltip-header">{{ day.date }}</div>
+                    <div class="tooltip-item">
+                      <span class="tooltip-dot dot-merge"></span>
+                      <span class="tooltip-lbl">生产合并:</span>
+                      <span class="tooltip-val">{{ formatBytes(day.merge_bytes) }} ({{ day.merge_count || 0 }} 次)</span>
+                    </div>
+                    <div class="tooltip-item">
+                      <span class="tooltip-dot dot-clean"></span>
+                      <span class="tooltip-lbl">释放清理:</span>
+                      <span class="tooltip-val">{{ formatBytes(day.clean_bytes) }} ({{ day.clean_count || 0 }} 次)</span>
+                    </div>
+                    <div class="tooltip-divider"></div>
+                    <div class="tooltip-net">
+                      <span>净空间变化:</span>
+                      <span :class="getNetDiffClass(day)">{{ getNetDiffText(day) }}</span>
+                    </div>
+                  </div>
+                </template>
+
+                <div class="trend-col-inner">
+                  <div class="trend-bars">
+                    <div class="trend-bar bar-merge" :style="{ height: barHeight(day.merge_bytes) + 'px' }" />
+                    <div class="trend-bar bar-clean" :style="{ height: barHeight(day.clean_bytes) + 'px' }" />
+                  </div>
+                  <span class="trend-date">{{ day.date.slice(5) }}</span>
+                </div>
+              </el-tooltip>
+            </div>
           </div>
-          <span class="trend-date">{{ day.date.slice(5) }}</span>
         </div>
       </div>
 
@@ -44,8 +86,8 @@
       </div>
 
       <div class="trend-legend">
-        <span><span class="legend-dot" style="background: #787774" />合并量</span>
-        <span><span class="legend-dot" style="background: var(--success)" />释放量</span>
+        <span><span class="legend-dot dot-merge" />生产合并</span>
+        <span><span class="legend-dot dot-clean" />释放清理</span>
       </div>
     </div>
   </div>
@@ -76,25 +118,36 @@ const totalCleanGB = computed(() => {
 });
 
 const maxBytes = computed(() => {
-  if (!props.stats?.daily) return 1;
-  return Math.max(...props.stats.daily.map(d => Math.max(d.merge_bytes || 0, d.clean_bytes || 0)), 1);
+  if (!props.stats?.daily || props.stats.daily.length === 0) return 1;
+  const max = Math.max(...props.stats.daily.map(d => Math.max(d.merge_bytes || 0, d.clean_bytes || 0)), 0);
+  return max > 0 ? max : 1;
+});
+
+const maxLabel = computed(() => {
+  return formatBytes(maxBytes.value);
+});
+
+const midLabel = computed(() => {
+  return formatBytes(Math.round(maxBytes.value / 2));
 });
 
 function barHeight(b: number): number {
-  if (!b || b <= 0) return 4;
-  return Math.max(6, Math.min(130, Math.round((b / maxBytes.value) * 130)));
+  if (!b || b <= 0) return 3;
+  return Math.max(5, Math.min(116, Math.round((b / maxBytes.value) * 116)));
 }
 
-function getMergeTooltip(day: DayStats): string {
-  if (!day.merge_bytes || day.merge_bytes <= 0) return `${day.date} 无合并任务`;
-  const count = day.merge_count ? `${day.merge_count} 次` : "";
-  return `合并 ${count} (${formatBytes(day.merge_bytes)})`;
+function getNetDiffText(day: DayStats): string {
+  const net = (day.merge_bytes || 0) - (day.clean_bytes || 0);
+  if (net === 0) return "0 B";
+  if (net > 0) return `+${formatBytes(net)}`;
+  return `-${formatBytes(Math.abs(net))}`;
 }
 
-function getCleanTooltip(day: DayStats): string {
-  if (!day.clean_bytes || day.clean_bytes <= 0) return `${day.date} 无清理操作`;
-  const count = day.clean_count ? `${day.clean_count} 次` : "";
-  return `释放 ${count} (${formatBytes(day.clean_bytes)})`;
+function getNetDiffClass(day: DayStats): string {
+  const net = (day.merge_bytes || 0) - (day.clean_bytes || 0);
+  if (net > 0) return "text-inflow";
+  if (net < 0) return "text-outflow";
+  return "";
 }
 </script>
 
@@ -141,56 +194,132 @@ function getCleanTooltip(day: DayStats): string {
   flex-direction: column;
   justify-content: space-between;
   flex: 1;
-  min-height: 180px;
+  min-height: 190px;
 }
 
-.trend-chart {
+/* Precision chart container with 3-tier hairline gridlines */
+.trend-chart-wrapper {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  height: 170px;
-  padding: 10px 0;
+  align-items: flex-start;
+  height: 160px;
+  padding: 10px 0 0 0;
+  gap: 10px;
 }
 
-.trend-col {
+.trend-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 120px;
+  text-align: right;
+  min-width: 48px;
+  padding-right: 4px;
+}
+
+.y-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--stone);
+  line-height: 1;
+}
+
+.trend-stage {
+  position: relative;
+  flex: 1;
+  height: 154px;
+}
+
+.gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--hairline);
+  pointer-events: none;
+}
+
+.gridline-top {
+  top: 0;
+}
+
+.gridline-mid {
+  top: 60px;
+}
+
+.gridline-zero {
+  top: 120px;
+}
+
+.trend-cols {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: 100%;
+}
+
+.trend-col-track {
+  flex: 1;
+  height: 154px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  border-radius: var(--r-xs);
+  transition: background 0.15s ease;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.trend-col-track:hover {
+  background: rgba(0, 0, 0, 0.035);
+}
+
+html.dark .trend-col-track:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.trend-col-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 .trend-bars {
   display: flex;
   align-items: flex-end;
-  gap: 4px;
-  height: 130px;
+  justify-content: center;
+  gap: 5px;
+  height: 120px;
 }
 
 .trend-bar {
-  width: 14px;
-  border-radius: 3px 3px 0 0;
-  cursor: pointer;
+  width: 12px;
+  border-radius: 2px 2px 0 0;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .trend-bar:hover {
-  opacity: 0.85;
+  opacity: 0.9;
   transform: scaleY(1.03);
 }
 
-.bar-merge {
-  background: #787774;
+.bar-merge, .dot-merge {
+  background: #3b82f6 !important;
 }
 
-.bar-clean {
-  background: var(--success);
+.bar-clean, .dot-clean {
+  background: #10b981 !important;
 }
 
 .trend-date {
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--stone);
+  margin-top: 10px;
+  line-height: 1;
 }
 
 .trend-empty {
@@ -204,18 +333,72 @@ function getCleanTooltip(day: DayStats): string {
   gap: 24px;
   font-size: 12px;
   color: var(--slate);
-  margin-top: 14px;
+  margin-top: 10px;
 }
 
 .trend-legend span {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .legend-dot {
   width: 8px;
   height: 8px;
   border-radius: 2px;
+}
+
+/* Tooltip internal styling */
+.trend-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  padding: 2px 0;
+}
+
+.tooltip-header {
+  font-weight: 600;
+  margin-bottom: 2px;
+  font-family: var(--font-mono);
+}
+
+.tooltip-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tooltip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.tooltip-val {
+  font-family: var(--font-mono);
+}
+
+.tooltip-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 4px 0;
+}
+
+.tooltip-net {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.text-inflow {
+  color: #58a6ff;
+}
+
+.text-outflow {
+  color: #3fb950;
 }
 </style>

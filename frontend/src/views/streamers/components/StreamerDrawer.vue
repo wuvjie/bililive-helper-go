@@ -8,12 +8,30 @@
   >
     <div v-loading="loading" class="drawer-content">
       <div class="drawer-header-bar">
-        <span class="drawer-sub">共 {{ files.length }} 个录像文件</span>
+        <UnderlineNav
+          v-model="activeTab"
+          :items="navItems"
+        />
+
+        <div class="drawer-header-actions">
+          <button
+            class="btn-drawer-merge"
+            :disabled="loading || files.length === 0"
+            @click="$emit('merge', streamer)"
+            title="一键触发合并该主播名下的全部录像分片"
+          >
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            <span>合并该主播</span>
+          </button>
+        </div>
       </div>
 
       <div class="table-responsive-wrapper">
         <el-table
-          :data="files"
+          :data="displayFiles"
           :tooltip-options="{ enterable: false, showAfter: 800, placement: 'top' }"
           size="small"
           max-height="650"
@@ -103,9 +121,13 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from "vue";
 import type { StreamerFile } from "@/api/types";
+import UnderlineNav, { type UnderlineNavItem } from "@/components/common/UnderlineNav.vue";
 
-defineProps<{
+const activeTab = ref<string>("all");
+
+const props = defineProps<{
   visible: boolean;
   streamer: string;
   files: StreamerFile[];
@@ -113,11 +135,27 @@ defineProps<{
   tick: number;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: "update:visible", val: boolean): void;
   (e: "play", file: StreamerFile): void;
   (e: "delete", file: StreamerFile): void;
+  (e: "merge", streamer: string): void;
 }>();
+
+const mergedCount = computed(() => props.files.filter(f => f.is_merged).length);
+const rawCount = computed(() => props.files.filter(f => !f.is_merged).length);
+
+const navItems = computed<UnderlineNavItem[]>(() => [
+  { label: "全部", value: "all", count: props.files.length },
+  { label: "已合并", value: "merged", count: mergedCount.value },
+  { label: "原始录像", value: "raw", count: rawCount.value }
+]);
+
+const displayFiles = computed(() => {
+  if (activeTab.value === "merged") return props.files.filter(f => f.is_merged);
+  if (activeTab.value === "raw") return props.files.filter(f => !f.is_merged);
+  return props.files;
+});
 
 function formatExactTime(ts: number): string {
   const d = new Date(ts * 1000);
@@ -158,6 +196,34 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   align-items: center;
   justify-content: space-between;
   padding: 0 4px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: -4px;
+}
+
+.btn-drawer-merge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-drawer-merge:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  border-color: var(--primary);
+}
+
+.btn-drawer-merge:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .drawer-sub {

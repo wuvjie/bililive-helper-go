@@ -15,6 +15,7 @@
   --canvas: #fbfbfa;
   --surface: #f4f3f0;
   --surface-card: #ffffff;
+  --surface-secondary: rgba(0, 0, 0, 0.02);
 
   // Elevation & Depth Shadows
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
@@ -37,8 +38,8 @@
   --link: #2f80ed;
 
   // Semantic (Notion-native desaturated tones)
-  --success: #448361;
-  --warning: #b45309;
+  --success: #059669;
+  --warning: #d97706;
   --error: #e03131;
 
   // Pastel tints (kept for stat cards)
@@ -67,7 +68,7 @@
   --glass-border: var(--hairline);
   --glass-blur: blur(12px);
 
-    // 8-Point Spatial System (Linear & Apple HIG Standards)
+  // 8-Point Spatial System (Linear & Apple HIG Standards)
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -126,54 +127,55 @@ button:not(:disabled) {
 ::-webkit-scrollbar-thumb:hover { background: var(--stone); }
 ::-webkit-scrollbar-track { background: transparent; }
 
-// Dark Mode Palette — OLED Deep Charcoal with subtle luminescence
+// Dark Mode Palette — GitHub Primer Official Dark (Deep Ocean Ink)
 html.dark {
   color-scheme: dark;
-  --primary: #2563eb;
-  --primary-hover: #3b82f6;
-  --primary-pressed: #1d4ed8;
-  --on-primary: #ffffff;
+  --primary: #58a6ff;
+  --primary-hover: #79c0ff;
+  --primary-pressed: #388bfd;
+  --on-primary: #0d1117;
 
-  --canvas: #09090b;
-  --surface: #141416;
-  --surface-card: #18181b;
+  --canvas: #0d1117;
+  --surface: #161b22;
+  --surface-card: #161b22;
+  --surface-secondary: #010409;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5), 0 6px 16px -4px rgba(0, 0, 0, 0.6);
-  --shadow-card-hover: 0 2px 6px rgba(0, 0, 0, 0.6), 0 12px 24px -6px rgba(0, 0, 0, 0.7);
-  --shadow-popover: 0 4px 24px -2px rgba(0, 0, 0, 0.8);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.7), 0 4px 12px -2px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6), 0 6px 16px -4px rgba(0, 0, 0, 0.7);
+  --shadow-card-hover: 0 2px 6px rgba(0, 0, 0, 0.7), 0 12px 24px -6px rgba(0, 0, 0, 0.8);
+  --shadow-popover: 0 4px 24px -2px rgba(0, 0, 0, 0.9);
 
-  --hairline: #27272a;
-  --hairline-strong: #3f3f46;
-  --hairline-focus: #60a5fa;
+  --hairline: #30363d;
+  --hairline-strong: #484f58;
+  --hairline-focus: #58a6ff;
 
-  --ink: #f4f4f5;
-  --charcoal: #e4e4e7;
-  --slate: #d4d4d8;
-  --steel: #a1a1aa;
-  --stone: #71717a;
-  --link: #60a5fa;
+  --ink: #f0f6fc;
+  --charcoal: #c9d1d9;
+  --slate: #b1bac4;
+  --steel: #8b949e;
+  --stone: #6e7681;
+  --link: #58a6ff;
 
-  --success: #34d399;
-  --warning: #fbbf24;
-  --error: #f87171;
+  --success: #3fb950;
+  --warning: #d29922;
+  --error: #f85149;
 
   --tint-peach: rgba(251, 146, 60, 0.12);
-  --tint-mint: rgba(52, 211, 153, 0.12);
-  --tint-lavender: rgba(167, 139, 250, 0.12);
-  --tint-sky: rgba(96, 165, 250, 0.12);
+  --tint-mint: rgba(63, 185, 80, 0.12);
+  --tint-lavender: rgba(188, 140, 255, 0.12);
+  --tint-sky: rgba(88, 166, 255, 0.12);
 
-  --highlight: #27272a;
+  --highlight: #21262d;
 
   // Dark Mode Frosted Glass
-  --glass-bg: color-mix(in srgb, var(--surface-card) 80%, transparent);
+  --glass-bg: color-mix(in srgb, var(--surface-card) 85%, transparent);
   --glass-border: var(--hairline);
   --glass-blur: blur(14px);
 }
+
 // Universal focus-visible accessibility halo
 :focus-visible {
   outline: 2px solid var(--hairline-focus);
   outline-offset: 2px;
 }
-

@@ -1,6 +1,6 @@
 // Element Plus — Notion ink-on-paper overrides
 :root {
-  --el-color-primary: #2563eb;
+  --el-color-primary: #58a6ff;
   --el-color-primary-light-3: #60a5fa;
   --el-color-primary-light-5: #93c5fd;
   --el-color-primary-light-7: #bfdbfe;
@@ -515,8 +515,8 @@ html.dark {
     }
   }
   .btn-tier-3 {
-    background: #18181b !important;
-    border-color: #27272a !important;
+    background: #161b22 !important;
+    border-color: #30363d !important;
     color: #e4e4e7 !important;
     &:hover {
       background: #27272a !important;
@@ -552,8 +552,8 @@ html.dark {
 
   // 下拉选择器在暗黑模式下的色彩与选项高亮
   .el-select-dropdown {
-    background-color: #18181b !important;
-    border-color: #27272a !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
   
 }
@@ -561,7 +561,7 @@ html.dark {
   .el-select-dropdown__item {
     color: #e4e4e7 !important;
     &.hover, &:hover {
-      background-color: #222226 !important;
+      background-color: #21262d !important;
       color: #ffffff !important;
     
 }
@@ -576,7 +576,7 @@ html.dark {
 }
 
 
-  --el-color-primary: #2563eb;
+  --el-color-primary: #58a6ff;
   --el-color-primary-light-3: #3b82f6;
   --el-color-primary-light-5: #60a5fa;
   --el-color-primary-light-7: #93c5fd;
@@ -584,42 +584,42 @@ html.dark {
   --el-color-primary-light-9: #1e293b;
   --el-color-primary-dark-2: #1d4ed8;
 
-  --el-bg-color: #18181b;
-  --el-bg-color-overlay: #1c1c20;
-  --el-bg-color-page: #09090b;
-  --el-text-color-primary: #f4f4f5;
-  --el-text-color-regular: #e4e4e7;
-  --el-text-color-secondary: #a1a1aa;
-  --el-text-color-placeholder: #52525b;
-  --el-border-color: #27272a;
-  --el-border-color-light: #27272a;
-  --el-fill-color-blank: #18181b;
-  --el-fill-color: #27272a;
-  --el-fill-color-light: #222226;
-  --el-fill-color-lighter: #1c1c20;
+  --el-bg-color: #161b22;
+  --el-bg-color-overlay: #161b22;
+  --el-bg-color-page: #0d1117;
+  --el-text-color-primary: #f0f6fc;
+  --el-text-color-regular: #c9d1d9;
+  --el-text-color-secondary: #8b949e;
+  --el-text-color-placeholder: #6e7681;
+  --el-border-color: #30363d;
+  --el-border-color-light: #21262d;
+  --el-fill-color-blank: #0d1117;
+  --el-fill-color: #21262d;
+  --el-fill-color-light: #161b22;
+  --el-fill-color-lighter: #161b22;
 
-  --el-card-bg-color: #18181b;
-  --el-card-border-color: #27272a;
+  --el-card-bg-color: #161b22;
+  --el-card-border-color: #30363d;
 
-  --el-dialog-bg-color: #18181b;
+  --el-dialog-bg-color: #161b22;
 
-  --el-table-bg-color: #18181b;
-  --el-table-tr-bg-color: #18181b;
-  --el-table-row-hover-bg-color: #1f1f23;
-  --el-table-border-color: rgba(255, 255, 255, 0.075);
-  --el-table-header-text-color: #a1a1aa;
-  --el-table-text-color: #e4e4e7;
+  --el-table-bg-color: #161b22;
+  --el-table-tr-bg-color: #161b22;
+  --el-table-row-hover-bg-color: #21262d;
+  --el-table-border-color: #30363d;
+  --el-table-header-text-color: #8b949e;
+  --el-table-text-color: #c9d1d9;
 
   // Explicit Card & Table Overrides in Dark Mode
   .el-card {
     --el-card-bg-color: #18181b !important;
-    --el-card-border-color: #27272a !important;
-    background-color: #18181b !important;
-    border-color: #27272a !important;
+    --el-card-border-color: #30363d !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     color: #e4e4e7 !important;
   }
   .el-card__header {
-    border-bottom-color: #27272a !important;
+    border-bottom-color: #30363d !important;
     color: #f4f4f5 !important;
   }
   .el-card__body {
@@ -635,7 +635,7 @@ html.dark {
     --el-table-row-hover-bg-color: #1f1f23 !important;
     --el-table-border-color: rgba(255, 255, 255, 0.075) !important;
     --el-table-header-bg-color: #18181b !important;
-    background-color: #18181b !important;
+    background-color: #161b22 !important;
     color: #e4e4e7 !important;
     border-color: rgba(255, 255, 255, 0.075) !important;
   }
@@ -643,7 +643,7 @@ html.dark {
     background: #141416 !important;
   }
   .el-table__empty-block {
-    background-color: #18181b !important;
+    background-color: #161b22 !important;
   }
   .el-table__empty-text {
     color: #a1a1aa !important;
@@ -702,8 +702,8 @@ html.dark {
 }
 
   .el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--success):not(.el-button--warning) {
-    background-color: #18181b !important;
-    border-color: #27272a !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     color: #e4e4e7 !important;
     &:hover {
       background-color: #27272a !important;
@@ -835,8 +835,8 @@ html.dark {
   .el-input-number {
     .el-input-number__decrease,
     .el-input-number__increase {
-      background-color: #1f1f23 !important;
-      border-color: #27272a !important;
+      background-color: #21262d !important;
+      border-color: #30363d !important;
       color: #a1a1aa !important;
       &:hover {
         background-color: #27272a !important;
@@ -876,17 +876,17 @@ html.dark {
 
   // Time Picker Panel in dark mode
   .el-time-panel {
-    background-color: #18181b !important;
-    border-color: #27272a !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
     .el-time-panel__content::after,
     .el-time-panel__content::before {
-      border-color: #27272a !important;
+      border-color: #30363d !important;
     
 }
 
     .el-time-panel__footer {
-      border-color: #27272a !important;
+      border-color: #30363d !important;
     
 }
 
@@ -925,11 +925,11 @@ html.dark {
   // Light poppers / tooltips in dark mode
   .el-popper.is-light {
     background-color: #1c1c20 !important;
-    border-color: #27272a !important;
+    border-color: #30363d !important;
     color: #e4e4e7 !important;
     .el-popper__arrow::before {
       background-color: #1c1c20 !important;
-      border-color: #27272a !important;
+      border-color: #30363d !important;
     
 }
 
@@ -975,8 +975,8 @@ html.dark {
   // Dialog & Drawer & Collapse in dark mode
   .el-dialog {
     --el-dialog-bg-color: #18181b !important;
-    background-color: #18181b !important;
-    border-color: #27272a !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     color: #e4e4e7 !important;
   }
 
@@ -998,8 +998,8 @@ html.dark {
   }
 
   .el-message-box {
-    background-color: #18181b !important;
-    border-color: #27272a !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     color: #e4e4e7 !important;
     .el-message-box__title,
     .el-message-box__content {
@@ -1029,16 +1029,16 @@ html.dark {
   }
 
   .el-collapse {
-    border-color: #27272a !important;
+    border-color: #30363d !important;
   }
   .el-collapse-item__header {
-    background-color: #18181b !important;
-    border-bottom-color: #27272a !important;
+    background-color: #161b22 !important;
+    border-bottom-color: #30363d !important;
     color: #f4f4f5 !important;
   }
   .el-collapse-item__wrap {
-    background-color: #18181b !important;
-    border-bottom-color: #27272a !important;
+    background-color: #161b22 !important;
+    border-bottom-color: #30363d !important;
   }
   .el-collapse-item__content {
     color: #e4e4e7 !important;
@@ -1047,8 +1047,8 @@ html.dark {
 
   // Dropdowns in dark mode
   .el-dropdown-menu {
-    background: #18181b !important;
-    border-color: #27272a !important;
+    background: #161b22 !important;
+    border-color: #30363d !important;
     .el-dropdown-menu__item {
       color: #e4e4e7 !important;
       &:hover, &:focus {
@@ -1073,7 +1073,7 @@ html.dark {
   .el-pagination {
     --el-pagination-hover-color: #f4f4f5;
     .btn-prev, .btn-next, .el-pager li {
-      background-color: #18181b !important;
+      background-color: #161b22 !important;
       color: #a1a1aa !important;
       border: 1px solid #27272a !important;
       border-radius: var(--r-xs) !important;
@@ -1236,8 +1236,8 @@ a:focus:not(:focus-visible) {
 
   .el-select__wrapper,
   .el-input__wrapper {
-    background-color: #18181b !important;
-    background: #18181b !important;
+    background-color: #161b22 !important;
+    background: #161b22 !important;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
     height: 28px !important;
     min-height: 28px !important;
@@ -1273,8 +1273,8 @@ a:focus:not(:focus-visible) {
 // 终端历史归档下拉弹出层（全场景暗黑沉浸隔离，彻底根除浅色/白底漏洞）
 .el-popper.history-select-popper,
 .history-select-popper {
-  background: #18181b !important;
-  background-color: #18181b !important;
+  background: #161b22 !important;
+  background-color: #161b22 !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
   --el-bg-color-overlay: #18181b !important;
@@ -1293,14 +1293,14 @@ a:focus:not(:focus-visible) {
   .el-scrollbar,
   .el-scrollbar__wrap,
   .el-select-dropdown__list {
-    background: #18181b !important;
-    background-color: #18181b !important;
+    background: #161b22 !important;
+    background-color: #161b22 !important;
   
 }
 
 
   .el-popper__arrow::before {
-    background: #18181b !important;
+    background: #161b22 !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
   
 }

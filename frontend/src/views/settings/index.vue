@@ -18,7 +18,6 @@
                 <svg v-if="item.id === 'policy'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
                 <svg v-else-if="item.id === 'schedule'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <svg v-else-if="item.id === 'backup'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <svg v-else-if="item.id === 'security'" class="tab-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </span>
               <span class="nav-btn-text">{{ item.label }}</span>
               <span v-if="item.id === 'policy' && isPolicyDirty()" class="nav-tab-dirty-dot" title="包含未保存的策略更改" />
@@ -183,40 +182,7 @@
             />
           </section>
 
-          <!-- 4. 安全设置 -->
-          <section
-            v-else-if="activeSectionId === 'security'"
-            key="security"
-            id="section-security"
-            class="settings-section-card"
-          >
-            <div class="section-card-header">
-              <div class="section-header-title-row">
-                <div class="ui-icon-box icon-box-amber">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                </div>
-                <h2 class="section-main-title">安全设置</h2>
-              </div>
-            </div>
-            <div class="section-card-body">
-              <SecurityTab />
-            </div>
-            <ModuleCardFooter
-              :sections="navSections"
-              :active-id="activeSectionId"
-              :current-index="currentModuleIndex"
-              :current-label="currentModuleLabel"
-              :prev-section="prevModule"
-              :next-section="nextModule"
-              :is-pulling-next="isPullingNext"
-              :is-pulling-prev="isPullingPrev"
-              :pull-progress="pullProgress"
-              @switch="handleSidebarTabClick"
-              @next="goToNextModule"
-              @prev="goToPrevModule"
-              @loop="switchToSection('policy', 'prev')"
-            />
-          </section>
+          
         </Transition>
       </main>
     </div>
@@ -261,7 +227,6 @@ import PolicyTab from "./tabs/PolicyTab.vue";
 import ScheduleTab from "./tabs/ScheduleTab.vue";
 import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
 import BackupTab from "./tabs/BackupTab.vue";
-import SecurityTab from "./tabs/SecurityTab.vue";
 import ModuleCardFooter from "./components/ModuleCardFooter.vue";
 
 const route = useRoute();
@@ -270,12 +235,11 @@ const router = useRouter();
 const navSections = [
   { id: "policy", label: "全局策略" },
   { id: "schedule", label: "定时调度" },
-  { id: "backup", label: "配置备份" },
-  { id: "security", label: "安全设置" }
+  { id: "backup", label: "配置备份" }
 ];
 
 const activeSectionId = ref<string>(
-  typeof route.query.tab === "string" && ["policy", "schedule", "backup", "security"].includes(route.query.tab)
+  typeof route.query.tab === "string" && ["policy", "schedule", "backup"].includes(route.query.tab)
     ? (route.query.tab as string)
     : "policy"
 );
@@ -894,11 +858,11 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   height: 38px;
-  padding: 0 12px;
-  border-radius: var(--r-md, 8px);
+  padding: 0 12px 0 14px;
+  border-radius: var(--r-sm, 4px);
   border: none;
   background: transparent;
-  color: var(--steel, #71717a);
+  color: var(--steel);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -907,16 +871,26 @@ onMounted(() => {
   white-space: nowrap;
 }
 .nav-tab-btn:hover:not(.active) {
-  color: var(--charcoal, #27272a);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  color: var(--charcoal);
+  background: var(--surface-secondary);
 }
 .nav-tab-btn.active {
-  color: var(--primary, #2563eb);
-  background: color-mix(in srgb, var(--primary, #2563eb) 8%, transparent);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
   font-weight: 600;
 }
+.nav-tab-btn.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--primary);
+}
 .nav-tab-btn.active .tab-svg-ico {
-  color: var(--primary, #2563eb);
+  color: var(--primary);
 }
 .nav-tab-dirty-dot {
   width: 6px;
@@ -1188,15 +1162,18 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
 
 /* Dark mode tweaks */
 html.dark .nav-tab-btn {
-  color: #94a3b8;
+  color: var(--steel);
 }
-html.dark .nav-tab-btn:hover {
-  color: #f1f5f9;
-  background: rgba(255, 255, 255, 0.05);
+html.dark .nav-tab-btn:hover:not(.active) {
+  color: var(--ink);
+  background: var(--highlight);
 }
 html.dark .nav-tab-btn.active {
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.12);
+  color: var(--ink);
+  background: rgba(88, 166, 255, 0.12);
+}
+html.dark .nav-tab-btn.active::before {
+  background: var(--primary);
 }
 html.dark .section-card-header {
   background: rgba(255, 255, 255, 0.02);

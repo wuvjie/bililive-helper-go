@@ -193,16 +193,11 @@ function formatNextTime(ts?: number): string {
   100% { transform: scale(0.9); opacity: 0.8; }
 }
 
+/* Deconstructed top metric - hairline underline, no box */
 .card-top-metric {
-  margin-bottom: 20px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
-  padding: 12px 14px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--hairline);
-}
-
-html.dark .card-top-metric {
-  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .runtime-top {
@@ -241,21 +236,40 @@ html.dark .card-top-metric {
   line-height: 1.4;
 }
 
+/* Hairline Ruled Metric Grid (十字发丝线标尺网格) */
 .data-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 14px;
 }
 
 .data-cell {
-  background: var(--surface);
-  border: 1px solid var(--hairline);
+  background: transparent;
+  border: none;
   padding: 10px 14px;
-  border-radius: var(--r-sm);
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.data-cell:nth-child(odd) {
+  border-right: 1px solid var(--hairline);
+  padding-left: 0;
+}
+
+.data-cell:nth-child(even) {
+  padding-right: 0;
+}
+
+.data-cell:nth-child(-n+2) {
+  border-bottom: 1px solid var(--hairline);
+  padding-top: 0;
+}
+
+.data-cell:nth-child(n+3) {
+  padding-bottom: 12px;
 }
 
 .data-label {
@@ -279,22 +293,22 @@ html.dark .card-top-metric {
   cursor: help;
 }
 
+/* Flattened bottom health bar - no outer boxes */
 .bottom-health-bar {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding-top: 14px;
-  border-top: 1px dashed var(--hairline);
+  gap: 16px;
+  padding-top: 2px;
 }
 
 .health-cell {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px 12px;
-  border-radius: var(--r-sm);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.025));
-  border: 1px solid var(--hairline);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
   box-sizing: border-box;
 }
 
@@ -316,10 +330,5 @@ html.dark .card-top-metric {
   font-size: 14px;
   font-weight: 600;
   color: var(--charcoal);
-}
-
-html.dark .health-cell {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.08);
 }
 </style>

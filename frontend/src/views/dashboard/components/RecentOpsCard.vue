@@ -31,6 +31,7 @@
         <span class="empty-desc">后台自动执行或手动触发的任务记录将保存在此处</span>
       </div>
 
+      <!-- GitHub Flush List (通栏流式列表) -->
       <div v-else class="recent-list">
         <div
           v-for="row in recentHistory"
@@ -154,18 +155,24 @@ function formatDetail(row: HistoryRecord): string {
   min-height: 180px;
 }
 
+/* GitHub Flush Ruled List (通栏发丝线列表) */
 .recent-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  margin: 0 -4px;
 }
 
 .recent-row {
-  padding: 8px 10px;
+  padding: 9px 8px;
   border-radius: var(--r-sm);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
-  border: 1px solid var(--hairline);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--hairline);
   transition: background 0.15s ease;
+}
+
+.recent-row:last-child {
+  border-bottom: none;
 }
 
 .recent-row:hover {

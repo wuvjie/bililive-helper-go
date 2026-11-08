@@ -1,27 +1,27 @@
 <template>
   <div class="stat-grid">
-    <div class="stat-card stat-peach">
+    <div class="stat-card accent-blue">
       <span class="stat-label">今日合并</span>
       <span class="stat-value">{{ stats?.today?.merge_count || 0 }}</span>
       <span class="stat-sub">
         产出 {{ stats?.today?.merge_bytes ? formatBytes(stats.today.merge_bytes) : '0.00 GB' }}
       </span>
     </div>
-    <div class="stat-card stat-mint">
+    <div class="stat-card accent-green">
       <span class="stat-label">昨日合并</span>
       <span class="stat-value">{{ yesterdayStats.count }}</span>
       <span class="stat-sub">
         产出 {{ yesterdayStats.bytes ? formatBytes(yesterdayStats.bytes) : '0.00 GB' }}
       </span>
     </div>
-    <div class="stat-card stat-sky">
+    <div class="stat-card accent-sky">
       <span class="stat-label">本月合并</span>
       <span class="stat-value">{{ stats?.month?.merge_count || 0 }}</span>
       <span class="stat-sub">
         产出 {{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}
       </span>
     </div>
-    <div class="stat-card stat-lavender">
+    <div class="stat-card accent-purple">
       <span class="stat-label">累计清理</span>
       <span class="stat-value">{{ totalFreedStats.count }}</span>
       <span class="stat-sub">
@@ -51,23 +51,41 @@ defineProps<{
 }
 
 .stat-card {
+  position: relative;
   padding: 16px 20px;
   border-radius: var(--r-md);
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-  border: 1px solid transparent;
+  overflow: hidden;
 }
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.stat-card.accent-blue::before { background: #3b82f6; }
+.stat-card.accent-green::before { background: #10b981; }
+.stat-card.accent-sky::before { background: #0ea5e9; }
+.stat-card.accent-purple::before { background: #8b5cf6; }
 
 .stat-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .stat-label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--charcoal);
+  color: var(--steel);
   margin-bottom: 6px;
 }
 
@@ -86,63 +104,13 @@ defineProps<{
   margin-top: 6px;
 }
 
-/* Pastel tints */
-.stat-peach {
-  background: #fdf5f0;
-  border-color: #f7e1d2;
-}
-.stat-peach .stat-label { color: #8f4c28; }
-
-.stat-mint {
-  background: #f0f7f3;
-  border-color: #d1ead9;
-}
-.stat-mint .stat-label { color: #2d6a4f; }
-
-.stat-sky {
-  background: #f0f5fa;
-  border-color: #d2e3f3;
-}
-.stat-sky .stat-label { color: #235d8a; }
-
-.stat-lavender {
-  background: #f5f2f9;
-  border-color: #dfd5ed;
-}
-.stat-lavender .stat-label { color: #5a3d7a; }
-
-/* Dark mode overrides */
-html.dark .stat-peach {
-  background: rgba(217, 115, 13, 0.1);
-  border-color: rgba(217, 115, 13, 0.2);
-}
-html.dark .stat-peach .stat-label { color: #fb923c; }
-
-html.dark .stat-mint {
-  background: rgba(68, 131, 97, 0.1);
-  border-color: rgba(68, 131, 97, 0.2);
-}
-html.dark .stat-mint .stat-label { color: #4ade80; }
-
-html.dark .stat-sky {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.2);
-}
-html.dark .stat-sky .stat-label { color: #60a5fa; }
-
-html.dark .stat-lavender {
-  background: rgba(147, 51, 234, 0.1);
-  border-color: rgba(147, 51, 234, 0.2);
-}
-html.dark .stat-lavender .stat-label { color: #c084fc; }
-
 @media (max-width: 900px) {
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 540px) {
+@media (max-width: 640px) {
   .stat-grid {
     grid-template-columns: 1fr;
   }

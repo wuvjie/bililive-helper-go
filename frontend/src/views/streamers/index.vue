@@ -78,6 +78,7 @@
       :tick="tick"
       @play="handlePlay"
       @delete="handleDeleteFile"
+      @merge="handleMergeStreamer"
     />
 
     <!-- 在线视频播放预览弹窗 -->
@@ -91,6 +92,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, onActivated } from "vue";
+import { useRouter } from "vue-router";
 import { getStreamers, getStreamerFiles, saveStreamerRule, getVideoPlayUrl, deleteStreamerFile } from "@/api/status";
 import { Search } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -101,6 +103,7 @@ import StreamerDrawer from "./components/StreamerDrawer.vue";
 import StreamerRuleDialog from "./components/StreamerRuleDialog.vue";
 import VideoPlayerModal from "./components/VideoPlayerModal.vue";
 
+const router = useRouter();
 const streamers = ref<StreamerInfo[]>([]);
 const loading = ref(true);
 const searchInputRef = ref();
@@ -198,6 +201,11 @@ async function handleDeleteFile(row: StreamerFile) {
 const playerVisible = ref(false);
 const playFileName = ref("");
 const playUrl = ref("");
+
+function handleMergeStreamer(name: string) {
+  drawerVisible.value = false;
+  router.push({ path: "/tasks", query: { streamer: name, auto: "merge" } });
+}
 
 function handlePlay(file: StreamerFile) {
   if (/\.(flv|ts)$/i.test(file.name)) {

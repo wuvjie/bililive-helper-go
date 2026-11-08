@@ -1,6 +1,34 @@
 # Baseline
 
-- **v3.7.0** (Current Active):
+- **v3.8.0** (Current Active):
+  - Git Tag: `v3.8.0`
+  - Commit: `5d25259` (GitHub) / `5b3d03b` (WSL)
+  - Release Highlights:
+    - **线条标尺美学体系 (GitHub Line & Metric)**：
+      - 横向底线式导航 (`UnderlineNav.vue`)：0 容器外边框、0 跑道底盒、2px 品牌底线与等宽数值徽标；全面落地于操作审计日志 (`/history`) 与主播录像抽屉 (`StreamerDrawer.vue`)；
+      - 纵向微标尺导航 (`SideNav Stripe`)：系统设置 (`/settings`) 采用左边缘 3px 纯色游标线，联动滚轮阻尼平滑翻页；
+      - 全局 App Shell 侧边栏激活项赋予 3px 品牌游标线。
+    - **纯矢量直出微图标 (Glyph-First)**：彻底废除 `.ui-icon-box` 与 `.mini-icon-box` 的 28px/24px 彩色方块底盒与背景色，直接呈现 16px/18px 偶数标尺高精度纯矢量描边，保留翠绿、琥珀、科技蓝等语义纯色。
+    - **系统概览反“套娃”大重构 (Anti-Overboxing & Ruled Metric Grid)**：
+      - 废除单卡片内套 7 个独立小外框的“俄罗斯套娃”形态；
+      - 核心指标采用十字发丝标尺网格 (Ruled Metric Grid) 无缝平铺；
+      - 最近操作记录采用 GitHub 通栏流式列表 (Flush Ruled List)，悬停通栏高亮，信息密度大幅提升；
+      - 统计大盘 4 卡片收敛为纯白画布 + 顶边 2px 主题细线 (`StatGrid`)。
+    - **近 7 天趋势图精密升级 (Precision Trend Chart)**：
+      - 引入 Y 轴三阶极淡发丝刻度线 (Max / 50% / 0) 与等宽刻度值；
+      - 废弃泥灰色，确立生产合并（科技深蓝 `#3b82f6`）与释放清理（薄荷翠绿 `#10b981`）双色契约；
+      - 引入整列悬停高亮垂直轨道 (`.trend-col-track`) 与一体化净空间吞吐 Tooltip 计算。
+    - **GitHub Primer Dark 官方暗黑主题升级**：
+      - 全面导入 GitHub Primer Dark 官方设计色彩（`#0d1117` 主画布、`#161b22` 卡片面、`#30363d` 发丝边框、`#58a6ff` 强调蓝等）；
+      - Element Plus 弹出层、菜单、表单及阴影系统全量对齐 Primer Dark 规范。
+    - **代码库清冗与零孤儿契约 (Codebase Pruning & Zero-Orphan Policy)**：
+      - 物理移除 3 个孤儿废弃组件：`AppCard.vue`, `StatusPill.vue`, `FilterPills.vue`；
+      - 系统设置精炼收敛为 3 大核心业务模块 (`policy`, `schedule`, `backup`)，剥离冗余的空壳密码页；
+      - 激活 `PasswordDialog.vue`，从顶栏管理员菜单直接弹出密码修改弹窗，无需跨页跳折；
+      - 主播录像抽屉新增三态 UnderlineNav 筛选与原地 `[ 合并该主播 ]` 快捷闭环。
+    - BDS 设计语言规范升级至 v3.8.0。
+
+- **v3.7.0**:
   - Git Tag: `v3.7.0`
   - Commit: `69dd93e` (GitHub) / `9901117` (WSL)
   - Release Highlights:

@@ -114,7 +114,7 @@
               <el-dropdown-menu class="nav-dropdown-menu">
                 <div class="user-dropdown-header">
                   <div class="user-dropdown-title">系统管理员</div>
-                  <div class="user-dropdown-sub">版本 v3.5.0 (Release)</div>
+                  <div class="user-dropdown-sub">版本 v3.8.0 (Release)</div>
                 </div>
                 <el-dropdown-item command="change-password" divided>
                   <span class="dropdown-item-flex">
@@ -227,7 +227,7 @@ function refreshPage() {
 }
 function handleCommand(cmd: string) {
   if (cmd === "logout") logout();
-  if (cmd === "change-password") router.push({ path: "/settings", query: { tab: "security" } });
+  if (cmd === "change-password") pwDialogVisible.value = true;
 }
 
 // Disk usage alert
@@ -378,12 +378,27 @@ router.afterEach(() => fetchDiskStatus());
   }
 
   .el-menu-item {
+    position: relative;
     border-radius: var(--r-sm); margin-bottom: 2px;
     font-size: 14px; color: var(--steel);
     padding: 0 14px;
     transition: background 0.1s, color 0.1s;
     &:hover { background: var(--highlight); color: var(--charcoal); }
-    &.is-active { background: var(--highlight); color: var(--ink); font-weight: 500; }
+    &.is-active {
+      background: var(--highlight);
+      color: var(--ink);
+      font-weight: 600;
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 2px;
+        background: var(--primary);
+      }
+    }
   }
 }
 
