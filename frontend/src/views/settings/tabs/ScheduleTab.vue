@@ -1,110 +1,131 @@
 <template>
   <div class="schedule-tab" v-loading="loading">
-    <!-- Card 1: 自动分片合并计划 -->
+    <!-- Card 1: 自动化任务调度计划 (双列并行对称网格) -->
     <div class="setting-group-card">
       <div class="group-card-header">
         <div class="group-header-text">
-          <h3 class="group-title">自动分片合并计划</h3>
-          <p class="group-desc">主调度器周期性激活录像分片合并流水线，将零散切片拼合为完整录播。</p>
+          <h3 class="group-title">自动化任务调度计划</h3>
+          <p class="group-desc">配置录像分片合并与磁盘巡检清理的主定时调度器，后台周期性轮询执行。</p>
         </div>
       </div>
       <div class="group-card-body">
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">
-              <span>开启自动合并</span>
-              <el-tooltip content="主调度器周期性激活录像分片合并流水线任务" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
-            </div>
-          </div>
-          <div class="setting-control">
-            <el-switch
-              :model-value="form.merge_enabled"
-              @update:model-value="emit('update:form', { ...form, merge_enabled: !!$event })"
-            />
-          </div>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">
-              <span>合并调度周期</span>
-              <el-tooltip content="任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟 / 6 小时）" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
-            </div>
-          </div>
-          <div class="setting-control">
-            <div class="inline-unit-row">
-              <el-input-number
-                :model-value="form.merge_interval"
-                :min="10"
-                :max="1440"
-                :step="15"
-                class="compact-counter"
-                @update:model-value="emit('update:form', { ...form, merge_interval: Number($event) })"
+        <div class="schedule-tasks-grid">
+          <!-- Task 1: 自动分片合并 -->
+          <div class="task-tile-card" :class="{ 'tile-disabled': !form.merge_enabled }">
+            <div class="tile-card-header">
+              <div class="tile-header-left">
+                <svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                  <line x1="7" y1="2" x2="7" y2="22"/>
+                  <line x1="17" y1="2" x2="17" y2="22"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <line x1="2" y1="7" x2="7" y2="7"/>
+                  <line x1="2" y1="17" x2="7" y2="17"/>
+                  <line x1="17" y1="17" x2="22" y2="17"/>
+                  <line x1="17" y1="7" x2="22" y2="7"/>
+                </svg>
+                <span class="tile-title">自动分片合并</span>
+                <el-tooltip content="主调度器周期性激活录像分片合并流水线，将零散切片拼合为完整录播" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </div>
+              <el-switch
+                :model-value="form.merge_enabled"
+                @update:model-value="updateFormField('merge_enabled', !!$event)"
               />
-              <span class="unit-text">分钟</span>
+            </div>
+
+            <div class="tile-card-body">
+              <div class="tile-field-row">
+                <label class="tile-field-label">
+                  <span>合并调度周期</span>
+                  <el-tooltip content="任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟 / 6 小时）" placement="top" :show-after="300">
+                    <span class="label-help-ico">?</span>
+                  </el-tooltip>
+                </label>
+                <div class="inline-unit-row">
+                  <el-input-number
+                    :model-value="form.merge_interval"
+                    :min="10"
+                    :max="1440"
+                    :step="15"
+                    class="compact-counter"
+                    :disabled="!form.merge_enabled"
+                    @update:model-value="updateFormField('merge_interval', Number($event))"
+                  />
+                  <span class="unit-text">分钟</span>
+                </div>
+              </div>
+
+              <div class="tile-hint-box">
+                <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span>推荐 360 分钟（6小时），任务执行完毕后休眠进入下次循环。</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task 2: 自动磁盘清理 -->
+          <div class="task-tile-card" :class="{ 'tile-disabled': !form.clean_enabled }">
+            <div class="tile-card-header">
+              <div class="tile-header-left">
+                <svg class="tile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="12" x2="2" y2="12"/>
+                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                  <line x1="6" y1="16" x2="6.01" y2="16"/>
+                  <line x1="10" y1="16" x2="10.01" y2="16"/>
+                </svg>
+                <span class="tile-title">自动磁盘清理</span>
+                <el-tooltip content="巡检器定时扫描磁盘可用水位，若触达警戒线则自动启动清理冲程" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </div>
+              <el-switch
+                :model-value="form.clean_enabled"
+                @update:model-value="updateFormField('clean_enabled', !!$event)"
+              />
+            </div>
+
+            <div class="tile-card-body">
+              <div class="tile-field-row">
+                <label class="tile-field-label">
+                  <span>巡检调度周期</span>
+                  <el-tooltip content="巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟 / 12 小时）" placement="top" :show-after="300">
+                    <span class="label-help-ico">?</span>
+                  </el-tooltip>
+                </label>
+                <div class="inline-unit-row">
+                  <el-input-number
+                    :model-value="form.clean_interval"
+                    :min="10"
+                    :max="1440"
+                    :step="30"
+                    class="compact-counter"
+                    :disabled="!form.clean_enabled"
+                    @update:model-value="updateFormField('clean_interval', Number($event))"
+                  />
+                  <span class="unit-text">分钟</span>
+                </div>
+              </div>
+
+              <div class="tile-hint-box">
+                <svg class="hint-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span>推荐 720 分钟（12小时），定期比对磁盘剩余水位并触发清理。</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Card 2: 自动磁盘巡检与清理计划 -->
-    <div class="setting-group-card">
-      <div class="group-card-header">
-        <div class="group-header-text">
-          <h3 class="group-title">自动磁盘巡检与清理计划</h3>
-          <p class="group-desc">巡检器定时扫描磁盘可用水位，若触达警戒线则自动启动清理冲程。</p>
-        </div>
-      </div>
-      <div class="group-card-body">
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">
-              <span>开启自动清理</span>
-              <el-tooltip content="定期巡检磁盘可用率，若触达警戒线则自动启动清理" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
-            </div>
-          </div>
-          <div class="setting-control">
-            <el-switch
-              :model-value="form.clean_enabled"
-              @update:model-value="emit('update:form', { ...form, clean_enabled: !!$event })"
-            />
-          </div>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-info">
-            <div class="setting-title">
-              <span>巡检调度周期</span>
-              <el-tooltip content="巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟 / 12 小时）" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
-            </div>
-          </div>
-          <div class="setting-control">
-            <div class="inline-unit-row">
-              <el-input-number
-                :model-value="form.clean_interval"
-                :min="10"
-                :max="1440"
-                :step="30"
-                class="compact-counter"
-                @update:model-value="emit('update:form', { ...form, clean_interval: Number($event) })"
-              />
-              <span class="unit-text">分钟</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 3: 免打扰避让时段 -->
+    <!-- Card 2: 免打扰避让时段 -->
     <div class="setting-group-card">
       <div class="group-card-header">
         <div class="group-header-text">
@@ -182,7 +203,7 @@ export interface ScheduleForm {
   clean_interval: number;
 }
 
-defineProps<{
+const props = defineProps<{
   form: ScheduleForm;
   backupStart: string;
   backupEnd: string;
@@ -196,6 +217,13 @@ const emit = defineEmits<{
   "update:backupEnd": [value: string];
   save?: [];
 }>();
+
+function updateFormField<K extends keyof ScheduleForm>(field: K, val: ScheduleForm[K]) {
+  emit("update:form", {
+    ...props.form,
+    [field]: val,
+  });
+}
 </script>
 
 <style scoped>
@@ -206,11 +234,11 @@ const emit = defineEmits<{
 
 /* Unified Group Card (GitHub Primer Section Card) */
 .setting-group-card {
-  background: var(--color-canvas-default, #ffffff);
-  border: 1px solid var(--color-border-subtle, #d0d7de);
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline, #e4e4e7);
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -221,7 +249,7 @@ const emit = defineEmits<{
 }
 
 html.dark .setting-group-card {
-  background: var(--color-canvas-subtle, #161b22);
+  background: #161b22;
   border-color: #30363d;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -232,9 +260,9 @@ html.dark .setting-group-card:hover {
 }
 
 .group-card-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
-  background: var(--color-canvas-subtle, #f6f8fa);
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -243,20 +271,20 @@ html.dark .setting-group-card:hover {
 
 html.dark .group-card-header {
   border-bottom-color: #30363d;
-  background: rgba(255, 255, 255, 0.02);
 }
 
 .group-header-text {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .group-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--color-fg-default, #24292f);
+  color: var(--charcoal, #24292f);
   margin: 0;
+  line-height: 1.3;
 }
 
 html.dark .group-title {
@@ -264,10 +292,10 @@ html.dark .group-title {
 }
 
 .group-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-fg-muted, #57606a);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 html.dark .group-desc {
@@ -275,7 +303,148 @@ html.dark .group-desc {
 }
 
 .group-card-body {
-  padding: 4px 20px 8px;
+  padding: 8px 22px 18px;
+}
+
+/* Symmetrical Dual-Task Grid */
+.schedule-tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  padding: 12px 0 6px;
+}
+
+@media (max-width: 768px) {
+  .schedule-tasks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.task-tile-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--hairline, #e4e4e7);
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.task-tile-card:hover {
+  border-color: var(--color-border-default, #afb8c1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .task-tile-card {
+  background: #0d1117;
+  border-color: #30363d;
+}
+
+html.dark .task-tile-card:hover {
+  border-color: #484f58;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.task-tile-card.tile-disabled {
+  opacity: 0.72;
+}
+
+.tile-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+}
+
+html.dark .tile-card-header {
+  border-bottom-color: #21262d;
+}
+
+.tile-header-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tile-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-accent-fg, #0969da);
+  flex-shrink: 0;
+}
+
+html.dark .tile-icon {
+  color: #58a6ff;
+}
+
+.tile-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal, #24292f);
+}
+
+html.dark .tile-title {
+  color: #f0f6fc;
+}
+
+.tile-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tile-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+}
+
+.tile-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-fg-default, #24292f);
+}
+
+html.dark .tile-field-label {
+  color: #c9d1d9;
+}
+
+.tile-hint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-fg-muted, #57606a);
+  background: var(--surface-card, #ffffff);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--hairline, #e4e4e7);
+}
+
+html.dark .tile-hint-box {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #21262d;
+  color: #8b949e;
+}
+
+.hint-icon {
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: var(--color-fg-muted, #57606a);
+}
+
+html.dark .hint-icon {
+  color: #8b949e;
 }
 
 /* Setting Rows */
@@ -287,14 +456,6 @@ html.dark .group-desc {
   gap: 20px;
   min-height: 44px;
   box-sizing: border-box;
-}
-
-.setting-row:not(:last-child) {
-  border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
-}
-
-html.dark .setting-row:not(:last-child) {
-  border-bottom-color: #21262d;
 }
 
 .setting-info {
@@ -310,7 +471,7 @@ html.dark .setting-row:not(:last-child) {
   gap: 6px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--color-fg-default, #24292f);
+  color: var(--charcoal, #24292f);
 }
 
 html.dark .setting-title {
@@ -399,7 +560,7 @@ html.dark .unit-text {
 
 /* Schedule Status Banner */
 .schedule-status-banner {
-  margin: 12px 0 8px;
+  margin: 6px 0 4px;
   padding: 10px 14px;
   border-radius: 6px;
   background: rgba(9, 105, 218, 0.06);
@@ -416,8 +577,8 @@ html.dark .schedule-status-banner {
 }
 
 .status-banner-neutral {
-  background: var(--color-canvas-subtle, #f6f8fa);
-  border-color: var(--color-border-subtle, #d0d7de);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
+  border-color: var(--hairline, #e4e4e7);
 }
 
 html.dark .status-banner-neutral {
@@ -430,7 +591,7 @@ html.dark .status-banner-neutral {
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
-  color: var(--color-fg-default, #24292f);
+  color: var(--charcoal, #24292f);
 }
 
 html.dark .status-banner-left {

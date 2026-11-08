@@ -1,6 +1,6 @@
 <template>
   <div class="policy-tab">
-    <!-- Group 1: 录制与分片合并规则 -->
+    <!-- Card 1: 录制与分片合并规则 -->
     <div class="setting-group-card">
       <div class="group-card-header">
         <div class="group-header-text">
@@ -59,12 +59,12 @@
       </div>
     </div>
 
-    <!-- Group 2: 磁盘自动清理与水位控制 -->
+    <!-- Card 2: 存储配额与自动清理防线 (大聚合卡片) -->
     <div class="setting-group-card">
       <div class="group-card-header">
         <div class="group-header-text">
-          <h3 class="group-title">磁盘自动清理与水位控制</h3>
-          <p class="group-desc">当磁盘占用触达警戒水位时自动清理旧录像，直至降至安全水位，形成有效清理冲程。</p>
+          <h3 class="group-title">存储配额与自动清理防线</h3>
+          <p class="group-desc">监控磁盘水位深度并自动释放存储空间，同时受免删保护天数与关键词白名单硬性约束。</p>
         </div>
         <div class="gauge-metric-badge">
           <span class="metric-lbl">单次释放冲程:</span>
@@ -74,6 +74,11 @@
       </div>
 
       <div class="group-card-body">
+        <!-- Subhead 1: 水位深度监控与冲程计算 -->
+        <div class="card-subhead">
+          <span class="subhead-title">水位深度与清理冲程控制</span>
+        </div>
+
         <!-- Visual Watermark Track (水位深度与冲程展示条) -->
         <div class="gauge-preview-wrap">
           <div class="gauge-bar-track">
@@ -154,18 +159,12 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Group 3: 安全保留防线 -->
-    <div class="setting-group-card">
-      <div class="group-card-header">
-        <div class="group-header-text">
-          <h3 class="group-title">安全保留防线</h3>
-          <p class="group-desc">即使磁盘空间达到警戒水位，以下三项防御限制仍受硬性保护，绝不被超额清理。</p>
+        <!-- Subhead 2: 安全保留防线 -->
+        <div class="card-subhead">
+          <span class="subhead-title">防御与安全保留限制</span>
         </div>
-      </div>
-      <div class="group-card-body">
+
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-title">
@@ -237,58 +236,54 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Group 4: 免清理白名单 -->
-    <div class="setting-group-card">
-      <div class="group-card-header">
-        <div class="group-header-text">
-          <h3 class="group-title">免清理白名单</h3>
-          <p class="group-desc">匹配关键词的录像文件或主播目录受永久保护，在任何清理任务中绝不被删除。</p>
+        <!-- Subhead 3: 免清理白名单关键词 -->
+        <div class="card-subhead">
+          <span class="subhead-title">免清理永久白名单关键词</span>
         </div>
-      </div>
-      <div class="group-card-body">
-        <div class="whitelist-wrap">
-          <div class="tags-container">
-            <el-tag
-              v-for="(tag, idx) in tagList"
-              :key="tag"
-              closable
-              effect="plain"
-              class="keyword-tag"
-              @close="removeTag(idx)"
-            >
-              {{ tag }}
-            </el-tag>
-            <div class="add-tag-inline">
-              <el-input
-                v-if="inputTagVisible"
-                ref="tagInputRef"
-                v-model="inputTagValue"
-                size="small"
-                class="tag-inline-input"
-                placeholder="按回车添加"
-                @keyup.enter="handleTagConfirm"
-                @blur="handleTagConfirm"
-              />
-              <el-button v-else size="small" class="btn-add-tag" @click="showTagInput">
-                + 添加关键词
-              </el-button>
+
+        <div class="whitelist-section-body">
+          <div class="whitelist-wrap">
+            <div class="tags-container">
+              <el-tag
+                v-for="(tag, idx) in tagList"
+                :key="tag"
+                closable
+                effect="plain"
+                class="keyword-tag"
+                @close="removeTag(idx)"
+              >
+                {{ tag }}
+              </el-tag>
+              <div class="add-tag-inline">
+                <el-input
+                  v-if="inputTagVisible"
+                  ref="tagInputRef"
+                  v-model="inputTagValue"
+                  size="small"
+                  class="tag-inline-input"
+                  placeholder="按回车添加"
+                  @keyup.enter="handleTagConfirm"
+                  @blur="handleTagConfirm"
+                />
+                <el-button v-else size="small" class="btn-add-tag" @click="showTagInput">
+                  + 添加关键词
+                </el-button>
+              </div>
             </div>
-          </div>
-          <div class="quick-tags-row">
-            <span class="quick-label">常用预设:</span>
-            <button
-              v-for="p in ['留存', '纪念', '高能', '生日', '勿删', '精选']"
-              :key="p"
-              type="button"
-              class="quick-preset-pill"
-              :disabled="tagList.includes(p)"
-              @click="addTag(p)"
-            >
-              + {{ p }}
-            </button>
+            <div class="quick-tags-row">
+              <span class="quick-label">常用预设:</span>
+              <button
+                v-for="p in ['留存', '纪念', '高能', '生日', '勿删', '精选']"
+                :key="p"
+                type="button"
+                class="quick-preset-pill"
+                :disabled="tagList.includes(p)"
+                @click="addTag(p)"
+              >
+                + {{ p }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -429,11 +424,11 @@ function addTag(keyword: string) {
 
 /* Unified Group Card (GitHub Primer Section Card) */
 .setting-group-card {
-  background: var(--color-canvas-default, #ffffff);
-  border: 1px solid var(--color-border-subtle, #d0d7de);
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline, #e4e4e7);
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -444,7 +439,7 @@ function addTag(keyword: string) {
 }
 
 html.dark .setting-group-card {
-  background: var(--color-canvas-subtle, #161b22);
+  background: #161b22;
   border-color: #30363d;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -455,31 +450,28 @@ html.dark .setting-group-card:hover {
 }
 
 .group-card-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
-  background: var(--color-canvas-subtle, #f6f8fa);
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+  background: transparent;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  align-items: center;
 }
 
 html.dark .group-card-header {
   border-bottom-color: #30363d;
-  background: rgba(255, 255, 255, 0.02);
 }
 
 .group-header-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex: 1;
 }
 
 .group-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--color-fg-default, #24292f);
-  margin: 0;
+  color: var(--charcoal, #24292f);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
 }
 
 html.dark .group-title {
@@ -487,57 +479,122 @@ html.dark .group-title {
 }
 
 .group-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-fg-muted, #57606a);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 html.dark .group-desc {
   color: #8b949e;
 }
 
+.gauge-metric-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--hairline, #e4e4e7);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+html.dark .gauge-metric-badge {
+  background: #0d1117;
+  border-color: #30363d;
+}
+
+.gauge-metric-badge .metric-lbl {
+  color: var(--color-fg-muted, #57606a);
+}
+
+html.dark .gauge-metric-badge .metric-lbl {
+  color: #8b949e;
+}
+
+.gauge-metric-badge .metric-pct {
+  color: #0969da;
+  font-weight: 600;
+}
+
+html.dark .gauge-metric-badge .metric-pct {
+  color: #58a6ff;
+}
+
+.gauge-metric-badge .metric-gb {
+  color: var(--color-fg-muted, #57606a);
+}
+
+html.dark .gauge-metric-badge .metric-gb {
+  color: #8b949e;
+}
+
+/* Card Subhead (板块内部分区小标题) */
+.card-subhead {
+  padding: 10px 22px;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
+  border-top: 1px solid var(--hairline, #e4e4e7);
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+}
+
+html.dark .card-subhead {
+  background: #0d1117;
+  border-top-color: #30363d;
+  border-bottom-color: #30363d;
+}
+
+.subhead-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-fg-muted, #57606a);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+html.dark .subhead-title {
+  color: #8b949e;
+}
+
 .group-card-body {
-  padding: 4px 20px 8px;
+  padding: 0;
 }
 
 /* Setting Rows */
 .setting-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  align-items: center;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
   gap: 20px;
-  min-height: 44px;
-  box-sizing: border-box;
 }
 
-.setting-row:not(:last-child) {
-  border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
+.setting-row:last-child {
+  border-bottom: none;
 }
 
-html.dark .setting-row:not(:last-child) {
-  border-bottom-color: #21262d;
+html.dark .setting-row {
+  border-bottom-color: #30363d;
 }
 
 .setting-info {
-  display: flex;
-  align-items: center;
   flex: 1;
   min-width: 0;
 }
 
 .setting-title {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-fg-default, #24292f);
+  font-weight: 500;
+  color: var(--charcoal, #24292f);
 }
 
 html.dark .setting-title {
-  color: #c9d1d9;
+  color: #e6edf3;
 }
 
 .label-help-ico {
@@ -549,53 +606,62 @@ html.dark .setting-title {
   border-radius: 50%;
   font-size: 10px;
   font-weight: 600;
-  background: var(--hairline, #e4e4e7);
-  color: var(--steel, #71717a);
+  color: var(--color-fg-muted, #57606a);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.05));
+  border: 1px solid var(--hairline, #e4e4e7);
   cursor: help;
-  transition: all 0.15s ease;
-  user-select: none;
 }
 
-.label-help-ico:hover {
-  background: var(--color-accent-fg, #0969da);
-  color: #ffffff;
+html.dark .label-help-ico {
+  color: #8b949e;
+  background: #21262d;
+  border-color: #30363d;
 }
 
-.setting-control {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
+.hint-free-gb {
+  font-size: 11.5px;
+  color: #d97706;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+html.dark .hint-free-gb {
+  color: #e3b341;
+}
+
+.slider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.compact-counter {
-  width: 120px;
-  height: 32px !important;
-  line-height: 32px !important;
+.slider-dot.dot-warn {
+  background: #d97706;
 }
 
-:deep(.compact-counter .el-input__wrapper) {
-  height: 32px !important;
-  box-sizing: border-box !important;
+.slider-dot.dot-target {
+  background: #1a7f37;
 }
 
-:deep(.compact-counter .el-input-number__decrease),
-:deep(.compact-counter .el-input-number__increase) {
-  height: 30px !important;
-  line-height: 30px !important;
+html.dark .slider-dot.dot-target {
+  background: #2ea043;
+}
+
+/* Controls */
+.setting-control {
+  flex-shrink: 0;
 }
 
 .inline-unit-row {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .unit-text {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--color-fg-muted, #57606a);
-  font-weight: 500;
-  white-space: nowrap;
   min-width: 24px;
 }
 
@@ -603,67 +669,73 @@ html.dark .unit-text {
   color: #8b949e;
 }
 
-/* Watermark Gauge Track */
-.gauge-metric-badge {
-  display: inline-flex;
+.compact-counter {
+  width: 130px;
+}
+
+/* Slider Controls */
+.slider-control-col {
+  width: 320px;
+  max-width: 50%;
+}
+
+.slider-with-val {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(9, 105, 218, 0.08);
-  border: 1px solid rgba(9, 105, 218, 0.2);
+  gap: 14px;
 }
 
-html.dark .gauge-metric-badge {
-  background: rgba(56, 139, 253, 0.12);
-  border-color: rgba(56, 139, 253, 0.3);
+.compact-slider {
+  flex: 1;
 }
 
-.metric-lbl {
-  color: var(--color-fg-muted, #57606a);
-}
-
-html.dark .metric-lbl {
-  color: #8b949e;
-}
-
-.metric-pct {
-  color: var(--color-accent-fg, #0969da);
-  font-family: var(--font-mono, monospace);
+.slider-val {
+  font-size: 13px;
   font-weight: 600;
-}
-
-html.dark .metric-pct {
-  color: #58a6ff;
-}
-
-.metric-gb {
-  color: var(--color-fg-muted, #57606a);
+  min-width: 40px;
+  text-align: right;
   font-family: var(--font-mono, monospace);
 }
 
+.warn-val {
+  color: #d97706;
+}
+
+html.dark .warn-val {
+  color: #e3b341;
+}
+
+.target-val {
+  color: #1a7f37;
+}
+
+html.dark .target-val {
+  color: #2ea043;
+}
+
+/* Watermark Gauge Preview */
 .gauge-preview-wrap {
-  padding: 16px 0 12px;
-  border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
+  padding: 16px 22px 18px;
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+  background: transparent;
 }
 
 html.dark .gauge-preview-wrap {
-  border-bottom-color: #21262d;
+  border-bottom-color: #30363d;
 }
 
 .gauge-bar-track {
   display: flex;
-  height: 24px;
+  height: 22px;
   border-radius: 6px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.04);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  background: #f6f8fa;
+  border: 1px solid var(--hairline, #e4e4e7);
 }
 
 html.dark .gauge-bar-track {
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: #0d1117;
+  border-color: #30363d;
 }
 
 .gauge-seg {
@@ -673,24 +745,39 @@ html.dark .gauge-bar-track {
   justify-content: center;
   font-size: 11px;
   font-weight: 500;
-  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.2s ease;
   overflow: hidden;
   white-space: nowrap;
 }
 
 .seg-safe {
-  background: #10b981;
-  color: #ffffff;
+  background: rgba(46, 160, 67, 0.15);
+  color: #1a7f37;
+}
+
+html.dark .seg-safe {
+  background: rgba(46, 160, 67, 0.2);
+  color: #3fb950;
 }
 
 .seg-reclaim {
-  background: #0284c7;
-  color: #ffffff;
+  background: rgba(9, 105, 218, 0.15);
+  color: #0969da;
+}
+
+html.dark .seg-reclaim {
+  background: rgba(56, 139, 253, 0.2);
+  color: #58a6ff;
 }
 
 .seg-danger {
-  background: #f59e0b;
-  color: #ffffff;
+  background: rgba(209, 36, 47, 0.15);
+  color: #cf222e;
+}
+
+html.dark .seg-danger {
+  background: rgba(248, 81, 73, 0.2);
+  color: #ff7b72;
 }
 
 .gauge-ticks {
@@ -703,106 +790,71 @@ html.dark .gauge-bar-track {
   position: absolute;
   top: 0;
   font-size: 11px;
-  color: var(--color-fg-muted, #57606a);
   font-family: var(--font-mono, monospace);
+  color: var(--color-fg-muted, #57606a);
   transform: translateX(-50%);
   white-space: nowrap;
 }
 
+html.dark .tick-label {
+  color: #8b949e;
+}
+
 .tick-0 {
-  left: 0;
-  transform: translateX(0);
+  left: 0 !important;
+  transform: none;
 }
 
 .tick-100 {
-  left: 100%;
+  left: 100% !important;
   transform: translateX(-100%);
 }
 
 .tick-target {
-  color: #0284c7;
-  font-weight: 600;
+  color: #1a7f37;
+  font-weight: 500;
+}
+
+html.dark .tick-target {
+  color: #3fb950;
 }
 
 .tick-trigger {
   color: #d97706;
-  font-weight: 600;
+  font-weight: 500;
 }
 
-/* Sliders within settings row */
-.slider-control-col {
-  width: min(340px, 45vw);
+html.dark .tick-trigger {
+  color: #e3b341;
 }
 
-.slider-with-val {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
+/* Whitelist Section Body */
+.whitelist-section-body {
+  padding: 16px 22px;
 }
 
-.compact-slider {
-  flex: 1;
-}
-
-.slider-val {
-  font-size: 13px;
-  font-weight: 600;
-  min-width: 42px;
-  text-align: right;
-  font-family: var(--font-mono, monospace);
-}
-
-.warn-val {
-  color: #d97706;
-}
-
-.target-val {
-  color: #0284c7;
-}
-
-.slider-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.dot-warn {
-  background: #f59e0b;
-}
-
-.dot-target {
-  background: #0284c7;
-}
-
-.hint-free-gb {
-  font-size: 11px;
-  color: var(--color-fg-muted, #57606a);
-  font-family: var(--font-mono, monospace);
-  margin-left: 4px;
-  font-weight: 400;
-}
-
-/* Whitelist Wrap */
 .whitelist-wrap {
-  padding: 14px 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
+  gap: 8px;
 }
 
 .keyword-tag {
-  font-size: 12px;
+  font-size: 12.5px;
+  padding: 0 8px;
+  height: 28px;
+  border-radius: 6px;
 }
 
 .add-tag-inline {
   display: inline-flex;
-  align-items: center;
 }
 
 .tag-inline-input {
@@ -810,15 +862,17 @@ html.dark .gauge-bar-track {
 }
 
 .btn-add-tag {
+  height: 28px;
+  border-radius: 6px;
   font-size: 12px;
 }
 
 .quick-tags-row {
-  margin-top: 12px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  padding-top: 4px;
 }
 
 .quick-label {
@@ -826,25 +880,29 @@ html.dark .gauge-bar-track {
   color: var(--color-fg-muted, #57606a);
 }
 
+html.dark .quick-label {
+  color: #8b949e;
+}
+
 .quick-preset-pill {
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 3px 8px;
   font-size: 11.5px;
+  border-radius: 4px;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--hairline, #e4e4e7);
   color: var(--color-fg-muted, #57606a);
-  background: var(--color-canvas-subtle, #f6f8fa);
-  border: 1px solid var(--color-border-subtle, #d0d7de);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .quick-preset-pill:hover:not(:disabled) {
   color: var(--color-accent-fg, #0969da);
+  background: var(--color-canvas-subtle, #f6f8fa);
   border-color: var(--color-accent-fg, #0969da);
-  background: rgba(9, 105, 218, 0.05);
 }
 
 .quick-preset-pill:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -852,5 +910,10 @@ html.dark .quick-preset-pill {
   background: #21262d;
   border-color: #30363d;
   color: #8b949e;
+}
+
+html.dark .quick-preset-pill:hover:not(:disabled) {
+  color: #58a6ff;
+  border-color: #58a6ff;
 }
 </style>
