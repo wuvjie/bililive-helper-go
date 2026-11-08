@@ -25,9 +25,6 @@
                   <line x1="17" y1="7" x2="22" y2="7"/>
                 </svg>
                 <span class="tile-title">自动分片合并</span>
-                <el-tooltip content="主调度器周期性激活录像分片合并流水线，将零散切片拼合为完整录播" placement="top" :show-after="300">
-                  <span class="label-help-ico">?</span>
-                </el-tooltip>
               </div>
               <el-switch
                 :model-value="form.merge_enabled"
@@ -39,9 +36,6 @@
               <div class="tile-field-row">
                 <label class="tile-field-label">
                   <span>合并调度周期</span>
-                  <el-tooltip content="任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟 / 6 小时）" placement="top" :show-after="300">
-                    <span class="label-help-ico">?</span>
-                  </el-tooltip>
                 </label>
                 <div class="inline-unit-row">
                   <el-input-number
@@ -77,9 +71,6 @@
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                 </svg>
                 <span class="tile-title">自动磁盘清理</span>
-                <el-tooltip content="巡检器定时扫描磁盘可用水位，若触达警戒线则自动启动清理冲程" placement="top" :show-after="300">
-                  <span class="label-help-ico">?</span>
-                </el-tooltip>
               </div>
               <el-switch
                 :model-value="form.clean_enabled"
@@ -91,9 +82,6 @@
               <div class="tile-field-row">
                 <label class="tile-field-label">
                   <span>巡检调度周期</span>
-                  <el-tooltip content="巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟 / 12 小时）" placement="top" :show-after="300">
-                    <span class="label-help-ico">?</span>
-                  </el-tooltip>
                 </label>
                 <div class="inline-unit-row">
                   <el-input-number
@@ -136,9 +124,6 @@
           <div class="setting-info">
             <div class="setting-title">
               <span>避让时间范围</span>
-              <el-tooltip content="避让时段内主调度器进入休眠，不抢占 CPU 与磁盘 I/O 资源" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
             </div>
           </div>
           <div class="setting-control">

@@ -78,6 +78,7 @@
       :tick="tick"
       @play="handlePlay"
       @delete="handleDeleteFile"
+      @merge-streamer="handleMergeStreamer"
     />
 
     <!-- 在线视频播放预览弹窗 -->
@@ -172,6 +173,11 @@ async function openDrawer(row: StreamerInfo) {
   } finally {
     drawerLoading.value = false;
   }
+}
+
+function handleMergeStreamer(streamerName: string) {
+  drawerVisible.value = false;
+  router.push({ path: "/tasks", query: { streamer: streamerName, auto: "merge" } });
 }
 
 async function handleDeleteFile(row: StreamerFile) {

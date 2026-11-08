@@ -45,12 +45,7 @@
           <span class="mono-val">{{ detail?.disk?.free_gb != null ? (detail.disk.free_gb.toFixed(1) + ' GB') : '-' }}</span>
         </div>
         <div class="data-cell">
-          <span class="data-label">
-            录播库占用
-            <el-tooltip content="当前已录制的视频文件所占用的磁盘物理空间总和" placement="top">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
-          </span>
+          <span class="data-label">录播占用</span>
           <span class="mono-val">{{ totalRecordingsGB ? (totalRecordingsGB + ' GB') : '-' }}</span>
         </div>
       </div>

@@ -13,10 +13,8 @@
           <div class="setting-info">
             <div class="setting-title">
               <span>断流重连容差</span>
-              <el-tooltip content="主播在此时间差内断流重连，自动合并为整段视频" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
             </div>
+            <div class="setting-desc">主播在此时间差内断流重连，自动合并为整段视频</div>
           </div>
           <div class="setting-control">
             <div class="inline-unit-row">
@@ -37,10 +35,8 @@
           <div class="setting-info">
             <div class="setting-title">
               <span>完播静置等待</span>
-              <el-tooltip content="录播关播后的静置缓冲期，防止误读正在写入的活动切片" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
             </div>
+            <div class="setting-desc">录播关播后的静置缓冲期，防止误读正在写入的活动切片</div>
           </div>
           <div class="setting-control">
             <div class="inline-unit-row">
@@ -113,11 +109,9 @@
             <div class="setting-title">
               <span class="slider-dot dot-warn"></span>
               <span>触发清理阈值</span>
-              <el-tooltip content="磁盘使用率达到此警戒水位时自动启动清理" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
               <span v-if="triggerFreeGB" class="hint-free-gb">余量 &lt; {{ triggerFreeGB }} GB 触发</span>
             </div>
+            <div class="setting-desc">磁盘使用率达到此警戒水位时自动启动清理</div>
           </div>
           <div class="setting-control slider-control-col">
             <div class="slider-with-val">
@@ -140,10 +134,8 @@
             <div class="setting-title">
               <span class="slider-dot dot-target"></span>
               <span>目标清理阈值</span>
-              <el-tooltip content="按由旧至新淘汰录像，直至磁盘降回此安全水位" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
             </div>
+            <div class="setting-desc">按由旧至新淘汰录像，直至磁盘降回此安全水位</div>
           </div>
           <div class="setting-control slider-control-col">
             <div class="slider-with-val">
@@ -169,10 +161,8 @@
           <div class="setting-info">
             <div class="setting-title">
               <span>新录像免删保护</span>
-              <el-tooltip content="保护期内新录像享有免删特权，即使达到警戒线也绝对保留" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
             </div>
+            <div class="setting-desc">保护期内新录像享有免删特权，即使达到警戒线也绝对保留</div>
           </div>
           <div class="setting-control">
             <div class="inline-unit-row">
@@ -193,10 +183,8 @@
           <div class="setting-info">
             <div class="setting-title">
               <span>每主播最少保留</span>
-              <el-tooltip content="每个主播强制保留的最低场次数，无论空间多么紧张绝不全删" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
             </div>
+            <div class="setting-desc">每个主播强制保留的最低场次数，无论空间多么紧张绝不全删</div>
           </div>
           <div class="setting-control">
             <div class="inline-unit-row">
@@ -217,10 +205,8 @@
           <div class="setting-info">
             <div class="setting-title">
               <span>单次最多清理</span>
-              <el-tooltip content="每次清理任务允许删除的文件上限，防止极端突发异常大量删除" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
             </div>
+            <div class="setting-desc">每次清理任务允许删除的文件上限，防止极端突发异常大量删除</div>
           </div>
           <div class="setting-control">
             <div class="inline-unit-row">
@@ -595,6 +581,17 @@ html.dark .setting-row {
 
 html.dark .setting-title {
   color: #e6edf3;
+}
+
+.setting-desc {
+  font-size: 12px;
+  color: var(--color-fg-muted, #57606a);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+html.dark .setting-desc {
+  color: #8b949e;
 }
 
 .label-help-ico {
