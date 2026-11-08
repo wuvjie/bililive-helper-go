@@ -156,6 +156,7 @@ function getNetDiffClass(day: DayStats): string {
   padding: 20px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .card-title {
@@ -163,8 +164,9 @@ function getNetDiffClass(day: DayStats): string {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  flex-wrap: wrap;
+  height: 32px;
   margin-bottom: 16px;
+  box-sizing: border-box;
 }
 
 .card-title-left {

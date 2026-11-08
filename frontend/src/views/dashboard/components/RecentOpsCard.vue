@@ -117,13 +117,16 @@ function formatDetail(row: HistoryRecord): string {
   padding: 20px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .card-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 32px;
   margin-bottom: 16px;
+  box-sizing: border-box;
 }
 
 .card-title-left {
