@@ -1,5 +1,31 @@
 # Baseline
 
+- **v3.8.1** (Current Active):
+  - Git Commits: `404f243`, `3be00c7` (GitHub) / `bcaa7ef`, `bfed8f8` (WSL)
+  - Release Highlights:
+    - **系统概览横向发丝线像素级锁齐 (Pixel-Locked Metric Cross-Card Symmetry)**：
+      - 彻底根治存储空间监控 (`StorageCard.vue`) 与自动化调度监控 (`ScheduleMonitorCard.vue`) 并排时的分割线上下错位难题；
+      - 确立卡片内部垂直几何尺寸锁定标准：`card-title`（32px）+ `card-top-metric`（56px）+ 顶部发丝线（Y = 124px）+ 2×2 网格显式轨道高 `grid-template-rows: 52px 52px;`（中间横向分割线 Y = 192px 绝对平齐）；
+      - 表格单元格标签 4 字高度内聚对称（`合并周期` | `下次合并` / `清理周期` | `下次清理`）。
+    - **时段裁剪语义通用化与去三重冗余 (Neutral Video Trim & Zero Tooltip Redundancy)**：
+      - 废除主播规则时段裁剪弹窗 (`StreamerRuleDialog.vue`) 中主观预设的“暖场”、“片尾”、“精选”等非通用称谓，升级为标准音视频工程中性术语：`剪除前段`、`保留片段`、`剪除后段`、`直至结尾`，时间轴起点终点对齐为 `00:00:00 录像起点` 与 `录像终点`；
+      - 彻底消除输入框标签重复的小问号气泡（解决格式与留空说明的三重冗余），收敛为统一单行的底部权威格式指导条；
+      - 修复 `normalizeTimeString` 在双段格式（`mm:ss`）下秒数丢失的边界 Bug。
+    - **主播录像抽屉黄金比例与精益列宽 (Golden-Ratio Drawer & Lean Columns)**：
+      - 抽屉宽度由过度侵占视窗的 `840px` 优化为黄金比例 `min(660px, 90vw)`，既保留录像完整信息，又不过度遮挡主界面主播列表；
+      - 标定 4 列紧凑列宽：文件名自适应 flex + 大小 84px + 状态 68px + 操作 54px。
+    - **系统设置双卡领域内聚架构 (Two Cohesive Domain Cards per Tab)**：
+      - 3 大设置 Tab（基础策略、定时调度、备份还原）全部统一收敛为严格对称的“双卡领域内聚架构”，告别 1 卡孤立或 4 卡松散的不平衡感。
+    - **全局 87 处 SVG 矢量图标高精度校准 (Precision SVG Semantic Mapping)**：
+      - 全量代码库图标语义审计，替换 5 处不精准图标（调度时钟、清理垃圾桶、免删盾牌、立即执行三角播放、任务侧栏操作图标）。
+    - **操作审计日志详情纯净视效 (Clean Log Viewer)**：
+      - 移除底栏冗余的“共 18 行日志”文字，底栏工具操作（复制/下载）与动作按钮（关闭）实现左右空间自然分离。
+    - **任务调度卡片因果时序流 (Causal Timeline Flow)**：
+      - 调度卡片指标重排为严谨因果流：`[上次运行]` -> `[调度周期]` -> `[下次预计]`。
+    - **大盘统计卡片语义精炼与量词补齐 (StatGrid Metric Quantifiers)**：
+      - 合并与清理频次补全中文量词 `次`；消灭“7日日均”等重复同义反复文案，指标命名升级为 `7 日平均产出` 与 `预计可用时长`。
+    - BDS 设计语言规范升级至 v3.8.1。
+
 - **v3.8.0** (Current Active):
   - Git Tag: `v3.8.0`
   - Commit: `5d25259` (GitHub) / `5b3d03b` (WSL)
