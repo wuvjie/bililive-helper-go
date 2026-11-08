@@ -1,8 +1,12 @@
 # Baseline
 
 - **v3.8.0** (Current Active):
-  - Git Commits: `5d25259` ~ `HEAD` (`fd5bad6` / `60c140d`)
+  - Git Commits: `5d25259` ~ `HEAD` (`742146b` / `ea078cb`)
   - Release Highlights:
+    - **定时任务提示对齐与开关右侧锚定规范 (Tabular Schedule Metrics & Switch Right-Docking)**：
+      - 针对动态换算小时标签（`（每 6.0 小时）` 与 `（每 12.0 小时）`）字符长度不一致导致后续元素/按钮错位的问题，将 `.interval-hint` 统一锁定为等宽数字与固定最小容器宽（`display: inline-block; min-width: 96px; font-variant-numeric: tabular-nums; monospace`），实现零像素抖动；
+      - 任务启用开关严格锚定至卡片头部最右侧（`.primer-switch { flex-shrink: 0; margin-left: auto; }`），与底部输入行彻底物理空间解耦，杜绝因标签字数不同导致的开关按钮错位；
+      - 避让窗口网格与任务网格统一对称收敛为 50%/50% 双列网格（`repeat(2, 1fr)`），实现两 Box 纵向切割线绝对同轴。
     - **吸底保存栏彻底规范化（通栏吸底 Dock + 内部 960px 严格同轴对齐）**：
       - 彻底修复重构时误还原的 `max-width: 660px` 孤岛及 `left: 50%` 导致的偏左视觉瑕疵；
       - 外层容器横向铺满工作区底端（`bottom: 0; left: 240px; right: 0;`，侧栏折叠时 `left: 64px;`），告别悬空药丸；
