@@ -1,16 +1,10 @@
 <template>
   <div class="policy-tab">
-
-
-    <el-form label-width="160px" label-position="left" class="settings-form">
+    <el-form label-width="140px" label-position="left" class="settings-form">
       <!-- Section 1: 录制与合并规则 -->
       <div class="form-section-card">
-        <div class="section-title">
-          <div class="section-title-left">
-            <div class="ui-icon-box icon-box-emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-            <span>录制与合并规则</span>
-          </div>
-
+        <div class="form-sub-header">
+          <span class="sub-title-text">录制与合并规则</span>
         </div>
         <div class="section-body">
           <el-form-item label="断流重连容差">
@@ -41,9 +35,8 @@
 
       <!-- Section 2: 存储清理策略 -->
       <div class="form-section-card">
-        <div class="section-title">
-          <div class="ui-icon-box icon-box-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
-          <span>磁盘自动清理策略</span>
+        <div class="form-sub-header">
+          <span class="sub-title-text">磁盘自动清理策略</span>
         </div>
         <div class="section-body">
           <el-form-item label="触发清理阈值">
@@ -81,35 +74,20 @@
             <div class="field-hint">清理时将从最旧录播开始删除，直至磁盘使用率降至此目标水位。</div>
           </el-form-item>
 
-          <!-- 动态空间释放模拟条 (Buffer Zone Live Simulator) -->
-          <div class="buffer-zone-card">
-            <div class="buffer-zone-header">
-              <div class="buffer-header-left">
-                <svg class="buffer-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                <span class="buffer-title">空间释放缓冲区间</span>
+          <!-- 动态空间释放冲程指示条 (轻量集成在阈值控制项下方) -->
+          <div class="threshold-buffer-indicator">
+            <div class="buffer-track-wrap">
+              <div class="buffer-visual-track">
+                <div class="track-fill-safe" :style="{ width: config.TARGET_THRESHOLD + '%' }" title="目标保底水位"></div>
+                <div class="track-fill-buffer" :style="{ width: bufferPct + '%' }" title="单次清理释放冲程"></div>
               </div>
-              <span class="buffer-val-pill">
-                {{ bufferPct }}% 冲程深度
-                <template v-if="bufferGB">（单次预计释放约 {{ bufferGB }} GB）</template>
-              </span>
             </div>
-            <div class="buffer-visual-track">
-              <div class="track-fill-safe" :style="{ width: config.TARGET_THRESHOLD + '%' }" title="目标安全基础水位"></div>
-              <div class="track-fill-buffer" :style="{ width: bufferPct + '%' }" title="每次清理释放的空间缓冲"></div>
-            </div>
-            <div class="buffer-scale-labels">
-              <span class="buffer-scale-item">
-                <span class="scale-lbl">目标保底:</span>
-                <span class="scale-val">{{ config.TARGET_THRESHOLD }}%</span>
+            <div class="buffer-track-meta">
+              <span class="buffer-meta-main">
+                单次释放冲程：<strong class="mono-num">{{ bufferPct }}%</strong>
+                <span v-if="bufferGB" class="buffer-meta-gb">（预计释放约 {{ bufferGB }} GB 磁盘空间）</span>
               </span>
-              <span class="buffer-scale-item buffer-scale-mid">
-                <span class="scale-lbl">释放冲程:</span>
-                <span class="scale-val">{{ bufferPct }}%</span>
-              </span>
-              <span class="buffer-scale-item">
-                <span class="scale-lbl">触发上限:</span>
-                <span class="scale-val">{{ config.TRIGGER_THRESHOLD }}%</span>
-              </span>
+              <span class="buffer-meta-range">目标水位 {{ config.TARGET_THRESHOLD }}% → 触发警戒 {{ config.TRIGGER_THRESHOLD }}%</span>
             </div>
           </div>
 
@@ -139,8 +117,6 @@
             </div>
             <div class="field-hint">每个主播至少保留最近的场次数，无论磁盘空间多么紧张也不会被全删。</div>
           </el-form-item>
-
-
 
           <!-- 白名单关键词 Tag 交互 -->
           <el-form-item label="免清理白名单">
@@ -189,18 +165,6 @@
             <div class="field-hint">包含任一白名单关键词的视频文件名或主播目录，将永远受保护不被清理。</div>
           </el-form-item>
         </div>
-      </div>
-    
-      <!-- 底部重置预设逃生区 (不干扰主表单，需要时触手可及) -->
-      <div class="policy-reset-footer">
-        <div class="reset-footer-left">
-          <span class="reset-footer-title">重置全局策略预设</span>
-          <span class="reset-footer-desc">将断流重连容差、完播静置、清理阈值与免删天数一键恢复为官方默认标准值。</span>
-        </div>
-        <button type="button" class="btn-reset-defaults" @click="emit('reset-defaults')" title="一键恢复推荐预设">
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          <span>恢复推荐预设</span>
-        </button>
       </div>
     </el-form>
   </div>
@@ -708,36 +672,80 @@ function addTag(keyword: string) {
 }
 
 
+/* 阈值动态冲程指示器 (轻量集成于表单内) */
+.threshold-buffer-indicator {
+  margin: 4px 0 16px 140px;
+  background: var(--surface, #f4f3f0);
+  border: 1px solid var(--hairline, #e6e4df);
+  border-radius: var(--r-sm, 6px);
+  padding: 8px 12px;
+  box-sizing: border-box;
+}
+.buffer-track-wrap {
+  width: 100%;
+}
+.buffer-visual-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+}
+.track-fill-safe {
+  height: 100%;
+  background: #10b981;
+  transition: width 0.2s ease;
+}
+.track-fill-buffer {
+  height: 100%;
+  background: #f59e0b;
+  transition: width 0.2s ease;
+}
+.buffer-track-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--steel, #787671);
+}
+.buffer-meta-main strong {
+  color: #d97706;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+.buffer-meta-gb {
+  color: var(--slate, #5d5b54);
+}
+.buffer-meta-range {
+  font-size: 11px;
+  color: var(--stone, #a4a097);
+  font-feature-settings: "tnum";
+}
+
 html.dark {
-  .buffer-zone-card {
-    background: #18181b;
+  .threshold-buffer-indicator {
+    background: #141416;
     border-color: #27272a;
-  }
-  .buffer-val-pill {
-    background: rgba(245, 158, 11, 0.12);
-    color: #e5a034;
-    border-color: rgba(245, 158, 11, 0.25);
   }
   .buffer-visual-track {
     background: #27272a;
   }
   .track-fill-safe {
-    background: #10b981;
+    background: #34d399;
   }
   .track-fill-buffer {
-    background: #e5a034;
+    background: #fbbf24;
   }
-  .buffer-scale-labels {
-    color: #a1a1aa;
-    .scale-lbl {
-      color: #a1a1aa !important;
-    }
-    .scale-val {
-      color: #f4f4f5 !important;
-    }
-    .buffer-scale-mid .scale-val {
-      color: #e5a034 !important;
-    }
+  .buffer-meta-main strong {
+    color: #fbbf24;
+  }
+  .buffer-meta-gb {
+    color: #d4d4d8;
+  }
+  .buffer-meta-range {
+    color: #71717a;
   }
   .tags-container {
     background: #141416;
@@ -760,82 +768,6 @@ html.dark {
   }
 }
 
-.policy-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-hover, #f4f4f5);
-  border: 1px solid var(--hairline, #e4e4e7);
-  border-radius: var(--r-sm, 6px);
-  margin-bottom: 16px;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.policy-header-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.policy-header-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--charcoal, #18181b);
-}
-
-.policy-header-desc {
-  font-size: 12px;
-  color: var(--slate, #71717a);
-}
-
-.btn-reset-defaults {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 12px;
-  border-radius: var(--r-sm, 4px);
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--hairline, #d4d4d8);
-  color: var(--charcoal, #18181b);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-
-  &:hover {
-    color: #4f46e5;
-    border-color: #4f46e5;
-    background: var(--bg-active, #f5f3ff);
-  }
-}
-
-html.dark .policy-header-bar {
-  background: #18181b;
-  border-color: #27272a;
-}
-html.dark .policy-header-title {
-  color: #f4f4f5;
-}
-html.dark .policy-header-desc {
-  color: #a1a1aa;
-}
-html.dark .btn-reset-defaults {
-  background: #27272a;
-  border-color: #3f3f46;
-  color: #e4e4e7;
-
-  &:hover {
-    color: #818cf8;
-    border-color: #818cf8;
-    background: #312e81;
-  }
-}
-
-
 .hint-highlight-tag {
   display: inline-block;
   margin-left: 6px;
@@ -850,48 +782,9 @@ html.dark .hint-highlight-tag {
   color: #fbbf24;
 }
 
-.policy-reset-footer {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px dashed var(--hairline);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.reset-footer-left {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.reset-footer-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--charcoal);
-}
-.reset-footer-desc {
-  font-size: 12px;
-  color: var(--steel);
-}
-.btn-reset-defaults {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  color: var(--steel);
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.btn-reset-defaults:hover {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+@media (max-width: 768px) {
+  .threshold-buffer-indicator {
+    margin-left: 0;
+  }
 }
 </style>

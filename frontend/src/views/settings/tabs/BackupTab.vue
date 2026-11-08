@@ -4,28 +4,25 @@
       <!-- Export card -->
       <div class="backup-card">
         <div class="backup-card-header">
-          <div class="ui-icon-box icon-box-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-          <span class="backup-title">导出配置备份</span>
+          <span class="sub-title-text">导出配置备份</span>
         </div>
         <p class="backup-desc">将系统当前的阈值策略、定时调度参数以及各主播的个性化截取与保护规则导出为 JSON 备份文件。</p>
-        <div class="backup-spacer"></div>
         <div class="backup-action-group">
-          <button class="btn-action-half btn-export" @click="emit('export-file')">
-              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>下载配置文件</span>
-            </button>
-          <button class="btn-action-half btn-copy" @click="emit('copy-json')">
-              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              <span>复制配置代码</span>
-            </button>
+          <button type="button" class="btn-action-half btn-export" @click="emit('export-file')">
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>下载配置文件</span>
+          </button>
+          <button type="button" class="btn-action-half btn-copy" @click="emit('copy-json')">
+            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span>复制配置代码</span>
+          </button>
         </div>
       </div>
 
       <!-- Import card -->
       <div class="backup-card">
         <div class="backup-card-header">
-          <div class="ui-icon-box icon-box-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-          <span class="backup-title">导入配置恢复</span>
+          <span class="sub-title-text">导入配置恢复</span>
         </div>
         <p class="backup-desc">选择之前导出的 JSON 备份文件，导入并校验通过后将自动覆盖应用现有设置。</p>
         <input
@@ -52,10 +49,10 @@
             @input="emit('update:import-json', ($event.target as HTMLTextAreaElement).value)"
           />
         </div>
-        <div class="backup-spacer"></div>
-        <div class="backup-card-footer">
+        <div class="backup-action-group">
           <button
-            class="btn-primary btn-full"
+            type="button"
+            class="btn-full btn-primary"
             :disabled="!selectedFileName && !importJson"
             @click="emit('apply-import')"
           >
@@ -104,54 +101,51 @@ function onFileChange(e: Event) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  padding: 8px 16px 20px 24px;
+  align-items: start;
 }
 .backup-card {
   display: flex;
   flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-md);
+  background: var(--surface, #f4f3f0);
+  border: 1px solid var(--hairline, #e6e4df);
+  border-radius: var(--r-md, 8px);
   padding: 20px;
+  box-sizing: border-box;
 }
 .backup-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hairline, #e6e4df);
 }
-.backup-icon {
-  font-size: 18px;
-}
-.backup-title {
-  font-size: 16px;
+.sub-title-text {
+  font-size: 13.5px;
   font-weight: 600;
-  color: var(--charcoal);
+  color: var(--charcoal, #18181b);
 }
 .backup-desc {
-  font-size: 13px;
-  color: var(--slate);
+  font-size: 12.5px;
+  color: var(--steel, #787671);
   line-height: 1.5;
-  margin-bottom: 16px;
-}
-.backup-spacer {
-  flex: 1;
+  margin: 0 0 14px 0;
+  min-height: 38px;
 }
 .backup-action-group {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 14px;
 }
 .btn-action-half {
   flex: 1;
-  height: 38px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  border-radius: var(--r-md, 6px);
+  border-radius: var(--r-sm, 6px);
   box-sizing: border-box;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -169,7 +163,7 @@ function onFileChange(e: Event) {
   transform: translateY(-1px);
 }
 .btn-action-half.btn-copy {
-  background: var(--surface, #fafafa);
+  background: var(--surface-card, #ffffff);
   border: 1px solid var(--hairline, #dcdfe6);
   color: var(--charcoal, #333);
 }
@@ -181,26 +175,28 @@ function onFileChange(e: Event) {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--canvas, #fff);
+  background: var(--surface-card, #fff);
   border: 1px dashed var(--hairline, #dcdfe6);
-  padding: 12px 16px;
-  border-radius: var(--r-sm, 4px);
+  padding: 10px 14px;
+  border-radius: var(--r-sm, 6px);
   cursor: pointer;
-  margin: 12px 0 8px;
+  margin: 4px 0 8px;
   transition: border-color 0.15s;
 }
 .import-file-box:hover {
-  border-color: #409eff;
+  border-color: var(--primary, #2563eb);
 }
-.import-file-icon {
-  font-size: 18px;
+.import-file-svg {
+  width: 16px;
+  height: 16px;
+  color: var(--steel, #787671);
 }
 .import-file-text {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--slate, #606266);
 }
 .import-manual-toggle {
-  margin: 6px 0 12px;
+  margin: 4px 0 6px;
 }
 .toggle-link {
   display: inline-flex;
@@ -225,13 +221,13 @@ function onFileChange(e: Event) {
 }
 .backup-textarea {
   width: 100%;
-  height: 120px;
-  padding: 10px;
+  height: 100px;
+  padding: 8px 10px;
   font-family: var(--font-mono);
   font-size: 12px;
   border: 1px solid var(--hairline);
-  border-radius: var(--r-md);
-  background: var(--surface-control, var(--surface));
+  border-radius: var(--r-sm, 6px);
+  background: var(--surface-card, #ffffff);
   color: var(--ink);
   resize: vertical;
   margin-top: 8px;
@@ -239,63 +235,56 @@ function onFileChange(e: Event) {
 }
 .backup-textarea:focus {
   outline: none;
-  border-color: var(--charcoal);
+  border-color: var(--primary, #2563eb);
 }
 .btn-full {
   width: 100%;
-  height: 38px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm, 6px);
   border: none;
   cursor: pointer;
-  background: var(--primary);
+  background: var(--primary, #2563eb);
   color: #fff;
-  transition: opacity 0.15s;
+  transition: all 0.15s ease;
 }
 .btn-full:disabled {
-  background: var(--surface-hover, #f4f4f5) !important;
+  background: var(--surface, #f4f4f5) !important;
   color: var(--stone, #a1a1aa) !important;
   border: 1px solid var(--hairline, #e2e8f0) !important;
   opacity: 1 !important;
   cursor: not-allowed;
   box-shadow: none !important;
 }
+.btn-svg-sm {
+  width: 14px;
+  height: 14px;
+}
 
 @media (max-width: 768px) {
   .backup-grid {
     grid-template-columns: 1fr;
-    padding: 8px 4px 16px 8px;
+    gap: 16px;
   }
 }
-
-.backup-card-header {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.btn-svg-sm {
-  width: 14px;
-  height: 14px;
-  margin-right: 6px;
-  vertical-align: -2px;
-}
-.import-file-svg {
-  width: 16px;
-  height: 16px;
-  margin-right: 6px;
-  vertical-align: -3px;
-  color: var(--steel);
-}
-
 
 html.dark {
   .backup-card {
     background: #18181b;
     border-color: #27272a;
+  }
+  .backup-card-header {
+    border-color: #27272a;
+  }
+  .sub-title-text {
+    color: #f4f4f5;
+  }
+  .backup-desc {
+    color: #a1a1aa;
   }
   .btn-action-half.btn-copy {
     background: #1f1f23;
@@ -331,20 +320,20 @@ html.dark {
       color: #e4e4e7;
     }
   }
-}
-html.dark .btn-action-half.btn-export {
-  background: rgba(37, 99, 235, 0.14) !important;
-  border-color: rgba(59, 130, 246, 0.30) !important;
-  color: #60a5fa !important;
-}
-html.dark .btn-action-half.btn-export:hover {
-  background: rgba(37, 99, 235, 0.22) !important;
-  border-color: #3b82f6 !important;
-  color: #93c5fd !important;
-}
-html.dark .btn-full:disabled {
-  background: #27272a !important;
-  color: #71717a !important;
-  border-color: #3f3f46 !important;
+  .btn-action-half.btn-export {
+    background: rgba(37, 99, 235, 0.14) !important;
+    border-color: rgba(59, 130, 246, 0.30) !important;
+    color: #60a5fa !important;
+  }
+  .btn-action-half.btn-export:hover {
+    background: rgba(37, 99, 235, 0.22) !important;
+    border-color: #3b82f6 !important;
+    color: #93c5fd !important;
+  }
+  .btn-full:disabled {
+    background: #27272a !important;
+    color: #71717a !important;
+    border-color: #3f3f46 !important;
+  }
 }
 </style>

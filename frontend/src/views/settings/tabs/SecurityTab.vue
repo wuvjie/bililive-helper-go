@@ -1,13 +1,12 @@
 <template>
   <div class="security-tab">
     <div class="form-section-card">
-      <div class="section-title">
-        <div class="ui-icon-box icon-box-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-        <span>修改管理密码</span>
+      <div class="form-sub-header">
+        <span class="sub-title-text">修改管理密码</span>
       </div>
       <p class="section-desc">修改当前 Web 系统的登录访问密码。密码仅保存在本地安全凭据中，修改后即刻生效。</p>
 
-      <el-form label-width="120px" label-position="left" class="security-form" @submit.prevent="handleSubmit">
+      <el-form label-width="140px" label-position="left" class="security-form" @submit.prevent="handleSubmit">
         <el-form-item label="当前密码" required>
           <el-input
             v-model="oldPassword"

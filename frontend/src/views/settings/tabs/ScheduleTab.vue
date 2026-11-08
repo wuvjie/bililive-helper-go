@@ -1,13 +1,10 @@
 <template>
   <div class="schedule-tab">
-    <el-form label-width="150px" label-position="left" v-loading="loading" class="settings-form">
+    <el-form label-width="140px" label-position="left" v-loading="loading" class="settings-form">
       <!-- Section 1: 自动合并计划 -->
       <div class="form-section-card">
-        <div class="section-title">
-          <div class="ui-icon-box icon-box-emerald">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          </div>
-          <span>自动分片合并计划</span>
+        <div class="form-sub-header">
+          <span class="sub-title-text">自动分片合并计划</span>
         </div>
         <div class="section-body">
           <el-form-item label="开启自动合并">
@@ -37,11 +34,8 @@
 
       <!-- Section 2: 自动清理计划 -->
       <div class="form-section-card">
-        <div class="section-title">
-          <div class="ui-icon-box icon-box-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-          </div>
-          <span>自动磁盘巡检与清理计划</span>
+        <div class="form-sub-header">
+          <span class="sub-title-text">自动磁盘巡检与清理计划</span>
         </div>
         <div class="section-body">
           <el-form-item label="开启自动清理">
@@ -71,11 +65,8 @@
 
       <!-- Section 3: 免打扰避让时段 -->
       <div class="form-section-card">
-        <div class="section-title">
-          <div class="ui-icon-box icon-box-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </div>
-          <span>免打扰避让时段</span>
+        <div class="form-sub-header">
+          <span class="sub-title-text">免打扰避让时段</span>
         </div>
         <div class="section-body">
           <el-form-item label="避让时间范围">

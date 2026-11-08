@@ -1,19 +1,11 @@
 <template>
   <div class="settings">
     <!-- Page Header (Top Level, outside card) -->
-    <header class="settings-page-header">
-      <div class="header-text-wrap">
-        <h1 class="page-title">系统设置</h1>
-        <p class="page-desc">管理自动化录制合并、磁盘巡检保护、计划调度与系统安全凭据</p>
-      </div>
-    </header>
-
-    <!-- Main Two-Column Layout -->
+        <!-- Main Two-Column Layout -->
     <div class="settings-layout">
       <!-- Left: Sticky Sidebar Navigation (200px) -->
       <aside class="settings-sidebar">
         <div class="sidebar-sticky-inner">
-          <div class="sidebar-caption">配置目录</div>
           <nav class="settings-nav">
             <button
               v-for="item in navSections"
@@ -42,13 +34,22 @@
           <div class="section-card-header">
             <div class="section-header-title-row">
               <div class="ui-icon-box icon-box-emerald">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
               </div>
               <div class="section-header-texts">
                 <h2 class="section-main-title">全局策略</h2>
-                <p class="section-sub-title">配置录播分片合并静置容差时间、磁盘巡检保护水位以及新录像免删天数</p>
+                <p class="section-sub-title">录播分片合并静置容差时间与磁盘巡检保护水位</p>
               </div>
             </div>
+            <button
+              type="button"
+              class="btn-header-action"
+              @click="handleResetDefaults"
+              title="将全局策略一键恢复为官方推荐预设值"
+            >
+              <svg class="btn-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>恢复推荐预设</span>
+            </button>
           </div>
           <div class="section-card-body" v-loading="configLoading">
             <PolicyTab
@@ -70,7 +71,7 @@
               </div>
               <div class="section-header-texts">
                 <h2 class="section-main-title">定时调度</h2>
-                <p class="section-sub-title">设定自动分片合并与磁盘清理巡检的运行周期与自动执行开关</p>
+                <p class="section-sub-title">自动分片合并与磁盘巡检清理的运行周期与自动执行开关</p>
               </div>
             </div>
           </div>
@@ -97,7 +98,7 @@
               </div>
               <div class="section-header-texts">
                 <h2 class="section-main-title">配置备份与恢复</h2>
-                <p class="section-sub-title">导出当前系统全部策略规则与调度参数，或从已有备份中导入恢复</p>
+                <p class="section-sub-title">导出当前系统策略与调度配置，或从已有备份中导入恢复</p>
               </div>
             </div>
           </div>
@@ -226,41 +227,36 @@ function handleContainerScroll() {
   if (isUserClicking) return;
   const container = getScrollContainer();
   if (!container) return;
+
   if (container.scrollHeight - container.scrollTop - container.clientHeight < 60) {
     activeSectionId.value = "security";
+    return;
   }
+
+  const sections = [
+    { id: "policy", el: document.getElementById("section-policy") },
+    { id: "schedule", el: document.getElementById("section-schedule") },
+    { id: "backup", el: document.getElementById("section-backup") },
+    { id: "security", el: document.getElementById("section-security") }
+  ];
+
+  const containerRect = container.getBoundingClientRect();
+  const triggerLine = containerRect.top + 140;
+
+  let current = "policy";
+  for (const s of sections) {
+    if (s.el) {
+      const rect = s.el.getBoundingClientRect();
+      if (rect.top <= triggerLine) {
+        current = s.id;
+      }
+    }
+  }
+  activeSectionId.value = current;
 }
 
-let observer: IntersectionObserver | null = null;
-
 function setupScrollSpy() {
-  if (observer) {
-    observer.disconnect();
-    observer = null;
-  }
-  const container = getScrollContainer();
-  const sections = document.querySelectorAll(".settings-section-card");
-  if (!sections.length) return;
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (isUserClicking) return;
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const sec = entry.target.getAttribute("data-section");
-          if (sec) {
-            activeSectionId.value = sec;
-          }
-        }
-      });
-    },
-    {
-      root: container,
-      rootMargin: "-10% 0px -60% 0px",
-      threshold: [0, 0.2]
-    }
-  );
-  sections.forEach((sec) => observer?.observe(sec));
+  // Driven by container scroll listener
 }
 
 const savingConfig = ref(false);
@@ -713,7 +709,7 @@ onUnmounted(() => {
 
 /* Sticky Sidebar (200px) */
 .settings-sidebar {
-  width: 200px;
+  width: 180px;
   flex-shrink: 0;
   position: sticky;
   top: 16px;
@@ -797,9 +793,12 @@ onUnmounted(() => {
 }
 
 .section-card-header {
-  padding: 18px 22px;
+  padding: 14px 22px;
   border-bottom: 1px solid var(--hairline, #e4e4e7);
   background: var(--surface-subtle, rgba(0, 0, 0, 0.015));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .section-header-title-row {
   display: flex;
@@ -827,20 +826,70 @@ onUnmounted(() => {
   padding: 22px;
 }
 
-/* Eliminate nested card borders inside PolicyTab, ScheduleTab, BackupTab, SecurityTab */
-.settings-section-card :deep(.form-section-card),
-.settings-section-card :deep(.backup-card) {
+/* Form sub-section styling inside cards */
+.settings-section-card :deep(.form-section-card) {
   border: none !important;
   background: transparent !important;
   padding: 0 !important;
   margin: 0 !important;
   box-shadow: none !important;
 }
-.settings-section-card :deep(.form-section-card + .form-section-card),
-.settings-section-card :deep(.backup-card + .backup-card) {
+.settings-section-card :deep(.form-section-card + .form-section-card) {
   margin-top: 24px !important;
-  padding-top: 24px !important;
+  padding-top: 20px !important;
   border-top: 1px solid var(--hairline) !important;
+}
+.settings-section-card :deep(.form-sub-header) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+}
+.settings-section-card :deep(.sub-title-text) {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--charcoal, #18181b);
+  letter-spacing: -0.2px;
+}
+
+/* Header Action Button (e.g. 恢复推荐预设) */
+.btn-header-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--hairline, #e6e4df);
+  background: var(--surface-card, #ffffff);
+  color: var(--steel, #787671);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-header-action:hover {
+  color: var(--ink, #18181b);
+  background: var(--highlight, rgba(0, 0, 0, 0.04));
+  border-color: var(--hairline-strong, #c8c4be);
+}
+.btn-action-svg {
+  width: 13px;
+  height: 13px;
+}
+
+html.dark .btn-header-action {
+  background: var(--surface-card, #18181b);
+  border-color: var(--hairline, #27272a);
+  color: var(--steel, #a1a1aa);
+}
+html.dark .btn-header-action:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #3f3f46;
 }
 
 /* Floating Sticky Save Bar (吸底保存条) */
