@@ -24,6 +24,20 @@
               <span v-if="activeSectionId === item.id" class="nav-active-pill" />
             </button>
           </nav>
+          
+          <div class="sidebar-divider" />
+          
+          <div class="sidebar-footer">
+            <button
+              type="button"
+              class="sidebar-reset-btn"
+              @click="handleResetDefaults"
+              title="将系统全局策略与定时调度一键恢复为官方推荐预设"
+            >
+              <svg class="reset-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>恢复推荐预设</span>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -41,15 +55,7 @@
                 <p class="section-sub-title">录播分片合并静置容差时间与磁盘巡检保护水位</p>
               </div>
             </div>
-            <button
-              type="button"
-              class="btn-header-action"
-              @click="handleResetDefaults"
-              title="将全局策略一键恢复为官方推荐预设值"
-            >
-              <svg class="btn-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              <span>恢复推荐预设</span>
-            </button>
+
           </div>
           <div class="section-card-body" v-loading="configLoading">
             <PolicyTab
@@ -709,15 +715,52 @@ onUnmounted(() => {
 
 /* Sticky Sidebar (200px) */
 .settings-sidebar {
-  width: 180px;
+  width: 190px;
   flex-shrink: 0;
   position: sticky;
-  top: 16px;
+  top: 0;
 }
 .sidebar-sticky-inner {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline, #e4e4e7);
+  border-radius: var(--r-md, 8px);
+  padding: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+.sidebar-divider {
+  height: 1px;
+  background: var(--hairline);
+  margin: 8px 4px;
+}
+.sidebar-footer {
+  padding: 4px;
+}
+.sidebar-reset-btn {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel);
+  background: var(--surface-subtle, rgba(0, 0, 0, 0.02));
+  border: 1px dashed var(--hairline);
+  border-radius: var(--r-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sidebar-reset-btn:hover {
+  color: var(--primary, #059669);
+  border-color: var(--primary);
+  background: rgba(16, 185, 129, 0.06);
+}
+.reset-svg-ico {
+  width: 13px;
+  height: 13px;
 }
 .sidebar-caption {
   font-size: 11px;
@@ -835,17 +878,17 @@ onUnmounted(() => {
   box-shadow: none !important;
 }
 .settings-section-card :deep(.form-section-card + .form-section-card) {
-  margin-top: 24px !important;
-  padding-top: 20px !important;
-  border-top: 1px solid var(--hairline) !important;
+  margin-top: 28px !important;
+  padding-top: 0 !important;
+  border-top: none !important;
 }
 .settings-section-card :deep(.form-sub-header) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--hairline, #e4e4e7);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  border-bottom: none !important;
 }
 .settings-section-card :deep(.sub-title-text) {
   font-size: 13.5px;

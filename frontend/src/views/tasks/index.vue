@@ -120,14 +120,7 @@
             </button>
           </div>
         </div>
-        <div class="action-bar-right">
-          <router-link
-            :to="selectedStreamer ? ('/streamers?streamer=' + encodeURIComponent(selectedStreamer)) : '/streamers'"
-            class="link-to-streamers"
-          >
-            前往主播管理查看切片详情 ↗
-          </router-link>
-        </div>
+
       </div>
 
       <div class="workbench-terminal-wrap">
@@ -1140,22 +1133,25 @@ html.dark {
 
 /* Unified Execution Workbench Card (定向维护与实时终端融合工作台) */
 .terminal-workbench-card {
-  background: var(--surface);
+  background: var(--surface-card, #ffffff);
   border: 1px solid var(--hairline);
   border-radius: var(--r-md, 8px);
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .workbench-action-bar {
-  padding: 12px 18px;
+  padding: 0 0 14px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  background: var(--surface);
+  background: transparent;
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -1192,7 +1188,7 @@ html.dark .terminal-workbench-card {
   border-color: #27272a;
 }
 html.dark .workbench-action-bar {
-  background: #141416;
+  background: transparent;
   border-color: #27272a;
 }
 html.dark .action-bar-title {

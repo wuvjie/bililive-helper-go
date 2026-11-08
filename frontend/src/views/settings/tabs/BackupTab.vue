@@ -3,10 +3,26 @@
     <div class="backup-grid">
       <!-- Export card -->
       <div class="backup-card">
-        <div class="backup-card-header">
-          <span class="sub-title-text">导出配置备份</span>
+        <div class="backup-card-top">
+          <div class="backup-card-header">
+            <span class="sub-title-text">导出配置备份</span>
+          </div>
+          <p class="backup-desc">将系统当前的阈值策略、定时调度参数以及各主播的个性化截取与保护规则导出为 JSON 备份文件。</p>
+          <div class="backup-scope-list">
+            <div class="scope-item">
+              <svg class="scope-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>全局清理阈值、重连容差与静置时间</span>
+            </div>
+            <div class="scope-item">
+              <svg class="scope-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>定时巡检周期与免打扰避让时段</span>
+            </div>
+            <div class="scope-item">
+              <svg class="scope-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>所有主播专属规则与裁剪区间</span>
+            </div>
+          </div>
         </div>
-        <p class="backup-desc">将系统当前的阈值策略、定时调度参数以及各主播的个性化截取与保护规则导出为 JSON 备份文件。</p>
         <div class="backup-action-group">
           <button type="button" class="btn-action-half btn-export" @click="emit('export-file')">
             <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -21,33 +37,35 @@
 
       <!-- Import card -->
       <div class="backup-card">
-        <div class="backup-card-header">
-          <span class="sub-title-text">导入配置恢复</span>
-        </div>
-        <p class="backup-desc">选择之前导出的 JSON 备份文件，导入并校验通过后将自动覆盖应用现有设置。</p>
-        <input
-          ref="importFileRef"
-          type="file"
-          accept=".json"
-          style="display: none"
-          @change="onFileChange"
-        />
-        <div class="import-file-box" @click="importFileRef?.click()">
-          <svg class="import-file-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          <span class="import-file-text">{{ selectedFileName || '点击选择本地 JSON 配置文件...' }}</span>
-        </div>
-        <div class="import-manual-toggle">
-          <span class="toggle-link" @click="showManualPaste = !showManualPaste">
-            <svg class="toggle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'rotate-open': showManualPaste }"><polyline points="6 9 12 15 18 9"/></svg>
-            {{ showManualPaste ? '收起手动粘贴' : '或手动粘贴 JSON 代码' }}
-          </span>
-          <textarea
-            v-if="showManualPaste"
-            class="backup-textarea"
-            :value="importJson"
-            placeholder="在此直接粘贴配置 JSON 字符串..."
-            @input="emit('update:import-json', ($event.target as HTMLTextAreaElement).value)"
+        <div class="backup-card-top">
+          <div class="backup-card-header">
+            <span class="sub-title-text">导入配置恢复</span>
+          </div>
+          <p class="backup-desc">选择之前导出的 JSON 备份文件，导入并校验通过后将自动覆盖应用现有设置。</p>
+          <input
+            ref="importFileRef"
+            type="file"
+            accept=".json"
+            style="display: none"
+            @change="onFileChange"
           />
+          <div class="import-file-box" @click="importFileRef?.click()">
+            <svg class="import-file-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span class="import-file-text">{{ selectedFileName || '点击选择本地 JSON 配置文件...' }}</span>
+          </div>
+          <div class="import-manual-toggle">
+            <span class="toggle-link" @click="showManualPaste = !showManualPaste">
+              <svg class="toggle-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'rotate-open': showManualPaste }"><polyline points="6 9 12 15 18 9"/></svg>
+              {{ showManualPaste ? '收起手动粘贴' : '或手动粘贴 JSON 代码' }}
+            </span>
+            <textarea
+              v-if="showManualPaste"
+              class="backup-textarea"
+              :value="importJson"
+              placeholder="在此直接粘贴配置 JSON 字符串..."
+              @input="emit('update:import-json', ($event.target as HTMLTextAreaElement).value)"
+            />
+          </div>
         </div>
         <div class="backup-action-group">
           <button
@@ -101,16 +119,46 @@ function onFileChange(e: Event) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 .backup-card {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
   background: var(--surface, #f4f3f0);
   border: 1px solid var(--hairline, #e6e4df);
   border-radius: var(--r-md, 8px);
   padding: 20px;
   box-sizing: border-box;
+}
+.backup-card-top {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.backup-scope-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 16px 0;
+  padding: 12px;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm, 6px);
+}
+.scope-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--slate);
+}
+.scope-svg {
+  width: 13px;
+  height: 13px;
+  color: var(--primary, #059669);
+  flex-shrink: 0;
 }
 .backup-card-header {
   display: flex;

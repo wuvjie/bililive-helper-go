@@ -120,12 +120,12 @@
         <el-table-column label="操作" width="185" align="left" header-align="left">
           <template #default="{ row }">
             <div class="action-btn-group">
-              <button class="ghost-action" @click="openDrawer(row)">
+              <button class="ghost-action ghost-action-files" @click="openDrawer(row)">
                 <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 <span>录像 ({{ row.files }})</span>
               </button>
               <span class="action-sep">|</span>
-              <button class="ghost-action" @click="openRuleDialog(row)">
+              <button class="ghost-action ghost-action-rule" @click="openRuleDialog(row)">
                 <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                 <span>规则</span>
               </button>
@@ -645,10 +645,8 @@ async function openDrawer(row: StreamerInfo) {
 }
 
 async function handleCopyPath(row: StreamerFile) {
-  const targetPath = row.path || `${drawerStreamer.value}/${row.name}`;
-  const isAbs = targetPath.startsWith("/") || /^[a-zA-Z]:[\\/]/.test(targetPath);
-  const msg = isAbs ? `已复制文件物理路径: ${targetPath}` : `已复制录像相对路径: ${targetPath}`;
-  await copyToClipboard(targetPath, msg);
+  // 复制文件名（最适合在本地 Windows 资源管理器或搜索框中快速定位文件）
+  await copyToClipboard(row.name, `已复制录像文件名: ${row.name}`);
 }
 
 async function handleDeleteFile(row: StreamerFile) {
@@ -831,15 +829,27 @@ onActivated(() => loadData());
 }
 
 .action-btn-group {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
+  gap: 0;
   padding-left: 2px;
+}
+.ghost-action-files {
+  width: 95px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .action-sep {
   color: var(--hairline-strong);
   font-size: 12px;
+  margin: 0 8px;
+  user-select: none;
+}
+.ghost-action-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .ghost-action {
   background: transparent;

@@ -1,10 +1,6 @@
 <template>
   <div class="security-tab">
     <div class="form-section-card">
-      <div class="form-sub-header">
-        <span class="sub-title-text">修改管理密码</span>
-      </div>
-      <p class="section-desc">修改当前 Web 系统的登录访问密码。密码仅保存在本地安全凭据中，修改后即刻生效。</p>
 
       <el-form label-width="140px" label-position="left" class="security-form" @submit.prevent="handleSubmit">
         <el-form-item label="当前密码" required>

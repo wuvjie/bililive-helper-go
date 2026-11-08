@@ -74,21 +74,15 @@
             <div class="field-hint">清理时将从最旧录播开始删除，直至磁盘使用率降至此目标水位。</div>
           </el-form-item>
 
-          <!-- 动态空间释放冲程指示条 (轻量集成在阈值控制项下方) -->
-          <div class="threshold-buffer-indicator">
-            <div class="buffer-track-wrap">
-              <div class="buffer-visual-track">
-                <div class="track-fill-safe" :style="{ width: config.TARGET_THRESHOLD + '%' }" title="目标保底水位"></div>
-                <div class="track-fill-buffer" :style="{ width: bufferPct + '%' }" title="单次清理释放冲程"></div>
-              </div>
+          <!-- 空间释放冲程预期摘要标 -->
+          <div class="stroke-summary-banner">
+            <div class="stroke-summary-left">
+              <svg class="stroke-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <span class="stroke-label">单次清理冲程：</span>
+              <span class="stroke-val-highlight">预计释放约 {{ bufferPct }}%</span>
+              <span v-if="bufferGB" class="stroke-gb-badge">≈ {{ bufferGB }} GB</span>
             </div>
-            <div class="buffer-track-meta">
-              <span class="buffer-meta-main">
-                单次释放冲程：<strong class="mono-num">{{ bufferPct }}%</strong>
-                <span v-if="bufferGB" class="buffer-meta-gb">（预计释放约 {{ bufferGB }} GB 磁盘空间）</span>
-              </span>
-              <span class="buffer-meta-range">目标水位 {{ config.TARGET_THRESHOLD }}% → 触发警戒 {{ config.TRIGGER_THRESHOLD }}%</span>
-            </div>
+            <span class="stroke-range-text">触发警戒 {{ config.TRIGGER_THRESHOLD }}% → 清理至目标 {{ config.TARGET_THRESHOLD }}%</span>
           </div>
 
           <el-form-item label="新录像免删保护">
