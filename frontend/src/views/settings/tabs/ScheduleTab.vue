@@ -132,10 +132,16 @@ const emit = defineEmits<{
   gap: 16px;
 }
 .form-section-card {
-  background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-md);
-  padding: 18px 20px;
+  background: transparent;
+  border: none;
+  padding: 0 0 24px 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--hairline);
+}
+.form-section-card:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
 }
 .section-title {
   display: flex;

@@ -38,7 +38,6 @@
                 placeholder="搜索主播名..."
                 :prefix-icon="Search"
                 clearable
-                size="small"
                 style="width: 230px"
               />
               <span v-if="!searchQuery" class="kbd-badge search-kbd">/</span>

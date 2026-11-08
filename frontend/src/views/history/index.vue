@@ -30,8 +30,9 @@
                   ref="streamerSearchRef"
                   v-model="filterStreamer"
                   placeholder="搜索主播名..."
+                  :prefix-icon="Search"
                   clearable
-                  style="width: 190px"
+                  style="width: 220px"
                   @input="onStreamerSearch"
                   @clear="loadHistory(1)"
                 />
@@ -176,6 +177,7 @@
 import { ref, onMounted, onActivated } from "vue";
 import router from "@/router";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { Search } from "@element-plus/icons-vue";
 import { getHistory, getLogContent, clearHistory } from "@/api/history";
 import { formatBytes } from "@/utils/format";
 import type { HistoryRecord } from "@/api/types";
@@ -414,9 +416,9 @@ onActivated(() => {
   border-radius: var(--r-sm);
   font-size: 12px;
   font-weight: 500;
-  background: var(--surface);
+  background: transparent;
   border: 1px solid var(--hairline);
-  color: var(--slate);
+  color: var(--steel);
   cursor: pointer;
   transition: all 0.15s ease;
   line-height: 30px;
@@ -424,7 +426,7 @@ onActivated(() => {
 
 .btn-clear-history:hover {
   background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.25);
   color: var(--error);
 }
 
