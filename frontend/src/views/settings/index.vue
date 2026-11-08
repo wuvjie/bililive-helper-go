@@ -796,10 +796,10 @@ onUnmounted(() => {
   gap: 10px;
   height: 38px;
   padding: 0 12px;
-  border-radius: var(--r-sm, 6px);
-  border: 1px solid transparent;
+  border-radius: var(--r-md, 8px);
+  border: none;
   background: transparent;
-  color: var(--slate, #64748b);
+  color: var(--steel, #71717a);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -807,16 +807,17 @@ onUnmounted(() => {
   transition: all 0.15s ease;
   white-space: nowrap;
 }
-.nav-tab-btn:hover {
-  color: var(--charcoal);
+.nav-tab-btn:hover:not(.active) {
+  color: var(--charcoal, #27272a);
   background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
 }
 .nav-tab-btn.active {
-  color: var(--ink);
-  background: var(--surface-card, #ffffff);
-  border-color: var(--hairline);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: var(--primary, #2563eb);
+  background: color-mix(in srgb, var(--primary, #2563eb) 8%, transparent);
   font-weight: 600;
+}
+.nav-tab-btn.active .tab-svg-ico {
+  color: var(--primary, #2563eb);
 }
 .nav-active-pill {
   display: none;
