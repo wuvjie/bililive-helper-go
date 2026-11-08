@@ -6,6 +6,14 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Changelog](https://img.shields.io/badge/Changelog-v1.0~v2.0-orange.svg)](CHANGELOG.md)
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/dashboard-light.png">
+    <img alt="Bililive Helper Go 控制台概览" src="docs/images/dashboard-light.png" width="100%">
+  </picture>
+</p>
+
 ---
 
 ## 功能
