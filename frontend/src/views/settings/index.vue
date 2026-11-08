@@ -114,6 +114,72 @@
         </div>
       </div>
     </transition>
+
+    <!-- 恢复预设确认弹窗 (GitHub Primer 规范卡片弹窗) -->
+    <el-dialog
+      v-model="presetModalVisible"
+      :title="presetModalType === 'policy' ? '恢复策略预设' : '恢复调度预设'"
+      width="460px"
+      destroy-on-close
+      class="preset-confirm-dialog"
+    >
+      <div class="preset-dialog-body">
+        <div class="preset-dialog-desc">
+          {{ presetModalType === 'policy' ? '将录制合并规则与磁盘清理水位恢复为官方推荐的基准参数：' : '将自动化分片合并与磁盘巡检周期恢复为官方推荐的基准参数：' }}
+        </div>
+
+        <!-- 结构化参数展示卡片 -->
+        <div class="preset-summary-card">
+          <div v-if="presetModalType === 'policy'" class="preset-params-list">
+            <div class="preset-param-item">
+              <span class="param-lbl">断流重连容差</span>
+              <span class="param-val">30 分钟</span>
+            </div>
+            <div class="preset-param-item">
+              <span class="param-lbl">完播静置等待</span>
+              <span class="param-val">30 分钟</span>
+            </div>
+            <div class="preset-param-item">
+              <span class="param-lbl">触发清理水位</span>
+              <span class="param-val">80% 触发 · 降至 60%</span>
+            </div>
+            <div class="preset-param-item">
+              <span class="param-lbl">免删保护底线</span>
+              <span class="param-val">保留最近 3 天录像</span>
+            </div>
+          </div>
+
+          <div v-else class="preset-params-list">
+            <div class="preset-param-item">
+              <span class="param-lbl">自动分片合并</span>
+              <span class="param-val">启用 · 每 360 分钟</span>
+            </div>
+            <div class="preset-param-item">
+              <span class="param-lbl">自动磁盘清理</span>
+              <span class="param-val">启用 · 每 720 分钟</span>
+            </div>
+            <div class="preset-param-item">
+              <span class="param-lbl">避让时间窗口</span>
+              <span class="param-val">全天候运行 (无避让)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="preset-dialog-hint">
+          <svg class="hint-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>预设参数将载入当前表单，您可在检查无误后，点击底部的「保存变更」正式生效。</span>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="preset-dialog-footer">
+          <el-button @click="presetModalVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmApplyPreset">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -352,7 +418,10 @@ const OFFICIAL_RECOMMENDED_SCHEDULE = {
   clean_interval: 720
 };
 
-async function handleResetPolicyDefaults() {
+const presetModalVisible = ref(false);
+const presetModalType = ref<"policy" | "schedule">("policy");
+
+function handleResetPolicyDefaults() {
   const targetConfig = {
     ...config.value,
     ...OFFICIAL_RECOMMENDED_POLICY
@@ -365,30 +434,16 @@ async function handleResetPolicyDefaults() {
     if (currentFormSerialized === initialSavedSerialized) {
       ElMessage.info("当前策略已是官方推荐预设，无需更改");
     } else {
-      ElMessage.info("表单已应用官方推荐策略预设，请点击下方保存按钮提交生效");
+      ElMessage.info("表单已应用官方推荐策略预设，请检查并点击下方保存变更生效");
     }
     return;
   }
 
-  try {
-    await ElMessageBox.confirm(
-      "是否将全局合并与磁盘清理策略恢复为系统官方推荐参数？（断流 30 分钟、静置 30 分钟、水位 80%/60%、免删 3 天、白名单保护关键词）\n\n应用后需点击下方保存按钮提交生效。",
-      "恢复官方推荐策略预设",
-      {
-        confirmButtonText: "确认应用策略预设",
-        cancelButtonText: "取消",
-        type: "warning"
-      }
-    );
-  } catch {
-    return;
-  }
-
-  config.value = targetConfig;
-  ElMessage.success("已载入官方推荐策略预设，请检查并点击下方保存按钮生效");
+  presetModalType.value = "policy";
+  presetModalVisible.value = true;
 }
 
-async function handleResetScheduleDefaults() {
+function handleResetScheduleDefaults() {
   const isAlreadyRecommended =
     scheduleForm.merge_enabled === OFFICIAL_RECOMMENDED_SCHEDULE.merge_enabled &&
     scheduleForm.clean_enabled === OFFICIAL_RECOMMENDED_SCHEDULE.clean_enabled &&
@@ -401,32 +456,32 @@ async function handleResetScheduleDefaults() {
     if (!isScheduleDirty()) {
       ElMessage.info("当前定时调度已是官方推荐预设，无需更改");
     } else {
-      ElMessage.info("表单已应用官方推荐调度预设，请点击下方保存按钮提交生效");
+      ElMessage.info("表单已应用官方推荐调度预设，请检查并点击下方保存变更生效");
     }
     return;
   }
 
-  try {
-    await ElMessageBox.confirm(
-      "是否将定时调度与避让窗口恢复为系统官方推荐参数？（分片合并每 6 小时、磁盘清理每 12 小时、启用自动调度、清空避让时间窗）\n\n应用后需点击下方保存按钮提交生效。",
-      "恢复官方推荐调度预设",
-      {
-        confirmButtonText: "确认应用调度预设",
-        cancelButtonText: "取消",
-        type: "warning"
-      }
-    );
-  } catch {
-    return;
-  }
+  presetModalType.value = "schedule";
+  presetModalVisible.value = true;
+}
 
-  scheduleForm.merge_enabled = true;
-  scheduleForm.clean_enabled = true;
-  scheduleForm.merge_interval = 360;
-  scheduleForm.clean_interval = 720;
-  backupStart.value = "";
-  backupEnd.value = "";
-  ElMessage.success("已载入官方推荐调度预设，请检查并点击下方保存按钮生效");
+function confirmApplyPreset() {
+  presetModalVisible.value = false;
+  if (presetModalType.value === "policy") {
+    config.value = {
+      ...config.value,
+      ...OFFICIAL_RECOMMENDED_POLICY
+    };
+    ElMessage.success("已载入官方推荐策略预设，请检查并点击下方保存变更生效");
+  } else {
+    scheduleForm.merge_enabled = true;
+    scheduleForm.clean_enabled = true;
+    scheduleForm.merge_interval = 360;
+    scheduleForm.clean_interval = 720;
+    backupStart.value = "";
+    backupEnd.value = "";
+    ElMessage.success("已载入官方推荐调度预设，请检查并点击下方保存变更生效");
+  }
 }
 
 async function handleSaveSettings() {
@@ -1041,5 +1096,140 @@ html.dark .nav-underline-item.active::after {
 }
 html.dark .section-card-header {
   background: rgba(255, 255, 255, 0.02);
+}
+
+/* Preset Confirm Modal Dialog */
+:deep(.preset-confirm-dialog) {
+  border-radius: var(--r-md, 8px);
+  overflow: hidden;
+
+  .el-dialog__header {
+    margin-right: 0;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--hairline, #e4e4e7);
+  }
+
+  .el-dialog__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--charcoal, #24292f);
+  }
+
+  .el-dialog__body {
+    padding: 18px 20px 14px;
+  }
+
+  .el-dialog__footer {
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--hairline, #e4e4e7);
+  }
+}
+
+html.dark :deep(.preset-confirm-dialog) {
+  background: #161b22;
+  border: 1px solid #30363d;
+
+  .el-dialog__header {
+    border-bottom-color: #30363d;
+  }
+  .el-dialog__title {
+    color: #f0f6fc;
+  }
+  .el-dialog__footer {
+    border-top-color: #30363d;
+  }
+}
+
+.preset-dialog-desc {
+  font-size: 13px;
+  color: var(--color-fg-muted, #57606a);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+html.dark .preset-dialog-desc {
+  color: #8b949e;
+}
+
+.preset-summary-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--hairline, #e4e4e7);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+html.dark .preset-summary-card {
+  background: #0d1117;
+  border-color: #30363d;
+}
+
+.preset-params-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preset-param-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+}
+
+.preset-param-item .param-lbl {
+  color: var(--color-fg-muted, #57606a);
+}
+
+html.dark .preset-param-item .param-lbl {
+  color: #8b949e;
+}
+
+.preset-param-item .param-val {
+  font-weight: 600;
+  color: var(--charcoal, #24292f);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+html.dark .preset-param-item .param-val {
+  color: #c9d1d9;
+}
+
+.preset-dialog-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-fg-muted, #57606a);
+  line-height: 1.45;
+
+  .hint-svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--color-accent-fg, #0969da);
+  }
+}
+
+html.dark .preset-dialog-hint {
+  color: #8b949e;
+
+  .hint-svg {
+    color: #58a6ff;
+  }
+}
+
+.preset-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  :deep(.el-button) {
+    min-width: 68px;
+    height: 32px;
+    font-size: 13px;
+  }
 }
 </style>
