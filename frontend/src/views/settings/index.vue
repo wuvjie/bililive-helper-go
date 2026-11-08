@@ -161,6 +161,7 @@
                 @export-file="handleExport"
                 @copy-json="handleCopyConfig"
                 @file-selected="handleFileSelect"
+                @clear-file="selectedImportFileName = ''; importJson = ''"
                 @update:import-json="importJson = $event"
                 @apply-import="handleImport"
               />
@@ -739,6 +740,8 @@ async function handleImport() {
     }
     await apiImportConfig(data);
     ElMessage.success("配置导入恢复成功");
+    selectedImportFileName.value = "";
+    importJson.value = "";
     await loadConfigData();
     await loadScheduleData();
   } catch (e: any) {
