@@ -24,20 +24,6 @@
               <span v-if="activeSectionId === item.id" class="nav-active-pill" />
             </button>
           </nav>
-          
-          <div class="sidebar-divider" />
-          
-          <div class="sidebar-footer">
-            <button
-              type="button"
-              class="sidebar-reset-btn"
-              @click="handleResetDefaults"
-              title="将系统全局策略与定时调度一键恢复为官方推荐预设"
-            >
-              <svg class="reset-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              <span>恢复推荐预设</span>
-            </button>
-          </div>
         </div>
       </aside>
 
@@ -55,7 +41,15 @@
                 <p class="section-sub-title">录播分片合并静置容差时间与磁盘巡检保护水位</p>
               </div>
             </div>
-
+            <button
+              type="button"
+              class="section-header-action-btn"
+              @click="handleResetPolicyDefaults"
+              title="将全局合并与磁盘清理策略参数恢复为官方推荐预设"
+            >
+              <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>恢复策略预设</span>
+            </button>
           </div>
           <div class="section-card-body" v-loading="configLoading">
             <PolicyTab
@@ -63,7 +57,6 @@
               :saving="savingConfig"
               :total-disk-gb="totalDiskGb"
               @update:config="config = $event"
-              @reset-defaults="handleResetDefaults"
             />
           </div>
         </section>
@@ -80,6 +73,15 @@
                 <p class="section-sub-title">自动分片合并与磁盘巡检清理的运行周期与自动执行开关</p>
               </div>
             </div>
+            <button
+              type="button"
+              class="section-header-action-btn"
+              @click="handleResetScheduleDefaults"
+              title="将定时调度运行周期与避让窗口恢复为官方推荐预设"
+            >
+              <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>恢复调度预设</span>
+            </button>
           </div>
           <div class="section-card-body" v-loading="scheduleLoading">
             <ScheduleTab
@@ -444,7 +446,14 @@ const OFFICIAL_RECOMMENDED_POLICY = {
   WHITELIST_KEYWORDS: ["留存", "纪念", "高能", "生日", "勿删"]
 };
 
-async function handleResetDefaults() {
+const OFFICIAL_RECOMMENDED_SCHEDULE = {
+  merge_enabled: true,
+  clean_enabled: true,
+  merge_interval: 360,
+  clean_interval: 720
+};
+
+async function handleResetPolicyDefaults() {
   const targetConfig = {
     ...config.value,
     ...OFFICIAL_RECOMMENDED_POLICY
@@ -455,19 +464,19 @@ async function handleResetDefaults() {
 
   if (currentFormSerialized === targetSerialized) {
     if (currentFormSerialized === initialSavedSerialized) {
-      ElMessage.info("当前配置已是官方推荐预设，无需更改");
+      ElMessage.info("当前策略已是官方推荐预设，无需更改");
     } else {
-      ElMessage.info("表单已应用官方推荐预设，请点击下方保存按钮提交生效");
+      ElMessage.info("表单已应用官方推荐策略预设，请点击下方保存按钮提交生效");
     }
     return;
   }
 
   try {
     await ElMessageBox.confirm(
-      "是否将全局合并与磁盘清理策略重置为系统官方推荐参数？（断流 30 分钟、静置 30 分钟、水位 80%/60%、免删 3 天、白名单保护关键词）\n\n重置后需点击下方保存按钮生效。",
-      "恢复官方推荐预设",
+      "是否将全局合并与磁盘清理策略恢复为系统官方推荐参数？（断流 30 分钟、静置 30 分钟、水位 80%/60%、免删 3 天、白名单保护关键词）\n\n应用后需点击下方保存按钮提交生效。",
+      "恢复官方推荐策略预设",
       {
-        confirmButtonText: "确认应用预设",
+        confirmButtonText: "确认应用策略预设",
         cancelButtonText: "取消",
         type: "warning"
       }
@@ -478,6 +487,47 @@ async function handleResetDefaults() {
 
   config.value = targetConfig;
   ElMessage.success("已载入官方推荐策略预设，请检查并点击下方保存按钮生效");
+}
+
+async function handleResetScheduleDefaults() {
+  const isAlreadyRecommended =
+    scheduleForm.merge_enabled === OFFICIAL_RECOMMENDED_SCHEDULE.merge_enabled &&
+    scheduleForm.clean_enabled === OFFICIAL_RECOMMENDED_SCHEDULE.clean_enabled &&
+    scheduleForm.merge_interval === OFFICIAL_RECOMMENDED_SCHEDULE.merge_interval &&
+    scheduleForm.clean_interval === OFFICIAL_RECOMMENDED_SCHEDULE.clean_interval &&
+    !backupStart.value &&
+    !backupEnd.value;
+
+  if (isAlreadyRecommended) {
+    if (!isScheduleDirty()) {
+      ElMessage.info("当前定时调度已是官方推荐预设，无需更改");
+    } else {
+      ElMessage.info("表单已应用官方推荐调度预设，请点击下方保存按钮提交生效");
+    }
+    return;
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      "是否将定时调度与避让窗口恢复为系统官方推荐参数？（分片合并每 6 小时、磁盘清理每 12 小时、启用自动调度、清空避让时间窗）\n\n应用后需点击下方保存按钮提交生效。",
+      "恢复官方推荐调度预设",
+      {
+        confirmButtonText: "确认应用调度预设",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
+    );
+  } catch {
+    return;
+  }
+
+  scheduleForm.merge_enabled = true;
+  scheduleForm.clean_enabled = true;
+  scheduleForm.merge_interval = 360;
+  scheduleForm.clean_interval = 720;
+  backupStart.value = "";
+  backupEnd.value = "";
+  ElMessage.success("已载入官方推荐调度预设，请检查并点击下方保存按钮生效");
 }
 
 async function handleSaveSettings() {
@@ -726,38 +776,6 @@ onUnmounted(() => {
   border: none;
   padding: 0;
 }
-.sidebar-divider {
-  height: 1px;
-  background: var(--hairline);
-  margin: 12px 6px;
-}
-.sidebar-footer {
-  padding: 0 4px;
-}
-.sidebar-reset-btn {
-  width: 100%;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--stone);
-  background: transparent;
-  border: none;
-  border-radius: var(--r-sm, 6px);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.sidebar-reset-btn:hover {
-  color: var(--charcoal);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
-}
-.reset-svg-ico {
-  width: 12px;
-  height: 12px;
-}
 .sidebar-caption {
   font-size: 11px;
   font-weight: 700;
@@ -860,6 +878,55 @@ onUnmounted(() => {
   margin: 0;
   font-size: 12px;
   color: var(--steel);
+}
+
+.section-header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--r-sm, 6px);
+  background: transparent;
+  border: 1px solid var(--hairline, #e4e4e7);
+  color: var(--slate, #71717a);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.section-header-action-btn:hover {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  border-color: var(--border-hover, #d4d4d8);
+  color: var(--charcoal, #27272a);
+}
+
+.reset-action-svg {
+  width: 13px;
+  height: 13px;
+  color: var(--stone, #a1a1aa);
+  transition: transform 0.25s ease, color 0.15s ease;
+}
+
+.section-header-action-btn:hover .reset-action-svg {
+  transform: rotate(-45deg);
+  color: var(--charcoal, #27272a);
+}
+
+html.dark .section-header-action-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #a1a1aa;
+}
+
+html.dark .section-header-action-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f4f4f5;
+}
+
+html.dark .section-header-action-btn:hover .reset-action-svg {
+  color: #f4f4f5;
 }
 
 .section-card-body {

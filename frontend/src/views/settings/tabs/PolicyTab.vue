@@ -177,7 +177,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   "update:config": [val: ConfigDTO];
   save: [];
-  "reset-defaults": [];
 }>();
 
 const formatPercent = (v: number | number[]) => Number(v) + "%";
