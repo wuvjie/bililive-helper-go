@@ -67,9 +67,14 @@
               <span class="type-label">
                 <span class="task-type-pill" :class="'type-' + row.task">
                   <svg v-if="row.task === 'merge'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="18" cy="18" r="3"/>
-                    <circle cx="6" cy="6" r="3"/>
-                    <path d="M6 21V9a9 9 0 0 0 9 9"/>
+                    <rect width="18" height="18" x="3" y="3" rx="2"/>
+              <path d="M7 3v18"/>
+              <path d="M17 3v18"/>
+              <path d="M3 7.5h4"/>
+              <path d="M3 12h18"/>
+              <path d="M3 16.5h4"/>
+              <path d="M17 7.5h4"/>
+              <path d="M17 16.5h4"/>
                   </svg>
                   <svg v-else-if="row.task === 'clean'" class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>

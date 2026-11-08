@@ -50,8 +50,8 @@
     </div>
 
     <!-- Main Full-Width Content Stream (Native Smooth Flow) -->
-    <main class="settings-content" ref="contentRef">
-      <Transition :name="slideDirection === 'next' ? 'slide-down-page' : 'slide-up-page'" mode="out-in" @after-enter="resetScrollToTop">
+    <main class="settings-content">
+      <Transition name="tab-fade" mode="out-in">
         <!-- 1. 全局策略 -->
         <div
           v-if="activeSectionId === 'policy'"
@@ -67,21 +67,6 @@
               @update:config="config = $event"
             />
           </div>
-          <ModuleCardFooter
-            :sections="navSections"
-            :active-id="activeSectionId"
-            :current-index="currentModuleIndex"
-            :current-label="currentModuleLabel"
-            :prev-section="prevModule"
-            :next-section="nextModule"
-            :is-pulling-next="isPullingNext"
-            :is-pulling-prev="isPullingPrev"
-            :pull-progress="pullProgress"
-            @switch="handleSidebarTabClick"
-            @next="goToNextModule"
-            @prev="goToPrevModule"
-            @loop="switchToSection('policy', 'prev')"
-          />
         </div>
 
         <!-- 2. 定时调度 -->
@@ -103,21 +88,6 @@
               @update:backup-end="backupEnd = $event"
             />
           </div>
-          <ModuleCardFooter
-            :sections="navSections"
-            :active-id="activeSectionId"
-            :current-index="currentModuleIndex"
-            :current-label="currentModuleLabel"
-            :prev-section="prevModule"
-            :next-section="nextModule"
-            :is-pulling-next="isPullingNext"
-            :is-pulling-prev="isPullingPrev"
-            :pull-progress="pullProgress"
-            @switch="handleSidebarTabClick"
-            @next="goToNextModule"
-            @prev="goToPrevModule"
-            @loop="switchToSection('policy', 'prev')"
-          />
         </div>
       </Transition>
     </main>
@@ -148,19 +118,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onActivated, nextTick } from "vue";
+import { ref, reactive, computed, watch, onMounted, onActivated } from "vue";
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getConfig, saveConfig } from "@/api/config";
 import { getSchedule, saveSchedule } from "@/api/schedule";
 import { getStatusDetail } from "@/api/status";
-import { useWheelOverscroll } from "@/composables/useWheelOverscroll";
 import type { ScheduleStatus, ConfigDTO } from "@/api/types";
 
 import PolicyTab from "./tabs/PolicyTab.vue";
 import ScheduleTab from "./tabs/ScheduleTab.vue";
 import type { ScheduleForm } from "./tabs/ScheduleTab.vue";
-import ModuleCardFooter from "./components/ModuleCardFooter.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -176,108 +144,24 @@ const activeSectionId = ref<string>(
     : "policy"
 );
 
-const currentModuleIndex = computed(() => {
-  return navSections.findIndex((s) => s.id === activeSectionId.value);
-});
-
-const currentModuleLabel = computed(() => {
-  const cur = navSections.find((s) => s.id === activeSectionId.value);
-  return cur ? cur.label : "";
-});
-
-const prevModule = computed(() => {
-  const idx = currentModuleIndex.value;
-  return idx > 0 ? navSections[idx - 1] : null;
-});
-
-const nextModule = computed(() => {
-  const idx = currentModuleIndex.value;
-  return idx < navSections.length - 1 ? navSections[idx + 1] : null;
-});
-
-const canGoPrev = computed(() => prevModule.value !== null);
-const canGoNext = computed(() => nextModule.value !== null);
-
-function getScrollContainer(): HTMLElement | null {
-  return document.querySelector(".layout-content") as HTMLElement | null;
-}
-
 function updateRouteQuery(tabId: string) {
   if (route.query.tab !== tabId) {
     router.replace({ query: { ...route.query, tab: tabId } }).catch(() => {});
   }
 }
 
-function resetScrollToTop() {
-  const container = getScrollContainer();
+function switchToSection(id: string) {
+  if (activeSectionId.value === id) return;
+  activeSectionId.value = id;
+  updateRouteQuery(id);
+  const container = document.querySelector(".layout-content") as HTMLElement | null;
   if (container) {
     container.scrollTop = 0;
   }
-  nextTick(() => {
-    const c = getScrollContainer();
-    if (c) c.scrollTop = 0;
-  });
-}
-
-// Extracted Composable for Wheel Overscroll Engine
-const {
-  slideDirection,
-  pullOffset,
-  pullProgress,
-  isPullingNext,
-  isPullingPrev,
-  triggerTransition,
-  lockOverscroll
-} = useWheelOverscroll({
-  getContainer: getScrollContainer,
-  canGoNext,
-  canGoPrev,
-  onNext: () => {
-    if (nextModule.value) {
-      slideDirection.value = "next";
-      activeSectionId.value = nextModule.value.id;
-      updateRouteQuery(nextModule.value.id);
-      resetScrollToTop();
-    }
-  },
-  onPrev: () => {
-    if (prevModule.value) {
-      slideDirection.value = "prev";
-      activeSectionId.value = prevModule.value.id;
-      updateRouteQuery(prevModule.value.id);
-      resetScrollToTop();
-    }
-  }
-});
-
-function switchToSection(id: string, direction?: "next" | "prev") {
-  if (activeSectionId.value === id) return;
-  const oldIdx = navSections.findIndex((s) => s.id === activeSectionId.value);
-  const newIdx = navSections.findIndex((s) => s.id === id);
-
-  lockOverscroll(600);
-  slideDirection.value = direction || (newIdx > oldIdx ? "next" : "prev");
-  activeSectionId.value = id;
-  updateRouteQuery(id);
-  resetScrollToTop();
 }
 
 function handleTabClick(id: string) {
   switchToSection(id);
-}
-
-function handleSidebarTabClick(id: string) {
-  switchToSection(id);
-}
-
-function goToNextModule() {
-  if (!canGoNext.value || !nextModule.value) return;
-  switchToSection(nextModule.value.id, "next");
-}
-
-function goToPrevModule() {
-  if (!canGoPrev.value || !prevModule.value) return;
-  switchToSection(prevModule.value.id, "prev");
 }
 
 const savingConfig = ref(false);
@@ -936,43 +820,15 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
   padding: 22px;
 }
 
-/* Direction-Aware Page Slide Transitions */
-/* 1. Downward Slide (Next): leaves UP, enters from DOWN */
-.slide-down-page-leave-active,
-.slide-down-page-enter-active {
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.slide-down-page-leave-to {
-  opacity: 0;
-  transform: translateY(-20px) scale(0.995);
-}
-.slide-down-page-enter-from {
-  opacity: 0;
-  transform: translateY(24px) scale(0.995);
-}
-.slide-down-page-enter-to,
-.slide-down-page-leave-from {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+/* Clean Subtle Tab Fade Transition */
+.tab-fade-enter-active,
+.tab-fade-leave-active {
+  transition: opacity 0.15s ease;
 }
 
-/* 2. Upward Slide (Prev): leaves DOWN, enters from UP */
-.slide-up-page-leave-active,
-.slide-up-page-enter-active {
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.slide-up-page-leave-to {
+.tab-fade-enter-from,
+.tab-fade-leave-to {
   opacity: 0;
-  transform: translateY(20px) scale(0.995);
-}
-.slide-up-page-enter-from {
-  opacity: 0;
-  transform: translateY(-24px) scale(0.995);
-}
-.slide-up-page-enter-to,
-.slide-up-page-leave-from {
-  opacity: 1;
-  transform: translateY(0) scale(1);
 }
 
 /* Form sub-section styling inside cards */
