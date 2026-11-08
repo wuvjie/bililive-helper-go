@@ -43,7 +43,7 @@
                 {{ row.task === 'merge' ? '合并' : row.task === 'clean' ? '清理' : row.task === 'config' ? '配置' : '调度' }}
               </span>
               <span class="recent-who">
-                <span v-if="!row.streamer || row.streamer === '全局'" class="pill-scope-global">全局</span>
+                <span v-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">全局</span>
                 <span v-else class="streamer-text" :title="row.streamer">{{ row.streamer }}</span>
               </span>
               <span class="recent-action" :title="cleanDetailText(row.detail || formatDetail(row), row.task)">
@@ -206,10 +206,18 @@ function formatDetail(row: HistoryRecord): string {
 }
 
 .recent-who {
-  width: 82px;
+  width: 76px;
+  max-width: 76px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+}
+
+.scope-global-text {
+  font-size: 12px;
+  color: var(--stone);
+  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 .streamer-text {
@@ -219,6 +227,7 @@ function formatDetail(row: HistoryRecord): string {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 .recent-action {

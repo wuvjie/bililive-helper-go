@@ -272,22 +272,28 @@ html.dark .card-top-metric {
 }
 
 .bottom-health-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 14px;
   border-top: 1px dashed var(--hairline);
 }
 
 .health-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 12px;
   color: var(--slate);
-  padding: 3px 8px;
-  border-radius: var(--r-xs);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.03));
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--hairline);
+  box-sizing: border-box;
 }
 
 html.dark .health-pill {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 </style>

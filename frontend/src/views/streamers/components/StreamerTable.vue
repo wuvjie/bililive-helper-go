@@ -40,7 +40,7 @@
       <el-table-column
         prop="files"
         label="录制文件数"
-        width="130"
+        width="115"
         align="right"
         header-align="right"
         sortable
@@ -61,7 +61,7 @@
       <el-table-column
         prop="size_gb"
         label="磁盘占用"
-        width="140"
+        width="125"
         align="right"
         header-align="right"
         sortable
@@ -77,7 +77,7 @@
       <el-table-column
         prop="mtime"
         label="最新视频"
-        width="130"
+        width="120"
         align="right"
         header-align="right"
         sortable
@@ -103,7 +103,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="185" align="left" header-align="left">
+      <el-table-column label="操作" width="205" align="left" header-align="left">
         <template #default="{ row }">
           <div class="action-btn-group">
             <button class="ghost-action ghost-action-files" @click="$emit('open-drawer', row)">
@@ -243,7 +243,9 @@ function formatRelativeTime(ts: number, _tick?: number): string {
 .action-btn-group {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  white-space: nowrap;
+  flex-wrap: nowrap;
 }
 
 .ghost-action {
@@ -261,11 +263,18 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   cursor: pointer;
   transition: all 0.15s ease;
   line-height: 1.4;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .ghost-action-files {
   min-width: 95px;
   width: 95px;
+  box-sizing: border-box;
+}
+
+.ghost-action-rule {
+  min-width: 58px;
   box-sizing: border-box;
 }
 

@@ -50,7 +50,9 @@ function selectItem(val: string | number) {
   align-items: center;
   gap: 3px;
   background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
-  padding: 3px;
+  padding: 2px;
+  height: 32px;
+  box-sizing: border-box;
   border-radius: var(--r-md);
   border: 1px solid var(--hairline);
   user-select: none;
@@ -66,7 +68,9 @@ html.dark .filter-pills {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 0 10px;
+  height: 26px;
+  box-sizing: border-box;
   font-size: 12px;
   font-weight: 500;
   color: var(--slate);
@@ -76,7 +80,7 @@ html.dark .filter-pills {
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  line-height: 1.5;
+  line-height: 26px;
 }
 
 .filter-pill-btn:hover:not(.is-active) {

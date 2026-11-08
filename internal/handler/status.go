@@ -309,6 +309,9 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 	}
 	cfg := h.config.ToDTO()
 	folder := filepath.Join(cfg.TargetDir, streamer)
+	if abs, err := filepath.Abs(folder); err == nil {
+		folder = abs
+	}
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
 		failNotFound(c, fmt.Sprintf("主播 %s 的目录不存在", streamer))
 		return

@@ -176,7 +176,8 @@ async function openDrawer(row: StreamerInfo) {
 }
 
 async function handleCopyPath(row: StreamerFile) {
-  await copyToClipboard(row.name, `已复制录像文件名: ${row.name}`);
+  const fullPath = row.path || `${drawerStreamer.value}/${row.name}`;
+  await copyToClipboard(fullPath, `已复制实际文件物理路径: ${fullPath}`);
 }
 
 async function handleDeleteFile(row: StreamerFile) {

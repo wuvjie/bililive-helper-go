@@ -210,6 +210,16 @@ html.dark .workbench-action-bar {
   width: 100%;
 }
 
+.workbench-terminal-wrap :deep(.re-terminal) {
+  border: none !important;
+  border-radius: 0 0 var(--r-md) var(--r-md) !important;
+}
+
+.workbench-terminal-wrap :deep(.terminal-header) {
+  border-top: none !important;
+  border-radius: 0 !important;
+}
+
 .term-title-wrapper {
   display: flex;
   align-items: center;

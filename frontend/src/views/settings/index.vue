@@ -712,7 +712,7 @@ onUnmounted(() => {
   }
 }
 
-/* Sticky Sidebar (200px) */
+/* Sticky Sidebar (190px) */
 .settings-sidebar {
   width: 190px;
   flex-shrink: 0;
@@ -722,44 +722,41 @@ onUnmounted(() => {
 .sidebar-sticky-inner {
   display: flex;
   flex-direction: column;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--hairline, #e4e4e7);
-  border-radius: var(--r-md, 8px);
-  padding: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 .sidebar-divider {
   height: 1px;
   background: var(--hairline);
-  margin: 8px 4px;
+  margin: 12px 6px;
 }
 .sidebar-footer {
-  padding: 4px;
+  padding: 0 4px;
 }
 .sidebar-reset-btn {
   width: 100%;
-  height: 36px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--steel);
-  background: var(--surface-subtle, rgba(0, 0, 0, 0.02));
-  border: 1px dashed var(--hairline);
+  color: var(--stone);
+  background: transparent;
+  border: none;
   border-radius: var(--r-sm, 6px);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .sidebar-reset-btn:hover {
-  color: var(--primary, #059669);
-  border-color: var(--primary);
-  background: rgba(16, 185, 129, 0.06);
+  color: var(--charcoal);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
 }
 .reset-svg-ico {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
 }
 .sidebar-caption {
   font-size: 11px;
@@ -772,17 +769,17 @@ onUnmounted(() => {
 .settings-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 .nav-tab-btn {
   position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 40px;
-  padding: 0 14px;
+  height: 38px;
+  padding: 0 12px;
   border-radius: var(--r-sm, 6px);
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--slate, #64748b);
   font-size: 13px;
@@ -794,50 +791,51 @@ onUnmounted(() => {
 }
 .nav-tab-btn:hover {
   color: var(--charcoal);
-  background: var(--surface-subtle, rgba(0, 0, 0, 0.04));
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
 }
 .nav-tab-btn.active {
-  color: var(--color-primary, #3b82f6);
-  background: var(--highlight, rgba(59, 130, 246, 0.08));
+  color: var(--ink);
+  background: var(--surface-card, #ffffff);
+  border-color: var(--hairline);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   font-weight: 600;
 }
 .nav-active-pill {
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  background: var(--color-primary, #3b82f6);
-  border-radius: 0 2px 2px 0;
+  display: none;
 }
 .tab-svg-ico {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
 }
 
-/* Right Content Main Stream (Uniform 100% width, no width mismatches) */
+/* Right Content Main Stream */
 .settings-content {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 }
 
-/* Unified Section Card (Every section looks identical in width, radius & borders) */
+/* Unified Section Card */
 .settings-section-card {
   background: var(--surface-card, #ffffff);
   border: 1px solid var(--hairline, #e4e4e7);
-  border-radius: 10px;
+  border-radius: var(--r-md, 8px);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.settings-section-card:hover {
+  box-shadow: var(--shadow-card-hover);
 }
 
 .section-card-header {
-  padding: 14px 22px;
+  padding: 16px 22px;
   border-bottom: 1px solid var(--hairline, #e4e4e7);
-  background: var(--surface-subtle, rgba(0, 0, 0, 0.015));
+  background: transparent;
   display: flex;
   justify-content: space-between;
   align-items: center;

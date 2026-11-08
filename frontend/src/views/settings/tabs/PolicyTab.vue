@@ -77,7 +77,7 @@
           <!-- 空间释放冲程预期摘要标 -->
           <div class="stroke-summary-banner">
             <div class="stroke-summary-left">
-              <svg class="stroke-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <svg class="stroke-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               <span class="stroke-label">单次清理冲程：</span>
               <span class="stroke-val-highlight">预计释放约 {{ bufferPct }}%</span>
               <span v-if="bufferGB" class="stroke-gb-badge">≈ {{ bufferGB }} GB</span>
@@ -345,6 +345,54 @@ function addTag(keyword: string) {
 
 .section-icon {
   font-size: 16px;
+}
+
+.stroke-summary-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.025));
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm, 6px);
+  padding: 8px 14px;
+  margin: 6px 0 16px 0;
+  font-size: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stroke-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stroke-svg {
+  width: 14px !important;
+  height: 14px !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+  color: var(--primary, #059669);
+  flex-shrink: 0;
+}
+.stroke-label {
+  color: var(--steel);
+}
+.stroke-val-highlight {
+  font-weight: 600;
+  color: var(--charcoal);
+  font-family: var(--font-mono);
+}
+.stroke-gb-badge {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+}
+.stroke-range-text {
+  font-size: 11px;
+  color: var(--stone);
+  font-family: var(--font-mono);
 }
 
 .section-body {

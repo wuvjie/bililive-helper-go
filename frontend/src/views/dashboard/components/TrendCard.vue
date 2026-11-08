@@ -82,7 +82,7 @@ const maxBytes = computed(() => {
 
 function barHeight(b: number): number {
   if (!b || b <= 0) return 4;
-  return Math.max(6, Math.min(100, Math.round((b / maxBytes.value) * 100)));
+  return Math.max(6, Math.min(130, Math.round((b / maxBytes.value) * 130)));
 }
 
 function getMergeTooltip(day: DayStats): string {
@@ -140,7 +140,7 @@ function getCleanTooltip(day: DayStats): string {
   display: flex;
   align-items: flex-end;
   justify-content: space-around;
-  height: 140px;
+  height: 170px;
   padding: 10px 0;
   border-bottom: 1px solid var(--hairline);
 }
@@ -157,7 +157,7 @@ function getCleanTooltip(day: DayStats): string {
   display: flex;
   align-items: flex-end;
   gap: 4px;
-  height: 100px;
+  height: 130px;
 }
 
 .trend-bar {
@@ -187,17 +187,17 @@ function getCleanTooltip(day: DayStats): string {
 }
 
 .trend-empty {
-  padding: 20px 0;
+  padding: 30px 0;
 }
 
 .trend-legend {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
+  justify-content: center;
+  gap: 24px;
   font-size: 12px;
   color: var(--slate);
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .trend-legend span {

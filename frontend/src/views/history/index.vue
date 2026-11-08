@@ -31,8 +31,7 @@
                   v-model="filterStreamer"
                   placeholder="搜索主播名..."
                   clearable
-                  size="small"
-                  style="width: 180px"
+                  style="width: 190px"
                   @input="onStreamerSearch"
                   @clear="loadHistory(1)"
                 />
@@ -392,6 +391,11 @@ onActivated(() => {
   align-items: center;
 }
 
+.search-input-wrap :deep(.el-input__wrapper) {
+  height: 32px;
+  line-height: 32px;
+}
+
 .search-kbd {
   position: absolute;
   right: 8px;
@@ -404,7 +408,9 @@ onActivated(() => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 12px;
   border-radius: var(--r-sm);
   font-size: 12px;
   font-weight: 500;
@@ -413,6 +419,7 @@ onActivated(() => {
   color: var(--slate);
   cursor: pointer;
   transition: all 0.15s ease;
+  line-height: 30px;
 }
 
 .btn-clear-history:hover {
