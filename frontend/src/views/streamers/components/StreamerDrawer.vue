@@ -12,27 +12,6 @@
           v-model="activeTab"
           :items="navItems"
         />
-
-        <div class="drawer-header-actions">
-          <button
-            class="btn-drawer-merge"
-            :disabled="loading || files.length === 0 || isMerging"
-            @click="handleMergeClick"
-            title="一键触发合并该主播名下的全部录像分片"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="3" rx="2"/>
-              <path d="M7 3v18"/>
-              <path d="M17 3v18"/>
-              <path d="M3 7.5h4"/>
-              <path d="M3 12h18"/>
-              <path d="M3 16.5h4"/>
-              <path d="M17 7.5h4"/>
-              <path d="M17 16.5h4"/>
-            </svg>
-            <span>合并录像</span>
-          </button>
-        </div>
       </div>
 
       <div class="table-responsive-wrapper">
@@ -151,16 +130,6 @@ import type { StreamerFile } from "@/api/types";
 import UnderlineNav, { type UnderlineNavItem } from "@/components/common/UnderlineNav.vue";
 
 const activeTab = ref<string>("all");
-const isMerging = ref(false);
-
-function handleMergeClick() {
-  if (isMerging.value) return;
-  isMerging.value = true;
-  emit("merge", props.streamer);
-  setTimeout(() => {
-    isMerging.value = false;
-  }, 1000);
-}
 
 const props = defineProps<{
   visible: boolean;
@@ -174,7 +143,6 @@ const emit = defineEmits<{
   (e: "update:visible", val: boolean): void;
   (e: "play", file: StreamerFile): void;
   (e: "delete", file: StreamerFile): void;
-  (e: "merge", streamer: string): void;
 }>();
 
 const mergedCount = computed(() => props.files.filter(f => f.is_merged).length);
@@ -235,31 +203,7 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   margin-bottom: -4px;
 }
 
-.btn-drawer-merge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: var(--r-sm);
-  font-size: 12px;
-  font-weight: 500;
-  background: transparent;
-  border: none;
-  color: var(--primary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
 
-.btn-drawer-merge:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-  color: var(--primary-hover, #1d4ed8);
-}
-
-.btn-drawer-merge:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
 
 .drawer-sub {
   font-size: 13px;

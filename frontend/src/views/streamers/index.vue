@@ -78,7 +78,6 @@
       :tick="tick"
       @play="handlePlay"
       @delete="handleDeleteFile"
-      @merge="handleMergeStreamer"
     />
 
     <!-- 在线视频播放预览弹窗 -->
@@ -201,11 +200,6 @@ async function handleDeleteFile(row: StreamerFile) {
 const playerVisible = ref(false);
 const playFileName = ref("");
 const playUrl = ref("");
-
-function handleMergeStreamer(name: string) {
-  drawerVisible.value = false;
-  router.push({ path: "/tasks", query: { streamer: name, auto: "merge" } });
-}
 
 function handlePlay(file: StreamerFile) {
   if (/\.(flv|ts)$/i.test(file.name)) {
