@@ -1,13 +1,14 @@
 <template>
   <div class="schedule-tab" v-loading="loading">
-    <!-- Dual Schedule Plans (2-Column Responsive Grid) -->
-    <div class="schedule-two-col-grid">
-      <!-- Card 1: 自动分片合并计划 -->
-      <div class="setting-group sched-panel-card">
-        <div class="subhead">
-          <h3 class="subhead-title">自动分片合并计划</h3>
+    <!-- Card 1: 自动分片合并计划 -->
+    <div class="setting-group-card">
+      <div class="group-card-header">
+        <div class="group-header-text">
+          <h3 class="group-title">自动分片合并计划</h3>
+          <p class="group-desc">主调度器周期性激活录像分片合并流水线，将零散切片拼合为完整录播。</p>
         </div>
-
+      </div>
+      <div class="group-card-body">
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-title">
@@ -49,13 +50,17 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Card 2: 自动磁盘巡检与清理计划 -->
-      <div class="setting-group sched-panel-card">
-        <div class="subhead">
-          <h3 class="subhead-title">自动磁盘巡检与清理计划</h3>
+    <!-- Card 2: 自动磁盘巡检与清理计划 -->
+    <div class="setting-group-card">
+      <div class="group-card-header">
+        <div class="group-header-text">
+          <h3 class="group-title">自动磁盘巡检与清理计划</h3>
+          <p class="group-desc">巡检器定时扫描磁盘可用水位，若触达警戒线则自动启动清理冲程。</p>
         </div>
-
+      </div>
+      <div class="group-card-body">
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-title">
@@ -99,67 +104,71 @@
       </div>
     </div>
 
-    <!-- Group 3: 免打扰避让时段 -->
-    <div class="setting-group">
-      <div class="subhead">
-        <h3 class="subhead-title">免打扰避让时段</h3>
+    <!-- Card 3: 免打扰避让时段 -->
+    <div class="setting-group-card">
+      <div class="group-card-header">
+        <div class="group-header-text">
+          <h3 class="group-title">免打扰避让时段</h3>
+          <p class="group-desc">在此设定时段内自动暂停合并与清理，其余时段恢复正常计划调度（支持跨午夜）。</p>
+        </div>
       </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">
-            <span>避让时间范围</span>
-            <el-tooltip content="在此设定时段内自动暂停合并与清理，其余时段恢复正常计划调度（支持跨午夜）" placement="top" :show-after="300">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
+      <div class="group-card-body">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-title">
+              <span>避让时间范围</span>
+              <el-tooltip content="避让时段内主调度器进入休眠，不抢占 CPU 与磁盘 I/O 资源" placement="top" :show-after="300">
+                <span class="label-help-ico">?</span>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="setting-control">
+            <div class="time-range-row">
+              <el-time-picker
+                :model-value="backupStart"
+                format="HH:mm"
+                value-format="HH:mm"
+                placeholder="开始时间"
+                class="time-picker-box"
+                @update:model-value="emit('update:backupStart', $event ?? '')"
+              />
+              <span class="time-sep">至</span>
+              <el-time-picker
+                :model-value="backupEnd"
+                format="HH:mm"
+                value-format="HH:mm"
+                placeholder="结束时间"
+                class="time-picker-box"
+                @update:model-value="emit('update:backupEnd', $event ?? '')"
+              />
+            </div>
           </div>
         </div>
-        <div class="setting-control">
-          <div class="time-range-row">
-            <el-time-picker
-              :model-value="backupStart"
-              format="HH:mm"
-              value-format="HH:mm"
-              placeholder="开始时间"
-              class="time-picker-box"
-              @update:model-value="emit('update:backupStart', $event ?? '')"
-            />
-            <span class="time-sep">至</span>
-            <el-time-picker
-              :model-value="backupEnd"
-              format="HH:mm"
-              value-format="HH:mm"
-              placeholder="结束时间"
-              class="time-picker-box"
-              @update:model-value="emit('update:backupEnd', $event ?? '')"
-            />
-          </div>
-        </div>
-      </div>
 
-      <!-- 避让窗口实时状态提示条 -->
-      <div v-if="backupStart && backupEnd" class="schedule-status-banner">
-        <div class="status-banner-left">
-          <svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <span class="status-text">
-            避让保护已激活：每天 <strong>{{ backupStart }}</strong> 至 <strong>{{ backupEnd }}</strong> 自动暂停合并与清理
-          </span>
+        <!-- 避让窗口实时状态提示条 -->
+        <div v-if="backupStart && backupEnd" class="schedule-status-banner">
+          <div class="status-banner-left">
+            <svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span class="status-text">
+              每日 <strong>{{ backupStart }}</strong> 至 <strong>{{ backupEnd }}</strong> 处于静默避让窗口
+            </span>
+          </div>
+          <span class="status-badge">定时避让生效中</span>
         </div>
-        <span class="status-badge">定时避让生效中</span>
-      </div>
-      <div v-else class="schedule-status-banner status-banner-neutral">
-        <div class="status-banner-left">
-          <svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <span class="status-text">全天候调度运行中（未设置避让时段）</span>
+        <div v-else class="schedule-status-banner status-banner-neutral">
+          <div class="status-banner-left">
+            <svg class="status-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span class="status-text">全天候调度运行中（未设置避让时段）</span>
+          </div>
+          <span class="status-badge-neutral">24h 持续作业</span>
         </div>
-        <span class="status-badge-neutral">24h 持续作业</span>
       </div>
     </div>
   </div>
@@ -195,38 +204,97 @@ const emit = defineEmits<{
   flex-direction: column;
 }
 
-.setting-group {
+/* Unified Group Card (GitHub Primer Section Card) */
+.setting-group-card {
+  background: var(--color-canvas-default, #ffffff);
+  border: 1px solid var(--color-border-subtle, #d0d7de);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.setting-group-card:hover {
+  border-color: var(--color-border-default, #afb8c1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+html.dark .setting-group-card {
+  background: var(--color-canvas-subtle, #161b22);
+  border-color: #30363d;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .setting-group-card:hover {
+  border-color: #484f58;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.group-card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
+  background: var(--color-canvas-subtle, #f6f8fa);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+html.dark .group-card-header {
+  border-bottom-color: #30363d;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.group-header-text {
   display: flex;
   flex-direction: column;
-}
-.setting-group + .setting-group {
-  margin-top: 32px;
+  gap: 3px;
 }
 
-/* GitHub Primer Subhead (子分类标题) */
-.subhead {
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--hairline);
-}
-
-.subhead-title {
-  margin: 0;
-  font-size: 15px;
+.group-title {
+  font-size: 14px;
   font-weight: 600;
-  color: var(--charcoal);
-  letter-spacing: -0.2px;
+  color: var(--color-fg-default, #24292f);
+  margin: 0;
 }
 
-/* Setting Rows - 单行清爽布局与渐进式展示 */
+html.dark .group-title {
+  color: #f0f6fc;
+}
+
+.group-desc {
+  font-size: 12px;
+  color: var(--color-fg-muted, #57606a);
+  margin: 0;
+  line-height: 1.4;
+}
+
+html.dark .group-desc {
+  color: #8b949e;
+}
+
+.group-card-body {
+  padding: 4px 20px 8px;
+}
+
+/* Setting Rows */
 .setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 14px 0;
   gap: 20px;
-  min-height: 40px;
+  min-height: 44px;
   box-sizing: border-box;
+}
+
+.setting-row:not(:last-child) {
+  border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
+}
+
+html.dark .setting-row:not(:last-child) {
+  border-bottom-color: #21262d;
 }
 
 .setting-info {
@@ -242,8 +310,11 @@ const emit = defineEmits<{
   gap: 6px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--charcoal);
-  letter-spacing: -0.1px;
+  color: var(--color-fg-default, #24292f);
+}
+
+html.dark .setting-title {
+  color: #c9d1d9;
 }
 
 .label-help-ico {
@@ -255,15 +326,15 @@ const emit = defineEmits<{
   border-radius: 50%;
   font-size: 10px;
   font-weight: 600;
-  background: var(--hairline);
-  color: var(--slate);
+  background: var(--hairline, #e4e4e7);
+  color: var(--steel, #71717a);
   cursor: help;
   transition: all 0.15s ease;
   user-select: none;
 }
 
 .label-help-ico:hover {
-  background: var(--primary);
+  background: var(--color-accent-fg, #0969da);
   color: #ffffff;
 }
 
@@ -278,15 +349,17 @@ const emit = defineEmits<{
   width: 120px;
   height: 32px !important;
   line-height: 32px !important;
-  :deep(.el-input__wrapper) {
-    height: 32px !important;
-    box-sizing: border-box !important;
-  }
-  :deep(.el-input-number__decrease),
-  :deep(.el-input-number__increase) {
-    height: 30px !important;
-    line-height: 30px !important;
-  }
+}
+
+:deep(.compact-counter .el-input__wrapper) {
+  height: 32px !important;
+  box-sizing: border-box !important;
+}
+
+:deep(.compact-counter .el-input-number__decrease),
+:deep(.compact-counter .el-input-number__increase) {
+  height: 30px !important;
+  line-height: 30px !important;
 }
 
 .inline-unit-row {
@@ -297,130 +370,104 @@ const emit = defineEmits<{
 
 .unit-text {
   font-size: 12px;
-  color: var(--steel);
+  color: var(--color-fg-muted, #57606a);
   font-weight: 500;
   white-space: nowrap;
-  min-width: 28px;
-  text-align: left;
+  min-width: 24px;
 }
 
+html.dark .unit-text {
+  color: #8b949e;
+}
+
+/* Time Picker Range */
 .time-range-row {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .time-picker-box {
-  width: 120px !important;
+  width: 124px !important;
 }
 
 .time-sep {
-  font-size: 12px;
-  color: var(--steel);
+  font-size: 13px;
+  color: var(--color-fg-muted, #57606a);
+  font-weight: 500;
 }
 
 /* Schedule Status Banner */
 .schedule-status-banner {
+  margin: 12px 0 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: rgba(9, 105, 218, 0.06);
+  border: 1px solid rgba(9, 105, 218, 0.18);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--primary, #2563eb) 20%, transparent);
-  border-radius: var(--r-sm, 6px);
-  padding: 10px 14px;
-  margin-top: 14px;
-  gap: 10px;
+  gap: 12px;
 }
+
+html.dark .schedule-status-banner {
+  background: rgba(56, 139, 253, 0.1);
+  border-color: rgba(56, 139, 253, 0.25);
+}
+
+.status-banner-neutral {
+  background: var(--color-canvas-subtle, #f6f8fa);
+  border-color: var(--color-border-subtle, #d0d7de);
+}
+
+html.dark .status-banner-neutral {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: #30363d;
+}
+
 .status-banner-left {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  color: var(--charcoal, #27272a);
+  font-size: 12.5px;
+  color: var(--color-fg-default, #24292f);
 }
+
+html.dark .status-banner-left {
+  color: #c9d1d9;
+}
+
 .status-svg {
-  width: 14px;
-  height: 14px;
-  color: var(--primary, #2563eb);
+  width: 15px;
+  height: 15px;
+  color: var(--color-accent-fg, #0969da);
   flex-shrink: 0;
 }
+
+.status-banner-neutral .status-svg {
+  color: var(--color-fg-muted, #57606a);
+}
+
 .status-badge {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--primary, #2563eb);
-  background: color-mix(in srgb, var(--primary, #2563eb) 12%, transparent);
   padding: 2px 8px;
-  border-radius: var(--r-xs, 4px);
-  white-space: nowrap;
+  border-radius: 12px;
+  background: #0969da;
+  color: #ffffff;
+  font-weight: 500;
 }
-.status-banner-neutral {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.025));
-  border-color: var(--hairline, #e4e4e7);
-}
-.status-banner-neutral .status-svg {
-  color: var(--stone, #a1a1aa);
-}
+
 .status-badge-neutral {
   font-size: 11px;
-  font-weight: 500;
-  color: var(--steel, #71717a);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.05));
   padding: 2px 8px;
-  border-radius: var(--r-xs, 4px);
-  white-space: nowrap;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-fg-muted, #57606a);
+  font-weight: 500;
 }
-html.dark .schedule-status-banner {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.25);
-}
-html.dark .status-banner-left {
-  color: #f4f4f5;
-}
-html.dark .status-badge {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-}
-html.dark .status-banner-neutral {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.08);
-}
+
 html.dark .status-badge-neutral {
   background: rgba(255, 255, 255, 0.08);
-  color: #a1a1aa;
+  color: #8b949e;
 }
-
-.schedule-two-col-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.sched-panel-card {
-  background: var(--color-canvas-subtle, #f6f8fa);
-  border: 1px solid var(--color-border-subtle, #d0d7de);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 0 !important;
-
-  .subhead {
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--color-border-subtle, #d0d7de);
-  }
-}
-
-html.dark .sched-panel-card {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: #30363d;
-
-  .subhead {
-    border-bottom-color: #30363d;
-  }
-}
-
 </style>

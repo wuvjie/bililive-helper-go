@@ -73,7 +73,6 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
 
   function handleWheel(e: WheelEvent) {
     if (isTransitioning.value) {
-      e.preventDefault();
       return;
     }
 
@@ -81,11 +80,11 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
     if (!container) return;
 
     const { scrollTop, clientHeight, scrollHeight } = container;
-    const isScrollable = scrollHeight > clientHeight + 40;
-    const isAtBottom = isScrollable && (scrollTop + clientHeight >= scrollHeight - 8);
-    const isAtTop = isScrollable && (scrollTop <= 8);
+    // 无论是超长内容滚到底/顶，还是内容短于视口未出现滚动条，均能准确响应滚动翻页
+    const isAtTop = scrollTop <= 12 || scrollHeight <= clientHeight;
+    const isAtBottom = (scrollTop + clientHeight >= scrollHeight - 12) || scrollHeight <= clientHeight;
 
-    // Downward wheel at bottom -> Pull towards next
+    // 向下滚动到底部 -> 触发切到下一模块
     if (e.deltaY > 0 && isAtBottom) {
       if (resolveCanNext()) {
         accumulatedDeltaYDown += e.deltaY;
@@ -95,14 +94,13 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
         scheduleAccumulatorReset();
 
         if (accumulatedDeltaYDown >= threshold) {
-          e.preventDefault();
           accumulatedDeltaYDown = 0;
           accumulatedDeltaYUp = 0;
           triggerTransition("next");
         }
       }
     }
-    // Upward wheel at top -> Pull towards prev
+    // 向上滚动到顶部 -> 触发切到上一模块
     else if (e.deltaY < 0 && isAtTop) {
       if (resolveCanPrev()) {
         accumulatedDeltaYUp += Math.abs(e.deltaY);
@@ -112,7 +110,6 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
         scheduleAccumulatorReset();
 
         if (accumulatedDeltaYUp >= threshold) {
-          e.preventDefault();
           accumulatedDeltaYDown = 0;
           accumulatedDeltaYUp = 0;
           triggerTransition("prev");
@@ -132,7 +129,7 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
     const container = getContainer();
     if (container) {
       container.removeEventListener("wheel", handleWheel);
-      container.addEventListener("wheel", handleWheel, { passive: false });
+      container.addEventListener("wheel", handleWheel, { passive: true });
     }
   }
 

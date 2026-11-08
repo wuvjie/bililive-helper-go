@@ -23,126 +23,104 @@
             <span v-if="item.id === 'schedule' && isScheduleDirty()" class="nav-tab-dirty-dot" title="包含未保存的调度更改" />
           </button>
         </nav>
+
+        <div class="top-nav-actions">
+          <button
+            v-if="activeSectionId === 'policy'"
+            type="button"
+            class="top-preset-action-btn"
+            @click="handleResetPolicyDefaults"
+            title="将全局合并与磁盘清理策略参数恢复为官方推荐预设"
+          >
+            <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>恢复策略预设</span>
+          </button>
+          <button
+            v-else-if="activeSectionId === 'schedule'"
+            type="button"
+            class="top-preset-action-btn"
+            @click="handleResetScheduleDefaults"
+            title="将定时调度运行周期与避让窗口恢复为官方推荐预设"
+          >
+            <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>恢复调度预设</span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Main Full-Width Content Stream with Directional Turn & Elastic Resistance -->
-    <main
-      class="settings-content"
-      ref="contentRef"
-      :style="{
-        transform: pullOffset ? `translateY(${pullOffset}px)` : '',
-        transition: pullOffset ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
-      }"
-    >
-        <Transition :name="slideDirection === 'next' ? 'slide-down-page' : 'slide-up-page'" mode="out-in">
-          <!-- 1. 全局策略 -->
-          <section
-            v-if="activeSectionId === 'policy'"
-            key="policy"
-            id="section-policy"
-            class="settings-section-card"
-          >
-            <div class="section-card-header">
-              <div class="section-header-title-row">
-                <div class="ui-icon-box icon-box-emerald">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                </div>
-                <h2 class="section-main-title">全局策略</h2>
-              </div>
-              <button
-                type="button"
-                class="section-header-action-btn"
-                @click="handleResetPolicyDefaults"
-                title="将全局合并与磁盘清理策略参数恢复为官方推荐预设"
-              >
-                <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                <span>恢复策略预设</span>
-              </button>
-            </div>
-            <div class="section-card-body" v-loading="configLoading">
-              <PolicyTab
-                :config="config"
-                :saving="savingConfig"
-                :total-disk-gb="totalDiskGb"
-                @update:config="config = $event"
-              />
-            </div>
-            <ModuleCardFooter
-              :sections="navSections"
-              :active-id="activeSectionId"
-              :current-index="currentModuleIndex"
-              :current-label="currentModuleLabel"
-              :prev-section="prevModule"
-              :next-section="nextModule"
-              :is-pulling-next="isPullingNext"
-              :is-pulling-prev="isPullingPrev"
-              :pull-progress="pullProgress"
-              @switch="handleSidebarTabClick"
-              @next="goToNextModule"
-              @prev="goToPrevModule"
-              @loop="switchToSection('policy', 'prev')"
+    <!-- Main Full-Width Content Stream (Native Smooth Flow) -->
+    <main class="settings-content" ref="contentRef">
+      <Transition :name="slideDirection === 'next' ? 'slide-down-page' : 'slide-up-page'" mode="out-in">
+        <!-- 1. 全局策略 -->
+        <div
+          v-if="activeSectionId === 'policy'"
+          key="policy"
+          id="section-policy"
+          class="settings-module-wrap"
+        >
+          <div class="module-body" v-loading="configLoading">
+            <PolicyTab
+              :config="config"
+              :saving="savingConfig"
+              :total-disk-gb="totalDiskGb"
+              @update:config="config = $event"
             />
-          </section>
+          </div>
+          <ModuleCardFooter
+            :sections="navSections"
+            :active-id="activeSectionId"
+            :current-index="currentModuleIndex"
+            :current-label="currentModuleLabel"
+            :prev-section="prevModule"
+            :next-section="nextModule"
+            :is-pulling-next="isPullingNext"
+            :is-pulling-prev="isPullingPrev"
+            :pull-progress="pullProgress"
+            @switch="handleSidebarTabClick"
+            @next="goToNextModule"
+            @prev="goToPrevModule"
+            @loop="switchToSection('policy', 'prev')"
+          />
+        </div>
 
-          <!-- 2. 定时调度 -->
-          <section
-            v-else-if="activeSectionId === 'schedule'"
-            key="schedule"
-            id="section-schedule"
-            class="settings-section-card"
-          >
-            <div class="section-card-header">
-              <div class="section-header-title-row">
-                <div class="ui-icon-box icon-box-blue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </div>
-                <h2 class="section-main-title">定时调度</h2>
-              </div>
-              <button
-                type="button"
-                class="section-header-action-btn"
-                @click="handleResetScheduleDefaults"
-                title="将定时调度运行周期与避让窗口恢复为官方推荐预设"
-              >
-                <svg class="reset-action-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                <span>恢复调度预设</span>
-              </button>
-            </div>
-            <div class="section-card-body" v-loading="scheduleLoading">
-              <ScheduleTab
-                :form="scheduleForm"
-                :backup-start="backupStart"
-                :backup-end="backupEnd"
-                :saving="savingSchedule"
-                :loading="scheduleLoading"
-                @update:form="Object.assign(scheduleForm, $event)"
-                @update:backup-start="backupStart = $event"
-                @update:backup-end="backupEnd = $event"
-              />
-            </div>
-            <ModuleCardFooter
-              :sections="navSections"
-              :active-id="activeSectionId"
-              :current-index="currentModuleIndex"
-              :current-label="currentModuleLabel"
-              :prev-section="prevModule"
-              :next-section="nextModule"
-              :is-pulling-next="isPullingNext"
-              :is-pulling-prev="isPullingPrev"
-              :pull-progress="pullProgress"
-              @switch="handleSidebarTabClick"
-              @next="goToNextModule"
-              @prev="goToPrevModule"
-              @loop="switchToSection('policy', 'prev')"
+        <!-- 2. 定时调度 -->
+        <div
+          v-else-if="activeSectionId === 'schedule'"
+          key="schedule"
+          id="section-schedule"
+          class="settings-module-wrap"
+        >
+          <div class="module-body" v-loading="scheduleLoading">
+            <ScheduleTab
+              :form="scheduleForm"
+              :backup-start="backupStart"
+              :backup-end="backupEnd"
+              :saving="savingSchedule"
+              :loading="scheduleLoading"
+              @update:form="Object.assign(scheduleForm, $event)"
+              @update:backup-start="backupStart = $event"
+              @update:backup-end="backupEnd = $event"
             />
-          </section>
-
-
-
-          
-        </Transition>
-      </main>
+          </div>
+          <ModuleCardFooter
+            :sections="navSections"
+            :active-id="activeSectionId"
+            :current-index="currentModuleIndex"
+            :current-label="currentModuleLabel"
+            :prev-section="prevModule"
+            :next-section="nextModule"
+            :is-pulling-next="isPullingNext"
+            :is-pulling-prev="isPullingPrev"
+            :pull-progress="pullProgress"
+            @switch="handleSidebarTabClick"
+            @next="goToNextModule"
+            @prev="goToPrevModule"
+            @loop="switchToSection('policy', 'prev')"
+          />
+        </div>
+      </Transition>
+    </main>
 
     <!-- Floating Sticky Save Bar (吸底浮动保存栏) -->
     <transition name="save-bar-slide">
@@ -703,11 +681,73 @@ onMounted(() => {
 .settings-top-nav-bar {
   position: sticky;
   top: 0;
-  z-index: 15;
-  background: var(--canvas);
-  border-bottom: 1px solid var(--hairline);
-  margin-bottom: 22px;
-  padding-top: 2px;
+  z-index: 20;
+  background: color-mix(in srgb, var(--canvas, #ffffff) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--hairline, #e4e4e7);
+  margin-bottom: 24px;
+}
+
+html.dark .settings-top-nav-bar {
+  background: color-mix(in srgb, var(--canvas, #0d1117) 88%, transparent);
+  border-bottom-color: #30363d;
+}
+
+.top-nav-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.top-nav-actions {
+  display: flex;
+  align-items: center;
+}
+
+.top-preset-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--steel, #71717a);
+  background: transparent;
+  border: 1px solid var(--hairline, #e4e4e7);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  .reset-action-svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.25s ease;
+  }
+
+  &:hover {
+    color: var(--primary, #0969da);
+    background: var(--surface-card, #f6f8fa);
+    border-color: var(--primary, #0969da);
+
+    .reset-action-svg {
+      transform: rotate(-45deg);
+    }
+  }
+}
+
+html.dark .top-preset-action-btn {
+  color: #8b949e;
+  border-color: #30363d;
+
+  &:hover {
+    color: #58a6ff;
+    background: #21262d;
+    border-color: #58a6ff;
+  }
 }
 
 .top-nav-inner {
@@ -808,11 +848,15 @@ onMounted(() => {
 /* Settings Content Main Stream */
 .settings-content {
   width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
   min-width: 0;
+}
+
+.settings-module-wrap {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  transform-origin: center top;
+  gap: 20px;
 }
 
 /* Unified Section Card */
