@@ -1,8 +1,13 @@
 # Baseline
 
 - **v3.8.0** (Current Active):
-  - Git Commits: `5d25259` ~ `HEAD` (`c2bfa1d` / `068916e`)
+  - Git Commits: `5d25259` ~ `HEAD` (`62f44f8` / `a3460e5`)
   - Release Highlights:
+    - **盘古之白与微指标排版工效全面规范化 (Pangu Spacing & Micro-Metric Typography Alignment)**：
+      - 彻底修复主播管理表格「磁盘占用」列中数字与 `GB` 单位紧密连体（`12.34GB`）以及「录像数量」与 `个` 贴合的排版失范缺陷；
+      - 将 `.data-block` 规范为 `inline-flex; align-items: baseline; gap: 4px;`，并将 `.unit-lbl`（字号 11px、字重 500、字体 `var(--font-sans)`）与 `.mono-val`（字号 13px、字重 600、等宽数字 `tabular-nums`）确立为全局标准微指标排版类；
+      - 主播管理顶部元数据徽标重构为弹性分词排版，`.meta-item` 统一注入 4px 盘古间隙，彻底告别 2px 过窄挤压；
+      - 历史记录执行耗时统一规范为中文语义与标准半角空格（如 `${row.duration} 秒`），概览大盘指标行统一对齐 4px 栅格间距。
     - **前端死代码彻底清洗、逻辑去重与严格类型硬化 (Dead CSS Purge, Load Deduplication & Strict TypeScript Hardening)**：
       - 对全部 Vue 视图与组件进行系统级死代码审计，彻底清除所有孤立无引用的 Scoped CSS 类选择器（`.nav-breadcrumb`, `.nav-icon`, `.control-unit-group`, `.drawer-sub`, `.rule-desc`, `.label-help-ico`, `.title-text-group`, `.sched-policy-meta`, `.footer-left-info`, `.header-actions`, `.action-retry` 等），实现样式表零死重；
       - 重构系统概览大盘 `dashboard/index.vue` 的 `loadData(isInitial)` 逻辑，消除 `onMounted` 与 `onActivated` 之间的重复请求模板代码，统一请求生命周期；
