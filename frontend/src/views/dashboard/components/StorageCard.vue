@@ -54,12 +54,20 @@
       </div>
 
       <div class="bottom-health-bar">
-        <span class="health-pill">
-          近7天产出: <strong class="mono-val">{{ stats?.daily_output_gb?.toFixed(1) || 0 }}</strong> GB/天
-        </span>
-        <span class="health-pill" :class="{ 'health-pill-warn': (stats?.days_until_full || 999) < 7 }">
-          余量预估: <strong class="mono-val">{{ (stats?.days_until_full && stats?.days_until_full > 0) ? stats.days_until_full.toFixed(0) + ' 天' : '充足' }}</strong>
-        </span>
+        <div class="health-cell">
+          <span class="health-cell-label">近 7 天产出</span>
+          <span class="health-cell-val mono-val">
+            <strong>{{ stats?.daily_output_gb?.toFixed(1) || 0 }}</strong>
+            <span class="unit-lbl">GB/天</span>
+          </span>
+        </div>
+        <div class="health-cell" :class="{ 'health-cell-warn': (stats?.days_until_full || 999) < 7 }">
+          <span class="health-cell-label">余量预估</span>
+          <span class="health-cell-val mono-val">
+            <strong>{{ (stats?.days_until_full && stats?.days_until_full > 0) ? stats.days_until_full.toFixed(0) : '充足' }}</strong>
+            <span v-if="stats?.days_until_full && stats?.days_until_full > 0" class="unit-lbl">天</span>
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -194,12 +202,10 @@ html.dark .card-top-metric {
   border-top: 1px dashed var(--hairline);
 }
 
-.health-pill {
+.health-cell {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--slate);
+  flex-direction: column;
+  gap: 4px;
   padding: 8px 12px;
   border-radius: var(--r-sm);
   background: var(--surface-secondary, rgba(0, 0, 0, 0.025));
@@ -207,20 +213,52 @@ html.dark .card-top-metric {
   box-sizing: border-box;
 }
 
-html.dark .health-pill {
+.health-cell-label {
+  font-size: 11px;
+  color: var(--stone);
+  font-weight: 500;
+}
+
+.health-cell-val {
+  font-size: 13px;
+  color: var(--charcoal);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.health-cell-val strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.health-cell-val .unit-lbl {
+  font-size: 11px;
+  color: var(--stone);
+  font-weight: 400;
+}
+
+.health-cell-warn {
+  background: #fdf5f0;
+  border-color: #f7e1d2;
+}
+
+.health-cell-warn .health-cell-label {
+  color: #b45309;
+}
+
+.health-cell-warn .health-cell-val strong {
+  color: #d9730d;
+}
+
+html.dark .health-cell {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-.health-pill-warn {
-  background: #fdf5f0;
-  border-color: #f7e1d2;
-  color: #d9730d;
-}
-
-html.dark .health-pill-warn {
+html.dark .health-cell-warn {
   background: rgba(217, 115, 13, 0.15);
   border-color: rgba(217, 115, 13, 0.3);
-  color: #fb923c;
 }
 </style>

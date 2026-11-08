@@ -103,17 +103,16 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="205" align="left" header-align="left">
+      <el-table-column label="操作" width="170" align="left" header-align="left">
         <template #default="{ row }">
           <div class="action-btn-group">
-            <button class="ghost-action ghost-action-files" @click="$emit('open-drawer', row)">
+            <button class="ghost-action" @click="$emit('open-drawer', row)" title="查看该主播全部录像文件">
               <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
               </svg>
-              <span>录像 ({{ row.files }})</span>
+              <span>录像</span>
             </button>
-            <span class="action-sep">|</span>
-            <button class="ghost-action ghost-action-rule" @click="$emit('open-rule', row)">
+            <button class="ghost-action" @click="$emit('open-rule', row)" title="配置该主播专属剪辑与合并规则">
               <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -252,8 +251,10 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 3px 8px;
+  gap: 5px;
+  width: 66px;
+  min-width: 66px;
+  padding: 4px 0;
   border-radius: var(--r-sm);
   font-size: 12px;
   font-weight: 500;
@@ -265,16 +266,6 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   line-height: 1.4;
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-.ghost-action-files {
-  min-width: 95px;
-  width: 95px;
-  box-sizing: border-box;
-}
-
-.ghost-action-rule {
-  min-width: 58px;
   box-sizing: border-box;
 }
 
@@ -282,12 +273,6 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   background: var(--highlight);
   border-color: var(--charcoal);
   color: var(--ink);
-}
-
-.action-sep {
-  color: var(--hairline-strong, #e2e8f0);
-  font-size: 12px;
-  user-select: none;
 }
 
 .btn-svg-sm {

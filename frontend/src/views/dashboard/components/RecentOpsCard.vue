@@ -225,9 +225,8 @@ function formatDetail(row: HistoryRecord): string {
 
 .scope-global-text {
   font-size: 12px;
-  color: var(--stone);
+  color: var(--charcoal);
   font-weight: 500;
-  letter-spacing: 0.2px;
 }
 
 .streamer-text {

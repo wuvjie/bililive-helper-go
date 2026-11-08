@@ -27,7 +27,15 @@
           @click="autoScroll = !autoScroll"
           :title="autoScroll ? '点击暂停自动滚动' : '点击恢复自动跟随到底部'"
         >
-          {{ autoScroll ? "自动滚动" : "已暂停滚动" }}
+          <svg v-if="autoScroll" class="term-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="7 13 12 18 17 13"/>
+            <polyline points="7 6 12 11 17 6"/>
+          </svg>
+          <svg v-else class="term-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
+          </svg>
+          <span>{{ autoScroll ? "自动滚动" : "已暂停滚动" }}</span>
         </button>
         <button
           class="terminal-action-btn"
@@ -42,7 +50,8 @@
           @click="$emit('clear')"
           title="清空当前控制台"
         >
-          清空
+          <svg class="term-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>清空</span>
         </button>
       </div>
     </div>

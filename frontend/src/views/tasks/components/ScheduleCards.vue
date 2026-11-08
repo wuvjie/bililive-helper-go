@@ -218,22 +218,25 @@ function formatDisplayTime(ts?: number): string {
 }
 
 .sched-action-row {
-  margin-top: 10px;
+  margin-top: 14px;
   display: flex;
-  justify-content: flex-end;
+  width: 100%;
 }
 
 .btn-task-action {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: var(--r-sm);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
   transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
 .btn-merge-action {

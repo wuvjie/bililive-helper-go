@@ -58,12 +58,18 @@
       </div>
 
       <div class="bottom-health-bar">
-        <span class="health-pill">
-          下次合并: <strong class="mono-val">{{ formatNextTime(detail?.schedule?.merge?.next_run) }}</strong>
-        </span>
-        <span class="health-pill">
-          下次清理: <strong class="mono-val">{{ formatNextTime(detail?.schedule?.clean?.next_run) }}</strong>
-        </span>
+        <div class="health-cell">
+          <span class="health-cell-label">下次合并</span>
+          <span class="health-cell-val mono-val">
+            <strong>{{ formatNextTime(detail?.schedule?.merge?.next_run) }}</strong>
+          </span>
+        </div>
+        <div class="health-cell">
+          <span class="health-cell-label">下次清理</span>
+          <span class="health-cell-val mono-val">
+            <strong>{{ formatNextTime(detail?.schedule?.clean?.next_run) }}</strong>
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -281,12 +287,10 @@ html.dark .card-top-metric {
   border-top: 1px dashed var(--hairline);
 }
 
-.health-pill {
+.health-cell {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--slate);
+  flex-direction: column;
+  gap: 4px;
   padding: 8px 12px;
   border-radius: var(--r-sm);
   background: var(--surface-secondary, rgba(0, 0, 0, 0.025));
@@ -294,7 +298,27 @@ html.dark .card-top-metric {
   box-sizing: border-box;
 }
 
-html.dark .health-pill {
+.health-cell-label {
+  font-size: 11px;
+  color: var(--stone);
+  font-weight: 500;
+}
+
+.health-cell-val {
+  font-size: 13px;
+  color: var(--charcoal);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.health-cell-val strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+html.dark .health-cell {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.08);
 }

@@ -150,7 +150,6 @@ function getCleanTooltip(day: DayStats): string {
   justify-content: space-around;
   height: 170px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--hairline);
 }
 
 .trend-col {
