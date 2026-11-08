@@ -14,7 +14,7 @@
           {{ isTaskRunning ? '正在执行任务' : '定时调度运行中' }}
         </span>
       </div>
-      <router-link to="/tasks" class="card-header-action" title="前往任务中心查看流式终端与执行记录">
+      <router-link to="/tasks" class="card-header-action" title="前往任务中心查看实时执行日志">
         任务中心 ↗
       </router-link>
     </div>
@@ -32,7 +32,7 @@
         </div>
         <div class="runtime-subline">
           <span class="runtime-subtext">
-            {{ isTaskRunning ? '后台正在执行录像合并或磁盘清理任务，前往任务中心可查看实时终端输出' : '后台定时任务已就绪，将按设定的周期自动执行' }}
+            {{ isTaskRunning ? '后台正在执行录像合并或磁盘清理任务，前往任务中心可查看实时执行日志' : '后台定时任务已就绪，将按设定的周期自动执行' }}
           </span>
         </div>
       </div>

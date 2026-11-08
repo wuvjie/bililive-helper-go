@@ -31,7 +31,7 @@
     <div class="log-modal-body" v-loading="loading">
       <div class="log-terminal-lines">
         <div v-if="filteredLogLines.length === 0" class="log-empty-lines">
-          日志内容为空
+          暂无日志内容
         </div>
         <div
           v-for="(line, idx) in filteredLogLines"
@@ -48,14 +48,14 @@
     <template #footer>
       <div class="modal-footer-container">
         <div class="footer-actions-left">
-          <button class="btn-dialog-secondary" @click="handleCopyContent" title="复制全部内容到剪贴板">
+          <button class="btn-dialog-secondary" @click="handleCopyContent" title="复制全部日志到剪贴板">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
             <span>复制全部日志</span>
           </button>
-          <button class="btn-dialog-secondary" @click="downloadRawLog" title="下载完整原始日志 (.log)">
+          <button class="btn-dialog-secondary" @click="downloadRawLog" title="下载完整日志文件 (.log)">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
@@ -118,7 +118,7 @@ const filteredLogLines = computed<FormattedLogLine[]>(() => {
 function downloadRawLog() {
   const c = props.content;
   if (!c) {
-    ElMessage.warning("日志内容为空或尚未加载完成");
+    ElMessage.warning("暂无日志内容可供下载");
     return;
   }
   const blob = new Blob([c], { type: "text/plain;charset=utf-8" });
@@ -133,10 +133,10 @@ function downloadRawLog() {
 
 async function handleCopyContent() {
   if (!props.content) {
-    ElMessage.warning("日志内容为空");
+    ElMessage.warning("暂无日志内容可供复制");
     return;
   }
-  await copyToClipboard(props.content, "已复制全部日志内容");
+  await copyToClipboard(props.content, "日志内容已复制到剪贴板");
 }
 </script>
 

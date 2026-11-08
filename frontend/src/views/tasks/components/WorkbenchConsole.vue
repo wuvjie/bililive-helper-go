@@ -79,7 +79,7 @@
         <template #title>
           <div class="term-title-wrapper">
             <span class="tab-indicator dot-live" :class="{ 'pulse-dot': isRunning }" />
-            <span class="term-title-text">实时执行终端</span>
+            <span class="term-title-text">实时执行日志</span>
             <span v-if="isRunning" class="term-badge-tag tag-running">任务执行中...</span>
             <span v-else class="term-badge-tag tag-idle">就绪待命</span>
           </div>

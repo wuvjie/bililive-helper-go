@@ -30,7 +30,7 @@
                 />
                 <span v-if="!filterStreamer" class="kbd-badge search-kbd">/</span>
               </div>
-              <button class="btn-clear-history" @click="handleClearHistory" title="清空全部操作历史记录与日志文件">
+              <button class="btn-clear-history" @click="handleClearHistory" title="清空全部操作记录与运行日志">
                 <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                 </svg>
@@ -62,7 +62,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="task" label="任务类型" width="125" align="center" header-align="center" sortable>
+          <el-table-column prop="task" label="操作类型" width="125" align="center" header-align="center" sortable>
             <template #default="{ row }">
               <span class="type-label">
                 <span class="task-type-pill" :class="'type-' + row.task">
@@ -94,7 +94,8 @@
 
           <el-table-column prop="streamer" label="关联主播" width="145" show-overflow-tooltip sortable>
             <template #default="{ row }">
-              <span v-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">所有主播</span>
+              <span v-if="row.task === 'config' || row.task === 'schedule'" class="scope-global-text">系统全局</span>
+              <span v-else-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">所有主播</span>
               <span v-else class="streamer-name-text">{{ row.streamer }}</span>
             </template>
           </el-table-column>
@@ -135,7 +136,7 @@
           <template #empty>
             <EmptyState
               title="暂无操作日志"
-              desc="未找到符合当前类型或主播筛选条件的历史记录"
+              desc="未找到符合当前筛选条件的日志记录"
               :action-text="filterTask || filterStreamer ? '重置筛选条件' : '刷新日志列表'"
               @action="filterTask || filterStreamer ? resetFilters() : loadHistory(1)"
             >
@@ -261,7 +262,7 @@ async function loadHistory(page = 1) {
 async function handleClearHistory() {
   try {
     await ElMessageBox.confirm(
-      "确定要永久清空全部历史操作记录和任务日志文件吗？清空后将无法找回。",
+      "确定要永久清空全部操作日志和任务日志文件吗？清空后将无法找回。",
       "清空全部操作日志",
       {
         type: "warning",
@@ -270,11 +271,11 @@ async function handleClearHistory() {
       }
     );
     await clearHistory();
-    ElMessage.success("全部操作历史记录已清空");
+    ElMessage.success("操作日志已全部清空");
     loadHistory(1);
   } catch (err: any) {
     if (err !== "cancel") {
-      ElMessage.error(err.message || "清空历史记录失败");
+      ElMessage.error(err.message || "清空操作日志失败");
     }
   }
 }
@@ -292,7 +293,7 @@ async function viewLog(row: HistoryRecord) {
     const res = await getLogContent(row.task, row.log_id);
     logContent.value = res.content || "";
   } catch {
-    ElMessage.error("获取日志文件内容失败");
+    ElMessage.error("获取详细日志失败");
   } finally {
     logLoading.value = false;
   }

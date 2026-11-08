@@ -8,8 +8,8 @@
             <span>{{ title || "任务输出" }}</span>
           </span>
         </slot>
-        <span v-if="errorCount > 0" class="terminal-badge-stat badge-stat-err">{{ errorCount }} 错误</span>
-        <span v-if="warnCount > 0" class="terminal-badge-stat badge-stat-warn">{{ warnCount }} 警告</span>
+        <span v-if="errorCount > 0" class="terminal-badge-stat badge-stat-err">{{ errorCount }} 条错误</span>
+        <span v-if="warnCount > 0" class="terminal-badge-stat badge-stat-warn">{{ warnCount }} 条警告</span>
       </div>
 
       <div class="terminal-header-actions">
@@ -17,7 +17,7 @@
           <input
             v-model="filterKeyword"
             type="text"
-            placeholder="过滤控制台日志..."
+            placeholder="搜索日志关键词..."
             class="terminal-filter-input"
           />
         </div>
@@ -40,7 +40,7 @@
         <button
           class="terminal-action-btn"
           @click="handleCopy"
-          title="复制当前控制台全部日志"
+          title="复制全部日志到剪贴板"
         >
           <svg class="term-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           <span>复制</span>
@@ -48,7 +48,7 @@
         <button
           class="terminal-action-btn terminal-clear-btn"
           @click="$emit('clear')"
-          title="清空当前控制台"
+          title="清空日志显示"
         >
           <svg class="term-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           <span>清空</span>
@@ -58,7 +58,7 @@
 
     <div class="terminal-body" ref="bodyRef">
       <div v-if="filteredLines.length === 0" class="terminal-empty">
-        {{ filterKeyword ? '未找到包含关键字的日志行' : (emptyText || '等待任务输出 ...') }}
+        {{ filterKeyword ? '未找到匹配该关键词的日志内容' : (emptyText || '等待任务执行输出...') }}
       </div>
       <div
         v-for="(line, i) in filteredLines"
@@ -122,7 +122,7 @@ function isDivider(text: string): boolean {
 async function handleCopy() {
   if (props.lines.length === 0) return;
   const rawText = props.lines.map(l => `[${l.time}] ${l.text}`).join("\n");
-  await copyToClipboard(rawText, "已复制控制台日志");
+  await copyToClipboard(rawText, "控制台日志已复制到剪贴板");
 }
 
 function isAtBottom(): boolean {

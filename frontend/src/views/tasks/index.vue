@@ -49,11 +49,11 @@ onDeactivated(() => {
 const sse = useSSE();
 
 const currentTerminalTitle = computed(() => {
-  return sse.isRunning.value ? "实时运行终端（流式输出中...）" : "实时运行终端（已完成）";
+  return sse.isRunning.value ? "实时任务执行日志（正在运行...）" : "实时任务执行日志（执行完成）";
 });
 
 const currentEmptyText = computed(() => {
-  return "等待手动触发或定时任务调度输出...";
+  return "暂无运行中的任务，等待手动触发或定时任务调度执行...";
 });
 
 function handleClear() {
