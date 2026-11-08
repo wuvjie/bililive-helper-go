@@ -86,16 +86,9 @@
         <!-- 区域 1: 磁盘空间清理阈值 -->
         <div class="gauge-section">
           <div class="gauge-console">
-            <!-- 仪表盘顶栏读数 -->
+            <!-- 仪表盘顶栏 -->
             <div class="gauge-header">
               <span class="gauge-label">磁盘空间清理阈值</span>
-              <span class="gauge-summary">
-                使用率达到 <strong class="text-warn">{{ triggerVal }}%</strong> 启动清理
-                <span v-if="triggerFreeGB" class="text-sub">（剩余空间不足 {{ triggerFreeGB }} GB 时启动）</span>
-                · 降至 <strong class="text-target">{{ targetVal }}%</strong> 停止清理
-                · 计划释放约 <strong class="text-blue">{{ strokePct }}%</strong>
-                <span v-if="strokeGB" class="text-sub">（约 {{ strokeGB }} GB 空间）</span>
-              </span>
             </div>
 
             <p class="gauge-desc">
@@ -114,6 +107,50 @@
                 <div class="track-segment seg-warn" :style="{ width: `${100 - triggerVal}%` }">
                   <span class="seg-label" v-if="(100 - triggerVal) > 15">超额清理区间 ({{ triggerVal }}% ~ 100%)</span>
                 </div>
+              </div>
+            </div>
+
+            <!-- 三列彩色对应指标卡 (方案一: 槽轨正下方状态卡) -->
+            <div class="gauge-metrics-grid">
+              <!-- 指标卡 1: 启动清理触发点 (对应标尺橙色区间) -->
+              <div class="metric-card card-warn">
+                <div class="metric-header">
+                  <span class="dot-indicator dot-warn"></span>
+                  <span class="metric-title">启动清理触发点</span>
+                </div>
+                <div class="metric-value-row">
+                  <span class="metric-number">{{ triggerVal }}</span>
+                  <span class="metric-unit">%</span>
+                </div>
+                <span v-if="triggerFreeGB" class="metric-desc">剩余空间不足 {{ triggerFreeGB }} GB 时启动</span>
+                <span v-else class="metric-desc">磁盘使用率达到此值启动清理</span>
+              </div>
+
+              <!-- 指标卡 2: 停止清理安全线 (对应标尺绿色区间) -->
+              <div class="metric-card card-target">
+                <div class="metric-header">
+                  <span class="dot-indicator dot-target"></span>
+                  <span class="metric-title">停止清理安全线</span>
+                </div>
+                <div class="metric-value-row">
+                  <span class="metric-number">{{ targetVal }}</span>
+                  <span class="metric-unit">%</span>
+                </div>
+                <span class="metric-desc">清理至降到此使用率后停止</span>
+              </div>
+
+              <!-- 指标卡 3: 预计释放磁盘空间 (对应标尺蓝色区间) -->
+              <div class="metric-card card-blue">
+                <div class="metric-header">
+                  <span class="dot-indicator dot-blue"></span>
+                  <span class="metric-title">预计释放磁盘空间</span>
+                </div>
+                <div class="metric-value-row">
+                  <span class="metric-number">{{ strokePct }}</span>
+                  <span class="metric-unit">%</span>
+                </div>
+                <span v-if="strokeGB" class="metric-desc">单次预计可释放约 {{ strokeGB }} GB</span>
+                <span v-else class="metric-desc">单次计划释放的空间比例</span>
               </div>
             </div>
 
@@ -156,7 +193,7 @@
           </div>
         </div>
 
-        <!-- 区域 2: 录像保留与免删保护规则 -->
+        <!-- 区域 2: 录像免删与保护规则 -->
         <div class="protection-section">
           <div class="section-sub-header">
             <span class="sub-header-title">录像保留与免删保护规则</span>
@@ -512,14 +549,12 @@ function removeTag(idx: number) {
 .gauge-console {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .gauge-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -534,31 +569,6 @@ function removeTag(idx: number) {
   color: var(--steel, #787671);
   line-height: 1.4;
   margin: 0;
-}
-
-.gauge-summary {
-  font-size: 12px;
-  color: var(--steel, #787671);
-}
-
-.text-warn {
-  color: var(--warning, #d97706);
-  font-weight: 600;
-}
-
-.text-target {
-  color: var(--success, #059669);
-  font-weight: 600;
-}
-
-.text-blue {
-  color: var(--primary, #2563eb);
-  font-weight: 600;
-}
-
-.text-sub {
-  color: var(--steel, #787671);
-  font-weight: normal;
 }
 
 .gauge-track-wrap {
@@ -610,6 +620,89 @@ function removeTag(idx: number) {
 .seg-stroke .seg-label { color: var(--primary, #2563eb); }
 .seg-warn .seg-label { color: var(--warning, #d97706); }
 
+/* 方案一: 三列彩色对应指标卡 (3-Column Metric Strip) */
+.gauge-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
+  border: 1px solid var(--hairline, #e5e3df);
+  border-radius: var(--r-md, 6px);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.metric-card.card-warn {
+  border-left: 3px solid var(--warning, #d97706);
+}
+
+.metric-card.card-target {
+  border-left: 3px solid var(--success, #059669);
+}
+
+.metric-card.card-blue {
+  border-left: 3px solid var(--primary, #2563eb);
+}
+
+.metric-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metric-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--charcoal, #37352f);
+}
+
+.metric-value-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.metric-number {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-warn .metric-number {
+  color: var(--warning, #d97706);
+}
+
+.card-target .metric-number {
+  color: var(--success, #059669);
+}
+
+.card-blue .metric-number {
+  color: var(--primary, #2563eb);
+}
+
+.metric-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate, #5d5b54);
+}
+
+.metric-desc {
+  font-size: 11.5px;
+  color: var(--steel, #787671);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .gauge-sliders-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -651,6 +744,7 @@ function removeTag(idx: number) {
   width: 6px;
   height: 6px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .dot-warn {
@@ -659,6 +753,10 @@ function removeTag(idx: number) {
 
 .dot-target {
   background: var(--success, #059669);
+}
+
+.dot-blue {
+  background: var(--primary, #2563eb);
 }
 
 /* 区域 2: 录像免删与保护规则专有样式 */
@@ -808,6 +906,7 @@ function removeTag(idx: number) {
 
 @media (max-width: 768px) {
   .rule-cards-grid,
+  .gauge-metrics-grid,
   .gauge-sliders-grid,
   .protect-cards-grid {
     grid-template-columns: 1fr;
