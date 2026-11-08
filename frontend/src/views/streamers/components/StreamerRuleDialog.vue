@@ -22,7 +22,7 @@
               </svg>
               <span class="rule-title">
                 <span>自动视频时段裁剪</span>
-                <el-tooltip content="分片合并完成后，无损流复制截取指定起止时段（如去除开播暖场或只保留前半场精选）" placement="top" :show-after="300">
+                <el-tooltip content="分片合并完成后，基于无损流复制截取指定起止时段保留成片" placement="top" :show-after="300">
                   <span class="label-help-ico">?</span>
                 </el-tooltip>
               </span>
@@ -39,21 +39,21 @@
             <!-- 拟真视频胶片时间轴预览条 (Film Strip Timeline Bar) -->
             <div class="film-timeline-wrap">
               <div class="film-strip-track">
-                <!-- Segment 1: 开播暖场剪除段 -->
+                <!-- Segment 1: 起始前段剪除 -->
                 <div
-                  v-if="timelineSegments.hasWarmup"
+                  v-if="timelineSegments.hasLeading"
                   class="film-seg seg-discarded"
-                  :style="{ flexGrow: timelineSegments.warmupGrow }"
-                  title="开播暖场剪除丢弃"
+                  :style="{ flexGrow: timelineSegments.leadingGrow }"
+                  title="起始前段剪除丢弃"
                 >
                   <svg class="seg-mini-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
-                  <span class="seg-text">剪除暖场</span>
+                  <span class="seg-text">剪除前段</span>
                 </div>
 
-                <!-- Segment 2: 有效录像保留成片段 (核心主体) -->
+                <!-- Segment 2: 有效录像保留片段 (核心主体) -->
                 <div
                   class="film-seg seg-retained"
                   :style="{ flexGrow: timelineSegments.retainedGrow }"
@@ -67,7 +67,7 @@
                       <line x1="17" y1="2" x2="17" y2="22"/>
                       <line x1="2" y1="12" x2="22" y2="12"/>
                     </svg>
-                    <span class="seg-text-bold">有效成片</span>
+                    <span class="seg-text-bold">保留片段</span>
                     <span v-if="trimSemanticInfo.durationText" class="retained-badge">
                       {{ trimSemanticInfo.durationText }}
                     </span>
@@ -75,39 +75,39 @@
                   <div class="film-sprockets bottom"></div>
                 </div>
 
-                <!-- Segment 3: 片尾剪除段 (若指定了 trim_end) -->
+                <!-- Segment 3: 出点后段剪除 (若指定了 trim_end) -->
                 <div
                   v-if="timelineSegments.hasTrailing"
                   class="film-seg seg-discarded"
                   :style="{ flexGrow: timelineSegments.trailingGrow }"
-                  title="片尾剪除丢弃"
+                  title="出点后段剪除丢弃"
                 >
                   <svg class="seg-mini-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
-                  <span class="seg-text">剪除片尾</span>
+                  <span class="seg-text">剪除后段</span>
                 </div>
                 <!-- 或者未指定 trim_end，表示截取至自然结尾 -->
                 <div
                   v-else-if="timelineSegments.isUntilEnd"
                   class="film-seg seg-tail-open"
-                  title="截取至录播自然关播结尾"
+                  title="截取至录播自然结束"
                 >
-                  <span class="seg-text">直至关播</span>
+                  <span class="seg-text">直至结尾</span>
                 </div>
               </div>
 
               <!-- 时间轴节点指示 -->
               <div class="timeline-ticks-row">
-                <span class="tick-node tick-start">00:00:00 开播</span>
-                <span class="tick-node tick-in" v-if="timelineSegments.hasWarmup">
+                <span class="tick-node tick-start">00:00:00 录像起点</span>
+                <span class="tick-node tick-in" v-if="timelineSegments.hasLeading">
                   入点 {{ formRule.trim_start }}
                 </span>
                 <span class="tick-node tick-out" v-if="timelineSegments.hasTrailing">
                   出点 {{ formRule.trim_end }}
                 </span>
-                <span class="tick-node tick-end">关播落盘</span>
+                <span class="tick-node tick-end">录像终点</span>
               </div>
             </div>
 
@@ -116,9 +116,6 @@
               <div class="time-field">
                 <label class="time-field-label">
                   <span>剪辑入点（起始时间）</span>
-                  <el-tooltip content="录像自此时刻开始保留（格式 HH:mm:ss 或 mm:ss）" placement="top">
-                    <span class="label-help-ico">?</span>
-                  </el-tooltip>
                 </label>
                 <el-input
                   v-model="formRule.trim_start"
@@ -130,14 +127,11 @@
               <span class="time-range-sep">至</span>
               <div class="time-field">
                 <label class="time-field-label">
-                  <span>剪辑出点（截至时间）</span>
-                  <el-tooltip content="录像截取到此时刻为止，留空则默认完整保留至关播" placement="top">
-                    <span class="label-help-ico">?</span>
-                  </el-tooltip>
+                  <span>剪辑出点（结束时间）</span>
                 </label>
                 <el-input
                   v-model="formRule.trim_end"
-                  placeholder="留空截取至录像末尾"
+                  placeholder="留空保留至录像末尾"
                   class="mono-input"
                   @blur="normalizeTrimField('trim_end')"
                 />
@@ -159,7 +153,7 @@
               </span>
             </div>
             <div class="trim-format-hint">
-              * 格式支持 <code>时:分:秒</code>（如 00:05:00）或简写（如 5:00）；结束时间留空自动截取到结尾。
+              * 格式支持 <code>时:分:秒</code>（如 01:30:00）或 <code>分:秒</code>（如 05:00）；出点留空自动保留至录像末尾。
             </div>
           </div>
         </transition>
@@ -285,7 +279,7 @@ function normalizeTimeString(val: string): string {
     return `${h}:${m}:${s}`;
   } else if (parts.length === 2) {
     const m = String(parseInt(parts[0], 10) || 0).padStart(2, "0");
-    const s = String(parseInt(parts[2], 10) || 0).padStart(2, "0");
+    const s = String(parseInt(parts[1], 10) || 0).padStart(2, "0");
     return `00:${m}:${s}`;
   }
   return cleaned;
@@ -305,37 +299,36 @@ function normalizeTrimField(field: "trim_start" | "trim_end") {
   }
 }
 
-
 const timelineSegments = computed(() => {
   const startSec = parseSeconds(formRule.value.trim_start) ?? 0;
   const endSec = parseSeconds(formRule.value.trim_end);
 
-  const hasWarmup = startSec > 0;
+  const hasLeading = startSec > 0;
   const hasTrailing = endSec !== null && endSec > startSec;
   const isUntilEnd = endSec === null;
 
-  let warmupGrow = 1;
+  let leadingGrow = 1;
   let retainedGrow = 3.5;
   let trailingGrow = 1;
 
-  if (hasWarmup && hasTrailing) {
+  if (hasLeading && hasTrailing) {
     const diff = Math.max(1, endSec - startSec);
-    warmupGrow = Math.max(1, Math.min(2.5, Math.round((startSec / diff) * 2)));
+    leadingGrow = Math.max(1, Math.min(2.5, Math.round((startSec / diff) * 2)));
     retainedGrow = 4;
     trailingGrow = 1.2;
-  } else if (hasWarmup && isUntilEnd) {
-    warmupGrow = 1.2;
+  } else if (hasLeading && isUntilEnd) {
+    leadingGrow = 1.2;
     retainedGrow = 4;
-  } else if (!hasWarmup && hasTrailing) {
+  } else if (!hasLeading && hasTrailing) {
     retainedGrow = 4;
     trailingGrow = 1.8;
   }
 
   return {
-    hasWarmup,
+    hasLeading,
     hasTrailing,
     isUntilEnd,
-    warmupGrow,
+    leadingGrow,
     retainedGrow,
     trailingGrow
   };
@@ -348,7 +341,7 @@ const trimSemanticInfo = computed(() => {
   if (endSec !== null && endSec <= startSec) {
     return {
       isInvalid: true,
-      text: `结束时间 (${formRule.value.trim_end}) 必须晚于开始时间 (${formRule.value.trim_start || "00:00:00"})`,
+      text: `出点时间 (${formRule.value.trim_end}) 必须晚于入点时间 (${formRule.value.trim_start || "00:00:00"})`,
       durationText: "区间无效"
     };
   }
@@ -356,7 +349,7 @@ const trimSemanticInfo = computed(() => {
   if (startSec === 0 && endSec === null) {
     return {
       isInvalid: false,
-      text: "完整录制：不裁剪视频时段，完整保留录播内容",
+      text: "全场保留：不执行裁剪，完整保留全场录播内容",
       durationText: "全场保留"
     };
   }
@@ -364,7 +357,7 @@ const trimSemanticInfo = computed(() => {
   if (startSec > 0 && endSec === null) {
     return {
       isInvalid: false,
-      text: `跳过暖场：自动跳过开播前 ${formatFriendlyDuration(startSec)}，截取至录像结束`,
+      text: `跳过前段：自动截除前 ${formatFriendlyDuration(startSec)}，后续内容保留至录像结尾`,
       durationText: `跳过前 ${formatFriendlyDuration(startSec)}`
     };
   }
@@ -372,7 +365,7 @@ const trimSemanticInfo = computed(() => {
   if (startSec === 0 && endSec !== null) {
     return {
       isInvalid: false,
-      text: `保留开播精选：截取开播前 ${formatFriendlyDuration(endSec)}，后续内容自动丢弃`,
+      text: `保留前段：仅截取前 ${formatFriendlyDuration(endSec)} 内容，后续部分自动剪除`,
       durationText: `时长 ${formatFriendlyDuration(endSec)}`
     };
   }
@@ -381,7 +374,7 @@ const trimSemanticInfo = computed(() => {
     const diff = endSec - startSec;
     return {
       isInvalid: false,
-      text: `选定时段：从 ${formRule.value.trim_start} 截取至 ${formRule.value.trim_end}`,
+      text: `选定时段：从 ${formRule.value.trim_start} 截取至 ${formRule.value.trim_end}，剪除首尾多余部分`,
       durationText: `有效时长 ${formatFriendlyDuration(diff)}`
     };
   }
