@@ -1,6 +1,6 @@
 <template>
   <div class="workbench-console-card">
-    <!-- Action Bar: 定向主播维护 -->
+    <!-- Action Bar: 手动执行录像合并与清理 -->
     <div class="workbench-action-bar">
       <div class="action-bar-left">
         <div class="ui-icon-box icon-box-blue">
@@ -8,52 +8,61 @@
             <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
           </svg>
         </div>
-        <span class="action-bar-title">定向主播维护</span>
-        <el-select
-          :model-value="selectedStreamer"
-          placeholder="选择特定主播发起维护..."
-          filterable
-          clearable
-          class="targeted-select"
-          @update:model-value="$emit('update:selectedStreamer', $event)"
-        >
-          <el-option
-            v-for="s in streamers"
-            :key="s.name"
-            :label="`${s.name} (${s.files} 个 · ${s.size_gb?.toFixed(1)} GB)`"
-            :value="s.name"
-          />
-        </el-select>
-        <div class="targeted-buttons">
-          <button
-            class="btn-targeted btn-targeted-merge"
-            :disabled="!selectedStreamer || isRunning"
-            @click="$emit('targeted-merge')"
+        <span class="action-bar-title">手动执行录像合并与清理</span>
+
+        <div class="scope-selector-wrap">
+          <span class="scope-label">处理范围：</span>
+          <el-select
+            :model-value="selectedStreamer"
+            class="scope-select"
+            filterable
+            @update:model-value="$emit('update:selectedStreamer', $event)"
           >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="3" rx="2"/>
-              <path d="M7 3v18"/>
-              <path d="M17 3v18"/>
-              <path d="M3 7.5h4"/>
-              <path d="M3 12h18"/>
-              <path d="M3 16.5h4"/>
-              <path d="M17 7.5h4"/>
-              <path d="M17 16.5h4"/>
-            </svg>
-            <span>合并录像</span>
-          </button>
-          <button
-            class="btn-targeted btn-targeted-clean"
-            :disabled="!selectedStreamer || isRunning"
-            @click="$emit('targeted-clean')"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-            <span>清理录像</span>
-          </button>
+            <el-option label="所有主播" value="" />
+            <el-option
+              v-for="s in streamers"
+              :key="s.name"
+              :label="`${s.name} (${s.files} 个录像 · ${s.size_gb?.toFixed(1)} GB)`"
+              :value="s.name"
+            />
+          </el-select>
         </div>
+      </div>
+
+      <div class="action-buttons-group">
+        <button
+          type="button"
+          class="btn-action btn-action-merge"
+          :disabled="isRunning"
+          :title="mergeButtonTooltip"
+          @click="$emit('execute-merge')"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2"/>
+            <path d="M7 3v18"/>
+            <path d="M17 3v18"/>
+            <path d="M3 7.5h4"/>
+            <path d="M3 12h18"/>
+            <path d="M3 16.5h4"/>
+            <path d="M17 7.5h4"/>
+            <path d="M17 16.5h4"/>
+          </svg>
+          <span>立即合并录像</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-action btn-action-clean"
+          :disabled="isRunning"
+          :title="cleanButtonTooltip"
+          @click="$emit('execute-clean')"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span>立即清理录像</span>
+        </button>
       </div>
     </div>
 
@@ -70,8 +79,8 @@
           <div class="term-title-wrapper">
             <span class="tab-indicator dot-live" :class="{ 'pulse-dot': isRunning }" />
             <span class="term-title-text">实时执行终端</span>
-            <span v-if="isRunning" class="term-badge-tag tag-running">运行中</span>
-            <span v-else class="term-badge-tag tag-idle">空闲待命</span>
+            <span v-if="isRunning" class="term-badge-tag tag-running">任务执行中...</span>
+            <span v-else class="term-badge-tag tag-idle">就绪待命</span>
           </div>
         </template>
       </ReTerminal>
@@ -90,11 +99,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import type { StreamerInfo } from "@/api/types";
 import type { SSELine } from "@/utils/sse";
 import ReTerminal from "@/components/ReTerminal/index.vue";
 
-defineProps<{
+const props = defineProps<{
   streamers: StreamerInfo[];
   selectedStreamer: string;
   isRunning: boolean;
@@ -106,11 +116,25 @@ defineProps<{
 
 defineEmits<{
   (e: "update:selectedStreamer", val: string): void;
-  (e: "targeted-merge"): void;
-  (e: "targeted-clean"): void;
+  (e: "execute-merge"): void;
+  (e: "execute-clean"): void;
   (e: "clear"): void;
   (e: "retry"): void;
 }>();
+
+const mergeButtonTooltip = computed(() => {
+  if (props.selectedStreamer) {
+    return `立即对主播「${props.selectedStreamer}」执行录像分片合并`;
+  }
+  return "立即对所有主播执行录像分片合并";
+});
+
+const cleanButtonTooltip = computed(() => {
+  if (props.selectedStreamer) {
+    return `立即清理主播「${props.selectedStreamer}」的已合并及过期录像`;
+  }
+  return "立即检查磁盘空间并对所有主播执行过期录像清理";
+});
 </script>
 
 <style scoped>
@@ -163,54 +187,73 @@ html.dark .workbench-action-bar {
   white-space: nowrap;
 }
 
-.targeted-select {
-  width: 250px;
-}
-
-.targeted-buttons {
+.scope-selector-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.btn-targeted {
+.scope-label {
+  font-size: 13px;
+  color: var(--steel, #787671);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.scope-select {
+  width: 260px;
+}
+
+.action-buttons-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.btn-action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 32px;
-  padding: 0 12px;
+  padding: 0 14px;
   box-sizing: border-box;
-  border-radius: var(--r-sm);
-  font-size: 12px;
+  border-radius: var(--r-sm, 4px);
+  font-size: 12.5px;
   font-weight: 500;
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
   line-height: 1;
+  box-shadow: var(--shadow-xs);
 }
 
-.btn-targeted-merge {
-  background: color-mix(in srgb, #059669 10%, transparent);
+.btn-action-merge {
+  background: color-mix(in srgb, #059669 12%, transparent);
   color: #047857;
-  border-color: color-mix(in srgb, #059669 25%, transparent);
+  border-color: color-mix(in srgb, #059669 30%, transparent);
 }
-.btn-targeted-merge:hover:not(:disabled) {
+
+.btn-action-merge:hover:not(:disabled) {
   background: #059669;
+  border-color: #059669;
   color: #ffffff;
 }
 
-.btn-targeted-clean {
-  background: color-mix(in srgb, #d97706 10%, transparent);
+.btn-action-clean {
+  background: color-mix(in srgb, #d97706 12%, transparent);
   color: #b45309;
-  border-color: color-mix(in srgb, #d97706 25%, transparent);
+  border-color: color-mix(in srgb, #d97706 30%, transparent);
 }
-.btn-targeted-clean:hover:not(:disabled) {
+
+.btn-action-clean:hover:not(:disabled) {
   background: #d97706;
+  border-color: #d97706;
   color: #ffffff;
 }
 
-.btn-targeted:disabled {
-  opacity: 0.45;
+.btn-action:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

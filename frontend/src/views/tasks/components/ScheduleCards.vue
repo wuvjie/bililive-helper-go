@@ -1,6 +1,6 @@
 <template>
   <div class="schedule-grid">
-    <!-- Card 1: 自动分片合并 -->
+    <!-- Card 1: 自动合并视频分片 -->
     <div class="card sched-card">
       <div class="card-title card-title-flex">
         <div class="title-left">
@@ -16,23 +16,12 @@
               <path d="M17 16.5h4"/>
             </svg>
           </div>
-          <span class="title-text">自动分片合并</span>
+          <span class="title-text">自动合并视频分片</span>
           <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
-            {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '调度生效中' : '定时已暂停' }}
+            {{ schedule?.merge?.is_running ? '正在合并录像...' : schedule?.merge?.enabled ? '定时调度中' : '定时已停用' }}
           </span>
         </div>
-        <button
-          class="btn-task-action btn-merge-action"
-          :disabled="isRunning"
-          @click="$emit('run-global', 'merge')"
-          title="立即启动一次全局分片合并任务"
-        >
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-          <span>立即执行合并</span>
-        </button>
       </div>
 
       <div class="sched-metric-grid">
@@ -51,7 +40,7 @@
       </div>
     </div>
 
-    <!-- Card 2: 自动磁盘清理 -->
+    <!-- Card 2: 自动清理磁盘空间 -->
     <div class="card sched-card">
       <div class="card-title card-title-flex">
         <div class="title-left">
@@ -60,23 +49,12 @@
               <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
             </svg>
           </div>
-          <span class="title-text">自动磁盘清理</span>
+          <span class="title-text">自动清理磁盘空间</span>
           <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
-            {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '巡检生效中' : '保护未开启' }}
+            {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '定时调度中' : '定时已停用' }}
           </span>
         </div>
-        <button
-          class="btn-task-action btn-clean-action"
-          :disabled="isRunning"
-          @click="$emit('run-global', 'clean')"
-          title="立即启动一次全局磁盘巡检与清理"
-        >
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
-          <span>立即执行清理</span>
-        </button>
       </div>
 
       <div class="sched-metric-grid">
@@ -103,11 +81,6 @@ import type { ScheduleStatus } from "@/api/types";
 
 defineProps<{
   schedule?: ScheduleStatus;
-  isRunning: boolean;
-}>();
-
-defineEmits<{
-  (e: "run-global", task: "merge" | "clean"): void;
 }>();
 
 function formatDisplayTime(ts?: number): string {
@@ -136,7 +109,6 @@ function formatDisplayTime(ts?: number): string {
   justify-content: space-between;
   height: 32px;
   margin-bottom: 16px;
-  gap: 12px;
   box-sizing: border-box;
 }
 
@@ -205,78 +177,6 @@ function formatDisplayTime(ts?: number): string {
   0% { transform: scale(0.9); opacity: 0.8; }
   50% { transform: scale(1.3); opacity: 1; }
   100% { transform: scale(0.9); opacity: 0.8; }
-}
-
-.btn-task-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  background: var(--color-btn-bg, #ffffff);
-  color: var(--color-btn-text, #24292f);
-  border: 1px solid var(--color-btn-border, #d0d7de);
-  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  line-height: 20px;
-
-  &:hover:not(:disabled) {
-    background: var(--color-btn-hover-bg, #f3f4f6);
-    border-color: var(--color-btn-hover-border, #d0d7de);
-    color: var(--color-btn-text, #24292f);
-  }
-
-  &:active:not(:disabled) {
-    background: var(--color-btn-active-bg, #ebecf0);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.btn-merge-action .btn-svg-sm {
-  color: #1a7f37;
-}
-
-.btn-clean-action .btn-svg-sm {
-  color: #9a6700;
-}
-
-html.dark .btn-task-action {
-  background: #21262d;
-  color: #c9d1d9;
-  border-color: #30363d;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
-
-  &:hover:not(:disabled) {
-    background: #30363d;
-    border-color: #8b949e;
-    color: #f0f6fc;
-  }
-
-  .btn-merge-action .btn-svg-sm {
-    color: #3fb950;
-  }
-
-  .btn-clean-action .btn-svg-sm {
-    color: #d29922;
-  }
-}
-
-.btn-task-action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-svg-sm {
-  width: 12px;
-  height: 12px;
 }
 
 /* Hairline ruled metric grid (3 columns) */

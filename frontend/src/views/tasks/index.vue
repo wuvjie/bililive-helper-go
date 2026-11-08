@@ -1,13 +1,9 @@
 <template>
   <div class="tasks">
-    <!-- 1. Top Section: 两个系统全局自动调度核心卡片 (并排 2 列) -->
-    <ScheduleCards
-      :schedule="schedule"
-      :is-running="sse.isRunning.value"
-      @run-global="handleRunGlobal"
-    />
+    <!-- 1. Top Section: 两个系统全局自动调度核心监控卡片 (并排 2 列) -->
+    <ScheduleCards :schedule="schedule" />
 
-    <!-- 2. Integrated Execution Workbench (定向主播维护与实时终端一体化融合控制台) -->
+    <!-- 2. Integrated Execution Workbench (手动执行录像合并与清理 + 实时终端一体化工作台) -->
     <WorkbenchConsole
       v-model:selected-streamer="selectedStreamer"
       :streamers="streamers"
@@ -16,8 +12,8 @@
       :lines="sse.lines.value"
       :title="currentTerminalTitle"
       :empty-text="currentEmptyText"
-      @targeted-merge="handleTargetedMerge"
-      @targeted-clean="handleTargetedClean"
+      @execute-merge="handleExecuteMerge"
+      @execute-clean="handleExecuteClean"
       @clear="handleClear"
       @retry="sse.retryLast()"
     />
@@ -57,45 +53,52 @@ const currentTerminalTitle = computed(() => {
 });
 
 const currentEmptyText = computed(() => {
-  return "等待前台任务触发输出...";
+  return "等待手动触发或定时任务调度输出...";
 });
 
 function handleClear() {
   sse.clear();
 }
 
-// 1. 全局合并 / 清理
-async function handleRunGlobal(task: "merge" | "clean") {
-  try {
-    if (task === "clean") {
-      await ElMessageBox.confirm(
-        "即将根据系统配置的阈值执行全局磁盘清理，是否确认？",
-        "全局清理确认",
-        { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
-      );
-    }
-    sse.startSSE(task === "merge" ? "/api/merge" : "/api/clean", {});
-  } catch {
-    // User cancelled
+// 1. 执行录像合并（根据 selectedStreamer 自动区分全局 vs 定向）
+async function handleExecuteMerge() {
+  if (sse.isRunning.value) return;
+  const streamer = selectedStreamer.value?.trim();
+  if (streamer) {
+    sse.startSSE("/api/merge", { streamer });
+  } else {
+    sse.startSSE("/api/merge", {});
   }
 }
 
-// 2. 定向主播合并
-async function handleTargetedMerge() {
-  if (!selectedStreamer.value) return;
-  sse.startSSE("/api/merge", { streamer: selectedStreamer.value });
-}
-
-// 3. 定向主播清理
-async function handleTargetedClean() {
-  if (!selectedStreamer.value) return;
+// 2. 执行录像清理（根据 selectedStreamer 自动区分全局 vs 定向，带明确安全确认提示）
+async function handleExecuteClean() {
+  if (sse.isRunning.value) return;
+  const streamer = selectedStreamer.value?.trim();
   try {
-    await ElMessageBox.confirm(
-      `即将清理主播「${selectedStreamer.value}」的已合并及过期录像，确认执行？`,
-      "清理确认",
-      { type: "warning", confirmButtonText: "确认清理", cancelButtonText: "取消" }
-    );
-    sse.startSSE("/api/clean", { streamer: selectedStreamer.value });
+    if (streamer) {
+      await ElMessageBox.confirm(
+        `即将清理主播「${streamer}」的已合并及过期录像，是否确认立即执行？`,
+        "清理确认",
+        {
+          type: "warning",
+          confirmButtonText: "确认清理",
+          cancelButtonText: "取消"
+        }
+      );
+      sse.startSSE("/api/clean", { streamer });
+    } else {
+      await ElMessageBox.confirm(
+        "即将根据系统配置的清理阈值与保留规则，对所有主播的录像目录执行磁盘清理，是否确认立即执行？",
+        "全局清理确认",
+        {
+          type: "warning",
+          confirmButtonText: "确认清理",
+          cancelButtonText: "取消"
+        }
+      );
+      sse.startSSE("/api/clean", {});
+    }
   } catch {
     // User cancelled
   }
@@ -118,45 +121,23 @@ async function loadBaseData() {
         // 关键防递归修复：立即清除 URL 中的 auto 标识，防止后续 watch(sse.isRunning) 循环递归触发
         router.replace({ query: { ...route.query, auto: undefined } });
         setTimeout(() => {
-          handleTargetedMerge();
+          handleExecuteMerge();
         }, 100);
       }
     }
-  } catch {
-    // ignore
+  } catch (e: any) {
+    ElMessage.error(e?.message || "获取调度数据失败");
   }
 }
 
-// Watch SSE running state to refresh when done
-watch(() => sse.isRunning.value, async (running, wasRunning) => {
-  if (wasRunning && !running) {
-    await loadBaseData();
-    const lastLine = sse.lines.value.length ? sse.lines.value[sse.lines.value.length - 1] : undefined;
-    if (lastLine) {
-      if (/✅/.test(lastLine.text)) {
-        ElMessage.success(lastLine.text);
-      } else if (/❌/.test(lastLine.text)) {
-        ElMessage.error(lastLine.text);
-      }
-    }
+onMounted(loadBaseData);
+onActivated(loadBaseData);
+
+// 任务完成时刷新基础数据
+watch(sse.isRunning, (running, prev) => {
+  if (prev && !running) {
+    loadBaseData();
   }
-});
-
-watch(() => route.query.streamer, (val, oldVal) => {
-  if (val && typeof val === "string") {
-    selectedStreamer.value = val;
-    if (val !== oldVal) {
-      autoTriggered = false;
-    }
-  }
-});
-
-onMounted(async () => {
-  await loadBaseData();
-});
-
-onActivated(async () => {
-  await loadBaseData();
 });
 </script>
 
