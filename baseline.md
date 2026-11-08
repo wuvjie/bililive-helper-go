@@ -1,6 +1,6 @@
 # Baseline
 
-- **v3.9.0** (Current Active):
+- **v2.0.1** (Current Active):
   - Release Highlights:
     - **全系统工程日志与执行反馈通顺度全面重构 (System-wide Engineering Log & Execution Feedback Overhaul)**：
       - 全局审查并重写了后台录像合并、智能磁盘清理、定时调度与配置变动的实时流式日志与操作历史记录；
@@ -20,7 +20,7 @@
       - 升级 Docker 运行时底座至 Alpine 3.21 长期支持稳定版，获取最新的 FFmpeg 与 OpenSSL 依赖；
       - MIT License 与 Dockerfile 维护者信息统一对齐为项目群体署名；全 Git 历史 419 个 Commit 完成作者邮箱物理级脱敏。
 
-- **v3.8.0**:
+- **v2.0.0**:
   - Git Commits: `5d25259` ~ `HEAD` (`1057cb5` / `247bf8d`)
   - Release Highlights:
     - **任务中心手动执行与实时控制台统一归一化架构 (Unified Manual Execution Workbench & Scope Selector Architecture)**：
