@@ -94,6 +94,8 @@ const totalRecordingsGB = computed(() => {
 <style scoped>
 .storage-card {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {

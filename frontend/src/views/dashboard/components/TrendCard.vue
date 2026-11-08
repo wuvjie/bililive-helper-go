@@ -101,12 +101,16 @@ function getCleanTooltip(day: DayStats): string {
 <style scoped>
 .trend-card {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
@@ -114,6 +118,7 @@ function getCleanTooltip(day: DayStats): string {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .card-title-main {
@@ -121,18 +126,21 @@ function getCleanTooltip(day: DayStats): string {
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
+  white-space: nowrap;
 }
 
 .trend-sub-summary {
   font-size: 12px;
   color: var(--steel);
   font-family: var(--font-mono);
+  white-space: nowrap;
 }
 
 .trend-body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  flex: 1;
   min-height: 180px;
 }
 

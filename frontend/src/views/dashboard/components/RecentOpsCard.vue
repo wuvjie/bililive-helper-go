@@ -110,6 +110,8 @@ function formatDetail(row: HistoryRecord): string {
 <style scoped>
 .recent-card {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {
@@ -142,6 +144,14 @@ function formatDetail(row: HistoryRecord): string {
 
 .card-header-action:hover {
   text-decoration: underline;
+}
+
+.recent-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  min-height: 180px;
 }
 
 .recent-list {

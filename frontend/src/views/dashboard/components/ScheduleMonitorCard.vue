@@ -110,6 +110,8 @@ function formatNextTime(ts?: number): string {
 <style scoped>
 .schedule-monitor-card {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {
