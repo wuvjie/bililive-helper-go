@@ -1,168 +1,190 @@
 <template>
   <div class="policy-tab">
-    <el-form label-width="140px" label-position="left" class="settings-form">
-      <!-- Section 1: 录制与合并规则 -->
-      <div class="form-section-card">
-        <div class="category-divider">
-          <span class="category-label">录制与合并</span>
-          <span class="category-line" />
-        </div>
-        <div class="section-body">
-          <el-form-item label="断流重连容差">
-            <div class="inline-unit-row">
-              <el-input-number
-                :model-value="config.GAP_MINUTES"
-                :min="1" :max="120" :step="5" class="compact-counter"
-                @update:model-value="updateField('GAP_MINUTES', Number($event))"
-              />
-              <span class="unit-text">分钟</span>
-            </div>
-            <div class="field-hint">主播在此时间差内断流重连，自动合并为整段视频</div>
-          </el-form-item>
-
-          <el-form-item label="完播静置等待">
-            <div class="inline-unit-row">
-              <el-input-number
-                :model-value="config.MERGE_AGE_MINUTES"
-                :min="5" :max="1440" :step="5" class="compact-counter"
-                @update:model-value="updateField('MERGE_AGE_MINUTES', Number($event))"
-              />
-              <span class="unit-text">分钟</span>
-            </div>
-            <div class="field-hint">录播关播后的静置缓冲期，防止误读正在写入的切片</div>
-          </el-form-item>
-        </div>
+    <!-- Group 1: 录制与合并 -->
+    <div class="setting-group">
+      <div class="category-divider">
+        <span class="category-label">录制与合并</span>
+        <span class="category-line" />
       </div>
 
-      <!-- Section 2: 存储清理策略 -->
-      <div class="form-section-card">
-        <div class="category-divider">
-          <span class="category-label">磁盘自动清理</span>
-          <span class="category-line" />
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">断流重连容差</div>
+          <div class="setting-desc">主播在此时间差内断流重连，自动合并为整段视频</div>
         </div>
-        <div class="section-body">
-          <el-form-item label="触发清理阈值">
-            <div class="slider-row">
-              <el-slider
-                :model-value="config.TRIGGER_THRESHOLD"
-                :min="50"
-                :max="99"
-                :format-tooltip="formatPercent"
-                class="slider-flex"
-                @update:model-value="onTriggerChange"
-              />
-              <span class="slider-value mono-val">{{ config.TRIGGER_THRESHOLD }}%</span>
-            </div>
-            <div class="field-hint">
-              磁盘使用率达到此警戒水位时自动启动清理
-              <span v-if="triggerFreeGB" class="hint-highlight-tag">
-                相当于总容量 {{ totalDiskGb?.toFixed(0) }} GB 中剩余低于 <strong>{{ triggerFreeGB }} GB</strong> 时触发
-              </span>
-            </div>
-          </el-form-item>
-
-          <el-form-item label="目标清理阈值">
-            <div class="slider-row">
-              <el-slider
-                :model-value="config.TARGET_THRESHOLD"
-                :min="30"
-                :max="89"
-                :format-tooltip="formatPercent"
-                class="slider-flex"
-                @update:model-value="onTargetChange"
-              />
-              <span class="slider-value mono-val">{{ config.TARGET_THRESHOLD }}%</span>
-            </div>
-            <div class="field-hint">由旧至新清理录播，直至磁盘使用率降至此目标水位</div>
-          </el-form-item>
-
-          <!-- 空间释放冲程预期摘要标 -->
-          <div class="stroke-summary-banner">
-            <div class="stroke-summary-left">
-              <svg class="stroke-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              <span class="stroke-label">单次清理冲程：</span>
-              <span class="stroke-val-highlight">预计释放约 {{ bufferPct }}%</span>
-              <span v-if="bufferGB" class="stroke-gb-badge">≈ {{ bufferGB }} GB</span>
-            </div>
-            <span class="stroke-range-text">触发警戒 {{ config.TRIGGER_THRESHOLD }}% → 清理至目标 {{ config.TARGET_THRESHOLD }}%</span>
+        <div class="setting-control">
+          <div class="inline-unit-row">
+            <el-input-number
+              :model-value="config.GAP_MINUTES"
+              :min="1" :max="120" :step="5" class="compact-counter"
+              @update:model-value="updateField('GAP_MINUTES', Number($event))"
+            />
+            <span class="unit-text">分钟</span>
           </div>
-
-          <el-form-item label="新录像免删保护">
-            <div class="inline-unit-row">
-              <el-input-number
-                :model-value="config.SAFE_DAYS || 3"
-                :min="1"
-                :max="365"
-                :step="1"
-                class="compact-counter"
-                @update:model-value="onSafeDaysChange(Number($event))"
-              />
-              <span class="unit-text">天</span>
-            </div>
-            <div class="field-hint">保护期内新录像享有免删特权，即使达到警戒线也绝对保留</div>
-          </el-form-item>
-
-          <el-form-item label="每主播最少保留">
-            <div class="inline-unit-row">
-              <el-input-number
-                :model-value="config.MIN_KEEP_PER_STREAMER"
-                :min="1" :max="50" :step="1" class="compact-counter"
-                @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
-              />
-              <span class="unit-text">场</span>
-            </div>
-            <div class="field-hint">每个主播强制保留的最低场次数，无论空间多么紧张绝不全删</div>
-          </el-form-item>
-
-          <!-- 白名单关键词 Tag 交互 -->
-          <el-form-item label="免清理白名单">
-            <div class="whitelist-tag-group">
-              <div class="tags-container">
-                <el-tag
-                  v-for="(tag, idx) in tagList"
-                  :key="tag"
-                  closable
-                  effect="plain"
-                  class="keyword-tag"
-                  @close="removeTag(idx)"
-                >
-                  {{ tag }}
-                </el-tag>
-                <div class="add-tag-inline">
-                  <el-input
-                    v-if="inputTagVisible"
-                    ref="tagInputRef"
-                    v-model="inputTagValue"
-                    size="small"
-                    class="tag-inline-input"
-                    placeholder="按回车添加"
-                    @keyup.enter="handleTagConfirm"
-                    @blur="handleTagConfirm"
-                  />
-                  <el-button v-else size="small" class="btn-add-tag" @click="showTagInput">
-                    + 添加关键词
-                  </el-button>
-                </div>
-              </div>
-              <div class="quick-tags-row">
-                <span class="quick-label">常用快捷添加:</span>
-                <button
-                  v-for="p in ['留存', '纪念', '高能', '生日', '勿删', '精选']"
-                  :key="p"
-                  type="button"
-                  class="quick-preset-pill"
-                  :disabled="tagList.includes(p)"
-                  @click="addTag(p)"
-                >
-                  + {{ p }}
-                </button>
-              </div>
-            </div>
-            <div class="field-hint">匹配关键词的录像文件或主播目录受永久保护不被清理</div>
-          </el-form-item>
         </div>
       </div>
-    </el-form>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">完播静置等待</div>
+          <div class="setting-desc">录播关播后的静置缓冲期，防止误读正在写入的切片</div>
+        </div>
+        <div class="setting-control">
+          <div class="inline-unit-row">
+            <el-input-number
+              :model-value="config.MERGE_AGE_MINUTES"
+              :min="5" :max="1440" :step="5" class="compact-counter"
+              @update:model-value="updateField('MERGE_AGE_MINUTES', Number($event))"
+            />
+            <span class="unit-text">分钟</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group 2: 磁盘自动清理 -->
+    <div class="setting-group">
+      <div class="category-divider">
+        <span class="category-label">磁盘自动清理</span>
+        <span class="category-line" />
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">触发清理阈值</div>
+          <div class="setting-desc">
+            磁盘使用率达到此警戒水位时自动启动清理
+            <span v-if="triggerFreeGB" class="hint-highlight-tag">
+              (余量 &lt; {{ triggerFreeGB }} GB 时触发)
+            </span>
+          </div>
+        </div>
+        <div class="setting-control slider-control-wrap">
+          <el-slider
+            :model-value="config.TRIGGER_THRESHOLD"
+            :min="50"
+            :max="99"
+            :format-tooltip="formatPercent"
+            class="compact-slider"
+            @update:model-value="onTriggerChange"
+          />
+          <span class="slider-value mono-val">{{ config.TRIGGER_THRESHOLD }}%</span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">目标清理阈值</div>
+          <div class="setting-desc">按文件生成时间由旧至新清理，直至磁盘降至此目标水位</div>
+        </div>
+        <div class="setting-control slider-control-wrap">
+          <el-slider
+            :model-value="config.TARGET_THRESHOLD"
+            :min="30"
+            :max="89"
+            :format-tooltip="formatPercent"
+            class="compact-slider"
+            @update:model-value="onTargetChange"
+          />
+          <span class="slider-value mono-val">{{ config.TARGET_THRESHOLD }}%</span>
+        </div>
+      </div>
+
+      <!-- 单次冲程预期指示条 -->
+      <div class="stroke-summary-banner">
+        <div class="stroke-summary-left">
+          <svg class="stroke-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span class="stroke-label">单次清理冲程：</span>
+          <span class="stroke-val-highlight">预计释放约 {{ bufferPct }}%</span>
+          <span v-if="bufferGB" class="stroke-gb-badge">≈ {{ bufferGB }} GB</span>
+        </div>
+        <span class="stroke-range-text">警戒水位 {{ config.TRIGGER_THRESHOLD }}% → 目标水位 {{ config.TARGET_THRESHOLD }}%</span>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">新录像免删保护</div>
+          <div class="setting-desc">保护期内新录像享有免删特权，即使达到警戒线也绝对保留</div>
+        </div>
+        <div class="setting-control">
+          <div class="inline-unit-row">
+            <el-input-number
+              :model-value="config.SAFE_DAYS || 3"
+              :min="1" :max="365" :step="1" class="compact-counter"
+              @update:model-value="onSafeDaysChange(Number($event))"
+            />
+            <span class="unit-text">天</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">每主播最少保留</div>
+          <div class="setting-desc">每个主播强制保留的最低场次数，无论空间多么紧张绝不全删</div>
+        </div>
+        <div class="setting-control">
+          <div class="inline-unit-row">
+            <el-input-number
+              :model-value="config.MIN_KEEP_PER_STREAMER"
+              :min="1" :max="50" :step="1" class="compact-counter"
+              @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
+            />
+            <span class="unit-text">场</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 白名单关键词 Tag 交互 -->
+      <div class="setting-row setting-row-stack">
+        <div class="setting-info">
+          <div class="setting-title">免清理白名单</div>
+          <div class="setting-desc">匹配关键词的录像文件或主播目录受永久保护不被清理</div>
+        </div>
+        <div class="whitelist-tag-group">
+          <div class="tags-container">
+            <el-tag
+              v-for="(tag, idx) in tagList"
+              :key="tag"
+              closable
+              effect="plain"
+              class="keyword-tag"
+              @close="removeTag(idx)"
+            >
+              {{ tag }}
+            </el-tag>
+            <div class="add-tag-inline">
+              <el-input
+                v-if="inputTagVisible"
+                ref="tagInputRef"
+                v-model="inputTagValue"
+                size="small"
+                class="tag-inline-input"
+                placeholder="按回车添加"
+                @keyup.enter="handleTagConfirm"
+                @blur="handleTagConfirm"
+              />
+              <el-button v-else size="small" class="btn-add-tag" @click="showTagInput">
+                + 添加关键词
+              </el-button>
+            </div>
+          </div>
+          <div class="quick-tags-row">
+            <span class="quick-label">常用快捷添加:</span>
+            <button
+              v-for="p in ['留存', '纪念', '高能', '生日', '勿删', '精选']"
+              :key="p"
+              type="button"
+              class="quick-preset-pill"
+              :disabled="tagList.includes(p)"
+              @click="addTag(p)"
+            >
+              + {{ p }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -292,65 +314,88 @@ function addTag(keyword: string) {
 .policy-tab {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.form-section-card {
-  background: transparent;
-  border: none;
-  padding: 0 0 24px 0;
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--hairline);
+.setting-group {
+  display: flex;
+  flex-direction: column;
 }
-.form-section-card:last-child {
-  padding-bottom: 0;
-  margin-bottom: 0;
+.setting-group + .setting-group {
+  margin-top: 24px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--hairline);
+  gap: 20px;
+}
+.setting-row:last-child {
   border-bottom: none;
 }
 
-.section-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+.setting-row-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
 }
-.section-title-left {
+
+.setting-info {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
 }
-.btn-ghost-header {
-  background: transparent;
-  border: none;
-  color: var(--steel, #64748b);
+
+.setting-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--charcoal);
+  letter-spacing: -0.1px;
+}
+
+.setting-desc {
   font-size: 12px;
+  color: var(--steel);
+  line-height: 1.45;
+}
+
+.setting-control {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  transition: all 0.15s ease;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
-.btn-ghost-header:hover {
-  background: rgba(0, 0, 0, 0.04);
+
+.slider-control-wrap {
+  width: 230px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.compact-slider {
+  flex: 1;
+}
+.slider-value {
+  font-size: 13px;
+  width: 38px;
+  text-align: right;
+  font-weight: 600;
   color: var(--ink);
 }
 
-.old-section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--charcoal);
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--hairline);
-  margin-bottom: 16px;
-}
-
-.section-icon {
-  font-size: 16px;
+.hint-highlight-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--primary);
+  font-size: 11px;
 }
 
 .stroke-summary-banner {
@@ -361,7 +406,7 @@ function addTag(keyword: string) {
   border: 1px solid var(--hairline);
   border-radius: var(--r-sm, 6px);
   padding: 8px 14px;
-  margin: 6px 0 16px 0;
+  margin: 6px 0 10px 0;
   font-size: 12px;
   flex-wrap: wrap;
   gap: 8px;
@@ -401,438 +446,102 @@ function addTag(keyword: string) {
   font-family: var(--font-mono);
 }
 
-.section-body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.settings-form :deep(.el-form-item) {
-  margin-bottom: 16px;
-}
-
-.settings-form :deep(.el-form-item__label) {
-  color: var(--charcoal, #333);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.field-hint {
-  width: 100%;
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.5;
-  margin-top: 6px;
-}
-
-.compact-counter,
-.compact-select {
+.compact-counter {
+  width: 120px;
   height: 32px !important;
   line-height: 32px !important;
-
   :deep(.el-input__wrapper) {
     height: 32px !important;
     box-sizing: border-box !important;
   }
-}
-.compact-counter {
-  width: 120px;
   :deep(.el-input-number__decrease),
   :deep(.el-input-number__increase) {
     height: 30px !important;
     line-height: 30px !important;
   }
 }
-.compact-select {
-  width: 96px;
-  flex-shrink: 0;
-}
+
 .inline-unit-row {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .unit-text {
-  font-size: 13px;
-  color: var(--slate);
+  font-size: 12px;
+  color: var(--steel);
+  font-weight: 500;
   white-space: nowrap;
-  flex-shrink: 0;
-  display: inline-block;
 }
 
-.slider-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.slider-flex {
-  flex: 1;
-}
-
-.slider-value {
-  min-width: 44px;
-  text-align: right;
-  font-size: 14px;
-}
-
-.safe-age-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-
-  :deep(.el-input__wrapper),
-  :deep(.el-select__wrapper) {
-    height: 32px !important;
-    box-sizing: border-box;
-  }
-  :deep(.el-input-number) {
-    height: 32px;
-  }
-  :deep(.el-input-number__decrease),
-  :deep(.el-input-number__increase) {
-    height: 30px !important;
-    width: 28px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
-/* Buffer Zone Card */
-.buffer-zone-card {
-  background: var(--canvas, #fff);
-  border: 1px solid var(--hairline, #eee);
-  border-radius: var(--r-sm, 6px);
-  padding: 14px 18px;
-  margin: -4px 0 16px 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-.buffer-zone-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.buffer-header-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.buffer-icon {
-  font-size: 14px;
-}
-.buffer-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--charcoal, #333);
-}
-.buffer-val-pill {
-  font-size: 12px;
-  color: #b45309;
-  background: #fffbeb;
-  border: 1px solid rgba(180, 83, 9, 0.25);
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-weight: 500;
-  font-family: var(--font-mono);
-}
-.buffer-visual-track {
-  display: flex;
-  height: 8px;
-  background: var(--surface-hover, #f0f0f0);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-.track-fill-safe {
-  background: #448361;
-  opacity: 0.8;
-  transition: width 0.2s ease;
-}
-.track-fill-buffer {
-  background: #b45309;
-  opacity: 0.9;
-  transition: width 0.2s ease;
-}
-.buffer-scale-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--steel, #888);
-}
-.buffer-scale-item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  font-size: 12px;
-}
-.scale-lbl {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--steel, #888);
-}
-.scale-val {
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--font-mono);
-  color: var(--ink, #333);
-}
-.buffer-scale-mid .scale-val {
-  color: #b45309;
-}
-
-/* Whitelist Tag Group */
+/* Whitelist Tags */
 .whitelist-tag-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  box-sizing: border-box;
+  gap: 10px;
 }
+
 .tags-container {
   display: flex;
-  align-items: center;
-  gap: 6px;
   flex-wrap: wrap;
-  min-height: 36px;
-  background: var(--canvas, #fff);
-  border: 1px solid var(--hairline, #dcdfe6);
-  border-radius: var(--r-sm, 4px);
-  padding: 4px 8px;
+  gap: 6px;
+  align-items: center;
 }
+
 .keyword-tag {
   font-size: 12px;
-  font-weight: 500;
-  background: var(--surface, #fafafa);
-  border-color: var(--hairline-strong, #ddd);
-  color: var(--charcoal, #333);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.03)) !important;
+  border-color: var(--hairline-strong) !important;
+  color: var(--charcoal) !important;
+  border-radius: var(--r-xs);
+  padding: 0 8px;
+  height: 26px;
+  line-height: 24px;
 }
+
 .tag-inline-input {
-  width: 110px;
+  width: 120px;
 }
+
 .btn-add-tag {
-  border-style: dashed;
   font-size: 12px;
-  color: var(--steel, #666);
+  color: var(--primary) !important;
+  border-color: color-mix(in srgb, var(--primary) 25%, transparent) !important;
+  background: color-mix(in srgb, var(--primary) 6%, transparent) !important;
 }
+
 .quick-tags-row {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
+
 .quick-label {
-  font-size: 12px;
-  color: var(--steel, #888);
+  font-size: 11px;
+  color: var(--muted);
 }
+
 .quick-preset-pill {
-  background: var(--surface, #fafafa);
-  border: 1px dashed var(--hairline, #ddd);
-  color: var(--slate, #555);
   padding: 2px 7px;
-  border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
+  border-radius: var(--r-xs);
+  background: transparent;
+  border: 1px dashed var(--hairline-strong);
+  color: var(--steel);
   cursor: pointer;
   transition: all 0.15s ease;
 }
+
 .quick-preset-pill:hover:not(:disabled) {
-  border-color: #448361;
-  color: #448361;
-  background: #edf6f0;
+  border-color: var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
 }
+
 .quick-preset-pill:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.policy-actions {
-  display: flex;
-  gap: 12px;
-  padding-top: 8px;
-  flex-wrap: wrap;
-}
-.btn-reset-policy {
-  padding: 10px 18px;
-  font-size: 13px;
-  border-radius: var(--r-md);
-}
-
-@media (max-width: 768px) {
-  .policy-actions {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    gap: 10px;
-    padding-top: 12px;
-  }
-  .btn-reset-policy {
-    width: 100% !important;
-    height: 42px;
-    font-size: 14px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: 0 !important;
-  }
-  .settings-form :deep(.el-form-item) {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .settings-form :deep(.el-form-item__label) {
-    width: 100% !important;
-    margin-bottom: 6px;
-    height: auto;
-    line-height: 1.4;
-  }
-  .settings-form :deep(.el-form-item__content) {
-    width: 100%;
-  }
-  .safe-age-group {
-    width: 100%;
-    overflow-x: auto;
-  }
-}
-
-.section-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.buffer-svg {
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-  vertical-align: -2px;
-}
-.btn-svg-sm {
-  width: 13px;
-  height: 13px;
-  margin-right: 4px;
-  vertical-align: -1px;
-}
-
-
-/* 阈值动态冲程指示器 (轻量集成于表单内) */
-.threshold-buffer-indicator {
-  margin: 4px 0 16px 140px;
-  background: var(--surface, #f4f3f0);
-  border: 1px solid var(--hairline, #e6e4df);
-  border-radius: var(--r-sm, 6px);
-  padding: 8px 12px;
-  box-sizing: border-box;
-}
-.buffer-track-wrap {
-  width: 100%;
-}
-.buffer-visual-track {
-  width: 100%;
-  height: 6px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 3px;
-  display: flex;
-  overflow: hidden;
-}
-.track-fill-safe {
-  height: 100%;
-  background: #10b981;
-  transition: width 0.2s ease;
-}
-.track-fill-buffer {
-  height: 100%;
-  background: #f59e0b;
-  transition: width 0.2s ease;
-}
-.buffer-track-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--steel, #787671);
-}
-.buffer-meta-main strong {
-  color: #d97706;
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-.buffer-meta-gb {
-  color: var(--slate, #5d5b54);
-}
-.buffer-meta-range {
-  font-size: 11px;
-  color: var(--stone, #a4a097);
-  font-feature-settings: "tnum";
-}
-
-html.dark {
-  .threshold-buffer-indicator {
-    background: #141416;
-    border-color: #27272a;
-  }
-  .buffer-visual-track {
-    background: #27272a;
-  }
-  .track-fill-safe {
-    background: #34d399;
-  }
-  .track-fill-buffer {
-    background: #fbbf24;
-  }
-  .buffer-meta-main strong {
-    color: #fbbf24;
-  }
-  .buffer-meta-gb {
-    color: #d4d4d8;
-  }
-  .buffer-meta-range {
-    color: #71717a;
-  }
-  .tags-container {
-    background: #141416;
-    border-color: #27272a;
-  }
-  .keyword-tag {
-    background: #1f1f23;
-    border-color: #27272a;
-    color: #e4e4e7;
-  }
-  .quick-preset-pill {
-    background: #18181b;
-    border-color: #27272a;
-    color: #a1a1aa;
-    &:hover:not(:disabled) {
-      background: rgba(34, 197, 94, 0.12);
-      border-color: rgba(34, 197, 94, 0.3);
-      color: #34d399;
-    }
-  }
-}
-
-.hint-highlight-tag {
-  display: inline-block;
-  margin-left: 6px;
-  color: var(--color-warning, #d97706);
-  font-feature-settings: "tnum";
-}
-.hint-highlight-tag strong {
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-html.dark .hint-highlight-tag {
-  color: #fbbf24;
-}
-
-@media (max-width: 768px) {
-  .threshold-buffer-indicator {
-    margin-left: 0;
-  }
+  border-style: solid;
 }
 </style>
