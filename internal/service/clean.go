@@ -64,11 +64,11 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	if err != nil {
 		return nil, setup.LogID, err
 	}
-	progress(fmt.Sprintf("▶ 开始 %s 清理 | 📊 磁盘 %.1f%% (剩余 %.0f GB)", setup.Tag, disk.UsedPct, float64(disk.Free)/oneGB))
+	progress(fmt.Sprintf("▶ 开始 %s 录像清理 | 📊 磁盘空间使用率 %.1f%% (剩余 %.1f GB)", setup.Tag, disk.UsedPct, float64(disk.Free)/oneGB))
 
 	if streamer == "" {
 		if disk.UsedPct < cfg.TriggerThreshold {
-			msg := fmt.Sprintf("📊 %s 磁盘使用率 %.1f%%（低于触发阈值 %.0f%%，无需清理）", setup.Tag, disk.UsedPct, cfg.TriggerThreshold)
+			msg := fmt.Sprintf("📊 磁盘空间使用率 %.1f%%（低于清理触发阈值 %.0f%%，无需清理）", disk.UsedPct, cfg.TriggerThreshold)
 			progress(msg)
 			if !setup.IsManual {
 				setup.OpLog.Discard()
@@ -78,11 +78,11 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 				fmt.Sprintf("磁盘 %.1f%% 低于阈值 %.0f%%", disk.UsedPct, cfg.TriggerThreshold), setup.LogID)
 			return &CleanResult{}, setup.LogID, nil
 		}
-		progress(fmt.Sprintf("📊 磁盘 %.1f%%（阈值 %.0f%%）", disk.UsedPct, cfg.TriggerThreshold))
-		progress(fmt.Sprintf("⚙ %s 清理目标: %.1f%% → %.0f%%", setup.Tag, disk.UsedPct, cfg.TargetThreshold))
+		progress(fmt.Sprintf("📊 当前磁盘空间使用率 %.1f%%（已达清理触发阈值 %.0f%%）", disk.UsedPct, cfg.TriggerThreshold))
+		progress(fmt.Sprintf("⚙ 清理目标：将磁盘使用率从 %.1f%% 降至停止阈值 %.0f%%", disk.UsedPct, cfg.TargetThreshold))
 	} else {
 		if disk.UsedPct > 95 {
-			msg := fmt.Sprintf("❌ %s 磁盘 %.1f%% 超过 95%% 安全上限，请手动检查磁盘空间", setup.Tag, disk.UsedPct)
+			msg := fmt.Sprintf("❌ 磁盘空间使用率已达 %.1f%%，超过 95%% 安全上限，请手动检查磁盘空间", disk.UsedPct)
 			progress(msg)
 			return nil, setup.LogID, fmt.Errorf("磁盘使用率 %.1f%% 超过 95%% 安全上限，请手动清理磁盘空间", disk.UsedPct)
 		}
@@ -91,7 +91,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	needToFree := s.calculateNeedToFree(disk, cfg)
 	if needToFree > 0 {
-		progress(fmt.Sprintf("📊 需释放 %s 才能达到 %.0f%%", utils.FormatSize(needToFree), cfg.TargetThreshold))
+		progress(fmt.Sprintf("📊 预计需释放 %s 磁盘空间以达到停止阈值 %.0f%%", utils.FormatSize(needToFree), cfg.TargetThreshold))
 	}
 
 	candidates, perStreamer := s.collectCandidates(root, streamer, cfg)
@@ -100,26 +100,26 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	for name, info := range perStreamer {
 		setup.OpLog.Log(fmt.Sprintf("── %s ──", name))
 		if info.total <= cfg.MinKeepPerStreamer {
-			setup.OpLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，全部保留（≤%d）", name, info.total, cfg.MinKeepPerStreamer))
+			setup.OpLog.Log(fmt.Sprintf("ℹ [%s] 共 %d 个录像文件，全部保留（处于最少保留场次限制内，≤%d 场）", name, info.total, cfg.MinKeepPerStreamer))
 		} else if info.skipped > 0 {
-			setup.OpLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，%d 个可清理，%d 个跳过（白名单/安全期）", name, info.total, info.candidate, info.skipped))
+			setup.OpLog.Log(fmt.Sprintf("ℹ [%s] 共 %d 个录像文件，%d 个待清理，%d 个跳过（受关键词白名单或免删保护期保护）", name, info.total, info.candidate, info.skipped))
 		} else {
-			setup.OpLog.Log(fmt.Sprintf("ℹ %s → %d 个文件，%d 个可清理", name, info.total, info.candidate))
+			setup.OpLog.Log(fmt.Sprintf("ℹ [%s] 共 %d 个录像文件，%d 个待清理", name, info.total, info.candidate))
 		}
 	}
 
 	if len(candidates) == 0 {
-		msg := "ℹ 扫描完成，无符合清理条件的文件（所有文件均受最小保留或安全期保护）"
+		msg := "ℹ 扫描完成，暂无符合清理条件的录像（所有录像均受最少保留场次或免删保护期保护）"
 		progress(msg)
 		if !setup.IsManual {
 			setup.OpLog.Discard()
 			return &CleanResult{}, "", nil
 		}
-		s.history.Add("clean", streamer, "success", "无符合条件的文件可删", setup.LogID)
+		s.history.Add("clean", streamer, "success", "无需清理（录像均受保护）", setup.LogID)
 		return &CleanResult{}, setup.LogID, nil
 	}
 
-	progress(fmt.Sprintf("ℹ 发现 %d 个候选文件", len(candidates)))
+	progress(fmt.Sprintf("ℹ 发现 %d 个待清理的候选录像文件", len(candidates)))
 
 	sort.Slice(candidates, func(i, j int) bool {
 		iMerged := utils.IsMergedFile(candidates[i].Name)
@@ -135,7 +135,7 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	duration := time.Since(start)
 
 	status := "success"
-	statusMsg := fmt.Sprintf("删除 %d 文件，释放 %s", deleted, utils.FormatSize(freed))
+	statusMsg := fmt.Sprintf("清理 %d 个录像文件，释放 %s", deleted, utils.FormatSize(freed))
 	if truncated {
 		if ctx.Err() != nil {
 			status = "partial"
@@ -147,16 +147,16 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	progress("───────────────────────────")
 	progress("📊 结果摘要")
-	progress(fmt.Sprintf("  删除：%d 个文件", deleted))
-	progress(fmt.Sprintf("  释放：%s", utils.FormatSize(freed)))
-	progress(fmt.Sprintf("  耗时：%s", formatDuration(duration)))
+	progress(fmt.Sprintf("  清理：%d 个录像文件", deleted))
+	progress(fmt.Sprintf("  释放空间：%s", utils.FormatSize(freed)))
+	progress(fmt.Sprintf("  执行耗时：%s", formatDuration(duration)))
 
 	if diskAfter, err := utils.GetDiskUsage(root); err == nil {
 		freeChangeGB := float64(int64(diskAfter.Free)-int64(disk.Free)) / oneGB
 		if freeChangeGB > 0 {
-			progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（释放 %.1f GB）", disk.UsedPct, diskAfter.UsedPct, freeChangeGB))
+			progress(fmt.Sprintf("  磁盘空间：%.1f%% → %.1f%%（释放 %.1f GB）", disk.UsedPct, diskAfter.UsedPct, freeChangeGB))
 		} else {
-			progress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（占用 %.1f GB）", disk.UsedPct, diskAfter.UsedPct, -freeChangeGB))
+			progress(fmt.Sprintf("  磁盘空间：%.1f%% → %.1f%%（占用 %.1f GB）", disk.UsedPct, diskAfter.UsedPct, -freeChangeGB))
 		}
 	}
 	progress("───────────────────────────")
@@ -346,17 +346,17 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	// 4. 执行删除 — 跳过两次快照间大小变化的文件（正在写入）
 	for _, f := range candidates {
 		if ctx.Err() != nil {
-			s.logger.Info("⚠ 上下文取消，终止清理")
+			s.logger.Info("⚠ 任务被取消，终止清理")
 			truncated = true
 			break
 		}
 		if deleted >= cfg.MaxDeletePerRun {
-			s.logger.Info(fmt.Sprintf("ℹ 已达单次删除上限 %d 个文件", cfg.MaxDeletePerRun))
+			s.logger.Info(fmt.Sprintf("ℹ 已达单次清理上限 %d 个文件，停止本次清理", cfg.MaxDeletePerRun))
 			truncated = true
 			break
 		}
 		if needToFree > 0 && freed >= needToFree {
-			s.logger.Info(fmt.Sprintf("ℹ 已释放 %s，达到目标", utils.FormatSize(freed)))
+			s.logger.Info(fmt.Sprintf("ℹ 已释放 %s 磁盘空间，达到清理目标", utils.FormatSize(freed)))
 			break
 		}
 		if _, err := os.Stat(f.Path); os.IsNotExist(err) {
@@ -367,13 +367,13 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 		s1, ok1 := sizeMap1[f.Path]
 		s2, ok2 := sizeMap2[f.Path]
 		if ok1 && ok2 && s1 != s2 {
-			s.logger.Info(fmt.Sprintf("⏭ 跳过（被占用正在写入）: %s", f.Name))
+			s.logger.Info(fmt.Sprintf("⏭ 跳过（录像文件正在录制写入中）: %s", f.Name))
 			continue
 		}
 
 		// 执行删除
 		if err := utils.SafeUnlink(f.Path); err != nil {
-			s.logger.Info(fmt.Sprintf("⚠ 删除失败: %s (%v)", f.Name, err))
+			s.logger.Info(fmt.Sprintf("⚠ 清理失败: %s (%v)", f.Name, err))
 			continue
 		}
 

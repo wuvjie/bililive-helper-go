@@ -45,7 +45,7 @@ func PrepareTask(cfg *config.Config, logger *zap.Logger, logDir, taskType, displ
 	// 静默时段检查
 	if snap.IsBackupWindow() {
 		opLog.Discard()
-		return nil, fmt.Errorf("当前处于静默时段（%d:%02d-%d:%02d），%s暂停",
+		return nil, fmt.Errorf("当前处于后台任务避让时段（%02d:%02d ~ %02d:%02d），已暂停执行%s任务",
 			snap.BackupStartHour, snap.BackupStartMinute,
 			snap.BackupEndHour, snap.BackupEndMinute,
 			displayName)
@@ -57,7 +57,7 @@ func PrepareTask(cfg *config.Config, logger *zap.Logger, logDir, taskType, displ
 		return nil, fmt.Errorf("录像存储目录不存在或未挂载: %s (请检查 Docker 容器目录映射)", snap.TargetDir)
 	}
 
-	tag := "[全局]"
+	tag := "[所有主播]"
 	if streamer != "" {
 		tag = fmt.Sprintf("[%s]", streamer)
 	}

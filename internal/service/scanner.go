@@ -327,12 +327,12 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 								s.logger.Warn("清理原片失败", zap.String("file", v.Name), zap.Error(err))
 							}
 						}
-						s.logger.Info(fmt.Sprintf("[%s] ✅ %s → 已合并，清理原片", entry.Name(), filepath.Base(actualOutputPath)))
+						s.logger.Info(fmt.Sprintf("[%s] ✅ %s → 已合并完成，清理原始分片", entry.Name(), filepath.Base(actualOutputPath)))
 					} else {
 						if err := utils.SafeUnlink(actualOutputPath); err != nil {
 							s.logger.Warn("清理损坏输出失败", zap.String("file", filepath.Base(actualOutputPath)), zap.Error(err))
 						}
-						s.logger.Info(fmt.Sprintf("[%s] ⚠ %s → 输出损坏，将重新合并", entry.Name(), filepath.Base(actualOutputPath)))
+						s.logger.Info(fmt.Sprintf("[%s] ⚠ %s → 输出文件损坏，将重新合并", entry.Name(), filepath.Base(actualOutputPath)))
 					}
 					continue
 				}
@@ -375,7 +375,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 
 						if isStreamActive(folder, key) {
 							streamerActive = true
-							s.logger.Info(fmt.Sprintf("[%s] ⏭ %s → 录制中，跳过", entry.Name(), singleName))
+							s.logger.Info(fmt.Sprintf("[%s] ⏭ %s → 正在直播录制中，跳过", entry.Name(), singleName))
 							continue
 						}
 
@@ -386,7 +386,7 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 						}
 						if ageMin < mergeAgeMin {
 							streamerWaitingSafety = true
-							s.logger.Info(fmt.Sprintf("[%s] ⏭ %s → 等待安全期（%.0f分钟前，需%.0f分钟）", entry.Name(), singleName, ageMin, mergeAgeMin))
+							s.logger.Info(fmt.Sprintf("[%s] ⏭ %s → 处于关播合并等待期（录制结束 %.0f 分钟，需等待满 %.0f 分钟）", entry.Name(), singleName, ageMin, mergeAgeMin))
 							continue
 						}
 
@@ -395,14 +395,14 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 						if mp4Info, err := os.Stat(mp4Path); err == nil && mp4Info.Size() >= minValidFileSize {
 							if ffmpeg.QuickProbe(ctx, mp4Path) == nil {
 								utils.SafeUnlink(flvPath)
-								s.logger.Info(fmt.Sprintf("[%s] ✅ %s → 已有MP4，清理FLV", entry.Name(), singleName))
+								s.logger.Info(fmt.Sprintf("[%s] ✅ %s → 已存在对应 MP4，清理源 FLV 文件", entry.Name(), singleName))
 								continue
 							}
 							utils.SafeUnlink(mp4Path)
-							s.logger.Info(fmt.Sprintf("[%s] ⚠ %s → MP4损坏，重新转换", entry.Name(), singleName))
+							s.logger.Info(fmt.Sprintf("[%s] ⚠ %s → MP4 文件损坏，重新执行格式转换", entry.Name(), singleName))
 						}
 						convertTasks = append(convertTasks, convertTask{FlvPath: flvPath, Mp4Path: mp4Path, Folder: folder, Name: entry.Name()})
-						s.logger.Info(fmt.Sprintf("[%s] 🔄 %s → 待转换 FLV→MP4", entry.Name(), singleName))
+						s.logger.Info(fmt.Sprintf("[%s] 🔄 %s → 待转换 FLV → MP4", entry.Name(), singleName))
 					} else if ext == ".ts" {
 						s.logger.Info(fmt.Sprintf("[%s] ⏭ %s → 孤立TS，等待清理", entry.Name(), singleName))
 					}
@@ -414,14 +414,14 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				// 主播正在录制时，跳过所有批次（避免合并未完成的场次）
 				if isStreamActive(folder, key) {
 					streamerActive = true
-					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 主播正在录制，跳过", entry.Name(), len(names)))
+					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d 个文件 → 主播正在直播录制中，跳过", entry.Name(), len(names)))
 					continue
 				}
 
 				lastFile := filepath.Join(folder, names[len(names)-1])
 				if isFileBeingWritten(ctx, lastFile, 2*time.Second) {
 					streamerActive = true
-					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 文件写入中，跳过", entry.Name(), len(names)))
+					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d 个文件 → 录像文件正在写入中，跳过", entry.Name(), len(names)))
 					continue
 				}
 
@@ -437,12 +437,12 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 
 				if ageMinutes < mergeAgeMinutes {
 					streamerWaitingSafety = true
-					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 等待安全期（%.0f分钟前，需%.0f分钟）", entry.Name(), len(names), ageMinutes, mergeAgeMinutes))
+					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d 个分片 → 处于关播合并等待期（录制结束 %.0f 分钟，需等待满 %.0f 分钟）", entry.Name(), len(names), ageMinutes, mergeAgeMinutes))
 					continue
 				}
 
 				// Phase 1: 通过快速检查，加入候选列表（不阻塞）
-				s.logger.Info(fmt.Sprintf("[%s] 🔗 %d个文件 (%.1f GB) → 候选待验证", entry.Name(), len(names), float64(size)/oneGB))
+				s.logger.Info(fmt.Sprintf("[%s] 🔗 %d 个分片 (%.1f GB) → 候选分片待验证稳定性", entry.Name(), len(names), float64(size)/oneGB))
 				pending = append(pending, pendingBatch{
 					Names:    names,
 					Folder:   folder,
@@ -482,9 +482,9 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 						SizeGB: float64(pb.Size) / oneGB,
 					})
 					mu.Unlock()
-					s.logger.Info(fmt.Sprintf("[%s] ✅ %d个文件 (%.1f GB) → 稳定，待合并", pb.Streamer, len(pb.Names), float64(pb.Size)/oneGB))
+					s.logger.Info(fmt.Sprintf("[%s] ✅ %d 个分片 (%.1f GB) → 文件已稳定，准备合并", pb.Streamer, len(pb.Names), float64(pb.Size)/oneGB))
 				} else {
-					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d个文件 → 文件大小仍在变化，跳过", pb.Streamer, len(pb.Names)))
+					s.logger.Info(fmt.Sprintf("[%s] ⏭ %d 个分片 → 文件大小仍在变化中，跳过", pb.Streamer, len(pb.Names)))
 				}
 			}(&pending[i])
 		}

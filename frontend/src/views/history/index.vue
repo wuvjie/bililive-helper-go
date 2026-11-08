@@ -284,8 +284,9 @@ async function viewLog(row: HistoryRecord) {
   if (!row.log_id) return;
   activeLogId.value = row.log_id;
   activeLogStatus.value = row.status;
-  const taskName = row.task === "merge" ? "合并" : row.task === "clean" ? "清理" : row.task;
-  activeLogTitle.value = `[${taskName}] ${row.streamer || "全局"} · ${row.time}`;
+  const taskName = row.task === "merge" ? "录像合并" : (row.task === "clean" ? "磁盘清理" : (row.task === "config" ? "系统配置" : "定时调度"));
+  const streamerName = (!row.streamer || row.streamer === "全局") ? (row.task === "config" || row.task === "schedule" ? "系统全局" : "所有主播") : row.streamer;
+  activeLogTitle.value = `[${taskName}] ${streamerName} · ${row.time}`;
   logDialogVisible.value = true;
   logLoading.value = true;
   logContent.value = "";

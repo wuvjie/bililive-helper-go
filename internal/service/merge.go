@@ -172,14 +172,14 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	// 磁盘状态快照（起始）
 	diskStart, _ := utils.GetDiskUsage(root)
 	if diskStart != nil {
-		progress(fmt.Sprintf("▶ 开始 %s 合并 | 📊 磁盘 %.1f%% (剩余 %.0f GB)", setup.Tag, diskStart.UsedPct, float64(diskStart.Free)/oneGB))
+		progress(fmt.Sprintf("▶ 开始 %s 录像合并 | 📊 磁盘空间使用率 %.1f%% (剩余 %.1f GB)", setup.Tag, diskStart.UsedPct, float64(diskStart.Free)/oneGB))
 	} else {
-		progress(fmt.Sprintf("▶ 开始 %s 合并", setup.Tag))
+		progress(fmt.Sprintf("▶ 开始 %s 录像合并", setup.Tag))
 	}
 	if streamer != "" {
-		progress(fmt.Sprintf("⚙ 扫描 [%s] 的录像文件 ...", streamer))
+		progress(fmt.Sprintf("⚙ 正在扫描主播「%s」的录像文件...", streamer))
 	} else {
-		progress("⚙ 扫描录像存储目录 ...")
+		progress("⚙ 正在扫描所有主播的录像存储目录...")
 	}
 
 	tasks, convertTasks, scanInfo := s.scanTasks(ctx, root, streamer, cfg)
@@ -188,21 +188,21 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 		var reason string
 		if scanInfo.TotalStreamers == 0 {
 			if streamer != "" {
-				reason = fmt.Sprintf("未找到主播 [%s] 的录像文件夹", streamer)
+				reason = fmt.Sprintf("未找到主播「%s」的录像目录", streamer)
 			} else {
 				reason = "录像存储目录中暂无任何主播文件夹"
 			}
 		} else if scanInfo.ActiveStreams > 0 && scanInfo.WaitingSafety == 0 {
-			reason = fmt.Sprintf("扫描 %d 个主播目录：主播正在直播录制中，暂不合并", scanInfo.TotalStreamers)
+			reason = fmt.Sprintf("已扫描 %d 位主播目录：当前正在直播录制中，暂不合并", scanInfo.TotalStreamers)
 		} else if scanInfo.WaitingSafety > 0 && scanInfo.ActiveStreams == 0 {
-			reason = fmt.Sprintf("扫描 %d 个主播目录：录像处于下播安全期（需静置满 %d 分钟），暂不合并", scanInfo.TotalStreamers, cfg.MergeAgeMinutes)
+			reason = fmt.Sprintf("已扫描 %d 位主播目录：录像处于关播合并等待期（需静置等待满 %d 分钟），暂不合并", scanInfo.TotalStreamers, cfg.MergeAgeMinutes)
 		} else if scanInfo.ActiveStreams > 0 && scanInfo.WaitingSafety > 0 {
-			reason = fmt.Sprintf("扫描 %d 个主播目录：%d 个录制中，%d 个等待安全期，暂不合并", scanInfo.TotalStreamers, scanInfo.ActiveStreams, scanInfo.WaitingSafety)
+			reason = fmt.Sprintf("已扫描 %d 位主播目录：%d 位正在录制，%d 位处于关播合并等待期，暂不合并", scanInfo.TotalStreamers, scanInfo.ActiveStreams, scanInfo.WaitingSafety)
 		} else {
-			reason = fmt.Sprintf("扫描 %d 个主播目录：全部录像已就绪或无需合并", scanInfo.TotalStreamers)
+			reason = fmt.Sprintf("已扫描 %d 位主播目录：暂无需要合并的分片录像", scanInfo.TotalStreamers)
 		}
 
-		progress(fmt.Sprintf("ℹ %s (耗时 %s)", reason, formatDuration(duration)))
+		progress(fmt.Sprintf("ℹ %s（耗时 %s）", reason, formatDuration(duration)))
 
 		// 自动定时轮询空跑：不产生无用历史记录，清理空日志文件，保持列表纯净
 		if !setup.IsManual {
@@ -217,7 +217,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 
 	// 任务预览
 	totalTasks := len(convertTasks) + len(tasks)
-	progress(fmt.Sprintf("⚙ 发现 %d 个待转换 + %d 个待合并（共 %d 个任务）", len(convertTasks), len(tasks), totalTasks))
+	progress(fmt.Sprintf("⚙ 发现 %d 个待转换分片 + %d 场待合并录像（共 %d 项任务）", len(convertTasks), len(tasks), totalTasks))
 
 	if len(tasks) > 0 {
 		if err := s.checkDiskSpaceForMerge(tasks, root); err != nil {
@@ -229,8 +229,8 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	// 磁盘空间硬性检查 — 可用空间低于 10GB 时跳过所有操作
 	disk, diskErr := utils.GetDiskUsage(root)
 	if diskErr == nil && disk.Free < minDiskFreeBytes {
-		setup.OpLog.Log(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB），跳过所有操作", float64(disk.Free)/oneGB))
-		progress(fmt.Sprintf("❌ 磁盘空间不足（仅剩 %.1f GB / 需要 10 GB），跳过", float64(disk.Free)/oneGB))
+		setup.OpLog.Log(fmt.Sprintf("❌ 磁盘剩余空间不足（仅剩 %.1f GB，需至少 10 GB），终止合并", float64(disk.Free)/oneGB))
+		progress(fmt.Sprintf("❌ 磁盘剩余空间不足（仅剩 %.1f GB，需至少 10 GB），跳过本次合并", float64(disk.Free)/oneGB))
 		s.history.Add("merge", streamer, "fail", fmt.Sprintf("磁盘空间不足: %.1f GB（使用率 %.1f%%）", float64(disk.Free)/oneGB, disk.UsedPct), setup.LogID)
 		return &MergeResult{}, setup.LogID, nil
 	}
@@ -267,19 +267,19 @@ func (s *MergeService) runConversions(ctx context.Context, convertTasks []conver
 		if fi, err := os.Stat(ct.FlvPath); err == nil {
 			flvSize = fi.Size()
 		}
-		onProgress(fmt.Sprintf("[%s] 🔄 FLV→MP4: %s (%s)", streamerName, filepath.Base(ct.FlvPath), utils.FormatSize(flvSize)))
+		onProgress(fmt.Sprintf("[%s] 🔄 正在转换 FLV → MP4: %s (%s)", streamerName, filepath.Base(ct.FlvPath), utils.FormatSize(flvSize)))
 		convertStart := time.Now()
 		if s.convertFlvToMp4(ctx, ct.FlvPath, ct.Mp4Path, onProgress, opLog) {
 			elapsed := time.Since(convertStart)
 			done++
 			totalGB += float64(flvSize) / oneGB
 			if info, err := os.Stat(ct.Mp4Path); err == nil {
-				onProgress(fmt.Sprintf("[%s] ✅ %s (%s, %s)", streamerName, filepath.Base(ct.Mp4Path), utils.FormatSize(info.Size()), formatDuration(elapsed)))
+				onProgress(fmt.Sprintf("[%s] ✅ 格式转换完成: %s (%s，耗时 %s)", streamerName, filepath.Base(ct.Mp4Path), utils.FormatSize(info.Size()), formatDuration(elapsed)))
 			} else {
 				onProgress(fmt.Sprintf("[%s] ✅ %s (%s)", streamerName, filepath.Base(ct.Mp4Path), formatDuration(elapsed)))
 			}
 		} else {
-			onProgress(fmt.Sprintf("[%s] ❌ 转换失败", streamerName))
+			onProgress(fmt.Sprintf("[%s] ❌ 格式转换失败", streamerName))
 		}
 	}
 	return done, totalGB
@@ -307,17 +307,17 @@ func (s *MergeService) runMerges(ctx context.Context, tasks []mergeTask, cfg con
 				return
 			}
 			defer s.unlockStreamer(sl)
-			onProgress(fmt.Sprintf("[%s] ⚙ 合并 %d 个文件 (%s)", streamerName, len(task.Files), utils.FormatSize(int64(task.SizeGB*oneGB))))
+			onProgress(fmt.Sprintf("[%s] ⚙ 正在合并 %d 个分片录像 (%s)", streamerName, len(task.Files), utils.FormatSize(int64(task.SizeGB*oneGB))))
 			mergeStart := time.Now()
 			if s.doMerge(ctx, task.Files, task.Folder, onProgress, opLog) {
 				done++
 				totalGB += task.SizeGB
-				onProgress(fmt.Sprintf("[%s] ✅ 合并完成 (%s)", streamerName, formatDuration(time.Since(mergeStart))))
+				onProgress(fmt.Sprintf("[%s] ✅ 录像合并完成（耗时 %s）", streamerName, formatDuration(time.Since(mergeStart))))
 			} else {
 				failed++
 				reason := classifyMergeFailure(task.Folder, task.Files[0])
 				failedReasons[reason]++
-				onProgress(fmt.Sprintf("[%s] ❌ 失败: %s", streamerName, reason))
+				onProgress(fmt.Sprintf("[%s] ❌ 合并失败：%s", streamerName, reason))
 			}
 		}()
 	}
@@ -340,13 +340,13 @@ func (s *MergeService) summarizeResults(ctx context.Context, root, streamer stri
 	onProgress("📊 结果摘要")
 
 	// 扫描统计
-	onProgress(fmt.Sprintf("  扫描：%d 个主播", totalScanned))
+	onProgress(fmt.Sprintf("  扫描：%d 位主播", totalScanned))
 
 	if convertDone > 0 {
-		onProgress(fmt.Sprintf("  转换：%d 个 FLV → MP4", convertDone))
+		onProgress(fmt.Sprintf("  转换：%d 个 FLV 分片", convertDone))
 	}
 	if mergeDone > 0 {
-		onProgress(fmt.Sprintf("  合并：%d 场次 (%.1f GB)", mergeDone, totalGB))
+		onProgress(fmt.Sprintf("  合并：%d 场录像 (%.1f GB)", mergeDone, totalGB))
 	}
 	if mergeFailed > 0 {
 		var failParts []string
@@ -357,15 +357,15 @@ func (s *MergeService) summarizeResults(ctx context.Context, root, streamer stri
 	}
 
 	// 耗时
-	onProgress(fmt.Sprintf("  耗时：%s", formatDuration(duration)))
+	onProgress(fmt.Sprintf("  执行耗时：%s", formatDuration(duration)))
 
 	// 磁盘变化
 	if diskStart != nil && diskEnd != nil {
 		freeChangeGB := float64(int64(diskEnd.Free)-int64(diskStart.Free)) / oneGB
 		if freeChangeGB > 0 {
-			onProgress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（释放 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, freeChangeGB))
+			onProgress(fmt.Sprintf("  磁盘空间：%.1f%% → %.1f%%（释放 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, freeChangeGB))
 		} else {
-			onProgress(fmt.Sprintf("  磁盘：%.1f%% → %.1f%%（占用 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, -freeChangeGB))
+			onProgress(fmt.Sprintf("  磁盘空间：%.1f%% → %.1f%%（占用 %.1f GB）", diskStart.UsedPct, diskEnd.UsedPct, -freeChangeGB))
 		}
 	}
 
