@@ -661,7 +661,6 @@ onUnmounted(() => {
   if (container) {
     container.removeEventListener("scroll", handleContainerScroll);
   }
-  if (observer) observer.disconnect();
   if (userClickTimer) clearTimeout(userClickTimer);
 });
 </script>

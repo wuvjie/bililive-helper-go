@@ -1,0 +1,293 @@
+<template>
+  <div class="streamer-table-container">
+    <el-table
+      :data="streamers"
+      :tooltip-options="{ enterable: false, showAfter: 800, placement: 'top' }"
+      v-loading="loading"
+      style="width: 100%"
+      class="streamer-table"
+      :default-sort="{ prop: 'size_gb', order: 'descending' }"
+    >
+      <el-table-column prop="name" label="主播" min-width="260" show-overflow-tooltip sortable>
+        <template #default="{ row }">
+          <div class="streamer-name-cell">
+            <span
+              class="live-status-dot"
+              :class="isStreamerActive(row) ? 'dot-recording' : 'dot-idle'"
+              :title="isStreamerActive(row) ? '近期活跃/录制中' : '空闲'"
+            />
+            <span class="streamer-name">{{ row.name }}</span>
+            <span v-if="row.rule?.protected" class="badge-pill badge-protected">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>免删保护</span>
+            </span>
+            <span v-if="row.rule?.trim_enabled" class="badge-pill badge-trim">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+              </svg>
+              <span>{{ row.rule.trim_start || '00:00:00' }} ~ {{ row.rule.trim_end || '结束' }}</span>
+            </span>
+          </div>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="files"
+        label="录制文件数"
+        width="130"
+        align="right"
+        header-align="right"
+        sortable
+        :sort-orders="['descending', 'ascending']"
+      >
+        <template #header>
+          <el-tooltip content="该主播名下的视频总数（含未合并分段与已合并成品）" placement="top" :show-after="500">
+            <span class="col-header-tip">录制文件数 ⓘ</span>
+          </el-tooltip>
+        </template>
+        <template #default="{ row }">
+          <div class="data-block">
+            <span class="mono-val">{{ row.files }}</span><span class="unit-lbl">个</span>
+          </div>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="size_gb"
+        label="磁盘占用"
+        width="140"
+        align="right"
+        header-align="right"
+        sortable
+        :sort-orders="['descending', 'ascending']"
+      >
+        <template #default="{ row }">
+          <div class="data-block">
+            <span class="mono-val">{{ row.size_gb?.toFixed(2) }}</span><span class="unit-lbl">GB</span>
+          </div>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="mtime"
+        label="最新视频"
+        width="130"
+        align="right"
+        header-align="right"
+        sortable
+        :sort-orders="['descending', 'ascending']"
+        :sort-method="sortMtime"
+      >
+        <template #header>
+          <el-tooltip content="该主播名下最近录像文件的录制/修改时间" placement="top" :show-after="500">
+            <span class="col-header-tip">最新视频 ⓘ</span>
+          </el-tooltip>
+        </template>
+        <template #default="{ row }">
+          <el-tooltip
+            v-if="row.mtime"
+            :content="`${formatExactTime(row.mtime)} (${formatRelativeTime(row.mtime, tick)})`"
+            placement="top"
+            :show-after="800"
+            :enterable="false"
+          >
+            <span class="mono-val cursor-help">{{ formatRelativeTime(row.mtime, tick) }}</span>
+          </el-tooltip>
+          <span v-else class="mono-val">-</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作" width="185" align="left" header-align="left">
+        <template #default="{ row }">
+          <div class="action-btn-group">
+            <button class="ghost-action ghost-action-files" @click="$emit('open-drawer', row)">
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span>录像 ({{ row.files }})</span>
+            </button>
+            <span class="action-sep">|</span>
+            <button class="ghost-action ghost-action-rule" @click="$emit('open-rule', row)">
+              <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              <span>规则</span>
+            </button>
+          </div>
+        </template>
+      </el-table-column>
+
+      <template #empty>
+        <EmptyState
+          title="未发现匹配的主播"
+          desc="请确认搜索关键词或检查录像存储目录中是否存在主播子文件夹"
+          :action-text="searchQuery ? '清空搜索条件' : '刷新列表'"
+          @action="searchQuery ? $emit('clear-search') : $emit('refresh')"
+        >
+          <template #icon>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </template>
+        </EmptyState>
+      </template>
+    </el-table>
+  </div>
+</template>
+
+<script setup lang="ts">
+import EmptyState from "@/components/common/EmptyState.vue";
+import type { StreamerInfo } from "@/api/types";
+
+defineProps<{
+  streamers: StreamerInfo[];
+  loading: boolean;
+  searchQuery: string;
+  tick: number;
+}>();
+
+defineEmits<{
+  (e: "open-drawer", row: StreamerInfo): void;
+  (e: "open-rule", row: StreamerInfo): void;
+  (e: "clear-search"): void;
+  (e: "refresh"): void;
+}>();
+
+function isStreamerActive(row: StreamerInfo): boolean {
+  if (!row.mtime) return false;
+  return (Date.now() / 1000 - row.mtime) < 1800;
+}
+
+function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
+  return (a.mtime || 0) - (b.mtime || 0);
+}
+
+function formatExactTime(ts: number): string {
+  const d = new Date(ts * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function formatRelativeTime(ts: number, _tick?: number): string {
+  const diff = Date.now() / 1000 - ts;
+  if (diff < 0) return "刚刚";
+  if (diff < 60) return "刚刚";
+  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
+  const days = Math.floor(diff / 86400);
+  if (days < 30) return `${days} 天前`;
+  const d = new Date(ts * 1000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+</script>
+
+<style scoped>
+.streamer-table-container {
+  width: 100%;
+}
+
+.streamer-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.live-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-recording {
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulseRecording 1.8s infinite;
+}
+
+.dot-idle {
+  background: var(--stone);
+  opacity: 0.5;
+}
+
+@keyframes pulseRecording {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.streamer-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--charcoal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-header-tip {
+  cursor: help;
+  color: var(--slate);
+  font-weight: 500;
+}
+
+.action-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ghost-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--slate);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.ghost-action-files {
+  min-width: 95px;
+  width: 95px;
+  box-sizing: border-box;
+}
+
+.ghost-action:hover {
+  background: var(--highlight);
+  border-color: var(--charcoal);
+  color: var(--ink);
+}
+
+.action-sep {
+  color: var(--hairline-strong, #e2e8f0);
+  font-size: 12px;
+  user-select: none;
+}
+
+.btn-svg-sm {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.cursor-help {
+  cursor: help;
+}
+</style>
