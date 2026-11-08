@@ -1,6 +1,6 @@
 <template>
   <div class="settings-tab-pane">
-    <!-- Box 1: 录播合并规则 -->
+    <!-- Box 1: 录像合并规则 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -19,11 +19,16 @@
       </header>
 
       <div class="primer-box-body">
-        <div class="fields-grid fields-grid-2">
-          <!-- 1. 断流重连合并等待时间 -->
-          <div class="field-cell">
-            <label class="field-label">断流重连合并等待时间</label>
-            <div class="field-control">
+        <div class="rule-cards-grid">
+          <!-- 模块 1: 断流重连合并等待 -->
+          <div class="rule-card">
+            <div class="rule-card-header">
+              <span class="rule-card-title">断流重连合并等待</span>
+            </div>
+            <p class="rule-card-desc">
+              直播异常中断或掉线时，在此时间内重新开播将自动合并为同一场录像
+            </p>
+            <div class="rule-card-control">
               <el-input-number
                 :model-value="config.GAP_MINUTES ?? 30"
                 :min="1"
@@ -34,13 +39,19 @@
                 @update:model-value="updateField('GAP_MINUTES', Number($event))"
               />
               <span class="unit-text">分钟</span>
+              <span v-if="gapHours" class="interval-hint mono-val">（约 {{ gapHours }} 小时）</span>
             </div>
           </div>
 
-          <!-- 2. 主播关播延迟合并时间 -->
-          <div class="field-cell">
-            <label class="field-label">主播关播延迟合并时间</label>
-            <div class="field-control">
+          <!-- 模块 2: 主播关播延迟合并 -->
+          <div class="rule-card">
+            <div class="rule-card-header">
+              <span class="rule-card-title">主播关播延迟合并</span>
+            </div>
+            <p class="rule-card-desc">
+              主播关播后静置等待此时间，确认录制彻底结束不再开播后再启动合并
+            </p>
+            <div class="rule-card-control">
               <el-input-number
                 :model-value="config.MERGE_AGE_MINUTES ?? 30"
                 :min="1"
@@ -51,6 +62,7 @@
                 @update:model-value="updateField('MERGE_AGE_MINUTES', Number($event))"
               />
               <span class="unit-text">分钟</span>
+              <span v-if="mergeAgeHours" class="interval-hint mono-val">（约 {{ mergeAgeHours }} 小时）</span>
             </div>
           </div>
         </div>
@@ -71,7 +83,7 @@
       </header>
 
       <div class="primer-box-body">
-        <!-- 1. 磁盘空间自动清理阈值控制台 -->
+        <!-- 区域 1: 磁盘容量清理阈值控制器 -->
         <div class="gauge-section">
           <div class="gauge-console">
             <!-- 仪表盘顶栏读数 -->
@@ -140,98 +152,112 @@
           </div>
         </div>
 
-        <!-- 2. 清理与保护三参数网格 -->
-        <div class="fields-grid fields-grid-3">
-          <!-- 字段 1: 新录像免删保护天数 -->
-          <div class="field-cell">
-            <label class="field-label">新录像免删保护天数</label>
-            <div class="field-control">
-              <el-input-number
-                :model-value="config.SAFE_DAYS ?? 3"
-                :min="1"
-                :max="365"
-                :step="1"
-                size="default"
-                class="stepper-compact"
-                @update:model-value="updateSafeDays(Number($event))"
-              />
-              <span class="unit-text">天</span>
+        <!-- 区域 2: 录像免删与保留保护规则 -->
+        <div class="protection-section">
+          <div class="section-sub-header">
+            <span class="sub-header-title">录像保留与免删保护规则</span>
+            <span class="sub-header-desc">磁盘清理时系统将优先保留符合以下规则的录像文件</span>
+          </div>
+
+          <!-- 三微卡保护规则网格 -->
+          <div class="protect-cards-grid">
+            <!-- 保护卡 1: 新录像免删保护天数 -->
+            <div class="protect-card">
+              <span class="protect-card-title">新录像免删保护天数</span>
+              <p class="protect-card-desc">生成未满此天数的新录像绝对不被删除</p>
+              <div class="protect-card-control">
+                <el-input-number
+                  :model-value="config.SAFE_DAYS ?? 3"
+                  :min="1"
+                  :max="365"
+                  :step="1"
+                  size="default"
+                  class="stepper-compact"
+                  @update:model-value="updateSafeDays(Number($event))"
+                />
+                <span class="unit-text">天</span>
+              </div>
+            </div>
+
+            <!-- 保护卡 2: 每位主播最少保留场次 -->
+            <div class="protect-card">
+              <span class="protect-card-title">每位主播最少保留场次</span>
+              <p class="protect-card-desc">空间紧张时为每位主播保留的最近场次数</p>
+              <div class="protect-card-control">
+                <el-input-number
+                  :model-value="config.MIN_KEEP_PER_STREAMER ?? 3"
+                  :min="1"
+                  :max="50"
+                  :step="1"
+                  size="default"
+                  class="stepper-compact"
+                  @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
+                />
+                <span class="unit-text">场录像</span>
+              </div>
+            </div>
+
+            <!-- 保护卡 3: 单次清理最多删除文件数 -->
+            <div class="protect-card">
+              <span class="protect-card-title">单次清理最多删除文件</span>
+              <p class="protect-card-desc">限制单次清理的文件数，防止长时间卡顿</p>
+              <div class="protect-card-control">
+                <el-input-number
+                  :model-value="config.MAX_DELETE_PER_RUN ?? 50"
+                  :min="5"
+                  :max="500"
+                  :step="10"
+                  size="default"
+                  class="stepper-compact"
+                  @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
+                />
+                <span class="unit-text">个文件</span>
+              </div>
             </div>
           </div>
 
-          <!-- 字段 2: 每位主播最少保留场次 -->
-          <div class="field-cell">
-            <label class="field-label">每位主播最少保留场次</label>
-            <div class="field-control">
-              <el-input-number
-                :model-value="config.MIN_KEEP_PER_STREAMER ?? 3"
-                :min="1"
-                :max="50"
-                :step="1"
-                size="default"
-                class="stepper-compact"
-                @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
-              />
-              <span class="unit-text">场录像</span>
+          <!-- 白名单关键词卡片 -->
+          <div class="whitelist-card">
+            <div class="whitelist-header">
+              <span class="whitelist-title">永久免删关键词（白名单）</span>
+              <span class="whitelist-desc">当录像标题或主播名称包含以下任意关键词时，清理任务将始终跳过</span>
             </div>
-          </div>
-
-          <!-- 字段 3: 单次清理最多删除文件数 -->
-          <div class="field-cell">
-            <label class="field-label">单次清理最多删除文件数</label>
-            <div class="field-control">
-              <el-input-number
-                :model-value="config.MAX_DELETE_PER_RUN ?? 50"
-                :min="5"
-                :max="500"
-                :step="10"
-                size="default"
-                class="stepper-compact"
-                @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
-              />
-              <span class="unit-text">个</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. 永久免删关键词（白名单） -->
-        <div class="whitelist-section">
-          <label class="field-label">永久免删关键词（白名单）</label>
-          <div class="tags-flex-wrap">
-            <el-tag
-              v-for="(tag, idx) in tagList"
-              :key="tag"
-              closable
-              effect="plain"
-              class="primer-keyword-tag"
-              @close="removeTag(idx)"
-            >
-              {{ tag }}
-            </el-tag>
-
-            <div class="tag-input-inline">
-              <el-input
-                v-if="inputTagVisible"
-                ref="tagInputRef"
-                v-model="inputTagValue"
-                size="small"
-                class="tag-editor-input"
-                placeholder="回车确认"
-                @keyup.enter="handleTagConfirm"
-                @blur="handleTagConfirm"
-              />
-              <button
-                v-else
-                type="button"
-                class="btn-add-tag"
-                @click="showTagInput"
+            <div class="tags-flex-wrap">
+              <el-tag
+                v-for="(tag, idx) in tagList"
+                :key="tag"
+                closable
+                effect="plain"
+                class="primer-keyword-tag"
+                @close="removeTag(idx)"
               >
-                <svg class="plus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"/>
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                <span>添加关键词</span>
-              </button>
+                {{ tag }}
+              </el-tag>
+
+              <div class="tag-input-inline">
+                <el-input
+                  v-if="inputTagVisible"
+                  ref="tagInputRef"
+                  v-model="inputTagValue"
+                  size="small"
+                  class="tag-editor-input"
+                  placeholder="回车确认"
+                  @keyup.enter="handleTagConfirm"
+                  @blur="handleTagConfirm"
+                />
+                <button
+                  v-else
+                  type="button"
+                  class="btn-add-tag"
+                  @click="showTagInput"
+                >
+                  <svg class="plus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  <span>添加关键词</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -261,6 +287,19 @@ function updateField<K extends keyof ConfigDTO>(key: K, value: ConfigDTO[K]) {
     [key]: value
   });
 }
+
+// 录像合并小时数换算提示
+const gapHours = computed(() => {
+  const m = Number(props.config.GAP_MINUTES ?? 30);
+  if (m >= 60) return (m / 60).toFixed(1);
+  return null;
+});
+
+const mergeAgeHours = computed(() => {
+  const m = Number(props.config.MERGE_AGE_MINUTES ?? 30);
+  if (m >= 60) return (m / 60).toFixed(1);
+  return null;
+});
 
 // 水位计算
 const triggerVal = computed(() => Number(props.config.TRIGGER_THRESHOLD ?? 80));
@@ -397,40 +436,52 @@ function removeTag(idx: number) {
   padding: 0;
 }
 
-/* Fields Grid: 模块化网格，告别单项占整行与无效空白 */
-.fields-grid {
+/* Box 1: 录像合并规则对称双卡网格 */
+.rule-cards-grid {
   display: grid;
-  padding: 16px 18px;
-  gap: 24px;
-}
-
-.fields-grid-2 {
   grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 16px 18px;
 }
 
-.fields-grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-  border-bottom: 1px solid var(--hairline, #e5e3df);
-}
-
-.field-cell {
+.rule-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
+  border: 1px solid var(--hairline, #e5e3df);
+  border-radius: var(--r-md, 6px);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  transition: all 0.15s ease;
 }
 
-.field-label {
+.rule-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rule-card-title {
   font-size: 13.5px;
-  font-weight: 500;
-  color: var(--charcoal, #37352f);
-  line-height: 1.35;
+  font-weight: 600;
+  color: var(--ink, #1a1a1a);
 }
 
-.field-control {
+.rule-card-desc {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  line-height: 1.45;
+  margin: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+}
+
+.rule-card-control {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  margin-top: 2px;
 }
 
 .stepper-compact {
@@ -441,6 +492,11 @@ function removeTag(idx: number) {
   font-size: 13px;
   color: var(--slate, #5d5b54);
   font-weight: 500;
+}
+
+.interval-hint {
+  font-size: 12px;
+  color: var(--steel, #787671);
 }
 
 /* 水位深度控制台专有样式 */
@@ -594,12 +650,97 @@ function removeTag(idx: number) {
   background: var(--success, #059669);
 }
 
-/* 白名单区域 */
-.whitelist-section {
+/* 区域 2: 录像免删与保护规则专有样式 */
+.protection-section {
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.section-sub-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sub-header-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--charcoal, #37352f);
+}
+
+.sub-header-desc {
+  font-size: 12px;
+  color: var(--steel, #787671);
+}
+
+.protect-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.protect-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
+  border: 1px solid var(--hairline, #e5e3df);
+  border-radius: var(--r-md, 6px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.protect-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink, #1a1a1a);
+}
+
+.protect-card-desc {
+  font-size: 11.5px;
+  color: var(--steel, #787671);
+  line-height: 1.4;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.protect-card-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* 保护白名单微卡 */
+.whitelist-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
+  border: 1px solid var(--hairline, #e5e3df);
+  border-radius: var(--r-md, 6px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+}
+
+.whitelist-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.whitelist-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink, #1a1a1a);
+}
+
+.whitelist-desc {
+  font-size: 11.5px;
+  color: var(--steel, #787671);
 }
 
 .tags-flex-wrap {
@@ -655,12 +796,9 @@ function removeTag(idx: number) {
 }
 
 @media (max-width: 768px) {
-  .fields-grid-2,
-  .fields-grid-3 {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .gauge-sliders-grid {
+  .rule-cards-grid,
+  .gauge-sliders-grid,
+  .protect-cards-grid {
     grid-template-columns: 1fr;
   }
 }
