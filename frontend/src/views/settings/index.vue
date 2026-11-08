@@ -559,15 +559,30 @@ onActivated(() => {
   transform: translateY(-4px);
 }
 
-/* Floating Sticky Save Bar */
+/* Bottom Docked Save Bar (通栏吸底保存栏：横向拓展铺满工作区底端，内部严格按 960px 居中对齐卡片) */
 .sticky-save-bar {
   position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  right: 0;
+  left: 240px;
+  height: 54px;
+  background: var(--surface-card, #ffffff);
+  border-top: 1px solid var(--hairline-strong, #c8c4be);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.07);
   z-index: 1000;
-  width: calc(100% - 32px);
-  max-width: 660px;
+  display: flex;
+  align-items: center;
+  transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(.layout-container.sidebar-collapsed) .sticky-save-bar {
+  left: 64px;
+}
+
+@media (max-width: 768px) {
+  .sticky-save-bar {
+    left: 0;
+  }
 }
 
 .save-bar-slide-enter-active,
@@ -578,19 +593,18 @@ onActivated(() => {
 .save-bar-slide-enter-from,
 .save-bar-slide-leave-to {
   opacity: 0;
-  transform: translate(-50%, 20px);
+  transform: translateY(100%);
 }
 
 .save-bar-inner {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--hairline-strong, #c8c4be);
-  border-radius: var(--r-xl, 14px);
-  padding: 10px 16px 10px 20px;
-  box-shadow: var(--shadow-popover, 0 8px 24px rgba(0, 0, 0, 0.12));
-  backdrop-filter: var(--glass-blur);
+  box-sizing: border-box;
 }
 
 .save-bar-status {
@@ -725,13 +739,13 @@ onActivated(() => {
     gap: 12px;
   }
   .sticky-save-bar {
-    width: calc(100% - 20px);
+    height: auto;
+    padding: 10px 0;
   }
   .save-bar-inner {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-    padding: 12px 16px;
   }
   .save-bar-actions {
     width: 100%;
