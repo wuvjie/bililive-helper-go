@@ -101,23 +101,18 @@
 
           <el-table-column prop="status" label="状态" width="95" align="center" header-align="center" sortable>
             <template #default="{ row }">
-              <span class="status-dot-text" :class="row.status === 'success' ? 'dot-success' : 'dot-fail'">
-                {{ row.status === 'success' ? '成功' : '失败' }}
+              <span
+                class="status-dot-text"
+                :class="row.status === 'success' ? 'dot-success' : (row.status === 'partial' ? 'dot-warn' : 'dot-fail')"
+              >
+                {{ row.status === 'success' ? '成功' : (row.status === 'partial' ? '部分' : '失败') }}
               </span>
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="130" align="center" header-align="center">
+          <el-table-column label="操作" width="100" align="center" header-align="center">
             <template #default="{ row }">
               <div class="row-actions-group">
-                <button
-                  v-if="row.task === 'merge' && row.status === 'fail' && row.streamer"
-                  class="row-action-btn action-retry"
-                  @click="retryMerge(row)"
-                  title="前往任务中心处理该主播合并任务"
-                >
-                  去处理 ↗
-                </button>
                 <button
                   v-if="row.log_id && (row.task === 'merge' || row.task === 'clean')"
                   class="row-action-btn action-view"
@@ -126,6 +121,7 @@
                 >
                   查看
                 </button>
+                <span v-else class="action-none-placeholder">-</span>
               </div>
             </template>
           </el-table-column>
@@ -274,14 +270,6 @@ async function handleClearHistory() {
     if (err !== "cancel") {
       ElMessage.error(err.message || "清空历史记录失败");
     }
-  }
-}
-
-function retryMerge(row: HistoryRecord) {
-  if (row.streamer) {
-    router.push({ path: "/tasks", query: { streamer: row.streamer } });
-  } else {
-    router.push("/tasks");
   }
 }
 
@@ -527,11 +515,24 @@ onActivated(() => {
   background: #10b981;
 }
 
+.dot-warn {
+  color: #d97706;
+}
+.dot-warn::before {
+  background: #f59e0b;
+}
+
 .dot-fail {
   color: var(--error);
 }
 .dot-fail::before {
   background: var(--error);
+}
+
+.action-none-placeholder {
+  color: var(--stone);
+  font-size: 13px;
+  user-select: none;
 }
 
 .row-actions-group {

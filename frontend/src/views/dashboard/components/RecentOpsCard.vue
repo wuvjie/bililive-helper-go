@@ -52,7 +52,11 @@
               </span>
             </div>
             <div class="recent-right">
-              <span class="recent-status-dot" :class="row.status === 'fail' ? 'dot-fail' : 'dot-emerald'"></span>
+              <span
+                class="recent-status-dot"
+                :class="row.status === 'fail' ? 'dot-fail' : (row.status === 'partial' ? 'dot-warn' : 'dot-emerald')"
+                :title="row.status === 'fail' ? '执行失败' : (row.status === 'partial' ? '部分完成' : '执行成功')"
+              ></span>
               <span class="recent-time">{{ formatShortTime(row.time) }}</span>
             </div>
           </div>
@@ -270,6 +274,10 @@ function formatDetail(row: HistoryRecord): string {
 
 .dot-emerald {
   background: #10b981;
+}
+
+.dot-warn {
+  background: #f59e0b;
 }
 
 .dot-fail {
