@@ -13,10 +13,10 @@
       </header>
 
       <div class="primer-box-body">
-        <!-- 1. 自动分片合并 -->
+        <!-- 1. 定时自动合并分片 -->
         <div class="primer-row">
           <div class="row-label-row">
-            <label class="row-label">自动分片合并</label>
+            <label class="row-label">定时自动合并分片</label>
             <span class="status-pill" :class="form.merge_enabled ? 'pill-active' : 'pill-inactive'">
               {{ form.merge_enabled ? '已启用' : '已停用' }}
             </span>
@@ -45,10 +45,10 @@
           </div>
         </div>
 
-        <!-- 2. 自动磁盘清理 -->
+        <!-- 2. 定时巡检磁盘并清理 -->
         <div class="primer-row">
           <div class="row-label-row">
-            <label class="row-label">自动磁盘清理</label>
+            <label class="row-label">定时巡检磁盘并清理</label>
             <span class="status-pill" :class="form.clean_enabled ? 'pill-active' : 'pill-inactive'">
               {{ form.clean_enabled ? '已启用' : '已停用' }}
             </span>
@@ -93,7 +93,7 @@
       <div class="primer-box-body">
         <!-- 1. 避让时间范围选择 -->
         <div class="primer-row">
-          <label class="row-label">避让时段范围</label>
+          <label class="row-label">每日任务避让时段</label>
           <div class="row-control">
             <div class="window-picker-flow">
               <div class="time-range-group">
@@ -266,10 +266,10 @@ const windowStatusTitle = computed(() => {
 .primer-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 13px 18px;
+  justify-content: flex-start;
+  gap: 28px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--hairline, #e5e3df);
-  gap: 20px;
   min-height: 52px;
   box-sizing: border-box;
 }
@@ -278,7 +278,10 @@ const windowStatusTitle = computed(() => {
   border-bottom: none;
 }
 
-.row-label-row {
+.row-label-row,
+.primer-row > .row-label {
+  width: 210px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -288,11 +291,14 @@ const windowStatusTitle = computed(() => {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--charcoal, #37352f);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .row-control {
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .status-pill {
@@ -438,6 +444,10 @@ const windowStatusTitle = computed(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+  .row-label-row,
+  .primer-row > .row-label {
+    width: 100%;
   }
   .schedule-control-flow {
     flex-direction: column;

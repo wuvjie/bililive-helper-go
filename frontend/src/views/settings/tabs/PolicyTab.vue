@@ -14,14 +14,14 @@
             <path d="M17 7.5h4"/>
             <path d="M17 16.5h4"/>
           </svg>
-          <h2 class="box-title">录播合并策略</h2>
+          <h2 class="box-title">录播合并规则</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
-        <!-- 1. 断流重连容差 -->
+        <!-- 1. 断流重连合并时间 -->
         <div class="primer-row">
-          <label class="row-label">断流重连容差</label>
+          <label class="row-label">断流重连合并时间</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -38,9 +38,9 @@
           </div>
         </div>
 
-        <!-- 2. 完播静置等待 -->
+        <!-- 2. 关播后等待合并时长 -->
         <div class="primer-row">
-          <label class="row-label">完播静置等待</label>
+          <label class="row-label">关播后等待合并时长</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -59,7 +59,7 @@
       </div>
     </section>
 
-    <!-- Box 2: 磁盘清理与空间安全策略 -->
+    <!-- Box 2: 磁盘自动清理与保护 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -68,7 +68,7 @@
             <path d="M12 8v4"/>
             <path d="M12 16h.01"/>
           </svg>
-          <h2 class="box-title">磁盘清理与空间安全</h2>
+          <h2 class="box-title">磁盘自动清理与保护</h2>
         </div>
       </header>
 
@@ -78,12 +78,12 @@
           <div class="gauge-console">
             <!-- 仪表盘顶栏读数 -->
             <div class="gauge-header">
-              <span class="gauge-label">磁盘清理冲程与水位控制</span>
+              <span class="gauge-label">磁盘清理警戒线与安全回落线</span>
               <span class="gauge-summary">
-                触发警戒线 <strong class="text-warn">{{ triggerVal }}%</strong>
-                <span v-if="triggerFreeGB" class="text-sub">（余量 &lt; {{ triggerFreeGB }} GB 触发）</span>
+                触发清理 <strong class="text-warn">{{ triggerVal }}%</strong>
+                <span v-if="triggerFreeGB" class="text-sub">（余量 &lt; {{ triggerFreeGB }} GB 时启动）</span>
                 · 降至安全线 <strong class="text-target">{{ targetVal }}%</strong>
-                · 单次冲程 <strong class="text-blue">{{ strokePct }}%</strong>
+                · 单次释放 <strong class="text-blue">{{ strokePct }}%</strong>
                 <span v-if="strokeGB" class="text-sub">（≈ {{ strokeGB }} GB）</span>
               </span>
             </div>
@@ -92,13 +92,13 @@
             <div class="gauge-track-wrap">
               <div class="gauge-track">
                 <div class="track-segment seg-safe" :style="{ width: `${targetVal}%` }">
-                  <span class="seg-label" v-if="targetVal > 15">安全水位区 (0% ~ {{ targetVal }}%)</span>
+                  <span class="seg-label" v-if="targetVal > 15">安全水位 (0% ~ {{ targetVal }}%)</span>
                 </div>
                 <div class="track-segment seg-stroke" :style="{ width: `${strokePct}%` }">
                   <span class="seg-label" v-if="strokePct > 12">清理释放冲程 ({{ strokePct }}%)</span>
                 </div>
                 <div class="track-segment seg-warn" :style="{ width: `${100 - triggerVal}%` }">
-                  <span class="seg-label" v-if="(100 - triggerVal) > 15">警戒水位区 ({{ triggerVal }}% ~ 100%)</span>
+                  <span class="seg-label" v-if="(100 - triggerVal) > 15">警戒水位 ({{ triggerVal }}% ~ 100%)</span>
                 </div>
               </div>
             </div>
@@ -109,7 +109,7 @@
                 <div class="slider-meta">
                   <span class="slider-title">
                     <span class="dot-indicator dot-warn"></span>
-                    触发清理阈值
+                    达到警戒线触发清理
                   </span>
                   <span class="slider-val mono-val">{{ triggerVal }}%</span>
                 </div>
@@ -126,7 +126,7 @@
                 <div class="slider-meta">
                   <span class="slider-title">
                     <span class="dot-indicator dot-target"></span>
-                    目标安全阈值
+                    降回安全线停止清理
                   </span>
                   <span class="slider-val mono-val">{{ targetVal }}%</span>
                 </div>
@@ -142,9 +142,9 @@
           </div>
         </div>
 
-        <!-- 2. 新录像免删保护 -->
+        <!-- 2. 最近录播免删保护期 -->
         <div class="primer-row">
-          <label class="row-label">新录像免删保护</label>
+          <label class="row-label">最近录像免删保护期</label>
           <div class="row-control">
             <div class="safe-mode-group">
               <el-radio-group
@@ -184,9 +184,9 @@
           </div>
         </div>
 
-        <!-- 3. 每主播最少保留 -->
+        <!-- 3. 每位主播保底留存场次 -->
         <div class="primer-row">
-          <label class="row-label">每主播最少保留</label>
+          <label class="row-label">每位主播保底留存场次</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -198,14 +198,14 @@
                 class="stepper-compact"
                 @update:model-value="updateField('MIN_KEEP_PER_STREAMER', Number($event))"
               />
-              <span class="unit-text">场</span>
+              <span class="unit-text">场录像</span>
             </div>
           </div>
         </div>
 
-        <!-- 4. 单次最多清理 -->
+        <!-- 4. 单次清理最多删除文件 -->
         <div class="primer-row">
-          <label class="row-label">单次最多清理</label>
+          <label class="row-label">单次清理最多删除文件</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -222,10 +222,10 @@
           </div>
         </div>
 
-        <!-- 5. 免清理白名单关键词 -->
-        <div class="primer-row whitelist-row">
-          <label class="row-label">免清理白名单</label>
-          <div class="whitelist-tags-area">
+        <!-- 5. 永久免删关键词白名单 -->
+        <div class="primer-row">
+          <label class="row-label">永久免删关键词白名单</label>
+          <div class="row-control whitelist-control">
             <div class="tags-flex-wrap">
               <el-tag
                 v-for="(tag, idx) in tagList"
@@ -425,7 +425,7 @@ function removeTag(idx: number) {
   line-height: 1.3;
 }
 
-/* Primer Rows */
+/* Primer Rows: 左标题固定 210px，右侧控件紧贴在同一纵轴对齐，彻底消灭中间数百像素空白大坑 */
 .primer-box-body {
   padding: 0;
 }
@@ -433,10 +433,10 @@ function removeTag(idx: number) {
 .primer-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 13px 18px;
+  justify-content: flex-start;
+  gap: 28px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--hairline, #e5e3df);
-  gap: 20px;
   min-height: 52px;
   box-sizing: border-box;
 }
@@ -446,14 +446,19 @@ function removeTag(idx: number) {
 }
 
 .row-label {
+  width: 210px;
+  flex-shrink: 0;
   font-size: 13.5px;
   font-weight: 500;
   color: var(--charcoal, #37352f);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .row-control {
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .control-unit-group {
@@ -463,14 +468,13 @@ function removeTag(idx: number) {
 }
 
 .stepper-compact {
-  width: 125px;
+  width: 130px;
 }
 
 .unit-text {
   font-size: 13px;
   color: var(--slate, #5d5b54);
   font-weight: 500;
-  min-width: 28px;
 }
 
 /* 水位深度控制台专有样式 */
@@ -495,7 +499,7 @@ function removeTag(idx: number) {
 
 .gauge-label {
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--charcoal, #37352f);
 }
 
@@ -628,25 +632,18 @@ function removeTag(idx: number) {
 .safe-mode-group {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* 白名单区域 */
-.whitelist-row {
-  align-items: center;
-}
-
-.whitelist-tags-area {
+.whitelist-control {
   flex: 1;
-  display: flex;
-  justify-content: flex-end;
 }
 
 .tags-flex-wrap {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -701,18 +698,15 @@ function removeTag(idx: number) {
     align-items: flex-start;
     gap: 8px;
   }
+  .row-label {
+    width: 100%;
+  }
   .gauge-sliders-grid {
     grid-template-columns: 1fr;
   }
   .safe-mode-group {
     flex-direction: column;
     align-items: flex-start;
-  }
-  .whitelist-tags-area {
-    justify-content: flex-start;
-  }
-  .tags-flex-wrap {
-    justify-content: flex-start;
   }
 }
 </style>
