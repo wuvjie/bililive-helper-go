@@ -78,7 +78,6 @@
       :loading="drawerLoading"
       :tick="tick"
       @play="handlePlay"
-      @copy="handleCopyPath"
       @delete="handleDeleteFile"
     />
 
@@ -94,7 +93,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, onActivated } from "vue";
 import { getStreamers, getStreamerFiles, saveStreamerRule, getVideoPlayUrl, deleteStreamerFile } from "@/api/status";
-import { copyToClipboard } from "@/utils/clipboard";
 import { Search } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { StreamerInfo, StreamerFile, StreamerRule } from "@/api/types";
@@ -173,11 +171,6 @@ async function openDrawer(row: StreamerInfo) {
   } finally {
     drawerLoading.value = false;
   }
-}
-
-async function handleCopyPath(row: StreamerFile) {
-  const fullPath = row.path || `${drawerStreamer.value}/${row.name}`;
-  await copyToClipboard(fullPath, `已复制实际文件物理路径: ${fullPath}`);
 }
 
 async function handleDeleteFile(row: StreamerFile) {

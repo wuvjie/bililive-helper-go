@@ -67,16 +67,12 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="205" align="center" header-align="center">
+          <el-table-column label="操作" width="140" align="center" header-align="center">
             <template #default="{ row }">
               <div class="drawer-file-actions">
                 <button class="play-btn-sm" @click="$emit('play', row)" title="在浏览器中播放预览">
                   <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   <span>播放</span>
-                </button>
-                <button class="play-btn-sm btn-copy-path" @click="$emit('copy', row)" :title="`复制实际物理路径: ${row.path || (streamer + '/' + row.name)}`">
-                  <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  <span>复制路径</span>
                 </button>
                 <button class="play-btn-sm btn-del-video" @click="$emit('delete', row)" title="从磁盘永久删除该录像文件">
                   <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -120,7 +116,6 @@ defineProps<{
 defineEmits<{
   (e: "update:visible", val: boolean): void;
   (e: "play", file: StreamerFile): void;
-  (e: "copy", file: StreamerFile): void;
   (e: "delete", file: StreamerFile): void;
 }>();
 
