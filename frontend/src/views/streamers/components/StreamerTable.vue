@@ -104,7 +104,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="185" align="left" header-align="left">
+      <el-table-column label="操作" width="225" align="left" header-align="left">
         <template #default="{ row }">
           <div class="action-btn-group">
             <button class="ghost-action" @click="$emit('open-drawer', row as StreamerInfo)" title="查看该主播全部录像文件">
@@ -254,9 +254,8 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  width: 66px;
-  min-width: 66px;
-  padding: 4px 0;
+  padding: 4px 10px;
+  height: 28px;
   border-radius: var(--r-sm);
   font-size: 12px;
   font-weight: 500;

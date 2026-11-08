@@ -13,12 +13,13 @@
         <div class="scope-selector-wrap">
           <span class="scope-label">处理范围：</span>
           <el-select
-            :model-value="selectedStreamer"
+            :model-value="selectedStreamer || 'all'"
             class="scope-select"
             filterable
+            placeholder="所有主播"
             @update:model-value="$emit('update:selectedStreamer', $event)"
           >
-            <el-option label="所有主播" value="" />
+            <el-option label="所有主播" value="all" />
             <el-option
               v-for="s in streamers"
               :key="s.name"
@@ -123,14 +124,14 @@ defineEmits<{
 }>();
 
 const mergeButtonTooltip = computed(() => {
-  if (props.selectedStreamer) {
+  if (props.selectedStreamer && props.selectedStreamer !== "all") {
     return `立即对主播「${props.selectedStreamer}」执行录像分片合并`;
   }
   return "立即对所有主播执行录像分片合并";
 });
 
 const cleanButtonTooltip = computed(() => {
-  if (props.selectedStreamer) {
+  if (props.selectedStreamer && props.selectedStreamer !== "all") {
     return `立即清理主播「${props.selectedStreamer}」的已合并及过期录像`;
   }
   return "立即检查磁盘空间并对所有主播执行过期录像清理";

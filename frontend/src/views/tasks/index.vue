@@ -36,13 +36,13 @@ const route = useRoute();
 const router = useRouter();
 const schedule = ref<ScheduleStatus>();
 const streamers = ref<StreamerInfo[]>([]);
-const selectedStreamer = ref("");
+const selectedStreamer = ref("all");
 
 let autoTriggered = false;
 
 // 离开页面时安全重置未执行的临时定向主播选择
 onDeactivated(() => {
-  selectedStreamer.value = "";
+  selectedStreamer.value = "all";
   autoTriggered = false;
 });
 
@@ -63,7 +63,7 @@ function handleClear() {
 // 1. 执行录像合并（根据 selectedStreamer 自动区分全局 vs 定向）
 async function handleExecuteMerge() {
   if (sse.isRunning.value) return;
-  const streamer = selectedStreamer.value?.trim();
+  const streamer = (selectedStreamer.value && selectedStreamer.value !== "all") ? selectedStreamer.value.trim() : "";
   if (streamer) {
     sse.startSSE("/api/merge", { streamer });
   } else {
@@ -74,7 +74,7 @@ async function handleExecuteMerge() {
 // 2. 执行录像清理（根据 selectedStreamer 自动区分全局 vs 定向，带明确安全确认提示）
 async function handleExecuteClean() {
   if (sse.isRunning.value) return;
-  const streamer = selectedStreamer.value?.trim();
+  const streamer = (selectedStreamer.value && selectedStreamer.value !== "all") ? selectedStreamer.value.trim() : "";
   try {
     if (streamer) {
       await ElMessageBox.confirm(
@@ -124,6 +124,8 @@ async function loadBaseData() {
           handleExecuteMerge();
         }, 100);
       }
+    } else {
+      selectedStreamer.value = "all";
     }
   } catch (e: any) {
     ElMessage.error(e?.message || "获取调度数据失败");
