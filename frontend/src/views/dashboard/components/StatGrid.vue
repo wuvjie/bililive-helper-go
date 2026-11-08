@@ -18,12 +18,12 @@
       </span>
     </div>
 
-    <!-- Card 3: 本月合并 (周期汇总) -->
+    <!-- Card 3: 累计合并 (业务产出总值) -->
     <div class="stat-card accent-sky">
-      <span class="stat-label">本月合并</span>
-      <span class="stat-value">{{ stats?.month?.merge_count || 0 }}</span>
+      <span class="stat-label">累计合并</span>
+      <span class="stat-value">{{ totalMergedStats.count }}</span>
       <span class="stat-sub">
-        产出 {{ stats?.month?.merge_bytes ? formatBytes(stats.month.merge_bytes) : '0.00 GB' }}
+        产出 {{ totalMergedStats.bytes ? formatBytes(totalMergedStats.bytes) : '0.00 GB' }}
       </span>
     </div>
 
@@ -66,6 +66,7 @@ import type { StatsResponse } from "@/api/types";
 const props = defineProps<{
   stats?: StatsResponse;
   yesterdayStats?: { count: number; bytes: number };
+  totalMergedStats: { count: number; bytes: number };
   totalFreedStats: { count: number; bytes: number };
   freedSpaceDisplay: { val: string; unit: string };
 }>();

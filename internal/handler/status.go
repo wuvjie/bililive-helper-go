@@ -76,8 +76,8 @@ func (h *Handler) Stats(c *gin.Context) {
 	yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
 	month := now.Format("2006-01")
 
-	var todayMerge, todayClean, yesterdayMerge, yesterdayClean, monthMerge, monthClean, totalClean int
-	var todayMergeBytes, todayCleanBytes, yesterdayMergeBytes, yesterdayCleanBytes, monthMergeBytes, monthCleanBytes, totalCleanBytes int64
+	var todayMerge, todayClean, yesterdayMerge, yesterdayClean, monthMerge, monthClean, totalClean, totalMerge int
+	var todayMergeBytes, todayCleanBytes, yesterdayMergeBytes, yesterdayCleanBytes, monthMergeBytes, monthCleanBytes, totalCleanBytes, totalMergeBytes int64
 
 	for _, r := range records {
 		// 有效清理：状态成功且实际产生了磁盘释放（排除未达水位无文件删除的空跑扫描）
@@ -85,6 +85,13 @@ func (h *Handler) Stats(c *gin.Context) {
 		if isEffectiveClean {
 			totalClean++
 			totalCleanBytes += r.FreedBytes
+		}
+
+		// 有效合并：状态成功/部分成功且实际发生了分片合并或产出体积（排除无待合并文件的空跑扫描）
+		isEffectiveMerge := r.Task == "merge" && (r.Status == "success" || r.Status == "partial") && (r.MergedBytes > 0 || r.FilesCount > 0)
+		if isEffectiveMerge {
+			totalMerge++
+			totalMergeBytes += r.MergedBytes
 		}
 
 		if len(r.Time) < 10 {
@@ -196,6 +203,8 @@ func (h *Handler) Stats(c *gin.Context) {
 			"clean_bytes": monthCleanBytes,
 		},
 		"total": gin.H{
+			"merge_count": totalMerge,
+			"merge_bytes": totalMergeBytes,
 			"clean_count": totalClean,
 			"clean_bytes": totalCleanBytes,
 		},

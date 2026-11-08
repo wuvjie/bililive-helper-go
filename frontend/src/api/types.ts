@@ -52,6 +52,8 @@ export interface StatsResponse {
   yesterday?: Omit<DayStats, "date">;
   month: Omit<DayStats, "date">;
   total?: {
+    merge_count?: number;
+    merge_bytes?: number;
     clean_count: number;
     clean_bytes: number;
   };

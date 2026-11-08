@@ -25,6 +25,7 @@
     <StatGrid
       :stats="stats"
       :yesterday-stats="yesterdayStats"
+      :total-merged-stats="totalMergedStats"
       :total-freed-stats="totalFreedStats"
       :freed-space-display="freedSpaceDisplay"
     />
@@ -81,6 +82,28 @@ const yesterdayStats = computed(() => {
     };
   }
   return { count: 0, bytes: 0 };
+});
+
+const totalMergedStats = computed(() => {
+  if (stats.value?.total?.merge_bytes !== undefined) {
+    return {
+      count: stats.value.total.merge_count || 0,
+      bytes: stats.value.total.merge_bytes || 0
+    };
+  }
+  const daily = stats.value?.daily;
+  if (daily && daily.length > 0) {
+    const sumBytes = daily.reduce((acc, d) => acc + (d.merge_bytes || 0), 0);
+    const sumCount = daily.reduce((acc, d) => acc + (d.merge_count || 0), 0);
+    return {
+      count: Math.max(stats.value?.month?.merge_count || 0, sumCount),
+      bytes: Math.max(stats.value?.month?.merge_bytes || 0, sumBytes)
+    };
+  }
+  return {
+    count: stats.value?.month?.merge_count || 0,
+    bytes: stats.value?.month?.merge_bytes || 0
+  };
 });
 
 const totalFreedStats = computed(() => {
