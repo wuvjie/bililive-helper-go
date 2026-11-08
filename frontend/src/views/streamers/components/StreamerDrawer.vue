@@ -12,24 +12,6 @@
           v-model="activeTab"
           :items="navItems"
         />
-        <button
-          type="button"
-          class="btn-drawer-merge"
-          title="针对该主播立即发起分片合并流水线"
-          @click="$emit('merge-streamer', streamer)"
-        >
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="18" height="18" x="3" y="3" rx="2"/>
-            <path d="M7 3v18"/>
-            <path d="M17 3v18"/>
-            <path d="M3 7.5h4"/>
-            <path d="M3 12h18"/>
-            <path d="M3 16.5h4"/>
-            <path d="M17 7.5h4"/>
-            <path d="M17 16.5h4"/>
-          </svg>
-          <span>合并该主播</span>
-        </button>
       </div>
 
       <div class="table-responsive-wrapper">
@@ -44,7 +26,7 @@
           <el-table-column
             prop="name"
             label="文件名"
-            min-width="280"
+            min-width="260"
             resizable
             align="left"
             header-align="left"
@@ -70,7 +52,7 @@
           <el-table-column
             prop="size"
             label="大小"
-            width="88"
+            width="90"
             resizable
             align="right"
             header-align="right"
@@ -85,7 +67,7 @@
           <el-table-column
             prop="is_merged"
             label="状态"
-            width="80"
+            width="104"
             resizable
             align="center"
             header-align="center"
@@ -103,7 +85,7 @@
 
           <el-table-column
             label="操作"
-            width="120"
+            width="140"
             resizable
             align="center"
             header-align="center"
@@ -161,7 +143,6 @@ const emit = defineEmits<{
   (e: "update:visible", val: boolean): void;
   (e: "play", file: StreamerFile): void;
   (e: "delete", file: StreamerFile): void;
-  (e: "merge-streamer", streamer: string): void;
 }>();
 
 const mergedCount = computed(() => props.files.filter(f => f.is_merged).length);
@@ -222,48 +203,6 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   margin-bottom: -4px;
 }
 
-.btn-drawer-merge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: var(--r-sm);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--primary, #2563eb);
-  background: color-mix(in srgb, var(--primary, #2563eb) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--primary, #2563eb) 20%, transparent);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  line-height: 1;
-
-  &:hover {
-    background: var(--primary, #2563eb);
-    color: #ffffff;
-    border-color: var(--primary, #2563eb);
-  }
-
-  .btn-svg-sm {
-    width: 13px;
-    height: 13px;
-  }
-}
-
-html.dark .btn-drawer-merge {
-  color: #58a6ff;
-  background: rgba(56, 139, 253, 0.12);
-  border-color: rgba(56, 139, 253, 0.3);
-
-  &:hover {
-    background: #1f6feb;
-    color: #ffffff;
-    border-color: #1f6feb;
-  }
-}
-
-
-
 .drawer-sub {
   font-size: 13px;
   color: var(--slate);
@@ -302,6 +241,7 @@ html.dark .btn-drawer-merge {
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
+  white-space: nowrap;
 }
 
 .badge-dot {
@@ -325,6 +265,7 @@ html.dark .btn-drawer-merge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .play-btn-sm {

@@ -22,26 +22,17 @@
             {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '调度生效中' : '定时已暂停' }}
           </span>
         </div>
-        <div class="title-right-actions">
-          <router-link to="/settings" class="sched-jump-link" title="前往系统设置修改调度周期与避让时段">
-            <svg class="sched-jump-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            <span>设置</span>
-          </router-link>
-          <button
-            class="btn-task-action btn-merge-action"
-            :disabled="isRunning"
-            @click="$emit('run-global', 'merge')"
-            title="立即启动一次全局分片合并任务"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-            <span>立即执行合并</span>
-          </button>
-        </div>
+        <button
+          class="btn-task-action btn-merge-action"
+          :disabled="isRunning"
+          @click="$emit('run-global', 'merge')"
+          title="立即启动一次全局分片合并任务"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>立即执行合并</span>
+        </button>
       </div>
 
       <div class="sched-metric-grid">
@@ -75,26 +66,17 @@
             {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '巡检生效中' : '保护未开启' }}
           </span>
         </div>
-        <div class="title-right-actions">
-          <router-link to="/settings" class="sched-jump-link" title="前往系统设置修改调度周期与避让时段">
-            <svg class="sched-jump-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            <span>设置</span>
-          </router-link>
-          <button
-            class="btn-task-action btn-clean-action"
-            :disabled="isRunning"
-            @click="$emit('run-global', 'clean')"
-            title="立即启动一次全局磁盘巡检与清理"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-            <span>立即执行清理</span>
-          </button>
-        </div>
+        <button
+          class="btn-task-action btn-clean-action"
+          :disabled="isRunning"
+          @click="$emit('run-global', 'clean')"
+          title="立即启动一次全局磁盘巡检与清理"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>立即执行清理</span>
+        </button>
       </div>
 
       <div class="sched-metric-grid">
@@ -188,51 +170,6 @@ function formatDisplayTime(ts?: number): string {
 
 html.dark .sched-policy-meta {
   color: #8b949e;
-}
-
-.title-right-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sched-jump-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 32px;
-  padding: 0 10px;
-  box-sizing: border-box;
-  border-radius: var(--r-sm);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-fg-muted, #57606a);
-  background: transparent;
-  border: 1px solid var(--hairline);
-  text-decoration: none;
-  transition: all 0.15s ease;
-  line-height: 1;
-
-  &:hover {
-    color: var(--primary, #0969da);
-    background: var(--surface-secondary, #f6f8fa);
-    border-color: var(--primary, #0969da);
-  }
-
-  .sched-jump-icon {
-    width: 13px;
-    height: 13px;
-  }
-}
-
-html.dark .sched-jump-link {
-  color: #8b949e;
-
-  &:hover {
-    color: #58a6ff;
-    background: #21262d;
-    border-color: #30363d;
-  }
 }
 
 .badge-status {
