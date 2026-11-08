@@ -148,19 +148,6 @@ export interface SetupCheck {
   disk_usage_pct: number;
 }
 
-export interface CleanEstimate {
-  file_count: number;
-  total_size_gb: number;
-}
-
-export interface ConfigAnalysis {
-  streamer_count: number;
-  total_videos: number;
-  merged_count: number;
-  daily_output_gb: number;
-  days_until_full: number;
-}
-
 export interface ConfigDTO {
   TARGET_DIR: string;
   TRIGGER_THRESHOLD: number;
@@ -181,20 +168,3 @@ export interface ConfigDTO {
   LOG_DIR: string;
 }
 
-export interface ConfigRecommend {
-  risk_level: string;
-  reason: string;
-  analysis: ConfigAnalysis;
-  current_usage: number;
-  total_gb: number;
-  free_gb: number;
-  need_to_free_gb: number;
-  TRIGGER_THRESHOLD: number;
-  TARGET_THRESHOLD: number;
-  MIN_KEEP_PER_STREAMER: number;
-  SAFE_AGE_MINUTES: number;
-  SAFE_MODE: string;
-  MERGE_AGE_MINUTES: number;
-  MAX_DELETE_PER_RUN: number;
-  GAP_MINUTES: number;
-}

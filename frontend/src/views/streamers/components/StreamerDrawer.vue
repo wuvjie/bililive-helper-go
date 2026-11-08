@@ -128,6 +128,7 @@
 import { ref, computed } from "vue";
 import type { StreamerFile } from "@/api/types";
 import UnderlineNav, { type UnderlineNavItem } from "@/components/common/UnderlineNav.vue";
+import { formatExactTime, formatDisplayDateTime, formatRelativeTime } from "@/utils/format";
 
 const activeTab = ref<string>("all");
 
@@ -159,31 +160,6 @@ const displayFiles = computed(() => {
   if (activeTab.value === "raw") return props.files.filter(f => !f.is_merged);
   return props.files;
 });
-
-function formatExactTime(ts: number): string {
-  const d = new Date(ts * 1000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
-function formatDisplayDateTime(ts: number): string {
-  if (!ts || isNaN(ts)) return "-";
-  const d = new Date(ts * 1000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function formatRelativeTime(ts: number, _tick?: number): string {
-  const diff = Date.now() / 1000 - ts;
-  if (diff < 0) return "刚刚";
-  if (diff < 60) return "刚刚";
-  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
-  const days = Math.floor(diff / 86400);
-  if (days < 30) return `${days} 天前`;
-  const d = new Date(ts * 1000);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 </script>
 
 <style scoped>

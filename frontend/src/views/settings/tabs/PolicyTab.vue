@@ -310,13 +310,11 @@ import type { ConfigDTO } from "@/api/types";
 
 const props = defineProps<{
   config: ConfigDTO;
-  saving?: boolean;
   totalDiskGb?: number;
 }>();
 
 const emit = defineEmits<{
   (e: "update:config", val: ConfigDTO): void;
-  (e: "save"): void;
 }>();
 
 function updateField<K extends keyof ConfigDTO>(key: K, value: ConfigDTO[K]) {

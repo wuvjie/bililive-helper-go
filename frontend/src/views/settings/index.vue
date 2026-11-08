@@ -39,7 +39,7 @@
     </header>
 
     <!-- Main Content Stream -->
-    <main class="settings-body" v-loading="loading">
+    <main class="settings-body" v-loading="loading || scheduleLoading">
       <Transition name="tab-fade" mode="out-in">
         <!-- 1. 全局策略 Tab -->
         <PolicyTab
@@ -47,7 +47,6 @@
           key="policy"
           :config="config"
           :total-disk-gb="totalDiskGb"
-          :saving="saving"
           @update:config="config = $event"
         />
 
@@ -58,8 +57,6 @@
           :form="scheduleForm"
           :backup-start="backupStart"
           :backup-end="backupEnd"
-          :saving="saving"
-          :loading="scheduleLoading"
           @update:form="Object.assign(scheduleForm, $event)"
           @update:backup-start="backupStart = $event"
           @update:backup-end="backupEnd = $event"

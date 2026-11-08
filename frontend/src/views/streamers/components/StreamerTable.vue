@@ -145,6 +145,7 @@
 
 <script setup lang="ts">
 import EmptyState from "@/components/common/EmptyState.vue";
+import { formatExactTime, formatRelativeTime } from "@/utils/format";
 import type { StreamerInfo } from "@/api/types";
 
 defineProps<{
@@ -168,24 +169,6 @@ function isStreamerActive(row: StreamerInfo): boolean {
 
 function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
   return (a.mtime || 0) - (b.mtime || 0);
-}
-
-function formatExactTime(ts: number): string {
-  const d = new Date(ts * 1000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
-function formatRelativeTime(ts: number, _tick?: number): string {
-  const diff = Date.now() / 1000 - ts;
-  if (diff < 0) return "刚刚";
-  if (diff < 60) return "刚刚";
-  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
-  const days = Math.floor(diff / 86400);
-  if (days < 30) return `${days} 天前`;
-  const d = new Date(ts * 1000);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 </script>
 

@@ -182,7 +182,7 @@ import router from "@/router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
 import { getHistory, getLogContent, clearHistory } from "@/api/history";
-import { formatBytes } from "@/utils/format";
+import { formatBytes, cleanDetailText, formatHistoryDetail as formatDetail } from "@/utils/format";
 import type { HistoryRecord } from "@/api/types";
 
 import UnderlineNav from "@/components/common/UnderlineNav.vue";
@@ -298,38 +298,6 @@ async function viewLog(row: HistoryRecord) {
   } finally {
     logLoading.value = false;
   }
-}
-
-function cleanDetailText(raw: string, _task?: string): string {
-  if (!raw) return "-";
-  let s = raw.trim();
-  if (s.startsWith("调度已保存:") || s.startsWith("调度已保存：")) {
-    const params = s.replace(/^调度已保存[:：]\s*/, "");
-    return `重新应用当前调度（${params}，无参数变动）`;
-  }
-  if (s === "配置未改动" || s === "无变更") {
-    return "重新应用当前配置 (无参数改动)";
-  }
-  s = s.replace(/^(调度变更|配置变更|系统配置变更|合并任务|清理任务)[:：]\s*/, "");
-  s = s.replace(/([^\s]+)\s*→\s*([^\s]+)/g, "$1 → $2");
-  s = s.replace(/,\s*/g, "，");
-  return s;
-}
-
-function formatDetail(row: HistoryRecord): string {
-  if (row.detail) return row.detail;
-  const p: string[] = [];
-  if (row.task === "merge") {
-    if (row.files_count) p.push(`合并 ${row.files_count} 个分片`);
-    if (row.merged_bytes) p.push(formatBytes(row.merged_bytes));
-  } else if (row.task === "clean") {
-    if (row.files_count) p.push(`清理 ${row.files_count} 个文件`);
-    if (row.freed_bytes) p.push(`释放 ${formatBytes(row.freed_bytes)}`);
-  } else {
-    if (row.files_count) p.push(`${row.files_count} 个文件`);
-  }
-  if (row.duration) p.push(`${row.duration} 秒`);
-  return p.join(" · ") || "已完成";
 }
 
 onMounted(() => {

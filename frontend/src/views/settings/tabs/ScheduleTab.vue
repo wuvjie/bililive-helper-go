@@ -182,15 +182,12 @@ const props = defineProps<{
   form: ScheduleForm;
   backupStart: string;
   backupEnd: string;
-  saving?: boolean;
-  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "update:form", val: Partial<ScheduleForm>): void;
   (e: "update:backupStart", val: string): void;
   (e: "update:backupEnd", val: string): void;
-  (e: "save"): void;
 }>();
 
 function updateField<K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K]) {

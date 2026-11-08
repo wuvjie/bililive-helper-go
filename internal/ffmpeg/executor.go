@@ -26,34 +26,3 @@ type Executor interface {
 	// TrimVideo 按时间参数裁剪视频并输出到指定路径（stream-copy）。
 	TrimVideo(ctx context.Context, input, output, startTime, endTime string) error
 }
-
-// DefaultExecutor 是 Executor 的默认实现，直接调用包级函数。
-type DefaultExecutor struct{}
-
-func (d *DefaultExecutor) ConcatTS(ctx context.Context, tsFiles []string, output string, onProgress func(string)) error {
-	return ConcatTS(ctx, tsFiles, output, onProgress)
-}
-
-func (d *DefaultExecutor) ConvertViaTS(ctx context.Context, input, output string) error {
-	return ConvertViaTS(ctx, input, output)
-}
-
-func (d *DefaultExecutor) Reencode(ctx context.Context, files []string, folder, output string, onProgress func(string)) error {
-	return Reencode(ctx, files, folder, output, onProgress)
-}
-
-func (d *DefaultExecutor) ValidateOutput(ctx context.Context, path string) error {
-	return ValidateOutput(ctx, path)
-}
-
-func (d *DefaultExecutor) ProbeDuration(ctx context.Context, path string) (float64, error) {
-	return ProbeDuration(ctx, path)
-}
-
-func (d *DefaultExecutor) ProbeHealth(ctx context.Context, path string) bool {
-	return ProbeHealth(ctx, path)
-}
-
-func (d *DefaultExecutor) TrimVideo(ctx context.Context, input, output, startTime, endTime string) error {
-	return TrimVideo(ctx, input, output, startTime, endTime)
-}
