@@ -1,7 +1,7 @@
 # Baseline
 
 - **v3.8.0** (Current Active):
-  - Git Commits: `5d25259` ~ `HEAD` (`d8146b6` / `2d6d505`)
+  - Git Commits: `5d25259` ~ `HEAD` (`c606ce0` / `855f155`)
   - Release Highlights:
     - **系统概览横向发丝线像素级锁齐 (Pixel-Locked Metric Cross-Card Symmetry)**：
       - 彻底根治存储空间监控 (`StorageCard.vue`) 与自动化调度监控 (`ScheduleMonitorCard.vue`) 并排时的分割线上下错位难题；
