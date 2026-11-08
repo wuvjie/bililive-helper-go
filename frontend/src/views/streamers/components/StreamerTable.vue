@@ -40,7 +40,7 @@
       <el-table-column
         prop="files"
         label="录制文件数"
-        width="115"
+        width="140"
         align="right"
         header-align="right"
         sortable
@@ -237,6 +237,7 @@ function formatRelativeTime(ts: number, _tick?: number): string {
   cursor: help;
   color: var(--slate);
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .action-btn-group {
