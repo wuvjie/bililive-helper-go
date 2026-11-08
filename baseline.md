@@ -1,12 +1,12 @@
 # Baseline
 
-- **v3.8.1** (Current Active):
-  - Git Commits: `404f243`, `3be00c7`, `8e18387`, `57ab9d0` (GitHub) / `bcaa7ef`, `bfed8f8`, `27ba414`, `3fe191b` (WSL)
+- **v3.8.0** (Current Active):
+  - Git Commits: `5d25259` ~ `HEAD` (`57ab9d0` / `3fe191b`)
   - Release Highlights:
     - **系统概览横向发丝线像素级锁齐 (Pixel-Locked Metric Cross-Card Symmetry)**：
       - 彻底根治存储空间监控 (`StorageCard.vue`) 与自动化调度监控 (`ScheduleMonitorCard.vue`) 并排时的分割线上下错位难题；
       - 确立卡片内部垂直几何尺寸锁定标准：`card-title`（32px）+ `card-top-metric`（56px）+ 顶部发丝线（Y = 124px）+ 2×2 网格显式轨道高 `grid-template-rows: 52px 52px;`（中间横向分割线 Y = 192px 绝对平齐）；
-      - 下半区趋势图 (`TrendCard.vue`) 与操作记录 (`RecentOpsCard.vue`) 同步锁死 `card-title`（32px），实现概览大盘 2×2 全域卡片顶边绝对平齐；
+      - 下半区趋势图 (`TrendCard.vue`) 与操作记录 (`RecentOpsCard.vue`) 同步锁死 `card-title`（32px），实现概览大盘 2×2 全域卡片顶边自 Y = 68px 绝对平齐；
       - 表格单元格标签 4 字高度内聚对称（`合并周期` | `下次合并` / `清理周期` | `下次清理`）。
     - **时段裁剪语义通用化与去三重冗余 (Neutral Video Trim & Zero Tooltip Redundancy)**：
       - 废除主播规则时段裁剪弹窗 (`StreamerRuleDialog.vue`) 中主观预设的“暖场”、“片尾”、“精选”等非通用称谓，升级为标准音视频工程中性术语：`剪除前段`、`保留片段`、`剪除后段`、`直至结尾`，时间轴起点终点对齐为 `00:00:00 录像起点` 与 `录像终点`；
@@ -14,52 +14,41 @@
       - 修复 `normalizeTimeString` 在双段格式（`mm:ss`）下秒数丢失的边界 Bug。
     - **主播录像抽屉黄金比例与精益列宽 (Golden-Ratio Drawer & Lean Columns)**：
       - 抽屉宽度由过度侵占视窗的 `840px` 优化为黄金比例 `min(660px, 90vw)`，既保留录像完整信息，又不过度遮挡主界面主播列表；
-      - 标定 4 列紧凑列宽：文件名自适应 flex + 大小 84px + 状态 68px + 操作 54px。
-    - **系统设置双卡领域内聚架构 (Two Cohesive Domain Cards per Tab)**：
-      - 3 大设置 Tab（基础策略、定时调度、备份还原）全部统一收敛为严格对称的“双卡领域内聚架构”，告别 1 卡孤立或 4 卡松散的不平衡感。
-    - **全局 87 处 SVG 矢量图标高精度校准 (Precision SVG Semantic Mapping)**：
-      - 全量代码库图标语义审计，替换 5 处不精准图标（调度时钟、清理垃圾桶、免删盾牌、立即执行三角播放、任务侧栏操作图标）。
-    - **操作审计日志详情纯净视效 (Clean Log Viewer)**：
-      - 移除底栏冗余的“共 18 行日志”文字，底栏工具操作（复制/下载）与动作按钮（关闭）实现左右空间自然分离。
-    - **任务调度卡片因果时序流 (Causal Timeline Flow)**：
-      - 调度卡片指标重排为严谨因果流：`[上次运行]` -> `[调度周期]` -> `[下次预计]`。
-    - **大盘统计卡片语义精炼与量词补齐 (StatGrid Metric Quantifiers)**：
-      - 合并与清理频次补全中文量词 `次`；消灭“7日日均”等重复同义反复文案，指标命名升级为 `7 日平均产出` 与 `预计可用时长`。
-    - BDS 设计语言规范升级至 v3.8.1。
-
-- **v3.8.0** (Current Active):
-  - Git Tag: `v3.8.0`
-  - Commit: `5d25259` (GitHub) / `5b3d03b` (WSL)
-  - Release Highlights:
+      - 标定 4 列紧凑列宽：文件名自适应 flex + 大小 84px + 状态 68px + 操作 54px；
+      - 抽屉头部集成 UnderlineNav 三态过滤（全部/已合并/原始录像）与原地 `[ 合并该主播 ]` 快捷闭环。
+    - **系统设置双核心与双卡领域内聚架构 (Settings 2-Core & Two-Card Domain Cohesion)**：
+      - 顶部采用 Sticky UnderlineNav 横向导航，聚焦两大核心业务模块（`基础配置` 与 `定时调度`）；
+      - 每个设置 Tab 严格规划为严格对称的“双卡领域内聚架构”，彻底消灭 1 卡孤立或 4 卡松散的不平衡感；
+      - 密码修改（`PasswordDialog.vue`）与配置备份（`BackupDialog.vue`）解耦提升至顶栏管理员下拉菜单作为独立轻量弹窗，原地改密与备份闭环；
+      - 重塑工业级「水位深度与清理冲程控制台 (Watermark & Stroke Gauge)」，三色标尺联动双滑块与实时容量预测。
     - **线条标尺美学体系 (GitHub Line & Metric)**：
-      - 横向底线式导航 (`UnderlineNav.vue`)：0 容器外边框、0 跑道底盒、2px 品牌底线与等宽数值徽标；全面落地于操作审计日志 (`/history`) 与主播录像抽屉 (`StreamerDrawer.vue`)；
-      - 纵向微标尺导航 (`SideNav Stripe`)：系统设置 (`/settings`) 采用左边缘 3px 纯色游标线，联动滚轮阻尼平滑翻页；
+      - 横向底线式导航 (`UnderlineNav.vue`)：0 容器外边框、0 跑道底盒、2px 品牌底线与等宽数值徽标；全面落地于操作审计日志 (`/history`)、主播录像抽屉 (`StreamerDrawer.vue`) 与系统设置 (`/settings`)；
       - 全局 App Shell 侧边栏激活项赋予 3px 品牌游标线。
-    - **纯矢量直出微图标 (Glyph-First)**：彻底废除 `.ui-icon-box` 与 `.mini-icon-box` 的 28px/24px 彩色方块底盒与背景色，直接呈现 16px/18px 偶数标尺高精度纯矢量描边，保留翠绿、琥珀、科技蓝等语义纯色。
+    - **纯矢量直出微图标 (Glyph-First) 与高精度校准**：
+      - 彻底废除 `.ui-icon-box` 与 `.mini-icon-box` 的 28px/24px 彩色方块底盒与背景色，直接呈现 16px/18px 偶数标尺高精度纯矢量描边，保留翠绿、琥珀、科技蓝等语义纯色；
+      - 全量代码库图标语义审计，替换 5 处不精准图标（调度时钟、清理垃圾桶、免删盾牌、立即执行三角播放、任务侧栏操作图标）。
     - **系统概览反“套娃”大重构 (Anti-Overboxing & Ruled Metric Grid)**：
       - 废除单卡片内套 7 个独立小外框的“俄罗斯套娃”形态；
       - 核心指标采用十字发丝标尺网格 (Ruled Metric Grid) 无缝平铺；
       - 最近操作记录采用 GitHub 通栏流式列表 (Flush Ruled List)，悬停通栏高亮，信息密度大幅提升；
-      - 统计大盘 4 卡片收敛为纯白画布 + 顶边 2px 主题细线 (`StatGrid`)。
+      - 统计大盘收敛为 6 列纯白画布 + 顶边 2px 主题细线 (`StatGrid`)，频次补齐中文量词 `次`，指标命名精炼去重（`7 日平均产出` 与 `预计可用时长`）。
     - **近 7 天趋势图精密升级 (Precision Trend Chart)**：
       - 引入 Y 轴三阶极淡发丝刻度线 (Max / 50% / 0) 与等宽刻度值；
       - 废弃泥灰色，确立生产合并（科技深蓝 `#3b82f6`）与释放清理（薄荷翠绿 `#10b981`）双色契约；
       - 引入整列悬停高亮垂直轨道 (`.trend-col-track`) 与一体化净空间吞吐 Tooltip 计算。
+    - **任务中心因果时序流与 32px 标尺对齐**：
+      - 调度卡片核心指标重排为严谨因果流：`[上次运行]` -> `[调度周期]` -> `[下次预计]`；
+      - 定向主播维护工具栏按钮（`合并录像`、`清理录像`）与下拉选择器锁定 32px 绝对等高；
+      - 实时终端永久暗黑岛屿隔离，全要素图标工具栏。
+    - **操作审计日志详情纯净视效 (Clean Log Viewer)**：
+      - 移除底栏冗余的“共 18 行日志”文字，底栏工具操作（复制/下载）与动作按钮（关闭）实现左右空间自然解耦分离。
     - **GitHub Primer Dark 官方暗黑主题升级**：
       - 全面导入 GitHub Primer Dark 官方设计色彩（`#0d1117` 主画布、`#161b22` 卡片面、`#30363d` 发丝边框、`#58a6ff` 强调蓝等）；
       - Element Plus 弹出层、菜单、表单及阴影系统全量对齐 Primer Dark 规范。
     - **代码库清冗与零孤儿契约 (Codebase Pruning & Zero-Orphan Policy)**：
       - 物理移除 3 个孤儿废弃组件：`AppCard.vue`, `StatusPill.vue`, `FilterPills.vue`；
-      - 系统设置精炼收敛为 3 大核心业务模块 (`policy`, `schedule`, `backup`)，剥离冗余的空壳密码页；
-      - 激活 `PasswordDialog.vue`，从顶栏管理员菜单直接弹出密码修改弹窗，无需跨页跳折；
-      - 主播录像抽屉新增三态 UnderlineNav 筛选与原地 `[ 合并该主播 ]` 快捷闭环。
-    - **系统设置降噪重构与一体化水位深度控制台**：
-      - 彻底消除系统设置内部划江而治的贯穿长横线与伪胶囊药丸，采用 GitHub Primer Subhead 纯净排版层级；
-      - 将突兀悬浮的单次冲程 Banner 重塑为工业级「水位深度与清理冲程控制台 (Watermark & Stroke Gauge)」，多色标尺联动双滑块与实时容量预测。
-    - **主播管理细节打磨与 GitHub Primer 规则弹窗**：
-      - 修复「录制文件数」表头宽度导致排序箭头换行挤到第二排的问题（拓宽至 140px 并强制单行不折行）；
-      - 抽屉内「合并该主播」动作按钮升级为轻量无边框纯矢量按钮，与左侧 UnderlineNav 完美平衡；
-      - 主播个性化规则弹窗重塑为 GitHub Primer 流式行布局（消灭弹窗内部套卡片俄套娃，开关置右与轻量辅助解算）。
+      - 表单保存单一行动权威法则，唯一吸底保存栏；
+      - UI 技术名词规范统一为大写无点形式（`JSON`、`FLV`、`MP4`）。
     - BDS 设计语言规范升级至 v3.8.0。
 
 - **v3.7.0**:
