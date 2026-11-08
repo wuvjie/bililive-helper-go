@@ -1,11 +1,14 @@
 <template>
-  <el-dialog :model-value="visible" title="修改密码" width="400px" destroy-on-close @update:model-value="$emit('update:visible', $event)">
+  <el-dialog :model-value="visible" title="修改系统管理密码" width="400px" destroy-on-close @update:model-value="$emit('update:visible', $event)">
     <el-form label-position="top" @submit.prevent="handleSubmit">
       <el-form-item label="旧密码">
         <el-input v-model="form.old_password" type="password" show-password placeholder="输入当前密码" />
       </el-form-item>
       <el-form-item label="新密码">
         <el-input v-model="form.new_password" type="password" show-password placeholder="至少 6 个字符" />
+      </el-form-item>
+      <el-form-item label="确认新密码">
+        <el-input v-model="form.confirm_password" type="password" show-password placeholder="请再次输入新密码" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -29,12 +32,16 @@ const form = reactive({ old_password: "", new_password: "", confirm_password: ""
 const saving = defineModel<boolean>("saving", { default: false });
 
 async function handleSubmit() {
-  if (!form.old_password || !form.new_password) {
-    ElMessage.warning("请填写旧密码和新密码");
+  if (!form.old_password || !form.new_password || !form.confirm_password) {
+    ElMessage.warning("请填写完整密码信息");
     return;
   }
   if (form.new_password.length < 6) {
     ElMessage.warning("新密码至少 6 个字符");
+    return;
+  }
+  if (form.new_password !== form.confirm_password) {
+    ElMessage.warning("两次输入的新密码不一致");
     return;
   }
   saving.value = true;

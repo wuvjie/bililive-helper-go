@@ -2,29 +2,82 @@
   <el-dialog
     :model-value="visible"
     title="配置备份与恢复"
-    width="min(600px, 94vw)"
-    top="7vh"
+    width="min(560px, 94vw)"
+    top="9vh"
     destroy-on-close
     class="backup-dialog"
     @update:model-value="$emit('update:visible', $event)"
   >
-    <div class="backup-modal-content">
-      <!-- Section 1: 导出配置备份 -->
-      <div class="backup-section">
-        <div class="section-meta">
-          <span class="section-title">导出配置备份</span>
-          <p class="section-desc">将系统策略、定时调度与主播专属规则导出为标准 JSON 备份留底。</p>
+    <!-- 顶部分段切换器 (Segmented Control) -->
+    <div class="backup-tab-nav">
+      <button
+        type="button"
+        class="tab-nav-btn"
+        :class="{ active: activeTab === 'export' }"
+        @click="activeTab = 'export'"
+      >
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>导出备份</span>
+      </button>
+      <button
+        type="button"
+        class="tab-nav-btn"
+        :class="{ active: activeTab === 'import' }"
+        @click="activeTab = 'import'"
+      >
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span>导入恢复</span>
+      </button>
+    </div>
+
+    <div class="backup-body">
+      <!-- Tab 1: 导出备份 -->
+      <div v-if="activeTab === 'export'" class="tab-pane">
+        <div class="pane-meta-row">
+          <span class="pane-title">导出当前系统配置</span>
+          <el-tooltip
+            content="将当前录制合并规则、定时巡检周期、存储水位阈值与主播专属配置打包导出为标准 JSON 格式文件。"
+            placement="top"
+            :show-after="200"
+          >
+            <span class="help-question-icon">?</span>
+          </el-tooltip>
         </div>
-        <div class="export-actions-row">
-          <button type="button" class="btn-action btn-export" @click="handleExport">
+
+        <div class="export-asset-card">
+          <div class="asset-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div class="asset-meta-info">
+            <span class="asset-filename">config-backup.json</span>
+            <span class="asset-subinfo">包含：全局策略 · 定时调度 · 主播规则</span>
+          </div>
+        </div>
+
+        <div class="export-actions-grid">
+          <button type="button" class="btn-action-primary" @click="handleExport">
             <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            <span>下载配置文件</span>
+            <span>下载配置文件 (.json)</span>
           </button>
-          <button type="button" class="btn-action btn-copy" @click="handleCopy">
+          <button type="button" class="btn-action-secondary" @click="handleCopy">
             <svg v-if="!copiedRecently" class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -37,24 +90,17 @@
         </div>
       </div>
 
-      <div class="section-divider"></div>
-
-      <!-- Section 2: 导入配置恢复 -->
-      <div class="backup-section">
-        <div class="section-meta">
-          <span class="section-title">导入配置恢复</span>
-          <p class="section-desc">选择或拖拽备份 JSON 文件，校验通过后将直接覆盖当前系统设置。</p>
-        </div>
-
-        <div class="backup-callout">
-          <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-          <span class="callout-text">
-            导入将覆盖当前的全局合并规则与定时清理调度，建议在导入前先导出备份以防配置丢失。
-          </span>
+      <!-- Tab 2: 导入恢复 -->
+      <div v-else class="tab-pane">
+        <div class="pane-meta-row">
+          <span class="pane-title">选择或上传配置文件</span>
+          <el-tooltip
+            content="导入配置将直接覆盖当前系统的合并与清理规则，操作不可逆，建议在导入前先导出备份以防配置丢失。"
+            placement="top"
+            :show-after="200"
+          >
+            <span class="help-question-icon">?</span>
+          </el-tooltip>
         </div>
 
         <!-- 真实文件输入框 -->
@@ -88,11 +134,11 @@
               <span>拖拽备份文件至此处，或</span>
               <span class="dropzone-browse-link">浏览本地文件</span>
             </div>
-            <div class="dropzone-secondary-text">支持 bililive-helper 导出的 .json 配置文件</div>
+            <div class="dropzone-secondary-text">仅支持导出的 .json 配置文件</div>
           </div>
         </div>
 
-        <!-- 已选文件资产卡片 -->
+        <!-- 已选文件卡片 -->
         <div v-else class="selected-file-card">
           <div class="file-icon-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -105,7 +151,7 @@
           </div>
           <div class="file-info-col">
             <span class="file-name" :title="selectedFileName">{{ selectedFileName }}</span>
-            <span class="file-status">已读取待应用</span>
+            <span class="file-status">已读取待覆盖</span>
           </div>
           <div class="file-card-actions">
             <button type="button" class="btn-ghost-sm" title="重新选择" @click="importFileRef?.click()">重新选择</button>
@@ -127,39 +173,46 @@
             <span>{{ showManualPaste ? '收起配置代码输入框' : '或手动粘贴 JSON 配置代码' }}</span>
           </button>
 
-          <transition name="paste-collapse">
-            <div v-if="showManualPaste" class="paste-textarea-wrap">
-              <textarea
-                class="backup-textarea"
-                :value="importJson"
-                placeholder="在此直接粘贴导出的 JSON 配置字符串..."
-                spellcheck="false"
-                @input="importJson = ($event.target as HTMLTextAreaElement).value"
-              />
-              <div v-if="importJson" class="paste-clear-row">
-                <button type="button" class="btn-clear-text" @click="importJson = ''">清空内容</button>
-              </div>
+          <div v-if="showManualPaste" class="paste-textarea-wrap">
+            <textarea
+              class="backup-textarea"
+              :value="importJson"
+              placeholder="在此直接粘贴导出的 JSON 配置字符串..."
+              spellcheck="false"
+              @input="importJson = ($event.target as HTMLTextAreaElement).value"
+            />
+            <div v-if="importJson" class="paste-clear-row">
+              <button type="button" class="btn-clear-text" @click="importJson = ''">清空内容</button>
             </div>
-          </transition>
-        </div>
-
-        <!-- 提交导入动作栏 -->
-        <div class="import-submit-row">
-          <button
-            type="button"
-            class="btn-primary-import"
-            :disabled="!hasValidImportContent || importing"
-            @click="handleApplyImport"
-          >
-            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>{{ importing ? '正在导入应用...' : '导入并应用配置' }}</span>
-          </button>
-          <span v-if="!hasValidImportContent" class="import-hint-disabled">请先选择备份文件或粘贴配置代码</span>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- 弹窗底部操作栏 -->
+    <template #footer>
+      <div class="backup-dialog-footer">
+        <div class="footer-left-status">
+          <span v-if="activeTab === 'import' && hasValidImportContent" class="status-ready-text">
+            配置已就绪，点击确认应用
+          </span>
+        </div>
+        <div class="footer-right-actions">
+          <el-button @click="$emit('update:visible', false)">
+            {{ activeTab === 'export' ? '完成' : '取消' }}
+          </el-button>
+          <el-button
+            v-if="activeTab === 'import'"
+            type="primary"
+            :loading="importing"
+            :disabled="!hasValidImportContent"
+            @click="handleApplyImport"
+          >
+            确认导入并覆盖
+          </el-button>
+        </div>
+      </div>
+    </template>
   </el-dialog>
 </template>
 
@@ -175,6 +228,7 @@ const emit = defineEmits<{
   "imported": [];
 }>();
 
+const activeTab = ref<"export" | "import">("export");
 const selectedFileName = ref("");
 const importJson = ref("");
 const showManualPaste = ref(false);
@@ -305,123 +359,266 @@ async function handleApplyImport() {
 </script>
 
 <style scoped>
-.backup-modal-content {
+/* Segmented Control 顶部分段切换器 */
+.backup-tab-nav {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  background: var(--color-canvas-subtle, #f6f8fa);
+  border: 1px solid var(--color-border-subtle, #d0d7de);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 3px;
+  margin-bottom: 16px;
 }
 
-.backup-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+html.dark .backup-tab-nav {
+  background: #21262d;
+  border-color: #30363d;
 }
 
-.section-meta {
+.tab-nav-btn {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--color-fg-muted, #57606a);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(.active) {
+    color: var(--color-fg-default, #24292f);
+  }
+
+  &.active {
+    background: var(--color-canvas-default, #ffffff);
+    color: var(--color-fg-default, #24292f);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(27, 31, 36, 0.08);
+  }
+
+  .tab-icon {
+    width: 14px;
+    height: 14px;
+  }
 }
 
-.section-title {
+html.dark .tab-nav-btn {
+  color: #8b949e;
+
+  &:hover:not(.active) {
+    color: #c9d1d9;
+  }
+
+  &.active {
+    background: #30363d;
+    color: #f0f6fc;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.backup-body {
+  min-height: 160px;
+}
+
+.tab-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pane-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pane-title {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.2px;
 }
 
-.section-desc {
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.45;
-  margin: 0;
-}
-
-.section-divider {
-  height: 1px;
-  background: var(--hairline);
-  margin: 2px 0;
-}
-
-/* 导出操作行 */
-.export-actions-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-action {
+.help-question-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  height: 32px;
-  padding: 0 14px;
-  font-size: 12.5px;
-  font-weight: 500;
-  border-radius: var(--r-sm, 4px);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border: 1px solid var(--hairline-strong);
-  background: var(--surface);
-  color: var(--charcoal);
-  user-select: none;
-  white-space: nowrap;
-}
-
-.btn-action:hover {
-  background: var(--highlight);
-  border-color: var(--charcoal);
-  color: var(--ink);
-}
-
-.btn-export {
-  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-  color: var(--charcoal);
-  border-color: color-mix(in srgb, var(--primary) 25%, var(--hairline-strong));
-  font-weight: 550;
-}
-
-.btn-export:hover {
-  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
-  border-color: var(--primary);
-  color: var(--ink);
-}
-
-.btn-copy .copied-check {
-  color: var(--success, #059669);
-}
-
-.btn-svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
-/* 提示卡片 */
-.backup-callout {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 8px 12px;
-  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--hairline));
-  border-radius: var(--r-sm, 4px);
-}
-
-.callout-icon {
   width: 15px;
   height: 15px;
-  color: var(--primary);
-  flex-shrink: 0;
-  margin-top: 1.5px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-subtle, #d0d7de);
+  color: var(--color-fg-muted, #57606a);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: help;
+  user-select: none;
+  line-height: 1;
+
+  &:hover {
+    border-color: var(--color-accent-fg, #0969da);
+    color: var(--color-accent-fg, #0969da);
+  }
 }
 
-.callout-text {
-  font-size: 11.5px;
+html.dark .help-question-icon {
+  border-color: #30363d;
+  color: #8b949e;
+
+  &:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+  }
+}
+
+/* 导出资产卡片 */
+.export-asset-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 6px;
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+}
+
+.asset-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  background: color-mix(in srgb, #0969da 10%, transparent);
+  color: #0969da;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+html.dark .asset-icon-box {
+  background: rgba(56, 139, 253, 0.15);
+  color: #58a6ff;
+}
+
+.asset-meta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.asset-filename {
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--charcoal);
-  line-height: 1.45;
+  font-family: var(--font-mono);
+}
+
+.asset-subinfo {
+  font-size: 12px;
+  color: var(--stone);
+}
+
+.export-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-action-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--color-accent-emphasis, #0969da);
+  border: 1px solid rgba(27, 31, 36, 0.15);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #0860ca;
+  }
+
+  .btn-svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+html.dark .btn-action-primary {
+  background: #1f6feb;
+  border-color: rgba(240, 246, 252, 0.1);
+
+  &:hover {
+    background: #388bfd;
+  }
+}
+
+.btn-action-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: var(--color-btn-text, #24292f);
+  background: var(--color-btn-bg, #ffffff);
+  border: 1px solid var(--color-btn-border, #d0d7de);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--color-btn-hover-bg, #f3f4f6);
+    border-color: var(--color-btn-hover-border, #d0d7de);
+    color: var(--color-accent-fg, #0969da);
+  }
+
+  .btn-svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .copied-check {
+    color: #1a7f37;
+  }
+}
+
+html.dark .btn-action-secondary {
+  color: #c9d1d9;
+  background: #21262d;
+  border-color: #30363d;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: #30363d;
+    border-color: #8b949e;
+    color: #58a6ff;
+  }
+
+  .copied-check {
+    color: #3fb950;
+  }
 }
 
 /* 拖拽上传区 */
@@ -429,101 +626,120 @@ async function handleApplyImport() {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 18px;
-  border: 1.5px dashed var(--hairline-strong);
-  border-radius: var(--r-sm, 4px);
-  background: var(--surface);
+  padding: 16px 18px;
+  border: 1.5px dashed var(--color-border-subtle, #d0d7de);
+  border-radius: 6px;
+  background: var(--surface-card);
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease;
   user-select: none;
+
+  &:hover,
+  &.is-dragover {
+    border-color: var(--color-accent-fg, #0969da);
+    background: var(--color-canvas-subtle, #f6f8fa);
+  }
 }
 
-.dropzone-box:hover,
-.dropzone-box.is-dragover {
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+html.dark .dropzone-box {
+  border-color: #30363d;
+
+  &:hover,
+  &.is-dragover {
+    border-color: #58a6ff;
+    background: #21262d;
+  }
 }
 
 .dropzone-icon-wrap {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--highlight);
+  background: var(--color-canvas-subtle, #f6f8fa);
+  border: 1px solid var(--hairline);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--steel);
+  color: var(--stone);
+
+  .dropzone-svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
-.dropzone-svg {
-  width: 18px;
-  height: 18px;
+html.dark .dropzone-icon-wrap {
+  background: #21262d;
+  border-color: #30363d;
+  color: #8b949e;
 }
 
 .dropzone-content {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 0;
 }
 
 .dropzone-primary-text {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--charcoal);
 }
 
 .dropzone-browse-link {
-  color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  color: var(--color-accent-fg, #0969da);
+  font-weight: 500;
   margin-left: 4px;
 }
 
-.dropzone-secondary-text {
-  font-size: 11px;
-  color: var(--steel);
+html.dark .dropzone-browse-link {
+  color: #58a6ff;
 }
 
-/* 已选文件资产卡片 */
+.dropzone-secondary-text {
+  font-size: 11.5px;
+  color: var(--stone);
+}
+
+/* 已选文件卡片 */
 .selected-file-card {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  border: 1px solid var(--hairline-strong);
-  border-radius: var(--r-sm, 4px);
-  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--surface-card);
 }
 
 .file-icon-badge {
   width: 32px;
   height: 32px;
-  border-radius: var(--r-sm, 4px);
-  background: color-mix(in srgb, var(--success, #059669) 12%, transparent);
-  color: var(--success, #059669);
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
 
-.file-icon-badge svg {
-  width: 16px;
-  height: 16px;
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .file-info-col {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 0;
   flex: 1;
+  min-width: 0;
 }
 
 .file-name {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--charcoal);
   overflow: hidden;
@@ -533,7 +749,7 @@ async function handleApplyImport() {
 
 .file-status {
   font-size: 11px;
-  color: var(--success, #059669);
+  color: #059669;
   font-weight: 500;
 }
 
@@ -541,23 +757,22 @@ async function handleApplyImport() {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
 }
 
 .btn-ghost-sm {
   background: transparent;
   border: 1px solid var(--hairline);
-  border-radius: var(--r-xs, 3px);
+  border-radius: 4px;
   font-size: 11.5px;
   color: var(--charcoal);
   padding: 3px 8px;
   cursor: pointer;
   transition: all 0.15s ease;
-}
 
-.btn-ghost-sm:hover {
-  background: var(--highlight);
-  border-color: var(--hairline-strong);
+  &:hover {
+    background: var(--surface-card);
+    border-color: var(--stone);
+  }
 }
 
 .btn-ghost-remove {
@@ -565,27 +780,26 @@ async function handleApplyImport() {
   border: none;
   width: 24px;
   height: 24px;
-  border-radius: var(--r-xs, 3px);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--steel);
+  color: var(--stone);
   transition: all 0.15s ease;
-  padding: 0;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
 }
 
-.btn-ghost-remove:hover {
-  background: color-mix(in srgb, var(--error, #e03131) 12%, transparent);
-  color: var(--error, #e03131);
-}
-
-.btn-ghost-remove svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* 手动粘贴折叠区 */
+/* 手动粘贴输入区 */
 .import-manual-section {
   display: flex;
   flex-direction: column;
@@ -595,55 +809,71 @@ async function handleApplyImport() {
 .toggle-paste-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: transparent;
   border: none;
   padding: 0;
   font-size: 12px;
-  color: var(--steel);
+  color: var(--color-fg-muted, #57606a);
   cursor: pointer;
   width: fit-content;
   user-select: none;
+
+  &:hover {
+    color: var(--color-fg-default, #24292f);
+  }
+
+  .toggle-svg {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s ease;
+
+    &.rotate-open {
+      transform: rotate(180deg);
+    }
+  }
 }
 
-.toggle-paste-btn:hover {
-  color: var(--charcoal);
-}
+html.dark .toggle-paste-btn {
+  color: #8b949e;
 
-.toggle-svg {
-  width: 13px;
-  height: 13px;
-  transition: transform 0.2s ease;
-}
-
-.toggle-svg.rotate-open {
-  transform: rotate(180deg);
+  &:hover {
+    color: #c9d1d9;
+  }
 }
 
 .paste-textarea-wrap {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .backup-textarea {
   width: 100%;
   box-sizing: border-box;
-  min-height: 95px;
+  min-height: 90px;
   padding: 8px 12px;
-  border-radius: var(--r-sm, 4px);
-  border: 1px solid var(--hairline-strong);
-  background: var(--surface);
+  border-radius: 6px;
+  border: 1px solid var(--color-border-subtle, #d0d7de);
+  background: var(--surface-card);
   color: var(--charcoal);
   font-family: var(--font-mono);
   font-size: 11.5px;
   line-height: 1.5;
   resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent-fg, #0969da);
+  }
 }
 
-.backup-textarea:focus {
-  outline: none;
-  border-color: var(--primary);
+html.dark .backup-textarea {
+  border-color: #30363d;
+
+  &:focus {
+    border-color: #58a6ff;
+  }
 }
 
 .paste-clear-row {
@@ -655,64 +885,40 @@ async function handleApplyImport() {
   background: transparent;
   border: none;
   font-size: 11px;
-  color: var(--steel);
+  color: var(--stone);
   cursor: pointer;
   padding: 2px 4px;
+
+  &:hover {
+    color: #dc2626;
+  }
 }
 
-.btn-clear-text:hover {
-  color: var(--error, #e03131);
-}
-
-/* 提交导入动作栏 */
-.import-submit-row {
+/* 弹窗底部操作栏 */
+.backup-dialog-footer {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 4px;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.btn-primary-import {
-  display: inline-flex;
+.status-ready-text {
+  font-size: 12px;
+  color: #059669;
+  font-weight: 500;
+}
+
+.footer-right-actions {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 16px;
-  font-size: 12.5px;
-  font-weight: 600;
-  border-radius: var(--r-sm, 4px);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  background: var(--primary);
-  color: #ffffff;
-  border: 1px solid transparent;
-  user-select: none;
-  white-space: nowrap;
-}
+  gap: 10px;
+  margin-left: auto;
 
-.btn-primary-import:hover:not(:disabled) {
-  background: var(--primary-pressed, #1e40af);
-}
-
-.btn-primary-import:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.import-hint-disabled {
-  font-size: 11.5px;
-  color: var(--steel);
-}
-
-.paste-collapse-enter-active,
-.paste-collapse-leave-active {
-  transition: all 0.2s ease;
-}
-
-.paste-collapse-enter-from,
-.paste-collapse-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
+  :deep(.el-button) {
+    min-width: 80px;
+    height: 32px;
+    font-size: 12.5px;
+    box-sizing: border-box;
+  }
 }
 </style>

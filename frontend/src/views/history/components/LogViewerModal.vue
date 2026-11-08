@@ -20,32 +20,10 @@
               {{ status === 'success' ? '成功' : (status === 'partial' ? '部分' : '失败') }}
             </span>
           </div>
-          <div class="header-title-right">
-            <div class="header-action-group">
-              <button class="btn-group-action" @click="downloadRawLog" title="下载完整原始日志 (.log)">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                <span>下载</span>
-              </button>
-              <button class="btn-group-action" @click="handleCopyContent" title="复制全部内容到剪贴板">
-                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                <span>复制</span>
-              </button>
-            </div>
-          </div>
         </div>
 
-        <div class="modal-header-subrow">
+        <div v-if="title" class="modal-header-subrow">
           <span class="subrow-task-desc" :title="title">{{ title }}</span>
-          <span class="subrow-divider">·</span>
-          <el-tooltip content="点击复制任务 ID" placement="top" :show-after="300">
-            <span class="log-meta-id" @click="copyToClipboard(logId, '已复制任务 ID')">
-              <span class="meta-hash">#</span>{{ logId }}
-            </span>
-          </el-tooltip>
         </div>
       </div>
     </template>
@@ -66,6 +44,34 @@
         </div>
       </div>
     </div>
+
+    <template #footer>
+      <div class="modal-footer-container">
+        <div class="footer-left-info">
+          <span v-if="filteredLogLines.length > 0" class="log-count-text">
+            共 {{ filteredLogLines.length }} 行日志
+          </span>
+        </div>
+        <div class="footer-actions">
+          <button class="btn-dialog-secondary" @click="handleCopyContent" title="复制全部内容到剪贴板">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>复制日志</span>
+          </button>
+          <button class="btn-dialog-secondary" @click="downloadRawLog" title="下载完整原始日志 (.log)">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>下载</span>
+          </button>
+          <button class="btn-dialog-primary" @click="$emit('update:visible', false)">
+            关闭
+          </button>
+        </div>
+      </div>
+    </template>
   </el-dialog>
 </template>
 
@@ -78,7 +84,7 @@ const props = defineProps<{
   visible: boolean;
   title: string;
   status: string;
-  logId: string;
+  logId?: string;
   loading: boolean;
   content: string;
 }>();
@@ -122,7 +128,7 @@ function downloadRawLog() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${props.logId || "task"}.log`;
+  a.download = `${props.logId || "audit"}.log`;
   a.click();
   URL.revokeObjectURL(url);
   ElMessage.success("日志文件已开始下载");
@@ -141,7 +147,7 @@ async function handleCopyContent() {
 .modal-header-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
   padding-right: 32px;
   box-sizing: border-box;
@@ -190,39 +196,6 @@ async function handleCopyContent() {
   color: #dc2626;
 }
 
-.header-title-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.btn-ghost-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: var(--r-sm);
-  font-size: 11.5px;
-  font-weight: 500;
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  color: var(--charcoal);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-ghost-action:hover {
-  background: var(--highlight);
-  border-color: var(--slate);
-  color: var(--ink);
-}
-
-.action-icon {
-  width: 12px;
-  height: 12px;
-}
-
 .modal-header-subrow {
   display: flex;
   align-items: center;
@@ -232,39 +205,12 @@ async function handleCopyContent() {
 }
 
 .subrow-task-desc {
-  max-width: 500px;
+  max-width: 600px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 500;
   color: var(--slate);
-}
-
-.subrow-divider {
-  color: var(--stone);
-}
-
-.log-meta-id {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--steel);
-  cursor: pointer;
-  padding: 1px 6px;
-  border-radius: var(--r-xs);
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
-  border: 1px solid var(--hairline);
-  transition: all 0.15s ease;
-}
-
-.log-meta-id:hover {
-  background: var(--highlight);
-  color: var(--primary);
-  border-color: var(--primary);
-}
-
-.meta-hash {
-  color: var(--stone);
-  margin-right: 1px;
 }
 
 .log-modal-body {
@@ -337,65 +283,97 @@ html.dark .line-success { color: #4ade80; }
 html.dark .line-divider { color: #30363d; }
 html.dark .line-header { color: #58a6ff; font-weight: 600; }
 
-.header-action-group {
+.modal-footer-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.footer-left-info {
+  font-size: 12px;
+  color: var(--color-fg-muted, #57606a);
+  font-family: var(--font-mono, monospace);
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-dialog-secondary {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
   border-radius: 6px;
-  overflow: hidden;
+  color: var(--color-btn-text, #24292f);
+  background: var(--color-btn-bg, #ffffff);
   border: 1px solid var(--color-btn-border, #d0d7de);
   box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 20px;
 
-  .btn-group-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--color-btn-text, #24292f);
-    background: var(--color-btn-bg, #ffffff);
-    border: none;
-    cursor: pointer;
-    line-height: 18px;
-    transition: background 0.15s ease, color 0.15s ease;
+  &:hover {
+    background: var(--color-btn-hover-bg, #f3f4f6);
+    border-color: var(--color-btn-hover-border, #d0d7de);
+    color: var(--color-accent-fg, #0969da);
+  }
 
-    &:not(:last-child) {
-      border-right: 1px solid var(--color-btn-border, #d0d7de);
-    }
-
-    &:hover {
-      background: var(--color-btn-hover-bg, #f3f4f6);
-      color: var(--color-accent-fg, #0969da);
-    }
-
-    &:active {
-      background: var(--color-btn-active-bg, #ebecf0);
-    }
-
-    .action-icon {
-      width: 14px;
-      height: 14px;
-    }
+  .action-icon {
+    width: 13px;
+    height: 13px;
   }
 }
 
-html.dark .header-action-group {
+.btn-dialog-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--color-accent-emphasis, #0969da);
+  border: 1px solid rgba(27, 31, 36, 0.15);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 20px;
+
+  &:hover {
+    background: #0860ca;
+  }
+}
+
+html.dark .footer-left-info {
+  color: #8b949e;
+}
+
+html.dark .btn-dialog-secondary {
+  color: #c9d1d9;
+  background: #21262d;
   border-color: #30363d;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
 
-  .btn-group-action {
-    color: #c9d1d9;
-    background: #21262d;
-
-    &:not(:last-child) {
-      border-right-color: #30363d;
-    }
-
-    &:hover {
-      background: #30363d;
-      color: #58a6ff;
-    }
+  &:hover {
+    background: #30363d;
+    border-color: #8b949e;
+    color: #58a6ff;
   }
 }
 
+html.dark .btn-dialog-primary {
+  background: #1f6feb;
+  border-color: rgba(240, 246, 252, 0.1);
+
+  &:hover {
+    background: #388bfd;
+  }
+}
 </style>

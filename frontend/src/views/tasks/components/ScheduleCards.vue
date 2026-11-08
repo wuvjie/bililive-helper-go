@@ -11,42 +11,30 @@
               <path d="M6 21V9a9 9 0 0 0 9 9"/>
             </svg>
           </div>
-          <div class="title-text-group">
-            <span class="title-text">自动分片合并</span>
-            <span class="sched-policy-meta">每 {{ schedule?.merge?.interval || 360 }} 分钟</span>
-          </div>
+          <span class="title-text">自动分片合并</span>
           <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
             {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '调度生效中' : '定时已暂停' }}
           </span>
         </div>
-        <div class="title-right-actions">
-          <router-link
-            to="/settings?tab=schedule"
-            class="sched-jump-link"
-            title="前往定时调度配置合并运行周期与避让时段"
-          >
-            <svg class="sched-jump-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            <span>配置调度</span>
-          </router-link>
-          <button
-            class="btn-task-action btn-merge-action"
-            :disabled="isRunning"
-            @click="$emit('run-global', 'merge')"
-            title="立即启动一次全局分片合并任务"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-            <span>立即执行合并</span>
-          </button>
-        </div>
+        <button
+          class="btn-task-action btn-merge-action"
+          :disabled="isRunning"
+          @click="$emit('run-global', 'merge')"
+          title="立即启动一次全局分片合并任务"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>立即执行合并</span>
+        </button>
       </div>
 
       <div class="sched-metric-grid">
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">调度周期</span>
+          <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} 分钟</span>
+        </div>
         <div class="sched-metric-cell">
           <span class="metric-lbl">上次运行</span>
           <span class="mono-val">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
@@ -67,42 +55,30 @@
               <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
             </svg>
           </div>
-          <div class="title-text-group">
-            <span class="title-text">自动磁盘清理</span>
-            <span class="sched-policy-meta">每 {{ schedule?.clean?.interval || 720 }} 分钟</span>
-          </div>
+          <span class="title-text">自动磁盘清理</span>
           <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
             {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '巡检生效中' : '保护未开启' }}
           </span>
         </div>
-        <div class="title-right-actions">
-          <router-link
-            to="/settings?tab=schedule"
-            class="sched-jump-link"
-            title="前往定时调度配置巡检运行周期与避让时段"
-          >
-            <svg class="sched-jump-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            <span>配置调度</span>
-          </router-link>
-          <button
-            class="btn-task-action btn-clean-action"
-            :disabled="isRunning"
-            @click="$emit('run-global', 'clean')"
-            title="立即启动一次全局磁盘巡检与清理"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            </svg>
-            <span>立即执行清理</span>
-          </button>
-        </div>
+        <button
+          class="btn-task-action btn-clean-action"
+          :disabled="isRunning"
+          @click="$emit('run-global', 'clean')"
+          title="立即启动一次全局磁盘巡检与清理"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+          <span>立即执行清理</span>
+        </button>
       </div>
 
       <div class="sched-metric-grid">
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">调度周期</span>
+          <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} 分钟</span>
+        </div>
         <div class="sched-metric-cell">
           <span class="metric-lbl">上次运行</span>
           <span class="mono-val">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
@@ -356,12 +332,25 @@ html.dark .btn-task-action {
   height: 12px;
 }
 
-/* Hairline ruled metric grid (2 columns) */
+/* Hairline ruled metric grid (3 columns) */
 .sched-metric-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid var(--hairline);
   padding-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .sched-metric-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .sched-metric-cell + .sched-metric-cell {
+    border-left: none;
+    border-top: 1px solid var(--hairline);
+    padding-top: 8px;
+    padding-left: 0;
+  }
 }
 
 .sched-metric-cell {
