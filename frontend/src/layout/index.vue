@@ -180,7 +180,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAppStore } from "@/store/modules/app";
 import { logout } from "@/api/auth";
 import { getStatusDetail } from "@/api/status";
-import { Monitor, User, VideoPlay, Document, Setting, Refresh, FullScreen } from "@element-plus/icons-vue";
+import { Monitor, User, Operation, Document, Setting, Refresh, FullScreen } from "@element-plus/icons-vue";
 import PasswordDialog from "./components/PasswordDialog.vue";
 import BackupDialog from "./components/BackupDialog.vue";
 import DiskAlert from "./components/DiskAlert.vue";
@@ -192,7 +192,7 @@ const appStore = useAppStore();
 const menuItems = [
   { path: "/dashboard", title: "系统概览", icon: Monitor },
   { path: "/streamers", title: "主播管理", icon: User },
-  { path: "/tasks", title: "任务中心", icon: VideoPlay },
+  { path: "/tasks", title: "任务中心", icon: Operation },
   { path: "/history", title: "操作日志", icon: Document },
   { path: "/settings", title: "系统设置", icon: Setting }
 ];

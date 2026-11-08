@@ -4,7 +4,8 @@
       <div class="card-title-left">
         <div class="ui-icon-box icon-box-purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
           </svg>
         </div>
         <span class="card-title-main">自动化调度监控</span>
