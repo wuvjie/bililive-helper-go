@@ -28,47 +28,27 @@
         </div>
         <div class="runtime-substrip">
           <span class="substrip-text">
-            {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : '定时调度器与目录监听器持续常驻，主播关播分片将自动静置后合并' }}
+            {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : `常驻巡检中 · 覆盖 ${streamerCount} 位主播 · 共 ${videoCount} 个录像文件` }}
           </span>
         </div>
       </div>
 
       <div class="data-grid">
         <div class="data-cell">
-          <span class="data-label">自动合并</span>
+          <span class="data-label">自动合并周期</span>
           <span class="mono-val">{{ detail?.schedule?.merge_enabled ? ('每 ' + (detail?.schedule?.merge_interval || 360) + ' 分钟') : '已暂停' }}</span>
         </div>
         <div class="data-cell">
-          <span class="data-label">自动清理</span>
+          <span class="data-label">下次合并预计</span>
+          <span class="mono-val">{{ formatNextTime(detail?.schedule?.merge?.next_run) }}</span>
+        </div>
+        <div class="data-cell">
+          <span class="data-label">自动清理周期</span>
           <span class="mono-val">{{ detail?.schedule?.clean_enabled ? ('每 ' + (detail?.schedule?.clean_interval || 720) + ' 分钟') : '未开启' }}</span>
         </div>
         <div class="data-cell">
-          <span class="data-label">录制主播</span>
-          <span class="mono-val">{{ streamerCount }} 位</span>
-        </div>
-        <div class="data-cell">
-          <span class="data-label">
-            视频总数
-            <el-tooltip content="全部主播录像文件总数（含未合并分段切片与已合并成品）" placement="top">
-              <span class="label-help-ico">?</span>
-            </el-tooltip>
-          </span>
-          <span class="mono-val">{{ videoCount }} 个</span>
-        </div>
-      </div>
-
-      <div class="bottom-health-bar">
-        <div class="health-cell">
-          <span class="health-cell-label">下次合并</span>
-          <span class="health-cell-val mono-val">
-            <strong>{{ formatNextTime(detail?.schedule?.merge?.next_run) }}</strong>
-          </span>
-        </div>
-        <div class="health-cell">
-          <span class="health-cell-label">下次清理</span>
-          <span class="health-cell-val mono-val">
-            <strong>{{ formatNextTime(detail?.schedule?.clean?.next_run) }}</strong>
-          </span>
+          <span class="data-label">下次清理预计</span>
+          <span class="mono-val">{{ formatNextTime(detail?.schedule?.clean?.next_run) }}</span>
         </div>
       </div>
     </div>
@@ -140,63 +120,63 @@ function formatNextTime(ts?: number): string {
   letter-spacing: -0.2px;
 }
 
-.card-header-action {
-  font-size: 12px;
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.15s ease;
-}
-
-.card-header-action:hover {
-  text-decoration: underline;
-}
-
 .monitor-mode-tag {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--r-full);
   font-size: 11px;
   font-weight: 500;
-}
-
-.tag-in-service {
-  background: color-mix(in srgb, #059669 10%, transparent);
-  color: #059669;
-}
-
-.tag-running {
-  background: color-mix(in srgb, #d97706 12%, transparent);
-  color: #b45309;
+  line-height: 1.4;
 }
 
 .status-pulse-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  display: inline-block;
 }
 
+.tag-running {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+.dot-active {
+  background: #10b981;
+  animation: schedPulse 1.6s infinite;
+}
+
+.tag-in-service {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  color: var(--slate);
+  border: 1px solid var(--hairline);
+}
 .dot-in-service {
   background: #10b981;
 }
 
-.dot-active {
-  background: #f59e0b;
-  animation: pulseDot 1.5s infinite;
-}
-
-@keyframes pulseDot {
+@keyframes schedPulse {
   0% { transform: scale(0.9); opacity: 0.8; }
   50% { transform: scale(1.3); opacity: 1; }
   100% { transform: scale(0.9); opacity: 0.8; }
 }
 
+.card-header-action {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+.card-header-action:hover {
+  text-decoration: underline;
+}
+
 /* Deconstructed top metric - hairline underline, no box */
 .card-top-metric {
   margin-bottom: 16px;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -209,54 +189,55 @@ function formatNextTime(ts?: number): string {
 
 .runtime-label {
   font-size: 13px;
-  color: var(--slate);
+  color: var(--charcoal);
   font-weight: 500;
 }
 
 .runtime-badge {
   font-size: 12px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: var(--r-full);
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--r-sm);
+  display: inline-flex;
+  align-items: center;
 }
 
 .badge-idle {
-  background: color-mix(in srgb, #059669 10%, transparent);
-  color: #059669;
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  color: var(--slate);
+  border: 1px solid var(--hairline);
 }
 
 .badge-running {
-  background: color-mix(in srgb, #d97706 12%, transparent);
-  color: #b45309;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .runtime-substrip {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--stone);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-/* Hairline Ruled Metric Grid (十字发丝线标尺网格) */
+/* Hairline ruled grid (2x2) */
 .data-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border-bottom: 1px solid var(--hairline);
-  margin-bottom: 14px;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
 }
 
 .data-cell {
-  background: transparent;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 0;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-sizing: border-box;
 }
 
 .data-cell:nth-child(odd) {
-  border-right: 1px solid var(--hairline);
   padding-left: 0;
+  border-right: 1px solid var(--hairline);
 }
 
 .data-cell:nth-child(even) {
@@ -269,7 +250,7 @@ function formatNextTime(ts?: number): string {
 }
 
 .data-cell:nth-child(n+3) {
-  padding-bottom: 12px;
+  padding-bottom: 4px;
 }
 
 .data-label {
@@ -278,57 +259,5 @@ function formatNextTime(ts?: number): string {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.label-help-ico {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  font-size: 10px;
-  background: var(--hairline);
-  color: var(--slate);
-  cursor: help;
-}
-
-/* Flattened bottom health bar - no outer boxes */
-.bottom-health-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  padding-top: 2px;
-}
-
-.health-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  border: none;
-  box-sizing: border-box;
-}
-
-.health-cell-label {
-  font-size: 11px;
-  color: var(--stone);
-  font-weight: 500;
-}
-
-.health-cell-val {
-  font-size: 13px;
-  color: var(--charcoal);
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.health-cell-val strong {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--charcoal);
 }
 </style>

@@ -1,16 +1,16 @@
 <template>
   <el-dialog
     :model-value="visible"
-    :title="`操作审计日志 · ${title}`"
     width="min(880px, 94vw)"
     top="5vh"
     destroy-on-close
     class="terminal-modal-dialog"
     @update:model-value="$emit('update:visible', $event)"
   >
-    <div class="log-modal-body" v-loading="loading">
-      <div class="log-modal-bar">
-        <div class="log-bar-left">
+    <template #header>
+      <div class="modal-custom-header">
+        <div class="header-left-col">
+          <span class="modal-title-text">操作审计日志 · {{ title }}</span>
           <span
             v-if="status"
             class="log-meta-status"
@@ -18,30 +18,30 @@
           >
             {{ status === 'success' ? '成功' : (status === 'partial' ? '部分' : '失败') }}
           </span>
-          <span
-            class="log-meta-tag log-meta-id"
-            :title="`任务 ID: ${logId} (点击复制)`"
-            @click="copyToClipboard(logId, '已复制任务 ID')"
-          >
-            <span class="meta-label">ID:</span> {{ logId }}
-          </span>
+          <el-tooltip content="点击复制任务 ID" placement="top" :show-after="300">
+            <span class="log-meta-id" @click="copyToClipboard(logId, '已复制任务 ID')">
+              <span class="meta-hash">#</span>{{ logId }}
+            </span>
+          </el-tooltip>
         </div>
-        <div class="log-modal-actions">
-          <button class="btn-copy-log" @click="downloadRawLog" title="下载完整原始日志 (.log)">
+        <div class="header-right-actions">
+          <button class="btn-ghost-action" @click="downloadRawLog" title="下载完整原始日志 (.log)">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
-            <span>下载日志</span>
+            <span>下载</span>
           </button>
-          <button class="btn-copy-log" @click="handleCopyContent" title="复制全部内容到剪贴板">
+          <button class="btn-ghost-action" @click="handleCopyContent" title="复制全部内容到剪贴板">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            <span>复制日志</span>
+            <span>复制</span>
           </button>
         </div>
       </div>
+    </template>
 
+    <div class="log-modal-body" v-loading="loading">
       <div class="log-terminal-lines">
         <div v-if="filteredLogLines.length === 0" class="log-empty-lines">
           日志内容为空
@@ -129,29 +129,27 @@ async function handleCopyContent() {
 </script>
 
 <style scoped>
-.log-modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.log-modal-bar {
+.modal-custom-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.03));
-  border-radius: var(--r-sm);
-  border: 1px solid var(--hairline);
-  font-size: 12px;
-  flex-wrap: wrap;
-  gap: 8px;
+  width: 100%;
+  padding-right: 28px;
+  gap: 12px;
 }
 
-.log-bar-left {
+.header-left-col {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modal-title-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--charcoal);
+  letter-spacing: -0.2px;
 }
 
 .log-meta-status {
@@ -176,34 +174,43 @@ async function handleCopyContent() {
   color: #dc2626;
 }
 
-.log-meta-tag {
+.log-meta-id {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--slate);
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: var(--r-xs);
-  background: var(--surface);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
   border: 1px solid var(--hairline);
+  transition: all 0.15s ease;
 }
 
-.meta-label {
+.log-meta-id:hover {
+  background: var(--highlight);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.meta-hash {
   color: var(--stone);
+  margin-right: 2px;
 }
 
-.log-modal-actions {
+.header-right-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.btn-copy-log {
+.btn-ghost-action {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: var(--r-sm);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
   border: 1px solid var(--hairline);
   background: var(--surface);
   color: var(--charcoal);
@@ -211,59 +218,84 @@ async function handleCopyContent() {
   transition: all 0.15s ease;
 }
 
-.btn-copy-log:hover {
+.btn-ghost-action:hover {
   background: var(--highlight);
+  border-color: var(--slate);
   color: var(--ink);
 }
 
 .action-icon {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
+}
+
+.log-modal-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .log-terminal-lines {
-  background: #18181b;
-  color: #f4f4f5;
+  background: #f6f8fa;
+  color: #24292f;
+  border: 1px solid var(--hairline);
   border-radius: var(--r-sm);
-  padding: 12px;
-  max-height: 520px;
+  padding: 12px 14px;
+  max-height: 540px;
   overflow-y: auto;
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.65;
+}
+
+html.dark .log-terminal-lines {
+  background: #0d1117;
+  color: #c9d1d9;
+  border-color: #30363d;
 }
 
 .log-empty-lines {
   text-align: center;
-  padding: 40px 0;
-  color: #71717a;
+  padding: 48px 0;
+  color: var(--stone);
 }
 
 .log-code-row {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
   word-break: break-all;
   white-space: pre-wrap;
+  padding: 1px 0;
 }
 
 .log-line-num {
-  color: #71717a;
+  color: #6e7781;
   user-select: none;
-  min-width: 30px;
+  min-width: 32px;
   text-align: right;
   flex-shrink: 0;
   font-size: 11px;
+}
+
+html.dark .log-line-num {
+  color: #8b949e;
 }
 
 .log-line-text {
   flex: 1;
 }
 
-.line-info { color: #e4e4e7; }
-.line-error { color: #f87171; font-weight: 500; }
-.line-warn { color: #fbbf24; }
-.line-success { color: #4ade80; }
-.line-divider { color: #52525b; }
-.line-header { color: #60a5fa; font-weight: 600; }
+.line-info { color: #24292f; }
+.line-error { color: #cf222e; font-weight: 500; }
+.line-warn { color: #9a6700; }
+.line-success { color: #1a7f37; }
+.line-divider { color: #d0d7de; }
+.line-header { color: #0969da; font-weight: 600; }
+
+html.dark .line-info { color: #c9d1d9; }
+html.dark .line-error { color: #f87171; font-weight: 500; }
+html.dark .line-warn { color: #fbbf24; }
+html.dark .line-success { color: #4ade80; }
+html.dark .line-divider { color: #30363d; }
+html.dark .line-header { color: #58a6ff; font-weight: 600; }
 </style>

@@ -52,23 +52,6 @@
           <span class="mono-val">{{ totalRecordingsGB }} GB</span>
         </div>
       </div>
-
-      <div class="bottom-health-bar">
-        <div class="health-cell">
-          <span class="health-cell-label">近 7 天产出</span>
-          <span class="health-cell-val mono-val">
-            <strong>{{ stats?.daily_output_gb?.toFixed(1) || 0 }}</strong>
-            <span class="unit-lbl">GB/天</span>
-          </span>
-        </div>
-        <div class="health-cell" :class="{ 'health-cell-warn': (stats?.days_until_full || 999) < 7 }">
-          <span class="health-cell-label">余量预估</span>
-          <span class="health-cell-val mono-val">
-            <strong>{{ (stats?.days_until_full && stats?.days_until_full > 0) ? stats.days_until_full.toFixed(0) : '充足' }}</strong>
-            <span v-if="stats?.days_until_full && stats?.days_until_full > 0" class="unit-lbl">天</span>
-          </span>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -142,36 +125,34 @@ const totalRecordingsGB = computed(() => {
 
 .disk-label {
   font-size: 13px;
-  color: var(--slate);
+  color: var(--charcoal);
   font-weight: 500;
 }
 
 .disk-pct {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
-/* Hairline Ruled Metric Grid (十字发丝线标尺网格) */
+/* Hairline ruled grid (2x2) */
 .data-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  border-bottom: 1px solid var(--hairline);
-  margin-bottom: 14px;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
 }
 
 .data-cell {
-  background: transparent;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 0;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-sizing: border-box;
 }
 
 .data-cell:nth-child(odd) {
-  border-right: 1px solid var(--hairline);
   padding-left: 0;
+  border-right: 1px solid var(--hairline);
 }
 
 .data-cell:nth-child(even) {
@@ -184,7 +165,7 @@ const totalRecordingsGB = computed(() => {
 }
 
 .data-cell:nth-child(n+3) {
-  padding-bottom: 12px;
+  padding-bottom: 4px;
 }
 
 .data-label {
@@ -206,54 +187,5 @@ const totalRecordingsGB = computed(() => {
   background: var(--hairline);
   color: var(--slate);
   cursor: help;
-}
-
-/* Flattened bottom health bar - no outer boxes */
-.bottom-health-bar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  padding-top: 2px;
-}
-
-.health-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  border: none;
-  box-sizing: border-box;
-}
-
-.health-cell-label {
-  font-size: 11px;
-  color: var(--stone);
-  font-weight: 500;
-}
-
-.health-cell-val {
-  font-size: 13px;
-  color: var(--charcoal);
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.health-cell-val strong {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--charcoal);
-}
-
-.health-cell-val .unit-lbl {
-  font-size: 11px;
-  color: var(--stone);
-  font-weight: 400;
-}
-
-.health-cell-warn strong {
-  color: #d9730d;
 }
 </style>

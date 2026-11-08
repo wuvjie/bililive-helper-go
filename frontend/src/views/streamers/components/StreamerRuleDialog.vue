@@ -12,8 +12,12 @@
       <div class="rule-section">
         <div class="rule-row-header">
           <div class="rule-title-col">
-            <span class="rule-title">自动视频时段裁剪</span>
-            <span class="rule-desc">分片合并完成后，无损流复制截取指定起止时段（如去除开播暖场或只保留前半场精选）</span>
+            <span class="rule-title">
+              <span>自动视频时段裁剪</span>
+              <el-tooltip content="分片合并完成后，无损流复制截取指定起止时段（如去除开播暖场或只保留前半场精选）" placement="top" :show-after="300">
+                <span class="label-help-ico">?</span>
+              </el-tooltip>
+            </span>
           </div>
           <el-switch v-model="formRule.trim_enabled" />
         </div>
@@ -68,14 +72,16 @@
         <div class="rule-row-header">
           <div class="rule-title-col">
             <div class="title-with-badge">
-              <span class="rule-title">免清理免删保护</span>
+              <span class="rule-title">
+                <span>免清理免删保护</span>
+                <el-tooltip content="最高保护等级：开启后后台自动磁盘清理任务彻底跳过该主播目录，即使磁盘耗尽也绝对保留" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </span>
               <span class="status-pill" :class="formRule.protected ? 'pill-exempt' : 'pill-default'">
                 {{ formRule.protected ? '已豁免清理' : '遵循全局' }}
               </span>
             </div>
-            <span class="rule-desc">
-              最高保护等级：开启后后台自动磁盘清理任务彻底跳过该主播目录，即使磁盘耗尽也绝对保留。
-            </span>
           </div>
           <el-switch v-model="formRule.protected" />
         </div>
@@ -290,29 +296,53 @@ function handleSave() {
 
 .rule-row-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-height: 38px;
 }
 
 .rule-title-col {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
   flex: 1;
 }
 
 .title-with-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .rule-title {
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.1px;
+}
+
+.label-help-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--hairline);
+  color: var(--slate);
+  cursor: help;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.label-help-ico:hover {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .rule-desc {

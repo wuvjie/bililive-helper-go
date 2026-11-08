@@ -4,13 +4,16 @@
     <div class="setting-group">
       <div class="subhead">
         <h3 class="subhead-title">录制与合并规则</h3>
-        <p class="subhead-desc">主播关播后的分片检测缓冲与自动重连容差参数</p>
       </div>
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">断流重连容差</div>
-          <div class="setting-desc">主播在此时间差内断流重连，自动合并为整段视频</div>
+          <div class="setting-title">
+            <span>断流重连容差</span>
+            <el-tooltip content="主播在此时间差内断流重连，自动合并为整段视频" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -26,8 +29,12 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">完播静置等待</div>
-          <div class="setting-desc">录播关播后的静置缓冲期，防止误读正在写入的活动切片</div>
+          <div class="setting-title">
+            <span>完播静置等待</span>
+            <el-tooltip content="录播关播后的静置缓冲期，防止误读正在写入的活动切片" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -46,15 +53,18 @@
     <div class="setting-group">
       <div class="subhead">
         <h3 class="subhead-title">磁盘自动清理策略</h3>
-        <p class="subhead-desc">设定磁盘使用警戒线、单次清理冲程深度及新录像保护规则</p>
       </div>
 
       <!-- 一体化水位深度与清理冲程控制台 (Unified Watermark & Stroke Gauge) -->
       <div class="watermark-gauge-card">
         <div class="gauge-header">
           <div class="gauge-title-col">
-            <span class="gauge-card-title">水位深度与清理冲程</span>
-            <span class="gauge-card-desc">当磁盘触达警戒水位时触发清理，自动清除陈旧录像直至降至目标水位</span>
+            <div class="gauge-card-title">
+              <span>水位深度与清理冲程</span>
+              <el-tooltip content="当磁盘触达警戒水位时触发清理，自动清除陈旧录像直至降至目标水位" placement="top" :show-after="300">
+                <span class="label-help-ico">?</span>
+              </el-tooltip>
+            </div>
           </div>
           <div class="gauge-metric-badge">
             <span class="metric-lbl">单次释放冲程:</span>
@@ -97,13 +107,13 @@
             <div class="slider-cell-header">
               <div class="slider-cell-title">
                 <span class="slider-dot dot-warn"></span>
-                <span>触发清理阈值 (警戒水位)</span>
+                <span>触发清理阈值</span>
+                <el-tooltip content="磁盘使用率达到此警戒水位时自动启动清理" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+                <span v-if="triggerFreeGB" class="hint-free-gb">余量 &lt; {{ triggerFreeGB }} GB 触发</span>
               </div>
               <span class="slider-val mono-val warn-val">{{ config.TRIGGER_THRESHOLD }}%</span>
-            </div>
-            <div class="slider-cell-desc">
-              磁盘使用率达到此警戒线时自动启动清理
-              <span v-if="triggerFreeGB" class="hint-free-gb">余量 &lt; {{ triggerFreeGB }} GB 触发</span>
             </div>
             <el-slider
               :model-value="config.TRIGGER_THRESHOLD"
@@ -119,12 +129,12 @@
             <div class="slider-cell-header">
               <div class="slider-cell-title">
                 <span class="slider-dot dot-target"></span>
-                <span>目标清理阈值 (降至水位)</span>
+                <span>目标清理阈值</span>
+                <el-tooltip content="按由旧至新淘汰录像，直至磁盘降回此安全水位" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
               </div>
               <span class="slider-val mono-val target-val">{{ config.TARGET_THRESHOLD }}%</span>
-            </div>
-            <div class="slider-cell-desc">
-              按由旧至新淘汰录像，直至磁盘降回此安全水位
             </div>
             <el-slider
               :model-value="config.TARGET_THRESHOLD"
@@ -140,8 +150,12 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">新录像免删保护</div>
-          <div class="setting-desc">保护期内新录像享有免删特权，即使达到警戒线也绝对保留</div>
+          <div class="setting-title">
+            <span>新录像免删保护</span>
+            <el-tooltip content="保护期内新录像享有免删特权，即使达到警戒线也绝对保留" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -157,8 +171,12 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">每主播最少保留</div>
-          <div class="setting-desc">每个主播强制保留的最低场次数，无论空间多么紧张绝不全删</div>
+          <div class="setting-title">
+            <span>每主播最少保留</span>
+            <el-tooltip content="每个主播强制保留的最低场次数，无论空间多么紧张绝不全删" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -174,8 +192,12 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">单次最多清理</div>
-          <div class="setting-desc">每次清理任务允许删除的文件上限，防止极端突发异常大量删除</div>
+          <div class="setting-title">
+            <span>单次最多清理</span>
+            <el-tooltip content="每次清理任务允许删除的文件上限，防止极端突发异常大量删除" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -192,8 +214,12 @@
       <!-- 白名单关键词 Tag 交互 -->
       <div class="setting-row setting-row-stack">
         <div class="setting-info">
-          <div class="setting-title">免清理白名单</div>
-          <div class="setting-desc">匹配关键词的录像文件或主播目录受永久保护不被自动清理</div>
+          <div class="setting-title">
+            <span>免清理白名单</span>
+            <el-tooltip content="匹配关键词的录像文件或主播目录受永久保护不被自动清理" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="whitelist-tag-group">
           <div class="tags-container">
@@ -378,39 +404,34 @@ function addTag(keyword: string) {
   flex-direction: column;
 }
 .setting-group + .setting-group {
-  margin-top: 32px;
+  margin-top: 28px;
 }
 
 /* GitHub Primer Subhead (子分类标题与描述) */
 .subhead {
-  margin-bottom: 14px;
-  padding-bottom: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--hairline);
 }
 
 .subhead-title {
-  margin: 0 0 4px 0;
+  margin: 0;
   font-size: 15px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
 }
 
-.subhead-desc {
-  margin: 0;
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.45;
-}
-
-/* Setting Rows */
+/* Setting Rows - Single Line Compact Layout */
 .setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--hairline);
   gap: 20px;
+  min-height: 42px;
+  box-sizing: border-box;
 }
 .setting-row:last-child {
   border-bottom: none;
@@ -419,28 +440,44 @@ function addTag(keyword: string) {
 .setting-row-stack {
   flex-direction: column;
   align-items: stretch;
-  gap: 12px;
+  gap: 10px;
 }
 
 .setting-info {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
+  align-items: center;
   min-width: 0;
 }
 
 .setting-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.1px;
 }
 
-.setting-desc {
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.45;
+.label-help-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--hairline);
+  color: var(--slate);
+  cursor: help;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.label-help-ico:hover {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .setting-control {
@@ -482,14 +519,14 @@ function addTag(keyword: string) {
    Precision Watermark Gauge Controller (一体化水位深度与冲程仪)
    ======================================================== */
 .watermark-gauge-card {
-  margin: 6px 0 16px 0;
-  padding: 16px 18px;
+  margin: 8px 0 14px 0;
+  padding: 14px 16px;
   border-radius: var(--r-md);
   background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
   border: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 html.dark .watermark-gauge-card {
@@ -500,34 +537,30 @@ html.dark .watermark-gauge-card {
 .gauge-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
 }
 
 .gauge-title-col {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: center;
 }
 
 .gauge-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.1px;
 }
 
-.gauge-card-desc {
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.4;
-}
-
 .gauge-metric-badge {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: var(--r-sm);
   background: color-mix(in srgb, #3b82f6 10%, transparent);
   border: 1px solid color-mix(in srgb, #3b82f6 20%, transparent);
@@ -546,7 +579,7 @@ html.dark .metric-lbl {
 }
 
 .metric-pct {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #1d4ed8;
   font-family: var(--font-mono);
@@ -557,7 +590,7 @@ html.dark .metric-pct {
 }
 
 .metric-gb {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #2563eb;
   font-family: var(--font-mono);
@@ -575,7 +608,7 @@ html.dark .metric-gb {
 }
 
 .gauge-bar-track {
-  height: 22px;
+  height: 20px;
   border-radius: 4px;
   background: var(--surface-card, #ffffff);
   border: 1px solid var(--hairline);
@@ -600,7 +633,7 @@ html.dark .gauge-bar-track {
 }
 
 .seg-label {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: -0.2px;
   user-select: none;
@@ -638,8 +671,8 @@ html.dark .seg-danger {
 
 .gauge-ticks {
   position: relative;
-  height: 16px;
-  font-size: 10.5px;
+  height: 14px;
+  font-size: 10px;
   font-family: var(--font-mono);
   color: var(--stone);
 }
@@ -684,7 +717,7 @@ html.dark .tick-trigger {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--hairline);
 }
 
@@ -697,7 +730,7 @@ html.dark .tick-trigger {
 .gauge-slider-cell {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .slider-cell-header {
@@ -730,7 +763,7 @@ html.dark .tick-trigger {
 }
 
 .slider-val {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -750,13 +783,6 @@ html.dark .target-val {
   color: #3fb950;
 }
 
-.slider-cell-desc {
-  font-size: 11px;
-  color: var(--steel);
-  line-height: 1.4;
-  min-height: 16px;
-}
-
 .hint-free-gb {
   display: inline-block;
   margin-left: 4px;
@@ -765,6 +791,7 @@ html.dark .target-val {
   background: rgba(245, 158, 11, 0.12);
   color: #b45309;
   font-family: var(--font-mono);
+  font-size: 10.5px;
 }
 
 html.dark .hint-free-gb {
@@ -780,7 +807,7 @@ html.dark .hint-free-gb {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .tags-container {

@@ -250,23 +250,40 @@ html.dark .workbench-action-bar {
 .term-title-text {
   font-size: 13px;
   font-weight: 600;
+  color: var(--charcoal);
+}
+
+html.dark .term-title-text {
   color: #e4e4e7;
 }
 
 .term-badge-tag {
   font-size: 11px;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: var(--r-full);
+  font-weight: 500;
 }
 
 .tag-running {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+html.dark .tag-running {
   background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
 }
 
 .tag-idle {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.05));
+  color: var(--steel);
+  border: 1px solid var(--hairline);
+}
+
+html.dark .tag-idle {
+  background: rgba(255, 255, 255, 0.08);
   color: #a1a1aa;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .retry-bar {

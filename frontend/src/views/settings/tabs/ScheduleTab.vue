@@ -4,13 +4,16 @@
     <div class="setting-group">
       <div class="subhead">
         <h3 class="subhead-title">自动分片合并计划</h3>
-        <p class="subhead-desc">周期性自动扫描各主播录像目录并合并已完播的视频分片</p>
       </div>
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">开启自动合并</div>
-          <div class="setting-desc">主调度器周期性激活录像分片合并流水线任务</div>
+          <div class="setting-title">
+            <span>开启自动合并</span>
+            <el-tooltip content="主调度器周期性激活录像分片合并流水线任务" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <el-switch
@@ -22,8 +25,12 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">合并调度周期</div>
-          <div class="setting-desc">任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟 / 6 小时）</div>
+          <div class="setting-title">
+            <span>合并调度周期</span>
+            <el-tooltip content="任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟 / 6 小时）" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -45,13 +52,16 @@
     <div class="setting-group">
       <div class="subhead">
         <h3 class="subhead-title">自动磁盘巡检与清理计划</h3>
-        <p class="subhead-desc">定期巡检磁盘可用率，仅当达到警戒水位时触发清理任务</p>
       </div>
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">开启自动清理</div>
-          <div class="setting-desc">定期巡检磁盘可用率，若触达警戒线则自动启动清理</div>
+          <div class="setting-title">
+            <span>开启自动清理</span>
+            <el-tooltip content="定期巡检磁盘可用率，若触达警戒线则自动启动清理" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <el-switch
@@ -63,8 +73,12 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">巡检调度周期</div>
-          <div class="setting-desc">巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟 / 12 小时）</div>
+          <div class="setting-title">
+            <span>巡检调度周期</span>
+            <el-tooltip content="巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟 / 12 小时）" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="inline-unit-row">
@@ -86,13 +100,16 @@
     <div class="setting-group">
       <div class="subhead">
         <h3 class="subhead-title">免打扰避让时段</h3>
-        <p class="subhead-desc">在指定时间范围内自动暂停合并与清理，避开直播高峰或录播密集期（支持跨午夜）</p>
       </div>
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-title">避让时间范围</div>
-          <div class="setting-desc">在此设定时段内自动暂停合并与清理，其余时段恢复正常计划调度</div>
+          <div class="setting-title">
+            <span>避让时间范围</span>
+            <el-tooltip content="在此设定时段内自动暂停合并与清理，其余时段恢复正常计划调度（支持跨午夜）" placement="top" :show-after="300">
+              <span class="label-help-ico">?</span>
+            </el-tooltip>
+          </div>
         </div>
         <div class="setting-control">
           <div class="time-range-row">
@@ -183,36 +200,31 @@ const emit = defineEmits<{
   margin-top: 32px;
 }
 
-/* GitHub Primer Subhead (子分类标题与描述) */
+/* GitHub Primer Subhead (子分类标题) */
 .subhead {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--hairline);
 }
 
 .subhead-title {
-  margin: 0 0 4px 0;
+  margin: 0;
   font-size: 15px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
 }
 
-.subhead-desc {
-  margin: 0;
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.45;
-}
-
-/* Setting Rows */
+/* Setting Rows - 单行清爽布局与渐进式展示 */
 .setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--hairline);
   gap: 20px;
+  min-height: 42px;
+  box-sizing: border-box;
 }
 .setting-row:last-child {
   border-bottom: none;
@@ -220,23 +232,40 @@ const emit = defineEmits<{
 
 .setting-info {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: center;
   flex: 1;
   min-width: 0;
 }
 
 .setting-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13.5px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.1px;
 }
 
-.setting-desc {
-  font-size: 12px;
-  color: var(--steel);
-  line-height: 1.45;
+.label-help-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--hairline);
+  color: var(--slate);
+  cursor: help;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.label-help-ico:hover {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .setting-control {

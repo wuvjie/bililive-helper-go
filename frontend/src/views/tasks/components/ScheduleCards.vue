@@ -11,36 +11,36 @@
             </svg>
           </div>
           <span class="title-text">自动分片合并</span>
+          <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
+            {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '定时调度已启用' : '定时调度已暂停' }}
+          </span>
         </div>
-        <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
-          <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
-          {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '定时调度已启用' : '定时调度已暂停' }}
-        </span>
+        <button
+          class="btn-task-action btn-merge-action"
+          :disabled="isRunning"
+          @click="$emit('run-global', 'merge')"
+          title="立即启动一次全局分片合并任务"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span>立即全局合并</span>
+        </button>
       </div>
-      <div class="card-body sched-body">
-        <div class="sched-row">
-          <span class="sched-label">调度周期</span>
+
+      <div class="sched-metric-grid">
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">调度周期</span>
           <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} <span class="unit-lbl">分钟</span></span>
         </div>
-        <div class="sched-row">
-          <span class="sched-label">上次运行</span>
-          <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">上次运行</span>
+          <span class="mono-val">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
         </div>
-        <div class="sched-row">
-          <span class="sched-label">下次预计</span>
-          <span class="mono-val-sm">{{ formatDisplayTime(schedule?.merge?.next_run) }}</span>
-        </div>
-        <div class="sched-action-row">
-          <button
-            class="btn-task-action btn-merge-action"
-            :disabled="isRunning"
-            @click="$emit('run-global', 'merge')"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-            <span>立即全局合并</span>
-          </button>
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">下次预计</span>
+          <span class="mono-val">{{ formatDisplayTime(schedule?.merge?.next_run) }}</span>
         </div>
       </div>
     </div>
@@ -55,36 +55,36 @@
             </svg>
           </div>
           <span class="title-text">自动磁盘清理</span>
+          <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
+            <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
+            {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '磁盘巡检已开启' : '巡检保护未开启' }}
+          </span>
         </div>
-        <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
-          <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
-          {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '磁盘巡检已开启' : '巡检保护未开启' }}
-        </span>
+        <button
+          class="btn-task-action btn-clean-action"
+          :disabled="isRunning"
+          @click="$emit('run-global', 'clean')"
+          title="立即启动一次全局磁盘巡检与清理"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+          <span>立即全局清理</span>
+        </button>
       </div>
-      <div class="card-body sched-body">
-        <div class="sched-row">
-          <span class="sched-label">巡检周期</span>
+
+      <div class="sched-metric-grid">
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">巡检周期</span>
           <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} <span class="unit-lbl">分钟</span></span>
         </div>
-        <div class="sched-row">
-          <span class="sched-label">上次运行</span>
-          <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">上次运行</span>
+          <span class="mono-val">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
         </div>
-        <div class="sched-row">
-          <span class="sched-label">下次预计</span>
-          <span class="mono-val-sm">{{ formatDisplayTime(schedule?.clean?.next_run) }}</span>
-        </div>
-        <div class="sched-action-row">
-          <button
-            class="btn-task-action btn-clean-action"
-            :disabled="isRunning"
-            @click="$emit('run-global', 'clean')"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            </svg>
-            <span>立即全局清理</span>
-          </button>
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">下次预计</span>
+          <span class="mono-val">{{ formatDisplayTime(schedule?.clean?.next_run) }}</span>
         </div>
       </div>
     </div>
@@ -127,13 +127,16 @@ function formatDisplayTime(ts?: number): string {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .title-left {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .title-text {
@@ -196,42 +199,14 @@ function formatDisplayTime(ts?: number): string {
   100% { transform: scale(0.9); opacity: 0.8; }
 }
 
-.sched-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-  justify-content: space-between;
-}
-
-.sched-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  padding: 4px 0;
-  border-bottom: 1px dashed var(--hairline);
-}
-
-.sched-label {
-  color: var(--slate);
-}
-
-.sched-action-row {
-  margin-top: 14px;
-  display: flex;
-  width: 100%;
-}
-
 .btn-task-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 5px 12px;
   border-radius: var(--r-sm);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
@@ -265,8 +240,55 @@ function formatDisplayTime(ts?: number): string {
 }
 
 .btn-svg-sm {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
+}
+
+/* Hairline ruled metric grid (3 columns) */
+.sched-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--hairline);
+  padding-top: 12px;
+}
+
+.sched-metric-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.sched-metric-cell:first-child {
+  padding-left: 0;
+}
+
+.sched-metric-cell:last-child {
+  padding-right: 0;
+}
+
+.sched-metric-cell + .sched-metric-cell {
+  border-left: 1px solid var(--hairline);
+}
+
+.metric-lbl {
+  font-size: 11.5px;
+  color: var(--stone);
+  font-weight: 500;
+}
+
+.mono-val {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--charcoal);
+  font-family: var(--font-mono);
+}
+
+.unit-lbl {
+  font-size: 11px;
+  color: var(--stone);
+  font-weight: 400;
 }
 
 @media (max-width: 860px) {
