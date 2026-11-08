@@ -1,8 +1,13 @@
 # Baseline
 
 - **v3.8.0** (Current Active):
-  - Git Commits: `5d25259` ~ `HEAD` (`0fabf5a` / `fe03bf8`)
+  - Git Commits: `5d25259` ~ `HEAD` (`a7b9f99` / `7766d38`)
   - Release Highlights:
+    - **系统设置极简单栏与左对齐表单重构 (Settings Single-Bar Header & Left-Aligned Form Alignment)**：
+      - 彻底清除 `h1 系统设置` 及冗余副标题说明，收敛为极致紧凑的单行顶栏（UnderlineNav 标签导航与「恢复推荐预设」操作同层并列）；
+      - 废除设置卡片标题下方的 4 处多余说明句，彻底移除全部表单项下方的解释小字；
+      - 升级所有配置项标题为“自解释、无歧义”的精准工程术语（`断流重连合并时间`、`关播后等待合并时长`、`最近录像免删保护期`、`每位主播保底留存场次`、`单次清理最多删除文件`、`永久免删关键词白名单`、`定时自动合并分片`、`定时巡检磁盘并清理`、`每日任务避让时段`）；
+      - 根治 `justify-content: space-between` 造成的中间 600px 巨大空白大坑（羽毛球/网球式两端分散）：锁定表单左侧标签列固定宽度 210px，所有输入控件采用 `justify-content: flex-start; gap: 28px;` 紧邻左侧统一纵轴锚定，呈现标准的 GitHub / Linear 专业表单排版。
     - **系统概览横向发丝线像素级锁齐 (Pixel-Locked Metric Cross-Card Symmetry)**：
       - 彻底根治存储空间监控 (`StorageCard.vue`) 与自动化调度监控 (`ScheduleMonitorCard.vue`) 并排时的分割线上下错位难题；
       - 确立卡片内部垂直几何尺寸锁定标准：`card-title`（32px）+ `card-top-metric`（56px）+ 顶部发丝线（Y = 124px）+ 2×2 网格显式轨道高 `grid-template-rows: 52px 52px;`（中间横向分割线 Y = 192px 绝对平齐）；
