@@ -15,10 +15,10 @@ export interface WheelOverscrollOptions {
 export function useWheelOverscroll(options: WheelOverscrollOptions) {
   const {
     getContainer,
-    threshold = 70,
+    threshold = 45,
     maxPullOffset = 16,
-    cooldownMs = 440,
-    debounceMs = 220
+    cooldownMs = 400,
+    debounceMs = 380
   } = options;
 
   const slideDirection = ref<"next" | "prev">("next");
@@ -81,8 +81,8 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
 
     const { scrollTop, clientHeight, scrollHeight } = container;
     // 无论是超长内容滚到底/顶，还是内容短于视口未出现滚动条，均能准确响应滚动翻页
-    const isAtTop = scrollTop <= 12 || scrollHeight <= clientHeight;
-    const isAtBottom = (scrollTop + clientHeight >= scrollHeight - 12) || scrollHeight <= clientHeight;
+    const isAtTop = scrollTop <= 16 || scrollHeight <= clientHeight;
+    const isAtBottom = (scrollTop + clientHeight >= scrollHeight - 16) || scrollHeight <= clientHeight;
 
     // 向下滚动到底部 -> 触发切到下一模块
     if (e.deltaY > 0 && isAtBottom) {

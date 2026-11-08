@@ -51,7 +51,7 @@
 
     <!-- Main Full-Width Content Stream (Native Smooth Flow) -->
     <main class="settings-content" ref="contentRef">
-      <Transition :name="slideDirection === 'next' ? 'slide-down-page' : 'slide-up-page'" mode="out-in">
+      <Transition :name="slideDirection === 'next' ? 'slide-down-page' : 'slide-up-page'" mode="out-in" @after-enter="resetScrollToTop">
         <!-- 1. 全局策略 -->
         <div
           v-if="activeSectionId === 'policy'"
@@ -677,20 +677,15 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Sticky Top UnderlineNav (GitHub Primer 规范横向导航栏) */
+/* Top UnderlineNav Header (GitHub Primer 规范横向导航栏，跟随页面自然排版，消除浮动穿透与重叠冲突) */
 .settings-top-nav-bar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: color-mix(in srgb, var(--canvas, #ffffff) 88%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  position: static;
+  background: transparent;
   border-bottom: 1px solid var(--hairline, #e4e4e7);
   margin-bottom: 24px;
 }
 
 html.dark .settings-top-nav-bar {
-  background: color-mix(in srgb, var(--canvas, #0d1117) 88%, transparent);
   border-bottom-color: #30363d;
 }
 
@@ -712,13 +707,13 @@ html.dark .settings-top-nav-bar {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--steel, #71717a);
+  color: var(--color-fg-muted, #57606a);
   background: transparent;
-  border: 1px solid var(--hairline, #e4e4e7);
+  border: none;
   cursor: pointer;
   transition: all 0.15s ease;
 
@@ -729,9 +724,8 @@ html.dark .settings-top-nav-bar {
   }
 
   &:hover {
-    color: var(--primary, #0969da);
-    background: var(--surface-card, #f6f8fa);
-    border-color: var(--primary, #0969da);
+    color: var(--color-accent-fg, #0969da);
+    background: var(--color-canvas-subtle, #f6f8fa);
 
     .reset-action-svg {
       transform: rotate(-45deg);
@@ -741,12 +735,10 @@ html.dark .settings-top-nav-bar {
 
 html.dark .top-preset-action-btn {
   color: #8b949e;
-  border-color: #30363d;
 
   &:hover {
     color: #58a6ff;
     background: #21262d;
-    border-color: #58a6ff;
   }
 }
 
@@ -997,107 +989,179 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
   border-top: none !important;
 }
 
-/* Floating Sticky Save Bar (吸底保存条) */
+/* Floating Sticky Save Bar (吸底浮层保存栏：居中对齐主内容区域，宽度贴合设置卡片，整体风格与系统原生主题深度融合) */
 .sticky-save-bar {
   position: fixed;
   bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 24px;
+  left: 244px; /* 展开侧栏 220px + 24px 页面 padding */
+  display: flex;
+  justify-content: center;
   z-index: 1000;
-  width: calc(100% - 48px);
-  max-width: 820px;
-  animation: barFloat 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
+
+:global(.layout-container.sidebar-collapsed) .sticky-save-bar {
+  left: 88px; /* 折叠侧栏 64px + 24px 页面 padding */
+}
+
+@media (max-width: 768px) {
+  .sticky-save-bar {
+    left: 14px;
+    right: 14px;
+    bottom: 16px;
+  }
+}
+
 .save-bar-inner {
-  background: rgba(24, 24, 27, 0.94);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 40px;
-  padding: 10px 18px 10px 22px;
+  pointer-events: auto;
+  width: 100%;
+  max-width: 980px; /* 与设置卡片 max-width 完全贴合对齐 */
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline, #e4e4e7);
+  border-radius: 8px;
+  padding: 10px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  gap: 16px;
+  box-sizing: border-box;
 }
+
+html.dark .save-bar-inner {
+  background: #161b22;
+  border-color: #30363d;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 .save-bar-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .save-bar-pulse-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  background: #d97706;
+  box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.6);
   animation: pulse-warn-dot 1.8s infinite;
 }
+
 @keyframes pulse-warn-dot {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.6); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(217, 119, 6, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
 }
+
 .save-bar-title {
-  color: #f4f4f5;
+  color: var(--charcoal, #24292f);
   font-size: 13px;
   font-weight: 600;
 }
+
+html.dark .save-bar-title {
+  color: #f0f6fc;
+}
+
 .save-bar-sub {
-  color: #a1a1aa;
+  color: var(--stone, #71717a);
   font-size: 12px;
 }
+
+html.dark .save-bar-sub {
+  color: #8b949e;
+}
+
 .save-bar-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .btn-bar-ghost {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #d4d4d8;
-  padding: 6px 14px;
-  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 14px;
   font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: var(--color-btn-text, #24292f);
+  background: var(--color-btn-bg, #ffffff);
+  border: 1px solid var(--color-btn-border, #d0d7de);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  line-height: 20px;
+
+  &:hover {
+    background: var(--color-btn-hover-bg, #f3f4f6);
+    border-color: #cf222e;
+    color: #cf222e;
+  }
 }
-.btn-bar-ghost:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+
+html.dark .btn-bar-ghost {
+  color: #c9d1d9;
+  background: #21262d;
+  border-color: #30363d;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: #30363d;
+    border-color: #f87171;
+    color: #f87171;
+  }
 }
+
 .btn-bar-primary {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #3b82f6;
-  border: 1px solid #60a5fa;
-  color: #ffffff;
-  padding: 6px 18px;
-  border-radius: 20px;
+  justify-content: center;
+  padding: 5px 18px;
   font-size: 12px;
   font-weight: 600;
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--color-accent-emphasis, #0969da);
+  border: 1px solid rgba(27, 31, 36, 0.15);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  line-height: 20px;
+
+  &:hover:not(:disabled) {
+    background: #0860ca;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
-.btn-bar-primary:hover:not(:disabled) {
-  background: #2563eb;
-  transform: translateY(-1px);
-}
-.btn-bar-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+
+html.dark .btn-bar-primary {
+  background: #1f6feb;
+  border-color: rgba(240, 246, 252, 0.1);
+
+  &:hover:not(:disabled) {
+    background: #388bfd;
+  }
 }
 
 /* Animations */
 .save-bar-slide-enter-active,
 .save-bar-slide-leave-active {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .save-bar-slide-enter-from,
 .save-bar-slide-leave-to {
   opacity: 0;
-  transform: translate(-50%, 20px);
+  transform: translateY(16px);
 }
 
 /* Dark mode tweaks */
