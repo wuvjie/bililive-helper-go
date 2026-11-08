@@ -134,7 +134,7 @@
               <span>拖拽备份文件至此处，或</span>
               <span class="dropzone-browse-link">浏览本地文件</span>
             </div>
-            <div class="dropzone-secondary-text">仅支持导出的 .json 配置文件</div>
+            <div class="dropzone-secondary-text">仅支持导出的 JSON 配置文件</div>
           </div>
         </div>
 
@@ -285,7 +285,7 @@ function onFileChange(e: Event) {
   const file = input.files?.[0];
   if (file) {
     if (!file.name.toLowerCase().endsWith(".json")) {
-      ElMessage.warning("请选择 .json 格式的配置文件");
+      ElMessage.warning("请选择 JSON 格式的配置文件");
       input.value = "";
       return;
     }
@@ -300,7 +300,7 @@ function onDrop(e: DragEvent) {
   if (!files || files.length === 0) return;
   const file = files[0];
   if (!file.name.toLowerCase().endsWith(".json")) {
-    ElMessage.warning("请选择 .json 格式的配置文件");
+    ElMessage.warning("请选择 JSON 格式的配置文件");
     return;
   }
   processFile(file);

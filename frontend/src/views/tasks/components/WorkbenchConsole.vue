@@ -177,14 +177,16 @@ html.dark .workbench-action-bar {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  height: 32px;
+  padding: 0 12px;
+  box-sizing: border-box;
   border-radius: var(--r-sm);
   font-size: 12px;
   font-weight: 500;
   border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
-  line-height: 1.4;
+  line-height: 1;
 }
 
 .btn-targeted-merge {

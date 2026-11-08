@@ -1,11 +1,12 @@
 # Baseline
 
 - **v3.8.1** (Current Active):
-  - Git Commits: `404f243`, `3be00c7` (GitHub) / `bcaa7ef`, `bfed8f8` (WSL)
+  - Git Commits: `404f243`, `3be00c7`, `8e18387` (GitHub) / `bcaa7ef`, `bfed8f8`, `27ba414` (WSL)
   - Release Highlights:
     - **系统概览横向发丝线像素级锁齐 (Pixel-Locked Metric Cross-Card Symmetry)**：
       - 彻底根治存储空间监控 (`StorageCard.vue`) 与自动化调度监控 (`ScheduleMonitorCard.vue`) 并排时的分割线上下错位难题；
       - 确立卡片内部垂直几何尺寸锁定标准：`card-title`（32px）+ `card-top-metric`（56px）+ 顶部发丝线（Y = 124px）+ 2×2 网格显式轨道高 `grid-template-rows: 52px 52px;`（中间横向分割线 Y = 192px 绝对平齐）；
+      - 下半区趋势图 (`TrendCard.vue`) 与操作记录 (`RecentOpsCard.vue`) 同步锁死 `card-title`（32px），实现概览大盘 2×2 全域卡片顶边绝对平齐；
       - 表格单元格标签 4 字高度内聚对称（`合并周期` | `下次合并` / `清理周期` | `下次清理`）。
     - **时段裁剪语义通用化与去三重冗余 (Neutral Video Trim & Zero Tooltip Redundancy)**：
       - 废除主播规则时段裁剪弹窗 (`StreamerRuleDialog.vue`) 中主观预设的“暖场”、“片尾”、“精选”等非通用称谓，升级为标准音视频工程中性术语：`剪除前段`、`保留片段`、`剪除后段`、`直至结尾`，时间轴起点终点对齐为 `00:00:00 录像起点` 与 `录像终点`；
