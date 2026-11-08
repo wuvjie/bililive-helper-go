@@ -1,4 +1,4 @@
-// Package main 是 Bililive Helper Go 应用程序的入口。
+// Package main 是 Bililive Helper Go 应用程序的服务端启动入口。
 package main
 
 import (
