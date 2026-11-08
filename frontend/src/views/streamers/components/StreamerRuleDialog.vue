@@ -2,31 +2,124 @@
   <el-dialog
     :model-value="visible"
     :title="`个性化规则 · ${streamer}`"
-    width="540px"
+    width="560px"
     destroy-on-close
     class="rule-dialog"
     @update:model-value="$emit('update:visible', $event)"
   >
     <div class="rule-dialog-body">
-      <!-- Section 1: 自动视频时段裁剪 (GitHub Primer Row) -->
+      <!-- Section 1: 自动视频时段裁剪 (视音频无损裁剪) -->
       <div class="rule-section">
         <div class="rule-row-header">
           <div class="rule-title-col">
-            <span class="rule-title">
-              <span>自动视频时段裁剪</span>
-              <el-tooltip content="分片合并完成后，无损流复制截取指定起止时段（如去除开播暖场或只保留前半场精选）" placement="top" :show-after="300">
-                <span class="label-help-ico">?</span>
-              </el-tooltip>
-            </span>
+            <div class="title-with-badge">
+              <svg class="rule-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="6" cy="6" r="3"/>
+                <circle cx="6" cy="18" r="3"/>
+                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+              </svg>
+              <span class="rule-title">
+                <span>自动视频时段裁剪</span>
+                <el-tooltip content="分片合并完成后，无损流复制截取指定起止时段（如去除开播暖场或只保留前半场精选）" placement="top" :show-after="300">
+                  <span class="label-help-ico">?</span>
+                </el-tooltip>
+              </span>
+              <span class="status-pill" :class="formRule.trim_enabled ? 'pill-active' : 'pill-default'">
+                {{ formRule.trim_enabled ? '裁剪已启用' : '未开启' }}
+              </span>
+            </div>
           </div>
           <el-switch v-model="formRule.trim_enabled" />
         </div>
 
         <transition name="rule-expand">
           <div v-if="formRule.trim_enabled" class="trim-expand-area">
+            <!-- 拟真视频胶片时间轴预览条 (Film Strip Timeline Bar) -->
+            <div class="film-timeline-wrap">
+              <div class="film-strip-track">
+                <!-- Segment 1: 开播暖场剪除段 -->
+                <div
+                  v-if="timelineSegments.hasWarmup"
+                  class="film-seg seg-discarded"
+                  :style="{ flexGrow: timelineSegments.warmupGrow }"
+                  title="开播暖场剪除丢弃"
+                >
+                  <svg class="seg-mini-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  <span class="seg-text">剪除暖场</span>
+                </div>
+
+                <!-- Segment 2: 有效录像保留成片段 (核心主体) -->
+                <div
+                  class="film-seg seg-retained"
+                  :style="{ flexGrow: timelineSegments.retainedGrow }"
+                  title="有效录像保留成片"
+                >
+                  <div class="film-sprockets top"></div>
+                  <div class="retained-content">
+                    <svg class="film-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                      <line x1="7" y1="2" x2="7" y2="22"/>
+                      <line x1="17" y1="2" x2="17" y2="22"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                    </svg>
+                    <span class="seg-text-bold">有效成片</span>
+                    <span v-if="trimSemanticInfo.durationText" class="retained-badge">
+                      {{ trimSemanticInfo.durationText }}
+                    </span>
+                  </div>
+                  <div class="film-sprockets bottom"></div>
+                </div>
+
+                <!-- Segment 3: 片尾剪除段 (若指定了 trim_end) -->
+                <div
+                  v-if="timelineSegments.hasTrailing"
+                  class="film-seg seg-discarded"
+                  :style="{ flexGrow: timelineSegments.trailingGrow }"
+                  title="片尾剪除丢弃"
+                >
+                  <svg class="seg-mini-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  <span class="seg-text">剪除片尾</span>
+                </div>
+                <!-- 或者未指定 trim_end，表示截取至自然结尾 -->
+                <div
+                  v-else-if="timelineSegments.isUntilEnd"
+                  class="film-seg seg-tail-open"
+                  title="截取至录播自然关播结尾"
+                >
+                  <span class="seg-text">直至关播</span>
+                </div>
+              </div>
+
+              <!-- 时间轴节点指示 -->
+              <div class="timeline-ticks-row">
+                <span class="tick-node tick-start">00:00:00 开播</span>
+                <span class="tick-node tick-in" v-if="timelineSegments.hasWarmup">
+                  入点 {{ formRule.trim_start }}
+                </span>
+                <span class="tick-node tick-out" v-if="timelineSegments.hasTrailing">
+                  出点 {{ formRule.trim_end }}
+                </span>
+                <span class="tick-node tick-end">关播落盘</span>
+              </div>
+            </div>
+
+            <!-- 剪辑入点与剪辑出点输入行 -->
             <div class="time-inputs-row">
               <div class="time-field">
-                <label class="time-field-label">开始时间</label>
+                <label class="time-field-label">
+                  <span>剪辑入点（起始时间）</span>
+                  <el-tooltip content="录像自此时刻开始保留（格式 HH:mm:ss 或 mm:ss）" placement="top">
+                    <span class="label-help-ico">?</span>
+                  </el-tooltip>
+                </label>
                 <el-input
                   v-model="formRule.trim_start"
                   placeholder="00:00:00"
@@ -36,10 +129,15 @@
               </div>
               <span class="time-range-sep">至</span>
               <div class="time-field">
-                <label class="time-field-label">结束时间</label>
+                <label class="time-field-label">
+                  <span>剪辑出点（截至时间）</span>
+                  <el-tooltip content="录像截取到此时刻为止，留空则默认完整保留至关播" placement="top">
+                    <span class="label-help-ico">?</span>
+                  </el-tooltip>
+                </label>
                 <el-input
                   v-model="formRule.trim_end"
-                  placeholder="留空截至录像末尾"
+                  placeholder="留空截取至录像末尾"
                   class="mono-input"
                   @blur="normalizeTrimField('trim_end')"
                 />
@@ -67,11 +165,14 @@
         </transition>
       </div>
 
-      <!-- Section 2: 存储清理保护 (GitHub Primer Row) -->
+      <!-- Section 2: 存储清理保护 (最高保护特权) -->
       <div class="rule-section">
         <div class="rule-row-header">
           <div class="rule-title-col">
             <div class="title-with-badge">
+              <svg class="rule-section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
               <span class="rule-title">
                 <span>免清理免删保护</span>
                 <el-tooltip content="最高保护等级：开启后后台自动磁盘清理任务彻底跳过该主播目录，即使磁盘耗尽也绝对保留" placement="top" :show-after="300">
@@ -203,6 +304,42 @@ function normalizeTrimField(field: "trim_start" | "trim_end") {
     }
   }
 }
+
+
+const timelineSegments = computed(() => {
+  const startSec = parseSeconds(formRule.value.trim_start) ?? 0;
+  const endSec = parseSeconds(formRule.value.trim_end);
+
+  const hasWarmup = startSec > 0;
+  const hasTrailing = endSec !== null && endSec > startSec;
+  const isUntilEnd = endSec === null;
+
+  let warmupGrow = 1;
+  let retainedGrow = 3.5;
+  let trailingGrow = 1;
+
+  if (hasWarmup && hasTrailing) {
+    const diff = Math.max(1, endSec - startSec);
+    warmupGrow = Math.max(1, Math.min(2.5, Math.round((startSec / diff) * 2)));
+    retainedGrow = 4;
+    trailingGrow = 1.2;
+  } else if (hasWarmup && isUntilEnd) {
+    warmupGrow = 1.2;
+    retainedGrow = 4;
+  } else if (!hasWarmup && hasTrailing) {
+    retainedGrow = 4;
+    trailingGrow = 1.8;
+  }
+
+  return {
+    hasWarmup,
+    hasTrailing,
+    isUntilEnd,
+    warmupGrow,
+    retainedGrow,
+    trailingGrow
+  };
+});
 
 const trimSemanticInfo = computed(() => {
   const startSec = parseSeconds(formRule.value.trim_start) ?? 0;
@@ -492,4 +629,172 @@ html.dark .trim-helper-note.is-invalid {
   opacity: 0;
   transform: translateY(-6px);
 }
+
+.rule-section-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--color-accent-fg, #0969da);
+  flex-shrink: 0;
+}
+
+html.dark .rule-section-icon {
+  color: #58a6ff;
+}
+
+.pill-active {
+  background: rgba(9, 105, 218, 0.1);
+  color: #0969da;
+}
+
+html.dark .pill-active {
+  background: rgba(56, 139, 253, 0.15);
+  color: #58a6ff;
+}
+
+/* Film Strip Timeline Track */
+.film-timeline-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.film-strip-track {
+  height: 38px;
+  display: flex;
+  align-items: stretch;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--hairline, #e4e4e7);
+  background: var(--surface-secondary, #f6f8fa);
+}
+
+html.dark .film-strip-track {
+  background: #0d1117;
+  border-color: #30363d;
+}
+
+.film-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  font-size: 11px;
+}
+
+.seg-discarded {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(239, 68, 68, 0.05),
+    rgba(239, 68, 68, 0.05) 6px,
+    rgba(239, 68, 68, 0.12) 6px,
+    rgba(239, 68, 68, 0.12) 12px
+  );
+  color: #cf222e;
+  border-right: 1px dashed rgba(239, 68, 68, 0.35);
+  border-left: 1px dashed rgba(239, 68, 68, 0.35);
+}
+
+html.dark .seg-discarded {
+  color: #f87171;
+}
+
+.seg-retained {
+  background: linear-gradient(135deg, rgba(9, 105, 218, 0.12), rgba(16, 185, 129, 0.14));
+  border: 1px solid rgba(9, 105, 218, 0.3);
+  color: #0969da;
+  position: relative;
+}
+
+html.dark .seg-retained {
+  background: linear-gradient(135deg, rgba(56, 139, 253, 0.18), rgba(63, 185, 80, 0.18));
+  border-color: rgba(56, 139, 253, 0.4);
+  color: #58a6ff;
+}
+
+.retained-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+}
+
+.film-ico {
+  width: 13px;
+  height: 13px;
+}
+
+.seg-text-bold {
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.retained-badge {
+  font-size: 10.5px;
+  font-family: var(--font-mono, monospace);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(9, 105, 218, 0.15);
+  color: #0969da;
+  font-weight: 500;
+}
+
+html.dark .retained-badge {
+  background: rgba(56, 139, 253, 0.25);
+  color: #79c0ff;
+}
+
+.film-sprockets {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.25) 1px, transparent 1px);
+  background-size: 8px 3px;
+}
+
+.film-sprockets.top { top: 2px; }
+.film-sprockets.bottom { bottom: 2px; }
+
+html.dark .film-sprockets {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+}
+
+.seg-tail-open {
+  background: rgba(16, 185, 129, 0.05);
+  color: #059669;
+  border-left: 1px dashed rgba(16, 185, 129, 0.3);
+  flex-grow: 1.5;
+}
+
+html.dark .seg-tail-open {
+  color: #4ade80;
+}
+
+.seg-mini-ico {
+  width: 10px;
+  height: 10px;
+}
+
+.timeline-ticks-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-size: 10.5px;
+  color: var(--color-fg-muted, #57606a);
+  font-family: var(--font-mono, monospace);
+}
+
+html.dark .timeline-ticks-row {
+  color: #8b949e;
+}
+
+.tick-node {
+  white-space: nowrap;
+}
+
 </style>

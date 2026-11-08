@@ -20,7 +20,7 @@
 
     <div class="card-body">
       <div class="card-top-metric">
-        <div class="runtime-top">
+        <div class="runtime-top" :class="{ 'has-substrip': isTaskRunning }">
           <span class="runtime-label">当前任务状态</span>
           <div class="runtime-state-indicator">
             <span class="state-dot" :class="isTaskRunning ? 'dot-running' : 'dot-idle'"></span>
@@ -29,9 +29,9 @@
             </span>
           </div>
         </div>
-        <div class="runtime-substrip">
+        <div v-if="isTaskRunning" class="runtime-substrip">
           <span class="substrip-text">
-            {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看终端流式输出' : `常驻巡检中 · 覆盖 ${streamerCount} 位主播 · 共 ${videoCount} 个录像文件` }}
+            后台正在处理媒体流水线任务，任务中心可查看终端流式输出
           </span>
         </div>
       </div>
@@ -187,6 +187,10 @@ function formatNextTime(ts?: number): string {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 28px;
+}
+
+.runtime-top.has-substrip {
   margin-bottom: 6px;
 }
 

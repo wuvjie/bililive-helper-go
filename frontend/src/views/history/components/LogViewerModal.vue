@@ -47,12 +47,7 @@
 
     <template #footer>
       <div class="modal-footer-container">
-        <div class="footer-left-info">
-          <span v-if="filteredLogLines.length > 0" class="log-count-text">
-            共 {{ filteredLogLines.length }} 行日志
-          </span>
-        </div>
-        <div class="footer-actions">
+        <div class="footer-actions-left">
           <button class="btn-dialog-secondary" @click="handleCopyContent" title="复制全部内容到剪贴板">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -66,6 +61,8 @@
             </svg>
             <span>下载</span>
           </button>
+        </div>
+        <div class="footer-actions-right">
           <button class="btn-dialog-primary" @click="$emit('update:visible', false)">
             关闭
           </button>
@@ -290,16 +287,15 @@ html.dark .line-header { color: #58a6ff; font-weight: 600; }
   width: 100%;
 }
 
-.footer-left-info {
-  font-size: 12px;
-  color: var(--color-fg-muted, #57606a);
-  font-family: var(--font-mono, monospace);
-}
-
-.footer-actions {
+.footer-actions-left {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.footer-actions-right {
+  display: flex;
+  align-items: center;
 }
 
 .btn-dialog-secondary {

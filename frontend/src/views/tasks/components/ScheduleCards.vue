@@ -37,12 +37,12 @@
 
       <div class="sched-metric-grid">
         <div class="sched-metric-cell">
-          <span class="metric-lbl">调度周期</span>
-          <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} 分钟</span>
-        </div>
-        <div class="sched-metric-cell">
           <span class="metric-lbl">上次运行</span>
           <span class="mono-val">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
+        </div>
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">调度周期</span>
+          <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} 分钟</span>
         </div>
         <div class="sched-metric-cell">
           <span class="metric-lbl">下次预计</span>
@@ -81,12 +81,12 @@
 
       <div class="sched-metric-grid">
         <div class="sched-metric-cell">
-          <span class="metric-lbl">调度周期</span>
-          <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} 分钟</span>
-        </div>
-        <div class="sched-metric-cell">
           <span class="metric-lbl">上次运行</span>
           <span class="mono-val">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
+        </div>
+        <div class="sched-metric-cell">
+          <span class="metric-lbl">调度周期</span>
+          <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} 分钟</span>
         </div>
         <div class="sched-metric-cell">
           <span class="metric-lbl">下次预计</span>

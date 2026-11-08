@@ -2,7 +2,7 @@
   <el-drawer
     :model-value="visible"
     :title="`录像文件清单 · ${streamer}`"
-    size="840px"
+    size="min(660px, 90vw)"
     destroy-on-close
     @update:model-value="$emit('update:visible', $event)"
   >
@@ -26,7 +26,7 @@
           <el-table-column
             prop="name"
             label="文件名"
-            min-width="300"
+            min-width="280"
             resizable
             align="left"
             header-align="left"
@@ -52,7 +52,7 @@
           <el-table-column
             prop="size"
             label="大小"
-            width="110"
+            width="95"
             resizable
             align="right"
             header-align="right"
@@ -67,7 +67,7 @@
           <el-table-column
             prop="is_merged"
             label="状态"
-            width="100"
+            width="85"
             resizable
             align="center"
             header-align="center"
@@ -85,7 +85,7 @@
 
           <el-table-column
             label="操作"
-            width="140"
+            width="130"
             resizable
             align="center"
             header-align="center"
