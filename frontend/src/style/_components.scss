@@ -16,6 +16,20 @@
   font-feature-settings: "tnum";
 }
 
+// 表格与微指标数值单位排版（对齐盘古之白规范，4px 舒适工效微间隙）
+.data-block {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.unit-lbl {
+  font-size: 11px;
+  color: var(--steel);
+  font-weight: 500;
+  font-family: var(--font-sans);
+}
+
 // 状态指示点
 .status-dot-sm {
   width: 6px;

@@ -281,7 +281,7 @@ onActivated(() => {
 .streamer-meta-stat {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
   color: var(--slate);
   background: var(--surface-secondary, rgba(0, 0, 0, 0.03));
@@ -293,11 +293,22 @@ html.dark .streamer-meta-stat {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.meta-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
 .meta-num {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--charcoal);
-  margin-right: 2px;
+}
+
+.meta-unit {
+  font-size: 11.5px;
+  color: var(--slate);
 }
 
 .meta-dot {

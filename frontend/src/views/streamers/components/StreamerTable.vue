@@ -52,7 +52,8 @@
         </template>
         <template #default="{ row }">
           <div class="data-block">
-            <span class="mono-val">{{ row.files }}</span><span class="unit-lbl">个</span>
+            <span class="mono-val">{{ row.files }}</span>
+            <span class="unit-lbl">个</span>
           </div>
         </template>
       </el-table-column>
@@ -68,7 +69,8 @@
       >
         <template #default="{ row }">
           <div class="data-block">
-            <span class="mono-val">{{ row.size_gb?.toFixed(2) }}</span><span class="unit-lbl">GB</span>
+            <span class="mono-val">{{ row.size_gb?.toFixed(2) }}</span>
+            <span class="unit-lbl">GB</span>
           </div>
         </template>
       </el-table-column>
@@ -283,5 +285,27 @@ function formatRelativeTime(ts: number, _tick?: number): string {
 
 .cursor-help {
   cursor: help;
+}
+
+.data-block {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.mono-val {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--charcoal);
+  font-size: 13px;
+}
+
+.unit-lbl {
+  font-size: 11px;
+  color: var(--steel);
+  font-weight: 500;
+  font-family: var(--font-sans);
 }
 </style>

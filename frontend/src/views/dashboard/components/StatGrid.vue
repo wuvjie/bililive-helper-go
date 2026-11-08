@@ -161,7 +161,7 @@ const runwayDisplay = computed(() => {
 .stat-value-row {
   display: flex;
   align-items: baseline;
-  gap: 3px;
+  gap: 4px;
 }
 
 .stat-value {

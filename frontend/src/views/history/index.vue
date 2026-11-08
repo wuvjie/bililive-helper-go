@@ -326,7 +326,7 @@ function formatDetail(row: HistoryRecord): string {
   } else {
     if (row.files_count) p.push(`${row.files_count} 个文件`);
   }
-  if (row.duration) p.push(`${row.duration}s`);
+  if (row.duration) p.push(`${row.duration} 秒`);
   return p.join(" · ") || "已完成";
 }
 
