@@ -3,8 +3,9 @@
     <el-form label-width="140px" label-position="left" v-loading="loading" class="settings-form">
       <!-- Section 1: 自动合并计划 -->
       <div class="form-section-card">
-        <div class="form-sub-header">
-          <span class="sub-title-text">自动分片合并计划</span>
+        <div class="category-divider">
+          <span class="category-label">分片合并调度</span>
+          <span class="category-line" />
         </div>
         <div class="section-body">
           <el-form-item label="开启自动合并">
@@ -12,7 +13,7 @@
               :model-value="form.merge_enabled"
               @update:model-value="emit('update:form', { ...form, merge_enabled: !!$event })"
             />
-            <div class="field-hint">开启后，后台调度器将周期性扫描各主播目录，自动合并已完播的视频分片切片。</div>
+            <div class="field-hint">周期性自动扫描各主播目录并合并切片</div>
           </el-form-item>
 
           <el-form-item label="合并调度周期">
@@ -27,15 +28,16 @@
               />
               <span class="unit-text">分钟</span>
             </div>
-            <div class="field-hint">任务执行完毕后，等待指定间隔自动启动下一次扫描合并（推荐 360 分钟 / 6 小时）。</div>
+            <div class="field-hint">任务执行完毕后等待指定间隔再启动下次合并（推荐 360 分钟）</div>
           </el-form-item>
         </div>
       </div>
 
       <!-- Section 2: 自动清理计划 -->
       <div class="form-section-card">
-        <div class="form-sub-header">
-          <span class="sub-title-text">自动磁盘巡检与清理计划</span>
+        <div class="category-divider">
+          <span class="category-label">磁盘清理巡检</span>
+          <span class="category-line" />
         </div>
         <div class="section-body">
           <el-form-item label="开启自动清理">
@@ -43,7 +45,7 @@
               :model-value="form.clean_enabled"
               @update:model-value="emit('update:form', { ...form, clean_enabled: !!$event })"
             />
-            <div class="field-hint">开启后，后台调度器将定期巡检磁盘使用率；仅当达到触发警戒水位时才执行清理。</div>
+            <div class="field-hint">定期巡检磁盘使用率，达警戒水位时自动触发清理</div>
           </el-form-item>
 
           <el-form-item label="巡检调度周期">
@@ -58,15 +60,16 @@
               />
               <span class="unit-text">分钟</span>
             </div>
-            <div class="field-hint">巡检器检查磁盘可用空间的轮询间隔（推荐 720 分钟 / 12 小时）。</div>
+            <div class="field-hint">巡检器检查磁盘可用水位的轮询间隔（推荐 720 分钟）</div>
           </el-form-item>
         </div>
       </div>
 
       <!-- Section 3: 免打扰避让时段 -->
       <div class="form-section-card">
-        <div class="form-sub-header">
-          <span class="sub-title-text">免打扰避让时段</span>
+        <div class="category-divider">
+          <span class="category-label">夜间避让时段</span>
+          <span class="category-line" />
         </div>
         <div class="section-body">
           <el-form-item label="避让时间范围">

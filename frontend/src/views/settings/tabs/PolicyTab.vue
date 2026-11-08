@@ -3,8 +3,9 @@
     <el-form label-width="140px" label-position="left" class="settings-form">
       <!-- Section 1: 录制与合并规则 -->
       <div class="form-section-card">
-        <div class="form-sub-header">
-          <span class="sub-title-text">录制与合并规则</span>
+        <div class="category-divider">
+          <span class="category-label">录制与合并</span>
+          <span class="category-line" />
         </div>
         <div class="section-body">
           <el-form-item label="断流重连容差">
@@ -16,7 +17,7 @@
               />
               <span class="unit-text">分钟</span>
             </div>
-            <div class="field-hint">同一主播在此时间差内断流重连，将被判定为同一场直播并自动合并为整段视频。</div>
+            <div class="field-hint">主播在此时间差内断流重连，自动合并为整段视频</div>
           </el-form-item>
 
           <el-form-item label="完播静置等待">
@@ -28,15 +29,16 @@
               />
               <span class="unit-text">分钟</span>
             </div>
-            <div class="field-hint">录制文件生成并静置满此时间后才允许合并，确保主播已彻底关播且文件写入完毕，防止误读活动切片。</div>
+            <div class="field-hint">录播关播后的静置缓冲期，防止误读正在写入的切片</div>
           </el-form-item>
         </div>
       </div>
 
       <!-- Section 2: 存储清理策略 -->
       <div class="form-section-card">
-        <div class="form-sub-header">
-          <span class="sub-title-text">磁盘自动清理策略</span>
+        <div class="category-divider">
+          <span class="category-label">磁盘自动清理</span>
+          <span class="category-line" />
         </div>
         <div class="section-body">
           <el-form-item label="触发清理阈值">
@@ -52,7 +54,7 @@
               <span class="slider-value mono-val">{{ config.TRIGGER_THRESHOLD }}%</span>
             </div>
             <div class="field-hint">
-              磁盘使用率达到此警戒水位时，定时清理任务将正式启动。
+              磁盘使用率达到此警戒水位时自动启动清理
               <span v-if="triggerFreeGB" class="hint-highlight-tag">
                 相当于总容量 {{ totalDiskGb?.toFixed(0) }} GB 中剩余低于 <strong>{{ triggerFreeGB }} GB</strong> 时触发
               </span>
@@ -71,7 +73,7 @@
               />
               <span class="slider-value mono-val">{{ config.TARGET_THRESHOLD }}%</span>
             </div>
-            <div class="field-hint">清理时将从最旧录播开始删除，直至磁盘使用率降至此目标水位。</div>
+            <div class="field-hint">由旧至新清理录播，直至磁盘使用率降至此目标水位</div>
           </el-form-item>
 
           <!-- 空间释放冲程预期摘要标 -->
@@ -97,7 +99,7 @@
               />
               <span class="unit-text">天</span>
             </div>
-            <div class="field-hint">在此保护天数内生成的最新录像享有免删保护，即使磁盘水位达到警戒线，清理任务也绝不删除保护期内的录像。</div>
+            <div class="field-hint">保护期内新录像享有免删特权，即使达到警戒线也绝对保留</div>
           </el-form-item>
 
           <el-form-item label="每主播最少保留">
@@ -109,7 +111,7 @@
               />
               <span class="unit-text">场</span>
             </div>
-            <div class="field-hint">每个主播至少保留最近的场次数，无论磁盘空间多么紧张也不会被全删。</div>
+            <div class="field-hint">每个主播强制保留的最低场次数，无论空间多么紧张绝不全删</div>
           </el-form-item>
 
           <!-- 白名单关键词 Tag 交互 -->
@@ -156,7 +158,7 @@
                 </button>
               </div>
             </div>
-            <div class="field-hint">包含任一白名单关键词的视频文件名或主播目录，将永远受保护不被清理。</div>
+            <div class="field-hint">匹配关键词的录像文件或主播目录受永久保护不被清理</div>
           </el-form-item>
         </div>
       </div>

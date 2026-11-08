@@ -5,7 +5,7 @@
       <div class="block-info">
         <span class="block-title">导出配置备份</span>
         <p class="block-desc">
-          将系统当前的清理阈值、自动化调度参数以及各主播的个性化规则导出为标准 JSON 备份文件。
+          将系统策略、调度参数与主播个性化规则导出为标准 JSON 备份
         </p>
       </div>
       <div class="block-actions">
@@ -34,7 +34,7 @@
       <div class="block-info">
         <span class="block-title">导入配置恢复</span>
         <p class="block-desc">
-          选择之前导出的 JSON 备份文件，校验格式通过后将自动覆盖应用至当前系统。
+          选择导出的 JSON 备份文件，校验通过后自动覆盖并应用至系统
         </p>
       </div>
       <div class="block-form">

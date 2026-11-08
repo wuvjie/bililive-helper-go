@@ -36,10 +36,7 @@
               <div class="ui-icon-box icon-box-emerald">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
               </div>
-              <div class="section-header-texts">
-                <h2 class="section-main-title">全局策略</h2>
-                <p class="section-sub-title">录播分片合并静置容差时间与磁盘巡检保护水位</p>
-              </div>
+              <h2 class="section-main-title">全局策略</h2>
             </div>
             <button
               type="button"
@@ -68,10 +65,7 @@
               <div class="ui-icon-box icon-box-blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
-              <div class="section-header-texts">
-                <h2 class="section-main-title">定时调度</h2>
-                <p class="section-sub-title">自动分片合并与磁盘巡检清理的运行周期与自动执行开关</p>
-              </div>
+              <h2 class="section-main-title">定时调度</h2>
             </div>
             <button
               type="button"
@@ -104,10 +98,7 @@
               <div class="ui-icon-box icon-box-purple">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </div>
-              <div class="section-header-texts">
-                <h2 class="section-main-title">配置备份与恢复</h2>
-                <p class="section-sub-title">导出当前系统策略与调度配置，或从已有备份中导入恢复</p>
-              </div>
+              <h2 class="section-main-title">配置备份与恢复</h2>
             </div>
           </div>
           <div class="section-card-body">
@@ -130,10 +121,7 @@
               <div class="ui-icon-box icon-box-amber">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </div>
-              <div class="section-header-texts">
-                <h2 class="section-main-title">安全设置</h2>
-                <p class="section-sub-title">修改 Web 管理控制台访问密码与安全凭据</p>
-              </div>
+              <h2 class="section-main-title">安全设置</h2>
             </div>
           </div>
           <div class="section-card-body">
@@ -947,6 +935,35 @@ html.dark .section-header-action-btn:hover .reset-action-svg {
   padding-top: 0 !important;
   border-top: none !important;
 }
+.settings-section-card :deep(.category-divider) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 18px 0;
+}
+.settings-section-card :deep(.category-label) {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--steel, #71717a);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  padding: 3px 8px;
+  border-radius: var(--r-xs, 4px);
+  white-space: nowrap;
+}
+.settings-section-card :deep(.category-line) {
+  flex: 1;
+  height: 1px;
+  background: var(--hairline, #e6e4df);
+}
+html.dark .settings-section-card :deep(.category-label) {
+  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.06);
+}
+html.dark .settings-section-card :deep(.category-line) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .settings-section-card :deep(.form-sub-header) {
   display: flex;
   align-items: center;
