@@ -2,23 +2,15 @@
   <div class="schedule-tab" v-loading="loading">
     <!-- Group 1: 自动分片合并计划 -->
     <div class="setting-group">
-      <div class="category-divider">
-        <div class="category-badge">
-          <div class="mini-icon-box icon-box-emerald">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-          </div>
-          <span class="category-label">自动分片合并计划</span>
-        </div>
-        <span class="category-line" />
+      <div class="subhead">
+        <h3 class="subhead-title">自动分片合并计划</h3>
+        <p class="subhead-desc">周期性自动扫描各主播录像目录并合并已完播的视频分片</p>
       </div>
 
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-title">开启自动合并</div>
-          <div class="setting-desc">周期性自动扫描各主播目录并合并已完播的视频分片</div>
+          <div class="setting-desc">主调度器周期性激活录像分片合并流水线任务</div>
         </div>
         <div class="setting-control">
           <el-switch
@@ -51,22 +43,15 @@
 
     <!-- Group 2: 自动磁盘巡检与清理计划 -->
     <div class="setting-group">
-      <div class="category-divider">
-        <div class="category-badge">
-          <div class="mini-icon-box icon-box-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            </svg>
-          </div>
-          <span class="category-label">自动磁盘巡检与清理计划</span>
-        </div>
-        <span class="category-line" />
+      <div class="subhead">
+        <h3 class="subhead-title">自动磁盘巡检与清理计划</h3>
+        <p class="subhead-desc">定期巡检磁盘可用率，仅当达到警戒水位时触发清理任务</p>
       </div>
 
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-title">开启自动清理</div>
-          <div class="setting-desc">定期巡检磁盘可用率，仅当达到警戒水位时触发清理任务</div>
+          <div class="setting-desc">定期巡检磁盘可用率，若触达警戒线则自动启动清理</div>
         </div>
         <div class="setting-control">
           <el-switch
@@ -99,22 +84,15 @@
 
     <!-- Group 3: 免打扰避让时段 -->
     <div class="setting-group">
-      <div class="category-divider">
-        <div class="category-badge">
-          <div class="mini-icon-box icon-box-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          </div>
-          <span class="category-label">免打扰避让时段</span>
-        </div>
-        <span class="category-line" />
+      <div class="subhead">
+        <h3 class="subhead-title">免打扰避让时段</h3>
+        <p class="subhead-desc">在指定时间范围内自动暂停合并与清理，避开直播高峰或录播密集期（支持跨午夜）</p>
       </div>
 
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-title">避让时间范围</div>
-          <div class="setting-desc">在此设定时段内自动暂停合并与清理，避开直播高峰或高占用期（支持跨午夜）</div>
+          <div class="setting-desc">在此设定时段内自动暂停合并与清理，其余时段恢复正常计划调度</div>
         </div>
         <div class="setting-control">
           <div class="time-range-row">
@@ -202,82 +180,32 @@ const emit = defineEmits<{
   flex-direction: column;
 }
 .setting-group + .setting-group {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
-/* Category Header with Mini Icon Box */
-.category-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 4px 0 16px 0;
-}
-.category-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
-  padding: 4px 10px 4px 6px;
-  border-radius: var(--r-sm, 6px);
-  border: 1px solid var(--hairline, #e4e4e7);
-}
-.mini-icon-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: transparent !important;
-  border: none;
-}
-.mini-icon-box svg {
-  width: 14px;
-  height: 14px;
-}
-.icon-box-emerald {
-  color: var(--success, #059669);
-}
-.icon-box-amber {
-  color: var(--warning, #d97706);
-}
-.icon-box-purple {
-  color: #9333ea;
-}
-.category-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: var(--charcoal, #27272a);
-  white-space: nowrap;
-}
-.category-line {
-  flex: 1;
-  height: 1px;
-  background: var(--hairline, #e6e4df);
+/* GitHub Primer Subhead (子分类标题与描述) */
+.subhead {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline);
 }
 
-html.dark .category-badge {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-html.dark .category-label {
-  color: #f4f4f5;
-}
-html.dark .category-line {
-  background: rgba(255, 255, 255, 0.08);
-}
-html.dark .icon-box-emerald {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-}
-html.dark .icon-box-amber {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-}
-html.dark .icon-box-purple {
-  background: rgba(139, 92, 246, 0.2);
-  color: #c084fc;
+.subhead-title {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--charcoal);
+  letter-spacing: -0.2px;
 }
 
+.subhead-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--steel);
+  line-height: 1.45;
+}
+
+/* Setting Rows */
 .setting-row {
   display: flex;
   align-items: center;
@@ -369,7 +297,7 @@ html.dark .icon-box-purple {
   background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent);
   border: 1px solid color-mix(in srgb, var(--primary, #2563eb) 20%, transparent);
   border-radius: var(--r-sm, 6px);
-  padding: 8px 14px;
+  padding: 10px 14px;
   margin-top: 14px;
   gap: 10px;
 }

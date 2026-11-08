@@ -2,17 +2,9 @@
   <div class="policy-tab">
     <!-- Group 1: 录制与合并规则 -->
     <div class="setting-group">
-      <div class="category-divider">
-        <div class="category-badge">
-          <div class="mini-icon-box icon-box-emerald">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-          </div>
-          <span class="category-label">录制与合并规则</span>
-        </div>
-        <span class="category-line" />
+      <div class="subhead">
+        <h3 class="subhead-title">录制与合并规则</h3>
+        <p class="subhead-desc">主播关播后的分片检测缓冲与自动重连容差参数</p>
       </div>
 
       <div class="setting-row">
@@ -50,70 +42,100 @@
       </div>
     </div>
 
-    <!-- Group 2: 磁盘自动清理策略 -->
+    <!-- Group 2: 磁盘自动清理与保护策略 -->
     <div class="setting-group">
-      <div class="category-divider">
-        <div class="category-badge">
-          <div class="mini-icon-box icon-box-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            </svg>
-          </div>
-          <span class="category-label">磁盘自动清理策略</span>
-        </div>
-        <span class="category-line" />
+      <div class="subhead">
+        <h3 class="subhead-title">磁盘自动清理策略</h3>
+        <p class="subhead-desc">设定磁盘使用警戒线、单次清理冲程深度及新录像保护规则</p>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">触发清理阈值</div>
-          <div class="setting-desc">
-            磁盘使用率达到此警戒水位时自动启动清理
-            <span v-if="triggerFreeGB" class="hint-highlight-tag">
-              (余量 &lt; {{ triggerFreeGB }} GB 时触发)
+      <!-- 一体化水位深度与清理冲程控制台 (Unified Watermark & Stroke Gauge) -->
+      <div class="watermark-gauge-card">
+        <div class="gauge-header">
+          <div class="gauge-title-col">
+            <span class="gauge-card-title">水位深度与清理冲程</span>
+            <span class="gauge-card-desc">当磁盘触达警戒水位时触发清理，自动清除陈旧录像直至降至目标水位</span>
+          </div>
+          <div class="gauge-metric-badge">
+            <span class="metric-lbl">单次释放冲程:</span>
+            <strong class="metric-pct">{{ bufferPct }}%</strong>
+            <span v-if="bufferGB" class="metric-gb">≈ {{ bufferGB }} GB</span>
+          </div>
+        </div>
+
+        <!-- Multi-segment visual watermark track -->
+        <div class="gauge-track-wrap">
+          <div class="gauge-bar-track">
+            <!-- Safe zone: 0 to Target -->
+            <div class="gauge-seg seg-safe" :style="{ width: config.TARGET_THRESHOLD + '%' }">
+              <span class="seg-label" v-if="config.TARGET_THRESHOLD >= 22">安全水位 (0 ~ {{ config.TARGET_THRESHOLD }}%)</span>
+            </div>
+            <!-- Reclaim stroke buffer zone: Target to Trigger -->
+            <div class="gauge-seg seg-reclaim" :style="{ width: bufferPct + '%' }">
+              <span class="seg-label" v-if="bufferPct >= 12">冲程 {{ bufferPct }}%</span>
+            </div>
+            <!-- Danger alert zone: Trigger to 100 -->
+            <div class="gauge-seg seg-danger" :style="{ width: (100 - config.TRIGGER_THRESHOLD) + '%' }">
+              <span class="seg-label" v-if="(100 - config.TRIGGER_THRESHOLD) >= 12">警戒区</span>
+            </div>
+          </div>
+          <div class="gauge-ticks">
+            <span class="tick-label tick-0">0%</span>
+            <span class="tick-label tick-target" :style="{ left: config.TARGET_THRESHOLD + '%' }">
+              目标 {{ config.TARGET_THRESHOLD }}%
             </span>
+            <span class="tick-label tick-trigger" :style="{ left: config.TRIGGER_THRESHOLD + '%' }">
+              警戒 {{ config.TRIGGER_THRESHOLD }}%
+            </span>
+            <span class="tick-label tick-100">100%</span>
           </div>
         </div>
-        <div class="setting-control slider-control-wrap">
-          <el-slider
-            :model-value="config.TRIGGER_THRESHOLD"
-            :min="50"
-            :max="99"
-            :format-tooltip="formatPercent"
-            class="compact-slider"
-            @update:model-value="onTriggerChange"
-          />
-          <span class="slider-value mono-val">{{ config.TRIGGER_THRESHOLD }}%</span>
-        </div>
-      </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-title">目标清理阈值</div>
-          <div class="setting-desc">按文件生成时间由旧至新清理，直至磁盘降至此目标水位</div>
-        </div>
-        <div class="setting-control slider-control-wrap">
-          <el-slider
-            :model-value="config.TARGET_THRESHOLD"
-            :min="30"
-            :max="89"
-            :format-tooltip="formatPercent"
-            class="compact-slider"
-            @update:model-value="onTargetChange"
-          />
-          <span class="slider-value mono-val">{{ config.TARGET_THRESHOLD }}%</span>
-        </div>
-      </div>
+        <!-- Dual Threshold Sliders (Grid) -->
+        <div class="gauge-sliders-grid">
+          <div class="gauge-slider-cell">
+            <div class="slider-cell-header">
+              <div class="slider-cell-title">
+                <span class="slider-dot dot-warn"></span>
+                <span>触发清理阈值 (警戒水位)</span>
+              </div>
+              <span class="slider-val mono-val warn-val">{{ config.TRIGGER_THRESHOLD }}%</span>
+            </div>
+            <div class="slider-cell-desc">
+              磁盘使用率达到此警戒线时自动启动清理
+              <span v-if="triggerFreeGB" class="hint-free-gb">余量 &lt; {{ triggerFreeGB }} GB 触发</span>
+            </div>
+            <el-slider
+              :model-value="config.TRIGGER_THRESHOLD"
+              :min="50"
+              :max="99"
+              :format-tooltip="formatPercent"
+              class="compact-slider"
+              @update:model-value="onTriggerChange"
+            />
+          </div>
 
-      <!-- 单次冲程预期指示条 (Buffer Zone Live Simulator) -->
-      <div class="stroke-summary-banner">
-        <div class="stroke-summary-left">
-          <svg class="stroke-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          <span class="stroke-label">单次清理冲程：</span>
-          <span class="stroke-val-highlight">预计释放约 {{ bufferPct }}% 存储深度</span>
-          <span v-if="bufferGB" class="stroke-gb-badge">≈ {{ bufferGB }} GB</span>
+          <div class="gauge-slider-cell">
+            <div class="slider-cell-header">
+              <div class="slider-cell-title">
+                <span class="slider-dot dot-target"></span>
+                <span>目标清理阈值 (降至水位)</span>
+              </div>
+              <span class="slider-val mono-val target-val">{{ config.TARGET_THRESHOLD }}%</span>
+            </div>
+            <div class="slider-cell-desc">
+              按由旧至新淘汰录像，直至磁盘降回此安全水位
+            </div>
+            <el-slider
+              :model-value="config.TARGET_THRESHOLD"
+              :min="30"
+              :max="89"
+              :format-tooltip="formatPercent"
+              class="compact-slider"
+              @update:model-value="onTargetChange"
+            />
+          </div>
         </div>
-        <span class="stroke-range-text">警戒水位 {{ config.TRIGGER_THRESHOLD }}% → 目标水位 {{ config.TARGET_THRESHOLD }}%</span>
       </div>
 
       <div class="setting-row">
@@ -356,74 +378,32 @@ function addTag(keyword: string) {
   flex-direction: column;
 }
 .setting-group + .setting-group {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
-/* Category Header with Mini Icon Box */
-.category-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 4px 0 16px 0;
-}
-.category-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
-  padding: 4px 10px 4px 6px;
-  border-radius: var(--r-sm, 6px);
-  border: 1px solid var(--hairline, #e4e4e7);
-}
-.mini-icon-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: transparent !important;
-  border: none;
-}
-.mini-icon-box svg {
-  width: 14px;
-  height: 14px;
-}
-.icon-box-emerald {
-  color: var(--success, #059669);
-}
-.icon-box-amber {
-  color: var(--warning, #d97706);
-}
-.category-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: var(--charcoal, #27272a);
-  white-space: nowrap;
-}
-.category-line {
-  flex: 1;
-  height: 1px;
-  background: var(--hairline, #e6e4df);
-}
-html.dark .category-badge {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-html.dark .category-label {
-  color: #f4f4f5;
-}
-html.dark .category-line {
-  background: rgba(255, 255, 255, 0.08);
-}
-html.dark .icon-box-emerald {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-}
-html.dark .icon-box-amber {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
+/* GitHub Primer Subhead (子分类标题与描述) */
+.subhead {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline);
 }
 
+.subhead-title {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--charcoal);
+  letter-spacing: -0.2px;
+}
+
+.subhead-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--steel);
+  line-height: 1.45;
+}
+
+/* Setting Rows */
 .setting-row {
   display: flex;
   align-items: center;
@@ -470,82 +450,6 @@ html.dark .icon-box-amber {
   flex-shrink: 0;
 }
 
-.slider-control-wrap {
-  width: 230px;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  justify-content: flex-end;
-}
-.compact-slider {
-  flex: 1;
-}
-.slider-value {
-  font-size: 13px;
-  width: 38px;
-  text-align: right;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.hint-highlight-tag {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 0 5px;
-  border-radius: var(--r-xs);
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-  color: var(--primary);
-  font-size: 11px;
-}
-
-.stroke-summary-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.025));
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-sm, 6px);
-  padding: 8px 14px;
-  margin: 6px 0 10px 0;
-  font-size: 12px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.stroke-summary-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.stroke-svg {
-  width: 14px !important;
-  height: 14px !important;
-  max-width: 14px !important;
-  max-height: 14px !important;
-  color: #059669;
-  flex-shrink: 0;
-}
-.stroke-label {
-  color: var(--steel);
-}
-.stroke-val-highlight {
-  font-weight: 600;
-  color: var(--charcoal);
-  font-family: var(--font-mono);
-}
-.stroke-gb-badge {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  padding: 1px 6px;
-  border-radius: var(--r-xs);
-}
-.stroke-range-text {
-  font-size: 11px;
-  color: var(--stone);
-  font-family: var(--font-mono);
-}
-
 .compact-counter {
   width: 120px;
   height: 32px !important;
@@ -572,6 +476,303 @@ html.dark .icon-box-amber {
   color: var(--steel);
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* ========================================================
+   Precision Watermark Gauge Controller (一体化水位深度与冲程仪)
+   ======================================================== */
+.watermark-gauge-card {
+  margin: 6px 0 16px 0;
+  padding: 16px 18px;
+  border-radius: var(--r-md);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+html.dark .watermark-gauge-card {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.gauge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.gauge-title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gauge-card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--charcoal);
+  letter-spacing: -0.1px;
+}
+
+.gauge-card-desc {
+  font-size: 12px;
+  color: var(--steel);
+  line-height: 1.4;
+}
+
+.gauge-metric-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, #3b82f6 10%, transparent);
+  border: 1px solid color-mix(in srgb, #3b82f6 20%, transparent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.metric-lbl {
+  font-size: 11px;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+html.dark .metric-lbl {
+  color: #58a6ff;
+}
+
+.metric-pct {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d4ed8;
+  font-family: var(--font-mono);
+}
+
+html.dark .metric-pct {
+  color: #58a6ff;
+}
+
+.metric-gb {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  font-family: var(--font-mono);
+}
+
+html.dark .metric-gb {
+  color: #79c0ff;
+}
+
+/* Track & Bar */
+.gauge-track-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gauge-bar-track {
+  height: 22px;
+  border-radius: 4px;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  display: flex;
+  position: relative;
+}
+
+html.dark .gauge-bar-track {
+  background: #0d1117;
+  border-color: #30363d;
+}
+
+.gauge-seg {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.15s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.seg-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  user-select: none;
+}
+
+.seg-safe {
+  background: color-mix(in srgb, #10b981 12%, transparent);
+  color: #059669;
+  border-right: 1px dashed rgba(16, 185, 129, 0.4);
+}
+
+html.dark .seg-safe {
+  background: rgba(16, 185, 129, 0.18);
+  color: #3fb950;
+}
+
+.seg-reclaim {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+html.dark .seg-reclaim {
+  background: #1f6feb;
+}
+
+.seg-danger {
+  background: color-mix(in srgb, #d97706 15%, transparent);
+  color: #b45309;
+}
+
+html.dark .seg-danger {
+  background: rgba(245, 158, 11, 0.18);
+  color: #d29922;
+}
+
+.gauge-ticks {
+  position: relative;
+  height: 16px;
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--stone);
+}
+
+.tick-label {
+  position: absolute;
+  top: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tick-0 {
+  left: 0;
+}
+
+.tick-100 {
+  right: 0;
+}
+
+.tick-target {
+  transform: translateX(-50%);
+  color: #059669;
+  font-weight: 600;
+}
+
+html.dark .tick-target {
+  color: #3fb950;
+}
+
+.tick-trigger {
+  transform: translateX(-50%);
+  color: #b45309;
+  font-weight: 600;
+}
+
+html.dark .tick-trigger {
+  color: #d29922;
+}
+
+/* Sliders inside gauge */
+.gauge-sliders-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+
+@media (max-width: 680px) {
+  .gauge-sliders-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gauge-slider-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slider-cell-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slider-cell-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+
+.slider-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.dot-warn {
+  background: #f59e0b;
+}
+
+.dot-target {
+  background: #10b981;
+}
+
+.slider-val {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.warn-val {
+  color: #b45309;
+}
+
+html.dark .warn-val {
+  color: #d29922;
+}
+
+.target-val {
+  color: #059669;
+}
+
+html.dark .target-val {
+  color: #3fb950;
+}
+
+.slider-cell-desc {
+  font-size: 11px;
+  color: var(--steel);
+  line-height: 1.4;
+  min-height: 16px;
+}
+
+.hint-free-gb {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: var(--r-xs);
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  font-family: var(--font-mono);
+}
+
+html.dark .hint-free-gb {
+  color: #d29922;
+}
+
+.compact-slider {
+  margin-top: -2px;
 }
 
 /* Whitelist Tag Group */
