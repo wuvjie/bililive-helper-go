@@ -13,27 +13,31 @@
       </header>
 
       <div class="primer-box-body">
-        <!-- 1. 定时自动合并分片 -->
-        <div class="primer-row">
-          <div class="row-label-row">
-            <label class="row-label">定时自动合并分片</label>
-            <span class="status-pill" :class="form.merge_enabled ? 'pill-active' : 'pill-inactive'">
-              {{ form.merge_enabled ? '已启用' : '已停用' }}
-            </span>
-          </div>
-          <div class="row-control">
-            <div class="schedule-control-flow">
+        <div class="schedule-task-grid">
+          <!-- 1. 定时自动合并分片 -->
+          <div class="schedule-task-card" :class="{ 'task-disabled': !form.merge_enabled }">
+            <div class="task-card-header">
+              <div class="task-card-title-group">
+                <span class="task-card-title">定时自动合并分片</span>
+                <span class="status-pill" :class="form.merge_enabled ? 'pill-active' : 'pill-inactive'">
+                  {{ form.merge_enabled ? '已启用' : '已停用' }}
+                </span>
+              </div>
               <el-switch
                 :model-value="form.merge_enabled"
                 class="primer-switch"
                 @update:model-value="updateField('merge_enabled', Boolean($event))"
               />
-              <div v-if="form.merge_enabled" class="control-unit-group">
+            </div>
+            <div class="task-card-body">
+              <label class="field-label-sm">执行周期</label>
+              <div class="interval-input-row">
                 <el-input-number
                   :model-value="form.merge_interval"
                   :min="10"
                   :max="10080"
                   :step="30"
+                  :disabled="!form.merge_enabled"
                   size="default"
                   class="stepper-compact"
                   @update:model-value="updateField('merge_interval', Number($event))"
@@ -43,29 +47,31 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 2. 定时巡检磁盘并清理 -->
-        <div class="primer-row">
-          <div class="row-label-row">
-            <label class="row-label">定时巡检磁盘并清理</label>
-            <span class="status-pill" :class="form.clean_enabled ? 'pill-active' : 'pill-inactive'">
-              {{ form.clean_enabled ? '已启用' : '已停用' }}
-            </span>
-          </div>
-          <div class="row-control">
-            <div class="schedule-control-flow">
+          <!-- 2. 定时巡检磁盘并清理 -->
+          <div class="schedule-task-card" :class="{ 'task-disabled': !form.clean_enabled }">
+            <div class="task-card-header">
+              <div class="task-card-title-group">
+                <span class="task-card-title">定时巡检磁盘并清理</span>
+                <span class="status-pill" :class="form.clean_enabled ? 'pill-active' : 'pill-inactive'">
+                  {{ form.clean_enabled ? '已启用' : '已停用' }}
+                </span>
+              </div>
               <el-switch
                 :model-value="form.clean_enabled"
                 class="primer-switch"
                 @update:model-value="updateField('clean_enabled', Boolean($event))"
               />
-              <div v-if="form.clean_enabled" class="control-unit-group">
+            </div>
+            <div class="task-card-body">
+              <label class="field-label-sm">执行周期</label>
+              <div class="interval-input-row">
                 <el-input-number
                   :model-value="form.clean_interval"
                   :min="10"
                   :max="10080"
                   :step="60"
+                  :disabled="!form.clean_enabled"
                   size="default"
                   class="stepper-compact"
                   @update:model-value="updateField('clean_interval', Number($event))"
@@ -91,10 +97,10 @@
       </header>
 
       <div class="primer-box-body">
-        <!-- 1. 避让时间范围选择 -->
-        <div class="primer-row">
-          <label class="row-label">每日任务避让时段</label>
-          <div class="row-control">
+        <div class="quiet-window-grid">
+          <!-- 1. 避让时间范围选择 -->
+          <div class="quiet-field-cell">
+            <label class="field-label">每日任务避让时段</label>
             <div class="window-picker-flow">
               <div class="time-range-group">
                 <el-time-picker
@@ -129,13 +135,14 @@
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- 2. 实时窗口运行状态指示 -->
-        <div class="primer-row window-status-row">
-          <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
-            <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
-            <span class="status-main-text">{{ windowStatusTitle }}</span>
+          <!-- 2. 实时窗口运行状态指示 -->
+          <div class="quiet-field-cell">
+            <label class="field-label">当前调度运行状态</label>
+            <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
+              <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
+              <span class="status-main-text">{{ windowStatusTitle }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -202,7 +209,7 @@ const windowStatusTitle = computed(() => {
     return "全天候 24 小时正常调度运行中（无避让窗口）";
   }
   if (isQuietActive.value) {
-    return `当前处于避让休眠时段（${props.backupStart} ~ ${props.backupEnd}），自动化任务已挂起顺延`;
+    return `当前处于避让休眠时段（${props.backupStart} ~ ${props.backupEnd}），任务挂起顺延`;
   }
   return `当前处于正常运行窗口（每日避让时段: ${props.backupStart} ~ ${props.backupEnd}）`;
 });
@@ -258,47 +265,50 @@ const windowStatusTitle = computed(() => {
   line-height: 1.3;
 }
 
-/* Primer Rows */
 .primer-box-body {
   padding: 0;
 }
 
-.primer-row {
+/* 定时任务对称双列网格 */
+.schedule-task-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 16px 18px;
+}
+
+.schedule-task-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
+  border: 1px solid var(--hairline, #e5e3df);
+  border-radius: var(--r-md, 6px);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.schedule-task-card.task-disabled {
+  opacity: 0.6;
+  background: var(--surface, #fbfbfa);
+}
+
+.task-card-header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 28px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--hairline, #e5e3df);
-  min-height: 52px;
-  box-sizing: border-box;
+  justify-content: space-between;
 }
 
-.primer-row:last-child {
-  border-bottom: none;
-}
-
-.row-label-row,
-.primer-row > .row-label {
-  width: 210px;
-  flex-shrink: 0;
+.task-card-title-group {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.row-label {
+.task-card-title {
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--charcoal, #37352f);
-  line-height: 1.4;
-}
-
-.row-control {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 .status-pill {
@@ -321,16 +331,23 @@ const windowStatusTitle = computed(() => {
   border: 1px solid var(--hairline, #e5e3df);
 }
 
-.schedule-control-flow {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
+.task-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.control-unit-group {
-  display: inline-flex;
+.field-label-sm {
+  font-size: 12px;
+  color: var(--steel, #787671);
+  font-weight: 500;
+}
+
+.interval-input-row {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .stepper-compact {
@@ -349,11 +366,33 @@ const windowStatusTitle = computed(() => {
   white-space: nowrap;
 }
 
-/* 避让窗口样式 */
+/* 避让时间窗口网格 */
+.quiet-window-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 20px;
+  padding: 16px 18px;
+  align-items: start;
+}
+
+.quiet-field-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--charcoal, #37352f);
+  line-height: 1.35;
+}
+
 .window-picker-flow {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .time-range-group {
@@ -390,11 +429,6 @@ const windowStatusTitle = computed(() => {
   border-color: var(--primary, #2563eb);
   color: var(--primary, #2563eb);
   background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent);
-}
-
-.window-status-row {
-  display: block;
-  padding: 12px 18px;
 }
 
 .window-status-card {
@@ -439,25 +473,11 @@ const windowStatusTitle = computed(() => {
   color: var(--charcoal, #37352f);
 }
 
-@media (max-width: 640px) {
-  .primer-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .row-label-row,
-  .primer-row > .row-label {
-    width: 100%;
-  }
-  .schedule-control-flow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .window-picker-flow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+@media (max-width: 768px) {
+  .schedule-task-grid,
+  .quiet-window-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
 </style>

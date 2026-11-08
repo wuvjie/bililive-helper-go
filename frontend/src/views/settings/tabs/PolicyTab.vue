@@ -1,6 +1,6 @@
 <template>
   <div class="settings-tab-pane">
-    <!-- Box 1: 录播合并策略 -->
+    <!-- Box 1: 录播合并规则 -->
     <section class="primer-box">
       <header class="primer-box-header">
         <div class="box-header-title-row">
@@ -19,11 +19,11 @@
       </header>
 
       <div class="primer-box-body">
-        <!-- 1. 断流重连合并时间 -->
-        <div class="primer-row">
-          <label class="row-label">断流重连合并时间</label>
-          <div class="row-control">
-            <div class="control-unit-group">
+        <div class="fields-grid fields-grid-2">
+          <!-- 1. 断流重连合并时间 -->
+          <div class="field-cell">
+            <label class="field-label">断流重连合并时间</label>
+            <div class="field-control">
               <el-input-number
                 :model-value="config.GAP_MINUTES ?? 30"
                 :min="1"
@@ -36,13 +36,11 @@
               <span class="unit-text">分钟</span>
             </div>
           </div>
-        </div>
 
-        <!-- 2. 关播后等待合并时长 -->
-        <div class="primer-row">
-          <label class="row-label">关播后等待合并时长</label>
-          <div class="row-control">
-            <div class="control-unit-group">
+          <!-- 2. 关播后等待合并时长 -->
+          <div class="field-cell">
+            <label class="field-label">关播后等待合并时长</label>
+            <div class="field-control">
               <el-input-number
                 :model-value="config.MERGE_AGE_MINUTES ?? 30"
                 :min="1"
@@ -74,7 +72,7 @@
 
       <div class="primer-box-body">
         <!-- 1. 水位深度与清理冲程控制台 -->
-        <div class="primer-row gauge-row">
+        <div class="gauge-section">
           <div class="gauge-console">
             <!-- 仪表盘顶栏读数 -->
             <div class="gauge-header">
@@ -142,53 +140,50 @@
           </div>
         </div>
 
-        <!-- 2. 最近录播免删保护期 -->
-        <div class="primer-row">
-          <label class="row-label">最近录像免删保护期</label>
-          <div class="row-control">
-            <div class="safe-mode-group">
+        <!-- 2. 清理与保护三参数网格 -->
+        <div class="fields-grid fields-grid-3">
+          <!-- 字段 1: 最近录像免删保护期 -->
+          <div class="field-cell">
+            <label class="field-label">最近录像免删保护期</label>
+            <div class="field-control safe-mode-group">
               <el-radio-group
                 :model-value="safeMode"
                 size="small"
                 class="mode-radio-group"
                 @update:model-value="onSafeModeChange"
               >
-                <el-radio-button label="days">按天保护</el-radio-button>
-                <el-radio-button label="hours">按小时保护</el-radio-button>
+                <el-radio-button label="days">按天</el-radio-button>
+                <el-radio-button label="hours">按小时</el-radio-button>
               </el-radio-group>
 
-              <div class="control-unit-group">
-                <el-input-number
-                  v-if="safeMode === 'days'"
-                  :model-value="config.SAFE_DAYS ?? 3"
-                  :min="1"
-                  :max="365"
-                  :step="1"
-                  size="default"
-                  class="stepper-compact"
-                  @update:model-value="updateField('SAFE_DAYS', Number($event))"
-                />
-                <el-input-number
-                  v-else
-                  :model-value="safeHours"
-                  :min="1"
-                  :max="720"
-                  :step="1"
-                  size="default"
-                  class="stepper-compact"
-                  @update:model-value="onSafeHoursChange(Number($event))"
-                />
-                <span class="unit-text">{{ safeMode === 'days' ? '天' : '小时' }}</span>
-              </div>
+              <el-input-number
+                v-if="safeMode === 'days'"
+                :model-value="config.SAFE_DAYS ?? 3"
+                :min="1"
+                :max="365"
+                :step="1"
+                size="default"
+                class="stepper-compact"
+                @update:model-value="updateField('SAFE_DAYS', Number($event))"
+              />
+              <el-input-number
+                v-else
+                :model-value="safeHours"
+                :min="1"
+                :max="720"
+                :step="1"
+                size="default"
+                class="stepper-compact"
+                @update:model-value="onSafeHoursChange(Number($event))"
+              />
+              <span class="unit-text">{{ safeMode === 'days' ? '天' : '小时' }}</span>
             </div>
           </div>
-        </div>
 
-        <!-- 3. 每位主播保底留存场次 -->
-        <div class="primer-row">
-          <label class="row-label">每位主播保底留存场次</label>
-          <div class="row-control">
-            <div class="control-unit-group">
+          <!-- 字段 2: 每位主播保底留存场次 -->
+          <div class="field-cell">
+            <label class="field-label">每位主播保底留存场次</label>
+            <div class="field-control">
               <el-input-number
                 :model-value="config.MIN_KEEP_PER_STREAMER ?? 3"
                 :min="1"
@@ -201,13 +196,11 @@
               <span class="unit-text">场录像</span>
             </div>
           </div>
-        </div>
 
-        <!-- 4. 单次清理最多删除文件 -->
-        <div class="primer-row">
-          <label class="row-label">单次清理最多删除文件</label>
-          <div class="row-control">
-            <div class="control-unit-group">
+          <!-- 字段 3: 单次清理最多删除文件 -->
+          <div class="field-cell">
+            <label class="field-label">单次清理最多删除文件</label>
+            <div class="field-control">
               <el-input-number
                 :model-value="config.MAX_DELETE_PER_RUN ?? 50"
                 :min="5"
@@ -222,46 +215,44 @@
           </div>
         </div>
 
-        <!-- 5. 永久免删关键词白名单 -->
-        <div class="primer-row">
-          <label class="row-label">永久免删关键词白名单</label>
-          <div class="row-control whitelist-control">
-            <div class="tags-flex-wrap">
-              <el-tag
-                v-for="(tag, idx) in tagList"
-                :key="tag"
-                closable
-                effect="plain"
-                class="primer-keyword-tag"
-                @close="removeTag(idx)"
-              >
-                {{ tag }}
-              </el-tag>
+        <!-- 3. 永久免删关键词白名单 -->
+        <div class="whitelist-section">
+          <label class="field-label">永久免删关键词白名单</label>
+          <div class="tags-flex-wrap">
+            <el-tag
+              v-for="(tag, idx) in tagList"
+              :key="tag"
+              closable
+              effect="plain"
+              class="primer-keyword-tag"
+              @close="removeTag(idx)"
+            >
+              {{ tag }}
+            </el-tag>
 
-              <div class="tag-input-inline">
-                <el-input
-                  v-if="inputTagVisible"
-                  ref="tagInputRef"
-                  v-model="inputTagValue"
-                  size="small"
-                  class="tag-editor-input"
-                  placeholder="回车确认"
-                  @keyup.enter="handleTagConfirm"
-                  @blur="handleTagConfirm"
-                />
-                <button
-                  v-else
-                  type="button"
-                  class="btn-add-tag"
-                  @click="showTagInput"
-                >
-                  <svg class="plus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  <span>添加关键词</span>
-                </button>
-              </div>
+            <div class="tag-input-inline">
+              <el-input
+                v-if="inputTagVisible"
+                ref="tagInputRef"
+                v-model="inputTagValue"
+                size="small"
+                class="tag-editor-input"
+                placeholder="回车确认"
+                @keyup.enter="handleTagConfirm"
+                @blur="handleTagConfirm"
+              />
+              <button
+                v-else
+                type="button"
+                class="btn-add-tag"
+                @click="showTagInput"
+              >
+                <svg class="plus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>添加关键词</span>
+              </button>
             </div>
           </div>
         </div>
@@ -282,6 +273,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update:config", val: ConfigDTO): void;
+  (e: "save"): void;
 }>();
 
 function updateField<K extends keyof ConfigDTO>(key: K, value: ConfigDTO[K]) {
@@ -425,40 +417,44 @@ function removeTag(idx: number) {
   line-height: 1.3;
 }
 
-/* Primer Rows: 左标题固定 210px，右侧控件紧贴在同一纵轴对齐，彻底消灭中间数百像素空白大坑 */
 .primer-box-body {
   padding: 0;
 }
 
-.primer-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 28px;
-  padding: 12px 18px;
+/* Fields Grid: 模块化网格，告别单项占整行与无效空白 */
+.fields-grid {
+  display: grid;
+  padding: 16px 18px;
+  gap: 24px;
+}
+
+.fields-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.fields-grid-3 {
+  grid-template-columns: 1.3fr 1fr 1fr;
   border-bottom: 1px solid var(--hairline, #e5e3df);
-  min-height: 52px;
-  box-sizing: border-box;
 }
 
-.primer-row:last-child {
-  border-bottom: none;
+.field-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.row-label {
-  width: 210px;
-  flex-shrink: 0;
+.field-label {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--charcoal, #37352f);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
-.row-control {
+.field-control {
   display: flex;
   align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 10px;
 }
 
 .control-unit-group {
@@ -478,9 +474,9 @@ function removeTag(idx: number) {
 }
 
 /* 水位深度控制台专有样式 */
-.gauge-row {
-  display: block;
+.gauge-section {
   padding: 16px 18px;
+  border-bottom: 1px solid var(--hairline, #e5e3df);
 }
 
 .gauge-console {
@@ -632,12 +628,15 @@ function removeTag(idx: number) {
 .safe-mode-group {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* 白名单区域 */
-.whitelist-control {
-  flex: 1;
+.whitelist-section {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .tags-flex-wrap {
@@ -692,21 +691,17 @@ function removeTag(idx: number) {
   height: 12px;
 }
 
-@media (max-width: 640px) {
-  .primer-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  .row-label {
-    width: 100%;
+@media (max-width: 768px) {
+  .fields-grid-2,
+  .fields-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
   .gauge-sliders-grid {
     grid-template-columns: 1fr;
   }
   .safe-mode-group {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
   }
 }
 </style>
