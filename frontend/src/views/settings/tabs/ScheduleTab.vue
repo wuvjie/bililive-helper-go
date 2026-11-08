@@ -8,24 +8,18 @@
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
-          <div class="box-header-text">
-            <h2 class="box-title">定时流水线调度</h2>
-            <p class="box-desc">配置后台自动化巡检扫描周期，按需静默执行视频分片合并与磁盘空间释放</p>
-          </div>
+          <h2 class="box-title">定时流水线调度</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
         <!-- 1. 自动分片合并 -->
         <div class="primer-row">
-          <div class="row-info">
-            <div class="row-label-row">
-              <label class="row-label">自动分片合并</label>
-              <span class="status-pill" :class="form.merge_enabled ? 'pill-active' : 'pill-inactive'">
-                {{ form.merge_enabled ? '已启用' : '已停用' }}
-              </span>
-            </div>
-            <p class="row-desc">后台定时扫描主播录像目录，将符合静置容差的已完播切片无损合并为完整视频</p>
+          <div class="row-label-row">
+            <label class="row-label">自动分片合并</label>
+            <span class="status-pill" :class="form.merge_enabled ? 'pill-active' : 'pill-inactive'">
+              {{ form.merge_enabled ? '已启用' : '已停用' }}
+            </span>
           </div>
           <div class="row-control">
             <div class="schedule-control-flow">
@@ -53,14 +47,11 @@
 
         <!-- 2. 自动磁盘清理 -->
         <div class="primer-row">
-          <div class="row-info">
-            <div class="row-label-row">
-              <label class="row-label">自动磁盘清理</label>
-              <span class="status-pill" :class="form.clean_enabled ? 'pill-active' : 'pill-inactive'">
-                {{ form.clean_enabled ? '已启用' : '已停用' }}
-              </span>
-            </div>
-            <p class="row-desc">后台定时检查磁盘水位深度，并在达到触发阈值时按策略自动淘汰旧录像</p>
+          <div class="row-label-row">
+            <label class="row-label">自动磁盘清理</label>
+            <span class="status-pill" :class="form.clean_enabled ? 'pill-active' : 'pill-inactive'">
+              {{ form.clean_enabled ? '已启用' : '已停用' }}
+            </span>
           </div>
           <div class="row-control">
             <div class="schedule-control-flow">
@@ -95,20 +86,14 @@
           <svg class="box-header-icon icon-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
-          <div class="box-header-text">
-            <h2 class="box-title">避让时间窗口 (免打扰时段)</h2>
-            <p class="box-desc">在设定的时段内自动暂停后台高 I/O 任务，避让业务高峰或夜间数据冷备</p>
-          </div>
+          <h2 class="box-title">避让时间窗口</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
         <!-- 1. 避让时间范围选择 -->
         <div class="primer-row">
-          <div class="row-info">
-            <label class="row-label">避让时间范围</label>
-            <p class="row-desc">在此时间段内定时合并与磁盘清理将自动挂起延后；留空表示全天候运行（无避让）</p>
-          </div>
+          <label class="row-label">避让时段范围</label>
           <div class="row-control">
             <div class="window-picker-flow">
               <div class="time-range-group">
@@ -149,13 +134,8 @@
         <!-- 2. 实时窗口运行状态指示 -->
         <div class="primer-row window-status-row">
           <div class="window-status-card" :class="isQuietActive ? 'status-card-quiet' : 'status-card-active'">
-            <div class="status-icon-col">
-              <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
-            </div>
-            <div class="status-text-col">
-              <span class="status-main-text">{{ windowStatusTitle }}</span>
-              <span class="status-sub-text">{{ windowStatusDesc }}</span>
-            </div>
+            <span class="status-pulse-dot" :class="isQuietActive ? 'pulse-amber' : 'pulse-emerald'"></span>
+            <span class="status-main-text">{{ windowStatusTitle }}</span>
           </div>
         </div>
       </div>
@@ -219,22 +199,12 @@ const isQuietActive = computed(() => {
 
 const windowStatusTitle = computed(() => {
   if (!props.backupStart || !props.backupEnd) {
-    return "全天候 24 小时正常调度运行中";
+    return "全天候 24 小时正常调度运行中（无避让窗口）";
   }
   if (isQuietActive.value) {
-    return "当前处于避让休眠时段（自动化任务已自动顺延挂起）";
+    return `当前处于避让休眠时段（${props.backupStart} ~ ${props.backupEnd}），自动化任务已挂起顺延`;
   }
-  return "当前处于正常调度窗口（后台任务按周期正规运行）";
-});
-
-const windowStatusDesc = computed(() => {
-  if (!props.backupStart || !props.backupEnd) {
-    return "未设定避让时间窗口，后台合并与清理任务全天候按各自设定周期自动执行";
-  }
-  if (isQuietActive.value) {
-    return `当前时间命中避让窗口（${props.backupStart} ~ ${props.backupEnd}），所有自动化高 I/O 操作已挂起，到达 ${props.backupEnd} 后自动恢复调度。`;
-  }
-  return `设定避让窗口为每日 ${props.backupStart} ~ ${props.backupEnd}，在进入该时段前后台自动化任务正常调度。`;
+  return `当前处于正常运行窗口（每日避让时段: ${props.backupStart} ~ ${props.backupEnd}）`;
 });
 </script>
 
@@ -242,7 +212,7 @@ const windowStatusDesc = computed(() => {
 .settings-tab-pane {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 /* GitHub Primer Box Model */
@@ -252,11 +222,10 @@ const windowStatusDesc = computed(() => {
   border-radius: var(--r-md, 6px);
   overflow: hidden;
   box-shadow: var(--shadow-xs);
-  transition: border-color 0.15s ease;
 }
 
 .primer-box-header {
-  padding: 14px 20px;
+  padding: 12px 18px;
   background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
   border-bottom: 1px solid var(--hairline, #e5e3df);
 }
@@ -264,12 +233,12 @@ const windowStatusDesc = computed(() => {
 .box-header-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .box-header-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
@@ -281,24 +250,12 @@ const windowStatusDesc = computed(() => {
   color: #8b5cf6;
 }
 
-.box-header-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .box-title {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--ink, #1a1a1a);
-  margin: 0 0 2px 0;
-  line-height: 1.3;
-}
-
-.box-desc {
-  font-size: 12px;
-  color: var(--steel, #787671);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 /* Primer Rows */
@@ -310,39 +267,28 @@ const windowStatusDesc = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 13px 18px;
   border-bottom: 1px solid var(--hairline, #e5e3df);
-  gap: 24px;
+  gap: 20px;
+  min-height: 52px;
+  box-sizing: border-box;
 }
 
 .primer-row:last-child {
   border-bottom: none;
 }
 
-.row-info {
-  flex: 1;
-  min-width: 0;
-}
-
 .row-label-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 3px;
 }
 
 .row-label {
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--charcoal, #37352f);
   line-height: 1.35;
-}
-
-.row-desc {
-  font-size: 12px;
-  color: var(--steel, #787671);
-  margin: 0;
-  line-height: 1.45;
 }
 
 .row-control {
@@ -442,15 +388,15 @@ const windowStatusDesc = computed(() => {
 
 .window-status-row {
   display: block;
-  padding: 14px 20px;
+  padding: 12px 18px;
 }
 
 .window-status-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: var(--r-md, 6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--r-sm, 4px);
   border: 1px solid transparent;
 }
 
@@ -464,14 +410,10 @@ const windowStatusDesc = computed(() => {
   border-color: rgba(245, 158, 11, 0.22);
 }
 
-.status-icon-col {
-  padding-top: 3px;
-}
-
 .status-pulse-dot {
-  display: block;
-  width: 8px;
-  height: 8px;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
 }
 
@@ -485,29 +427,17 @@ const windowStatusDesc = computed(() => {
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
-.status-text-col {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .status-main-text {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--charcoal, #37352f);
-}
-
-.status-sub-text {
-  font-size: 12px;
-  color: var(--steel, #787671);
-  line-height: 1.4;
 }
 
 @media (max-width: 640px) {
   .primer-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
   }
   .schedule-control-flow {
     flex-direction: column;

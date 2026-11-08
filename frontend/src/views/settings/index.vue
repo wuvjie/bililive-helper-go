@@ -1,30 +1,7 @@
 <template>
   <div class="settings-view">
-    <!-- GitHub Primer Subhead Header -->
-    <header class="primer-subhead">
-      <div class="subhead-main">
-        <div class="subhead-heading-col">
-          <h1 class="subhead-title">系统设置</h1>
-          <p class="subhead-description">配置录播分片合并策略、磁盘安全水位与后台自动化调度任务</p>
-        </div>
-
-        <div class="subhead-actions">
-          <button
-            type="button"
-            class="btn-primer-outline"
-            :title="activeTab === 'policy' ? '将录播合并与磁盘清理策略恢复为官方推荐预设' : '将自动化合并与磁盘巡检调度恢复为官方推荐预设'"
-            @click="handleOpenPresetModal"
-          >
-            <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
-            </svg>
-            <span>恢复{{ activeTab === 'policy' ? '策略' : '调度' }}推荐预设</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- UnderlineNav 横向导航栏 -->
+    <!-- 极简单行顶栏：UnderlineNav + 右侧恢复预设按钮 -->
+    <header class="settings-top-bar">
       <nav class="settings-underline-nav" role="tablist">
         <button
           v-for="item in navTabs"
@@ -44,6 +21,21 @@
           ></span>
         </button>
       </nav>
+
+      <div class="top-bar-actions">
+        <button
+          type="button"
+          class="btn-primer-outline"
+          :title="activeTab === 'policy' ? '将录播合并与磁盘清理策略恢复为官方推荐预设' : '将自动化合并与磁盘巡检调度恢复为官方推荐预设'"
+          @click="handleOpenPresetModal"
+        >
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          <span>恢复推荐预设</span>
+        </button>
+      </div>
     </header>
 
     <!-- Main Content Stream -->
@@ -463,73 +455,16 @@ onActivated(() => {
   position: relative;
 }
 
-/* Primer Subhead */
-.primer-subhead {
-  padding: 24px 0 0;
-  margin-bottom: 24px;
+/* 单行极简顶栏：UnderlineNav + 右侧操作 */
+.settings-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 0;
+  margin-bottom: 20px;
   border-bottom: 1px solid var(--hairline, #e5e3df);
 }
 
-.subhead-main {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.subhead-heading-col {
-  flex: 1;
-}
-
-.subhead-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--ink, #1a1a1a);
-  margin: 0 0 4px 0;
-  letter-spacing: -0.3px;
-}
-
-.subhead-description {
-  font-size: 13px;
-  color: var(--steel, #787671);
-  margin: 0;
-  line-height: 1.45;
-}
-
-.subhead-actions {
-  flex-shrink: 0;
-}
-
-.btn-primer-outline {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: var(--r-sm, 4px);
-  border: 1px solid var(--hairline-strong, #c8c4be);
-  background: var(--surface-card, #ffffff);
-  color: var(--charcoal, #37352f);
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: var(--shadow-xs);
-}
-
-.btn-primer-outline:hover {
-  border-color: var(--primary, #2563eb);
-  color: var(--primary, #2563eb);
-  background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent);
-}
-
-.btn-svg-sm {
-  width: 14px;
-  height: 14px;
-}
-
-/* UnderlineNav */
 .settings-underline-nav {
   display: flex;
   gap: 8px;
@@ -568,6 +503,39 @@ onActivated(() => {
   height: 6px;
   border-radius: 50%;
   background: var(--warning, #d97706);
+}
+
+.top-bar-actions {
+  flex-shrink: 0;
+  padding-bottom: 8px;
+}
+
+.btn-primer-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--r-sm, 4px);
+  border: 1px solid var(--hairline-strong, #c8c4be);
+  background: var(--surface-card, #ffffff);
+  color: var(--charcoal, #37352f);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.btn-primer-outline:hover {
+  border-color: var(--primary, #2563eb);
+  color: var(--primary, #2563eb);
+  background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent);
+}
+
+.btn-svg-sm {
+  width: 13px;
+  height: 13px;
 }
 
 /* Settings Content Transition */
@@ -750,9 +718,10 @@ onActivated(() => {
 }
 
 @media (max-width: 640px) {
-  .subhead-main {
+  .settings-top-bar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
   .sticky-save-bar {
     width: calc(100% - 20px);

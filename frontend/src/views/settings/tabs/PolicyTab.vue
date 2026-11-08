@@ -14,20 +14,14 @@
             <path d="M17 7.5h4"/>
             <path d="M17 16.5h4"/>
           </svg>
-          <div class="box-header-text">
-            <h2 class="box-title">录播合并策略</h2>
-            <p class="box-desc">定义录播分片的断流容差与关播静置缓冲时间，确保视频无损合流</p>
-          </div>
+          <h2 class="box-title">录播合并策略</h2>
         </div>
       </header>
 
       <div class="primer-box-body">
         <!-- 1. 断流重连容差 -->
         <div class="primer-row">
-          <div class="row-info">
-            <label class="row-label">断流重连容差</label>
-            <p class="row-desc">主播在此时间差内断流并重连，系统自动识别为同场直播并合并为单段完整录像</p>
-          </div>
+          <label class="row-label">断流重连容差</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -46,10 +40,7 @@
 
         <!-- 2. 完播静置等待 -->
         <div class="primer-row">
-          <div class="row-info">
-            <label class="row-label">完播静置等待</label>
-            <p class="row-desc">录播关播后的静置缓冲期，防止误读录播工具正在写入的活动分片</p>
-          </div>
+          <label class="row-label">完播静置等待</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -77,10 +68,7 @@
             <path d="M12 8v4"/>
             <path d="M12 16h.01"/>
           </svg>
-          <div class="box-header-text">
-            <h2 class="box-title">磁盘清理与空间安全策略</h2>
-            <p class="box-desc">自动化监控磁盘容量水位，按由旧至新淘汰录像并保护核心数据</p>
-          </div>
+          <h2 class="box-title">磁盘清理与空间安全</h2>
         </div>
       </header>
 
@@ -90,16 +78,14 @@
           <div class="gauge-console">
             <!-- 仪表盘顶栏读数 -->
             <div class="gauge-header">
-              <div class="gauge-title-col">
-                <span class="gauge-label">磁盘清理冲程与水位控制</span>
-                <span class="gauge-summary">
-                  触发警戒线 <strong class="text-warn">{{ triggerVal }}%</strong>
-                  <span v-if="triggerFreeGB" class="text-sub">（余量 &lt; {{ triggerFreeGB }} GB 触发）</span>
-                  · 降至安全线 <strong class="text-target">{{ targetVal }}%</strong>
-                  · 单次冲程 <strong class="text-blue">{{ strokePct }}%</strong>
-                  <span v-if="strokeGB" class="text-sub">（≈ {{ strokeGB }} GB）</span>
-                </span>
-              </div>
+              <span class="gauge-label">磁盘清理冲程与水位控制</span>
+              <span class="gauge-summary">
+                触发警戒线 <strong class="text-warn">{{ triggerVal }}%</strong>
+                <span v-if="triggerFreeGB" class="text-sub">（余量 &lt; {{ triggerFreeGB }} GB 触发）</span>
+                · 降至安全线 <strong class="text-target">{{ targetVal }}%</strong>
+                · 单次冲程 <strong class="text-blue">{{ strokePct }}%</strong>
+                <span v-if="strokeGB" class="text-sub">（≈ {{ strokeGB }} GB）</span>
+              </span>
             </div>
 
             <!-- 三色连续标尺槽轨 -->
@@ -158,10 +144,7 @@
 
         <!-- 2. 新录像免删保护 -->
         <div class="primer-row">
-          <div class="row-info">
-            <label class="row-label">新录像免删保护</label>
-            <p class="row-desc">保护期内的新鲜录像享有免删特权，即使磁盘空间紧迫也绝不提前清理</p>
-          </div>
+          <label class="row-label">新录像免删保护</label>
           <div class="row-control">
             <div class="safe-mode-group">
               <el-radio-group
@@ -203,10 +186,7 @@
 
         <!-- 3. 每主播最少保留 -->
         <div class="primer-row">
-          <div class="row-info">
-            <label class="row-label">每主播最少保留</label>
-            <p class="row-desc">无论磁盘空间多紧张，每位主播必定至少保留最近 N 场录播不被淘汰</p>
-          </div>
+          <label class="row-label">每主播最少保留</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -225,10 +205,7 @@
 
         <!-- 4. 单次最多清理 -->
         <div class="primer-row">
-          <div class="row-info">
-            <label class="row-label">单次最多清理</label>
-            <p class="row-desc">每次清理任务允许删除的文件数量上限，防止极端异常情况下瞬间误删过多文件</p>
-          </div>
+          <label class="row-label">单次最多清理</label>
           <div class="row-control">
             <div class="control-unit-group">
               <el-input-number
@@ -247,10 +224,7 @@
 
         <!-- 5. 免清理白名单关键词 -->
         <div class="primer-row whitelist-row">
-          <div class="row-info">
-            <label class="row-label">免清理永久白名单关键词</label>
-            <p class="row-desc">文件名包含任一关键词的录播将享受免删豁免，不受任何自动清理规则影响</p>
-          </div>
+          <label class="row-label">免清理白名单</label>
           <div class="whitelist-tags-area">
             <div class="tags-flex-wrap">
               <el-tag
@@ -405,7 +379,7 @@ function removeTag(idx: number) {
 .settings-tab-pane {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 /* GitHub Primer Box Model */
@@ -415,11 +389,10 @@ function removeTag(idx: number) {
   border-radius: var(--r-md, 6px);
   overflow: hidden;
   box-shadow: var(--shadow-xs);
-  transition: border-color 0.15s ease;
 }
 
 .primer-box-header {
-  padding: 14px 20px;
+  padding: 12px 18px;
   background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
   border-bottom: 1px solid var(--hairline, #e5e3df);
 }
@@ -427,12 +400,12 @@ function removeTag(idx: number) {
 .box-header-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .box-header-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
@@ -444,24 +417,12 @@ function removeTag(idx: number) {
   color: var(--warning, #d97706);
 }
 
-.box-header-text {
-  flex: 1;
-  min-width: 0;
-}
-
 .box-title {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--ink, #1a1a1a);
-  margin: 0 0 2px 0;
-  line-height: 1.3;
-}
-
-.box-desc {
-  font-size: 12px;
-  color: var(--steel, #787671);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 /* Primer Rows */
@@ -473,34 +434,22 @@ function removeTag(idx: number) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 13px 18px;
   border-bottom: 1px solid var(--hairline, #e5e3df);
-  gap: 24px;
+  gap: 20px;
+  min-height: 52px;
+  box-sizing: border-box;
 }
 
 .primer-row:last-child {
   border-bottom: none;
 }
 
-.row-info {
-  flex: 1;
-  min-width: 0;
-}
-
 .row-label {
-  display: block;
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--charcoal, #37352f);
-  margin-bottom: 3px;
   line-height: 1.35;
-}
-
-.row-desc {
-  font-size: 12px;
-  color: var(--steel, #787671);
-  margin: 0;
-  line-height: 1.45;
 }
 
 .row-control {
@@ -514,7 +463,7 @@ function removeTag(idx: number) {
 }
 
 .stepper-compact {
-  width: 130px;
+  width: 125px;
 }
 
 .unit-text {
@@ -527,30 +476,26 @@ function removeTag(idx: number) {
 /* 水位深度控制台专有样式 */
 .gauge-row {
   display: block;
-  padding: 18px 20px;
+  padding: 16px 18px;
 }
 
 .gauge-console {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .gauge-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.gauge-title-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .gauge-label {
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--charcoal, #37352f);
 }
 
@@ -584,7 +529,7 @@ function removeTag(idx: number) {
 }
 
 .gauge-track {
-  height: 20px;
+  height: 18px;
   width: 100%;
   border-radius: var(--r-sm, 4px);
   display: flex;
@@ -635,13 +580,13 @@ function removeTag(idx: number) {
   background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
   border: 1px solid var(--hairline, #e5e3df);
   border-radius: var(--r-md, 6px);
-  padding: 14px 18px;
+  padding: 12px 16px;
 }
 
 .slider-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .slider-meta {
@@ -683,31 +628,32 @@ function removeTag(idx: number) {
 .safe-mode-group {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* 白名单区域 */
 .whitelist-row {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
 }
 
 .whitelist-tags-area {
-  width: 100%;
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .tags-flex-wrap {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 
 .primer-keyword-tag {
   border-radius: var(--r-sm, 4px) !important;
   font-size: 12px !important;
-  padding: 3px 10px !important;
+  padding: 2px 8px !important;
   background: var(--surface, #f4f3f0) !important;
   border-color: var(--hairline-strong, #c8c4be) !important;
   color: var(--ink, #1a1a1a) !important;
@@ -753,7 +699,7 @@ function removeTag(idx: number) {
   .primer-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
   }
   .gauge-sliders-grid {
     grid-template-columns: 1fr;
@@ -761,6 +707,12 @@ function removeTag(idx: number) {
   .safe-mode-group {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .whitelist-tags-area {
+    justify-content: flex-start;
+  }
+  .tags-flex-wrap {
+    justify-content: flex-start;
   }
 }
 </style>
