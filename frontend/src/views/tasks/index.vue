@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onActivated, onDeactivated } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getStreamers } from "@/api/status";
 import { getSchedule } from "@/api/schedule";
@@ -37,13 +37,17 @@ import ScheduleCards from "./components/ScheduleCards.vue";
 import WorkbenchConsole from "./components/WorkbenchConsole.vue";
 
 const route = useRoute();
+const router = useRouter();
 const schedule = ref<ScheduleStatus>();
 const streamers = ref<StreamerInfo[]>([]);
 const selectedStreamer = ref("");
 
+let autoTriggered = false;
+
 // 离开页面时安全重置未执行的临时定向主播选择
 onDeactivated(() => {
   selectedStreamer.value = "";
+  autoTriggered = false;
 });
 
 const sse = useSSE();
@@ -109,7 +113,10 @@ async function loadBaseData() {
     const queryStreamer = route.query.streamer as string;
     if (queryStreamer && streamers.value.some(s => s.name === queryStreamer)) {
       selectedStreamer.value = queryStreamer;
-      if (route.query.auto === "merge" && !sse.isRunning.value) {
+      if (route.query.auto === "merge" && !autoTriggered && !sse.isRunning.value) {
+        autoTriggered = true;
+        // 关键防递归修复：立即清除 URL 中的 auto 标识，防止后续 watch(sse.isRunning) 循环递归触发
+        router.replace({ query: { ...route.query, auto: undefined } });
         setTimeout(() => {
           handleTargetedMerge();
         }, 100);
@@ -135,9 +142,12 @@ watch(() => sse.isRunning.value, async (running, wasRunning) => {
   }
 });
 
-watch(() => route.query.streamer, (val) => {
+watch(() => route.query.streamer, (val, oldVal) => {
   if (val && typeof val === "string") {
     selectedStreamer.value = val;
+    if (val !== oldVal) {
+      autoTriggered = false;
+    }
   }
 });
 

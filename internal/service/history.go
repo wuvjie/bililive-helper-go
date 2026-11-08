@@ -65,6 +65,20 @@ func (s *HistoryService) AddWithStats(task, streamer, status string, filesCount 
 		record.Streamer = "全局"
 	}
 
+	// 防抖去重：如果缓存中最后一条记录与当前记录属于同一任务、同一主播、同一状态与详情，且时间在 3 秒以内，视为误触重复触发并予以丢弃
+	if len(s.cache) > 0 {
+		last := s.cache[len(s.cache)-1]
+		if last.Task == record.Task && last.Streamer == record.Streamer && last.Status == record.Status && last.Detail == record.Detail {
+			if lastTime, err := time.ParseInLocation("2006-01-02 15:04:05", last.Time, time.Local); err == nil {
+				if now.Sub(lastTime) < 3*time.Second {
+					s.logger.Debug("忽略短时间内完全重复的历史记录写入",
+						zap.String("task", task), zap.String("streamer", record.Streamer), zap.String("detail", detail))
+					return
+				}
+			}
+		}
+	}
+
 	records := append([]model.HistoryRecord{}, s.cache...)
 	records = append(records, record)
 	records = s.cleanupRecords(records)

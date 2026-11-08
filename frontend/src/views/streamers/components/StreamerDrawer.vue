@@ -16,8 +16,8 @@
         <div class="drawer-header-actions">
           <button
             class="btn-drawer-merge"
-            :disabled="loading || files.length === 0"
-            @click="$emit('merge', streamer)"
+            :disabled="loading || files.length === 0 || isMerging"
+            @click="handleMergeClick"
             title="一键触发合并该主播名下的全部录像分片"
           >
             <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -146,6 +146,16 @@ import type { StreamerFile } from "@/api/types";
 import UnderlineNav, { type UnderlineNavItem } from "@/components/common/UnderlineNav.vue";
 
 const activeTab = ref<string>("all");
+const isMerging = ref(false);
+
+function handleMergeClick() {
+  if (isMerging.value) return;
+  isMerging.value = true;
+  emit("merge", props.streamer);
+  setTimeout(() => {
+    isMerging.value = false;
+  }, 1000);
+}
 
 const props = defineProps<{
   visible: boolean;
