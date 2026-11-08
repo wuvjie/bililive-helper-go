@@ -22,8 +22,11 @@
       <div class="card-top-metric">
         <div class="runtime-top">
           <span class="runtime-label">当前任务状态</span>
-          <div class="runtime-badge" :class="isTaskRunning ? 'badge-running' : 'badge-idle'">
-            <span>{{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并视频...' : '正在清理磁盘...') : '空闲待命中' }}</span>
+          <div class="runtime-state-indicator">
+            <span class="state-dot" :class="isTaskRunning ? 'dot-running' : 'dot-idle'"></span>
+            <span class="state-text" :class="{ 'text-running': isTaskRunning }">
+              {{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并视频...' : '正在清理磁盘...') : '待命就绪 · 暂无活动任务' }}
+            </span>
           </div>
         </div>
         <div class="runtime-substrip">
@@ -193,25 +196,38 @@ function formatNextTime(ts?: number): string {
   font-weight: 500;
 }
 
-.runtime-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--r-sm);
+.runtime-state-indicator {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
 }
 
-.badge-idle {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+.state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.dot-idle {
+  background: #10b981;
+}
+
+.dot-running {
+  background: #10b981;
+  animation: schedPulse 1.6s infinite;
+}
+
+.state-text {
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--slate);
-  border: 1px solid var(--hairline);
 }
 
-.badge-running {
-  background: rgba(16, 185, 129, 0.12);
+.text-running {
   color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-weight: 600;
 }
 
 .runtime-substrip {

@@ -41,7 +41,8 @@
           <el-table-column
             prop="name"
             label="文件名"
-            min-width="360"
+            min-width="300"
+            resizable
             align="left"
             header-align="left"
             sortable
@@ -63,13 +64,30 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="size" label="大小" width="85" align="right" header-align="right" sortable :sort-method="(a: any, b: any) => a.size - b.size">
+          <el-table-column
+            prop="size"
+            label="大小"
+            width="110"
+            resizable
+            align="right"
+            header-align="right"
+            sortable
+            :sort-method="(a: any, b: any) => a.size - b.size"
+          >
             <template #default="{ row }">
               <span class="mono-val">{{ row.size_str }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="is_merged" label="状态" width="95" align="center" header-align="center" sortable>
+          <el-table-column
+            prop="is_merged"
+            label="状态"
+            width="100"
+            resizable
+            align="center"
+            header-align="center"
+            sortable
+          >
             <template #default="{ row }">
               <el-tooltip :content="row.is_merged ? '已通过系统合并处理的完整录播视频' : '录播工具生成的原始录像文件（待合并或独立单场录像）'" placement="top" :show-after="500">
                 <span class="file-status-badge" :class="row.is_merged ? 'status-merged' : 'status-raw'">
@@ -80,7 +98,13 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="140" align="center" header-align="center">
+          <el-table-column
+            label="操作"
+            width="140"
+            resizable
+            align="center"
+            header-align="center"
+          >
             <template #default="{ row }">
               <div class="drawer-file-actions">
                 <button class="play-btn-sm" @click="$emit('play', row)" title="在浏览器中播放预览">

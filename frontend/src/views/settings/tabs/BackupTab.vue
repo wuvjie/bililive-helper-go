@@ -276,7 +276,8 @@ function onFileChange(e: Event) {
 
 .import-submit-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  margin-top: 4px;
 }
 
 .btn-import-submit {

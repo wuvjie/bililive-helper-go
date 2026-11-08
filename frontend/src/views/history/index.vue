@@ -543,21 +543,21 @@ onActivated(() => {
 .row-action-btn {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: var(--r-xs);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  color: var(--slate);
+  border: none;
+  background: transparent;
+  color: var(--primary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .row-action-btn:hover {
-  background: var(--highlight);
-  border-color: var(--charcoal);
-  color: var(--ink);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary-hover, #1d4ed8);
+  text-decoration: underline;
 }
 
 .action-retry {

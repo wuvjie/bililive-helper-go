@@ -81,8 +81,9 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
     if (!container) return;
 
     const { scrollTop, clientHeight, scrollHeight } = container;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 6;
-    const isAtTop = scrollTop <= 6;
+    const isScrollable = scrollHeight > clientHeight + 40;
+    const isAtBottom = isScrollable && (scrollTop + clientHeight >= scrollHeight - 8);
+    const isAtTop = isScrollable && (scrollTop <= 8);
 
     // Downward wheel at bottom -> Pull towards next
     if (e.deltaY > 0 && isAtBottom) {
@@ -159,6 +160,19 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
     detachWheelListener();
   });
 
+  function lockOverscroll(durationMs = 600) {
+    isTransitioning.value = true;
+    accumulatedDeltaYDown = 0;
+    accumulatedDeltaYUp = 0;
+    pullOffset.value = 0;
+    pullProgress.value = 0;
+    isPullingNext.value = false;
+    isPullingPrev.value = false;
+    setTimeout(() => {
+      isTransitioning.value = false;
+    }, durationMs);
+  }
+
   return {
     slideDirection,
     pullOffset,
@@ -167,6 +181,7 @@ export function useWheelOverscroll(options: WheelOverscrollOptions) {
     isPullingPrev,
     isTransitioning,
     triggerTransition,
+    lockOverscroll,
     attachWheelListener,
     detachWheelListener
   };

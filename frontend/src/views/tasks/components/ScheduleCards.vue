@@ -10,10 +10,13 @@
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
             </svg>
           </div>
-          <span class="title-text">自动分片合并</span>
+          <div class="title-text-group">
+            <span class="title-text">自动分片合并</span>
+            <span class="sched-policy-pill">每 {{ schedule?.merge?.interval || 360 }} 分钟</span>
+          </div>
           <span class="badge-status" :class="schedule?.merge?.is_running ? 'badge-emerald' : schedule?.merge?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.merge?.is_running ? 'dot-emerald pulse-dot' : schedule?.merge?.enabled ? 'dot-standing' : 'dot-off'" />
-            {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '定时调度已启用' : '定时调度已暂停' }}
+            {{ schedule?.merge?.is_running ? '正在合并视频...' : schedule?.merge?.enabled ? '调度生效中' : '定时已暂停' }}
           </span>
         </div>
         <button
@@ -22,18 +25,14 @@
           @click="$emit('run-global', 'merge')"
           title="立即启动一次全局分片合并任务"
         >
-          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
           </svg>
-          <span>立即全局合并</span>
+          <span>立即执行合并</span>
         </button>
       </div>
 
       <div class="sched-metric-grid">
-        <div class="sched-metric-cell">
-          <span class="metric-lbl">调度周期</span>
-          <span class="mono-val">每 {{ schedule?.merge?.interval || 360 }} <span class="unit-lbl">分钟</span></span>
-        </div>
         <div class="sched-metric-cell">
           <span class="metric-lbl">上次运行</span>
           <span class="mono-val">{{ formatDisplayTime(schedule?.merge?.last_run) }}</span>
@@ -54,10 +53,13 @@
               <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
             </svg>
           </div>
-          <span class="title-text">自动磁盘清理</span>
+          <div class="title-text-group">
+            <span class="title-text">自动磁盘清理</span>
+            <span class="sched-policy-pill">每 {{ schedule?.clean?.interval || 720 }} 分钟</span>
+          </div>
           <span class="badge-status" :class="schedule?.clean?.is_running ? 'badge-amber' : schedule?.clean?.enabled ? 'badge-standing' : 'badge-off'">
             <span class="status-dot-sm" :class="schedule?.clean?.is_running ? 'dot-amber' : schedule?.clean?.enabled ? 'dot-standing' : 'dot-off'" />
-            {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '磁盘巡检已开启' : '巡检保护未开启' }}
+            {{ schedule?.clean?.is_running ? '正在清理磁盘...' : schedule?.clean?.enabled ? '巡检生效中' : '保护未开启' }}
           </span>
         </div>
         <button
@@ -69,15 +71,11 @@
           <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
           </svg>
-          <span>立即全局清理</span>
+          <span>立即执行清理</span>
         </button>
       </div>
 
       <div class="sched-metric-grid">
-        <div class="sched-metric-cell">
-          <span class="metric-lbl">巡检周期</span>
-          <span class="mono-val">每 {{ schedule?.clean?.interval || 720 }} <span class="unit-lbl">分钟</span></span>
-        </div>
         <div class="sched-metric-cell">
           <span class="metric-lbl">上次运行</span>
           <span class="mono-val">{{ formatDisplayTime(schedule?.clean?.last_run) }}</span>
@@ -139,11 +137,34 @@ function formatDisplayTime(ts?: number): string {
   flex-wrap: wrap;
 }
 
+.title-text-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .title-text {
   font-size: 15px;
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
+}
+
+.sched-policy-pill {
+  font-size: 11px;
+  color: var(--steel);
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.04));
+  padding: 1px 7px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--hairline);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+html.dark .sched-policy-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
 }
 
 .badge-status {
@@ -204,34 +225,40 @@ function formatDisplayTime(ts?: number): string {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: var(--r-sm);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  border: 1px solid transparent;
+  border-width: 1px;
+  border-style: solid;
   transition: all 0.15s ease;
-  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  line-height: 1.4;
 }
 
 .btn-merge-action {
-  background: color-mix(in srgb, #059669 10%, transparent);
+  background: color-mix(in srgb, #059669 12%, transparent);
   color: #047857;
-  border-color: color-mix(in srgb, #059669 25%, transparent);
+  border-color: color-mix(in srgb, #059669 35%, transparent);
 }
 .btn-merge-action:hover:not(:disabled) {
   background: #059669;
+  border-color: #047857;
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
 }
 
 .btn-clean-action {
-  background: color-mix(in srgb, #d97706 10%, transparent);
+  background: color-mix(in srgb, #d97706 12%, transparent);
   color: #b45309;
-  border-color: color-mix(in srgb, #d97706 25%, transparent);
+  border-color: color-mix(in srgb, #d97706 35%, transparent);
 }
 .btn-clean-action:hover:not(:disabled) {
   background: #d97706;
+  border-color: #b45309;
   color: #ffffff;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
 }
 
 .btn-task-action:disabled {
@@ -240,14 +267,14 @@ function formatDisplayTime(ts?: number): string {
 }
 
 .btn-svg-sm {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
 }
 
-/* Hairline ruled metric grid (3 columns) */
+/* Hairline ruled metric grid (2 columns) */
 .sched-metric-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   border-top: 1px solid var(--hairline);
   padding-top: 12px;
 }
@@ -256,7 +283,7 @@ function formatDisplayTime(ts?: number): string {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 12px;
+  padding: 0 14px;
   box-sizing: border-box;
 }
 
@@ -283,12 +310,6 @@ function formatDisplayTime(ts?: number): string {
   font-weight: 600;
   color: var(--charcoal);
   font-family: var(--font-mono);
-}
-
-.unit-lbl {
-  font-size: 11px;
-  color: var(--stone);
-  font-weight: 400;
 }
 
 @media (max-width: 860px) {

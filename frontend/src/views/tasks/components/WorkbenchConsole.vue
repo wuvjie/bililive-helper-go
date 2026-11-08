@@ -121,6 +121,11 @@ defineEmits<{
   box-shadow: var(--shadow-card-hover);
 }
 
+html.dark .workbench-console-card {
+  background: #161b22;
+  border-color: #30363d;
+}
+
 .workbench-action-bar {
   display: flex;
   align-items: center;
@@ -133,7 +138,8 @@ defineEmits<{
 }
 
 html.dark .workbench-action-bar {
-  background: rgba(255, 255, 255, 0.03);
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
 }
 
 .action-bar-left {

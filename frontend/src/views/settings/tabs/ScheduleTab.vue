@@ -220,14 +220,10 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--hairline);
+  padding: 8px 0;
   gap: 20px;
-  min-height: 42px;
+  min-height: 40px;
   box-sizing: border-box;
-}
-.setting-row:last-child {
-  border-bottom: none;
 }
 
 .setting-info {
@@ -301,6 +297,8 @@ const emit = defineEmits<{
   color: var(--steel);
   font-weight: 500;
   white-space: nowrap;
+  min-width: 28px;
+  text-align: left;
 }
 
 .time-range-row {

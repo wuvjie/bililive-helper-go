@@ -206,7 +206,7 @@
               :min="5" :max="500" :step="10" class="compact-counter"
               @update:model-value="updateField('MAX_DELETE_PER_RUN', Number($event))"
             />
-            <span class="unit-text">个文件</span>
+            <span class="unit-text">个</span>
           </div>
         </div>
       </div>
@@ -427,14 +427,10 @@ function addTag(keyword: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--hairline);
+  padding: 8px 0;
   gap: 20px;
-  min-height: 42px;
+  min-height: 40px;
   box-sizing: border-box;
-}
-.setting-row:last-child {
-  border-bottom: none;
 }
 
 .setting-row-stack {
@@ -513,6 +509,8 @@ function addTag(keyword: string) {
   color: var(--steel);
   font-weight: 500;
   white-space: nowrap;
+  min-width: 28px;
+  text-align: left;
 }
 
 /* ========================================================
