@@ -32,7 +32,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o bililive-helper-go ./c
 FROM ${REGISTRY}/library/alpine:3.21
 ARG ALPINE_MIRROR
 
-LABEL maintainer="wuvjie"
+LABEL maintainer="The Bililive Helper Go Authors"
 LABEL description="Bililive Helper Go - 直播录制后处理工具"
 LABEL org.opencontainers.image.source="https://github.com/wuvjie/bililive-helper-go"
 
