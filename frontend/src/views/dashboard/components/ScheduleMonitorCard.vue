@@ -21,7 +21,7 @@
 
     <div class="card-body">
       <div class="card-top-metric">
-        <div class="runtime-top" :class="{ 'has-substrip': isTaskRunning }">
+        <div class="runtime-top">
           <span class="runtime-label">当前任务状态</span>
           <div class="runtime-state-indicator">
             <span class="state-dot" :class="isTaskRunning ? 'dot-running' : 'dot-idle'"></span>
@@ -30,9 +30,9 @@
             </span>
           </div>
         </div>
-        <div v-if="isTaskRunning" class="runtime-substrip">
-          <span class="substrip-text">
-            后台正在处理媒体流水线任务，任务中心可查看终端流式输出
+        <div class="runtime-subline">
+          <span class="runtime-subtext">
+            {{ isTaskRunning ? '后台正在处理媒体流水线任务，任务中心可查看流式输出' : '后台定时轮询已就绪，按策略周期巡检' }}
           </span>
         </div>
       </div>
@@ -112,14 +112,16 @@ function formatNextTime(ts?: number): string {
   padding: 20px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .card-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 32px;
   margin-bottom: 16px;
-  min-height: 32px;
+  box-sizing: border-box;
 }
 
 .card-title-left {
@@ -133,6 +135,7 @@ function formatNextTime(ts?: number): string {
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
+  line-height: 1;
 }
 
 .monitor-mode-tag {
@@ -183,44 +186,43 @@ function formatNextTime(ts?: number): string {
   color: var(--primary);
   text-decoration: none;
   transition: opacity 0.15s ease;
+  line-height: 1;
 }
 .card-header-action:hover {
   text-decoration: underline;
 }
 
-/* Deconstructed top metric - hairline underline, no box */
+/* Deconstructed top metric - fixed height 56px, exactly matching storage card */
 .card-top-metric {
+  height: 56px;
   margin-bottom: 16px;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--hairline);
-  min-height: 52px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .runtime-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  min-height: 38px;
-}
-
-.runtime-top.has-substrip {
-  margin-bottom: 6px;
+  align-items: baseline;
+  height: 24px;
 }
 
 .runtime-label {
   font-size: 13px;
   color: var(--charcoal);
   font-weight: 500;
+  line-height: 1;
 }
 
 .runtime-state-indicator {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  line-height: 1;
 }
 
 .state-dot {
@@ -244,6 +246,7 @@ function formatNextTime(ts?: number): string {
   font-size: 12.5px;
   font-weight: 500;
   color: var(--slate);
+  line-height: 1;
 }
 
 .text-running {
@@ -251,26 +254,38 @@ function formatNextTime(ts?: number): string {
   font-weight: 600;
 }
 
-.runtime-substrip {
-  font-size: 11.5px;
-  color: var(--stone);
-  line-height: 1.45;
+.runtime-subline {
+  height: 16px;
+  display: flex;
+  align-items: center;
 }
 
-/* Hairline ruled grid (2x2) */
+.runtime-subtext {
+  font-size: 11.5px;
+  color: var(--stone);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hairline ruled grid (2x2) - locked 52px row height for absolute cross-card alignment */
 .data-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 52px 52px;
   position: relative;
+  box-sizing: border-box;
 }
 
 .data-cell {
-  padding: 10px 12px;
+  padding: 6px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
   box-sizing: border-box;
-  min-height: 54px;
+  overflow: hidden;
 }
 
 .data-cell:nth-child(odd) {
@@ -284,11 +299,6 @@ function formatNextTime(ts?: number): string {
 
 .data-cell:nth-child(-n+2) {
   border-bottom: 1px solid var(--hairline);
-  padding-top: 0;
-}
-
-.data-cell:nth-child(n+3) {
-  padding-bottom: 4px;
 }
 
 .data-label {
@@ -297,7 +307,7 @@ function formatNextTime(ts?: number): string {
   display: flex;
   align-items: center;
   gap: 4px;
-  line-height: 1.4;
+  line-height: 1.2;
 }
 
 .val-disabled {

@@ -21,12 +21,14 @@
             {{ detail?.disk?.usage_pct?.toFixed(1) || 0 }}%
           </span>
         </div>
-        <el-progress
-          :percentage="detail?.disk?.usage_pct || 0"
-          :color="diskColor"
-          :stroke-width="6"
-          :format="() => ''"
-        />
+        <div class="disk-progress-wrap">
+          <el-progress
+            :percentage="detail?.disk?.usage_pct || 0"
+            :color="diskColor"
+            :stroke-width="6"
+            :show-text="false"
+          />
+        </div>
       </div>
 
       <div class="data-grid">
@@ -87,14 +89,16 @@ const totalRecordingsGB = computed(() => {
   padding: 20px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .card-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 32px;
   margin-bottom: 16px;
-  min-height: 32px;
+  box-sizing: border-box;
 }
 
 .card-title-left {
@@ -108,50 +112,73 @@ const totalRecordingsGB = computed(() => {
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.2px;
+  line-height: 1;
 }
 
-/* Deconstructed top metric - hairline underline, no box */
+/* Deconstructed top metric - fixed height 56px, exactly matching schedule card */
 .card-top-metric {
+  height: 56px;
   margin-bottom: 16px;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--hairline);
-  min-height: 52px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .disk-top {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 8px;
+  height: 24px;
 }
 
 .disk-label {
   font-size: 13px;
   color: var(--charcoal);
   font-weight: 500;
+  line-height: 1;
 }
 
 .disk-pct {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.5px;
+  line-height: 1;
 }
 
-/* Hairline ruled grid (2x2) */
+.disk-progress-wrap {
+  height: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.disk-progress-wrap :deep(.el-progress) {
+  width: 100%;
+}
+
+.disk-progress-wrap :deep(.el-progress-bar__outer) {
+  background-color: var(--hairline, rgba(0, 0, 0, 0.08));
+}
+
+/* Hairline ruled grid (2x2) - locked 52px row height for absolute cross-card alignment */
 .data-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 52px 52px;
   position: relative;
+  box-sizing: border-box;
 }
 
 .data-cell {
-  padding: 10px 12px;
+  padding: 6px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
   box-sizing: border-box;
-  min-height: 54px;
+  overflow: hidden;
 }
 
 .data-cell:nth-child(odd) {
@@ -165,11 +192,6 @@ const totalRecordingsGB = computed(() => {
 
 .data-cell:nth-child(-n+2) {
   border-bottom: 1px solid var(--hairline);
-  padding-top: 0;
-}
-
-.data-cell:nth-child(n+3) {
-  padding-bottom: 4px;
 }
 
 .data-label {
@@ -178,7 +200,7 @@ const totalRecordingsGB = computed(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  line-height: 1.4;
+  line-height: 1.2;
 }
 
 .label-help-ico {
