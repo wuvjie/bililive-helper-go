@@ -69,7 +69,7 @@ PORT=5689
 | `WHITELIST_KEYWORDS` | []string | 白名单关键词 | `["留存","纪念","高能","生日","勿删"]` |
 | `SAFE_MODE` | string | 安全期模式：`hours` 或 `days` | `hours` |
 | `SAFE_DAYS` | int | 安全期天数（仅 days 模式） | 1 |
-| `MAX_DELETE_PER_RUN` | int | 单次清理最大删除数 | 10 |
+| `MAX_DELETE_PER_RUN` | int | 单次清理最大删除数 | 50 |
 | `BACKUP_START_HOUR` | int | 静默时段开始小时（起止均为 0 表示默认关闭） | 0 |
 | `BACKUP_START_MINUTE` | int | 静默时段开始分钟 | 0 |
 | `BACKUP_END_HOUR` | int | 静默时段结束小时（起止均为 0 表示默认关闭） | 0 |

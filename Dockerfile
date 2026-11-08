@@ -14,7 +14,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Build Go binary
-FROM ${REGISTRY}/library/golang:1.26-alpine AS builder
+FROM ${REGISTRY}/library/golang:1.25-alpine AS builder
 ARG ALPINE_MIRROR
 ARG GO_PROXY
 
