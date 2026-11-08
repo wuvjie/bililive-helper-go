@@ -100,9 +100,6 @@ func (h *Handler) Stats(c *gin.Context) {
 		recordDay := r.Time[:10]
 		recordMonth := r.Time[:7]
 
-		// 有效合并：状态成功/部分成功且实际发生了分片合并或产出体积（排除无待合并文件的空跑扫描）
-		isEffectiveMerge := r.Task == "merge" && (r.Status == "success" || r.Status == "partial") && (r.MergedBytes > 0 || r.FilesCount > 0)
-
 		if recordDay == today {
 			if isEffectiveMerge {
 				todayMerge++
