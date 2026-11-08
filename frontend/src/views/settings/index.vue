@@ -561,55 +561,67 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Top UnderlineNav Header (GitHub Primer 规范横向导航栏，跟随页面自然排版，消除浮动穿透与重叠冲突) */
+/* Sticky Top UnderlineNav Header (GitHub Primer 规范横向吸顶导航栏：毛玻璃背景 + 两极分布排版) */
 .settings-top-nav-bar {
-  position: static;
-  background: transparent;
+  position: sticky;
+  top: -24px;
+  margin-top: -24px;
+  padding-top: 24px;
+  background: color-mix(in srgb, var(--canvas, #f6f8fa) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--hairline, #e4e4e7);
   margin-bottom: 24px;
+  z-index: 20;
 }
 
 html.dark .settings-top-nav-bar {
+  background: color-mix(in srgb, var(--canvas, #0d1117) 88%, transparent);
   border-bottom-color: #30363d;
 }
 
 .top-nav-inner {
-  max-width: 1040px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   padding: 0 4px;
+  box-sizing: border-box;
 }
 
 .top-nav-actions {
   display: flex;
   align-items: center;
+  margin-left: auto;
 }
 
 .top-preset-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
+  gap: 6px;
+  padding: 5px 10px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
   color: var(--color-fg-muted, #57606a);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
 
   .reset-action-svg {
     width: 14px;
     height: 14px;
     transition: transform 0.25s ease;
+    flex-shrink: 0;
   }
 
   &:hover {
     color: var(--color-accent-fg, #0969da);
     background: var(--color-canvas-subtle, #f6f8fa);
+    border-color: var(--hairline, #e4e4e7);
 
     .reset-action-svg {
       transform: rotate(-45deg);
@@ -623,14 +635,8 @@ html.dark .top-preset-action-btn {
   &:hover {
     color: #58a6ff;
     background: #21262d;
+    border-color: #30363d;
   }
-}
-
-.top-nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
 }
 
 .settings-nav-underline {
