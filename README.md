@@ -2,7 +2,7 @@
 
 > B 站 / 抖音直播录制后处理工具 — 自动合并、智能清理、Web 管理控制台
 
-[![Version](https://img.shields.io/badge/Version-v3.0.0-blue.svg)](https://github.com/wuvjie/bililive-helper-go)
+[![Version](https://img.shields.io/badge/Version-v3.9.0-blue.svg)](https://github.com/wuvjie/bililive-helper-go)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 简介

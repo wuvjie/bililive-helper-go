@@ -1,6 +1,26 @@
 # Baseline
 
-- **v3.8.0** (Current Active):
+- **v3.9.0** (Current Active):
+  - Release Highlights:
+    - **全系统工程日志与执行反馈通顺度全面重构 (System-wide Engineering Log & Execution Feedback Overhaul)**：
+      - 全局审查并重写了后台录像合并、智能磁盘清理、定时调度与配置变动的实时流式日志与操作历史记录；
+      - 坚决杜绝机械生硬的机器拼接词汇与反向语序，全面升级为地道自然、层级分明的高清工程中文；
+      - 操作日志列表与概览卡片细节文本自动标准化排版，统一全角标点与箭头规范。
+    - **控制台范围选择器与主播视图边界交互修复 (Workbench Scope Selector & Streamer View Boundaries Fix)**：
+      - 修复手动执行工作台中“所有主播”在未选择特定主播时偶发无法触发的问题，范围与业务动作彻底自适应联动；
+      - 修复主播管理表格中个性化规则徽章以及抽屉中超长录像标题溢出外部边框的排版截断问题。
+    - **全代码仓冗余代码与死逻辑深度清理 (Codebase Redundancy & Dead Code Sweep)**：
+      - 深度重构与清理 23 个文件，累计净删除约 600 行废弃与死代码；
+      - 彻底移除无引用的历史遗留文件：`DirWatcher` 目录监听器（147 行）、`DefaultExecutor` 壳结构体；
+      - 彻底清理前端无用工具与死模块：`useWheelOverscroll`、`useFetchOnActivate`、`api/task.ts`、`_toolbar.scss` 及废弃类型接口；
+      - 统一抽取收敛 `formatRelativeTime`、`cleanDetailText`、`formatHistoryDetail` 至通用格式化模块，消除多处复制粘贴的代码副本。
+    - **Docker 容器构建安全加固与历史隐私完全脱敏 (Docker Hardening & Git History Desensitization)**：
+      - 严密修复 `.dockerignore` 缺少 `.env*` 导致本地敏感配置可能泄露进容器镜像的高危漏洞；
+      - Go 镜像编译命令开启 `-ldflags="-s -w"` 符号与调试路径剥离，二进制体积大幅缩减 30%~40%；
+      - 升级 Docker 运行时底座至 Alpine 3.21 长期支持稳定版，获取最新的 FFmpeg 与 OpenSSL 依赖；
+      - MIT License 与 Dockerfile 维护者信息统一对齐为项目群体署名；全 Git 历史 419 个 Commit 完成作者邮箱物理级脱敏。
+
+- **v3.8.0**:
   - Git Commits: `5d25259` ~ `HEAD` (`1057cb5` / `247bf8d`)
   - Release Highlights:
     - **任务中心手动执行与实时控制台统一归一化架构 (Unified Manual Execution Workbench & Scope Selector Architecture)**：

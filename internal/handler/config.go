@@ -77,7 +77,7 @@ func (h *Handler) ExportConfig(c *gin.Context) {
 	schedule := h.scheduler.GetStatus()
 
 	ok(c, gin.H{
-		"version":     "3.0.0",
+		"version":     "3.9.0",
 		"exported_at": time.Now().Format(time.RFC3339),
 		"config":      cfg,
 		"schedule":    schedule,
