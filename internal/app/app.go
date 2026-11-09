@@ -34,6 +34,19 @@ type App struct {
 
 // New 初始化所有服务并返回 App 实例。
 func New() (*App, error) {
+	// 初始化全局默认时区：优先读取 TZ 环境变量，未设置时默认使用 Asia/Shanghai（中国标准时间）
+	if tz := os.Getenv("TZ"); tz != "" {
+		if loc, err := time.LoadLocation(tz); err == nil {
+			time.Local = loc
+		}
+	} else {
+		if loc, err := time.LoadLocation("Asia/Shanghai"); err == nil {
+			time.Local = loc
+		} else {
+			time.Local = time.FixedZone("CST", 8*3600)
+		}
+	}
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		return nil, fmt.Errorf("初始化日志失败: %w", err)

@@ -41,6 +41,9 @@ LABEL org.opencontainers.image.source="https://github.com/wuvjie/bililive-helper
 RUN sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_MIRROR}/g" /etc/apk/repositories
 RUN apk add --no-cache ffmpeg ca-certificates tzdata curl
 
+# 默认设置时区为中国标准时间（Asia/Shanghai）
+ENV TZ=Asia/Shanghai
+
 WORKDIR /app
 
 COPY --from=builder /app/bililive-helper-go .

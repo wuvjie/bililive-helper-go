@@ -31,7 +31,8 @@ PORT=5689
 -v /path/to/recordings:/recordings \
 -v /path/to/data:/data \
 -e TARGET_DIR=/recordings \
--e LOG_DIR=/data
+-e LOG_DIR=/data \
+-e TZ=Asia/Shanghai
 ```
 
 ### 3. WSL Container (`wslc run`) 挂载参数
@@ -39,7 +40,8 @@ PORT=5689
 -v "D:\video\recordings:/recordings" `
 -v "D:\docker\bililive-helper-go:/data" `
 -e TARGET_DIR=/recordings `
--e LOG_DIR=/data
+-e LOG_DIR=/data `
+-e TZ=Asia/Shanghai
 ```
 
 ---

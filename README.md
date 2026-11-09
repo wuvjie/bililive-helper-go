@@ -2,7 +2,7 @@
 
 > 通用直播录像后处理工具：视频分片合并、磁盘清理、Web 管理控制台。
 
-[![Version](https://img.shields.io/badge/Version-v2.0.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-v2.0.2-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Docker Image](https://img.shields.io/badge/Docker%20Hub-wuvjie%2Fbililive--helper--go-blue?logo=docker)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
 [![Architecture](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen.svg)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
@@ -96,6 +96,7 @@ wslc run -d `
   -p 5689:5000 `
   -v "D:\video\recordings:/recordings" `
   -v "D:\docker\bililive-helper-go:/data" `
+  -e TZ=Asia/Shanghai `
   wuvjie/bililive-helper-go:latest
 ```
 

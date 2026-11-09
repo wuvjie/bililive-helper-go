@@ -137,6 +137,7 @@
             <EmptyState
               title="暂无操作日志"
               desc="未找到符合当前筛选条件的日志记录"
+              icon-color="#6366f1"
               :action-text="filterTask || filterStreamer ? '重置筛选条件' : '刷新日志列表'"
               @action="filterTask || filterStreamer ? resetFilters() : loadHistory(1)"
             >

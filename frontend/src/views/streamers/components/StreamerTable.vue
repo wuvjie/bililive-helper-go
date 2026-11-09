@@ -78,7 +78,7 @@
       <el-table-column
         prop="mtime"
         label="最近录像时间"
-        width="130"
+        width="160"
         align="right"
         header-align="right"
         sortable
@@ -128,6 +128,7 @@
         <EmptyState
           title="未发现匹配的主播"
           desc="请确认搜索关键词或检查录像存储目录中是否存在主播子文件夹"
+          icon-color="#6366f1"
           :action-text="searchQuery ? '清空搜索条件' : '刷新列表'"
           @action="searchQuery ? $emit('clear-search') : $emit('refresh')"
         >
@@ -222,6 +223,11 @@ function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
   color: var(--slate);
   font-weight: 500;
   white-space: nowrap;
+}
+
+:deep(.el-table__header-wrapper th .cell) {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
 }
 
 .action-btn-group {

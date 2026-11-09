@@ -106,7 +106,7 @@
 
           <template #empty>
             <div class="drawer-empty-box">
-              <div class="empty-icon-wrapper">
+              <div class="empty-icon-wrapper" style="background: rgba(99, 102, 241, 0.09); color: #6366f1;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                   <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
                   <line x1="7" y1="2" x2="7" y2="22"/>
