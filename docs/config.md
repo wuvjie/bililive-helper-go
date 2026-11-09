@@ -10,7 +10,16 @@
 | `/data` | 持久化数据目录（配置文件、日志、会话凭据） | 宿主机的专用数据目录（如 `/docker/bililive-helper-go` 或 `D:\docker\bililive-helper-go`） |
 
 ### 1. Docker Compose 挂载配置
-在宿主机根目录下的 `.env` 文件中配置映射：
+支持直接在 `docker-compose.yml` 中指定路径（推荐，单文件无需 `.env`），亦可通过同目录下的 `.env` 变量进行解耦：
+
+**方式 A（直接挂载，推荐）**：
+```yaml
+volumes:
+  - /path/to/recordings:/recordings
+  - /path/to/data:/data
+```
+
+**方式 B（使用 .env 变量管理）**：
 ```env
 RECORDINGS_DIR=/path/to/recordings
 DATA_DIR=/path/to/data
@@ -27,8 +36,8 @@ PORT=5689
 
 ### 3. WSL Container (`wslc run`) 挂载参数
 ```powershell
--v D:\video\recordings:/recordings `
--v D:\docker\bililive-helper-go:/data `
+-v "D:\video\recordings:/recordings" `
+-v "D:\docker\bililive-helper-go:/data" `
 -e TARGET_DIR=/recordings `
 -e LOG_DIR=/data
 ```

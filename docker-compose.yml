@@ -1,7 +1,7 @@
 services:
   bililive-helper-go:
-    build: .
-    image: bililive-helper-go
+    image: wuvjie/bililive-helper-go:latest
+    # build: .
     container_name: bililive-helper-go
     ports:
       # 宿主机端口:容器端口，默认访问 http://IP:5689

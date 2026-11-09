@@ -15,6 +15,11 @@ This project adheres to [Semantic Versioning (SemVer)](https://semver.org/lang/z
 - **Docker 容器构建安全加固**：严密修复 `.dockerignore` 缺少 `.env*` 导致敏感配置泄露风险；Go 编译启用 `-ldflags="-s -w"` 剥离符号表；升级运行时底座至 Alpine 3.21。
 - **版权与全 Git 历史脱敏**：全历史 420 个 Commit 完成作者邮箱物理级脱敏，版权声明统一对齐为项目群体署名。
 
+### CI/CD & Distribution (容器分发与自动化构建)
+- **多架构 Docker 镜像官方发布**：正式接入 Docker Hub（`wuvjie/bililive-helper-go`）与 GitHub Packages（`ghcr.io/wuvjie/bililive-helper-go`），多平台开箱即用。
+- **全架构原生支持**：支持 `linux/amd64`（PC / X86 服务器）与 `linux/arm64`（树莓派 / 苹果 M 系列芯片 / 国产 ARM NAS）。
+- **极速交叉编译优化**：利用 Go 原生交叉编译特性结合 Docker BuildKit `--platform=$BUILDPLATFORM`，多架构云端构建耗时由 10 分钟缩减至 45 秒。
+
 ---
 
 ## [v2.0.0] - 2026-11-08

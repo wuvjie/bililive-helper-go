@@ -4,7 +4,9 @@
 
 [![Version](https://img.shields.io/badge/Version-v2.0.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Changelog](https://img.shields.io/badge/Changelog-v1.0~v2.0-orange.svg)](CHANGELOG.md)
+[![Docker Image](https://img.shields.io/badge/Docker%20Hub-wuvjie%2Fbililive--helper--go-blue?logo=docker)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
+[![Architecture](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen.svg)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/wuvjie/bililive-helper-go/docker-publish.yml?branch=main&label=CI%2FCD)](https://github.com/wuvjie/bililive-helper-go/actions/workflows/docker-publish.yml)
 
 <p align="center">
   <picture>
@@ -39,47 +41,47 @@
 
 ## 安装与部署
 
-### 方式一：Docker Compose
+官方 Docker 镜像已发布至 Docker Hub（`wuvjie/bililive-helper-go`）及 GitHub Container Registry（`ghcr.io/wuvjie/bililive-helper-go`），内置 FFmpeg，支持 `linux/amd64` 与 `linux/arm64` 双架构。
 
-1. **克隆项目并配置环境**：
-   ```bash
-   git clone https://github.com/wuvjie/bililive-helper-go.git
-   cd bililive-helper-go
-   cp .env.example .env
-   ```
-   编辑 `.env` 文件，填入实际路径：
-   ```env
-   RECORDINGS_DIR=/path/to/recordings
-   DATA_DIR=/path/to/data
-   PORT=5689
-   ```
+### 方式一：Docker Compose（推荐）
 
-2. **构建并启动**：
-   ```bash
-   docker compose up -d --build
-   ```
+新建一个 `docker-compose.yml` 文件（**若已克隆本仓库，可直接使用根目录下现成的 `docker-compose.yml`**）：
+
+```yaml
+services:
+  bililive-helper-go:
+    image: wuvjie/bililive-helper-go:latest
+    container_name: bililive-helper-go
+    restart: always
+    ports:
+      - "5689:5000"
+    volumes:
+      - /path/to/recordings:/recordings # 录像存储目录（如 bililive-go 输出路径）
+      - /path/to/data:/data             # 配置文件与数据持久化目录
+    environment:
+      - TZ=Asia/Shanghai
+```
+
+在配置文件所在目录下启动容器：
+```bash
+docker compose up -d
+```
 
 ---
 
 ### 方式二：Docker CLI
 
-直接使用命令行运行容器：
+无需下载源码，直接拉取并运行官方镜像：
 
 ```bash
-# 1. 构建镜像
-docker build -t bililive-helper-go .
-
-# 2. 运行容器（将 /path/to/... 替换为宿主机实际路径）
 docker run -d \
   --name bililive-helper-go \
   --restart always \
   -p 5689:5000 \
   -v /path/to/recordings:/recordings \
   -v /path/to/data:/data \
-  -e TARGET_DIR=/recordings \
-  -e LOG_DIR=/data \
   -e TZ=Asia/Shanghai \
-  bililive-helper-go
+  wuvjie/bililive-helper-go:latest
 ```
 
 ---
@@ -89,19 +91,26 @@ docker run -d \
 在 Windows PowerShell 环境下运行：
 
 ```powershell
-# 1. 构建镜像
-wslc build -t bililive-helper-go .
-
-# 2. 启动容器（将 D:\video\recordings 与 D:\docker\data 替换为实际路径）
 wslc run -d `
   --name bililive-helper-go `
   -p 5689:5000 `
-  -v D:\video\recordings:/recordings `
-  -v D:\docker\bililive-helper-go:/data `
-  -e TARGET_DIR=/recordings `
-  -e LOG_DIR=/data `
-  -e TZ=Asia/Shanghai `
-  bililive-helper-go
+  -v "D:\video\recordings:/recordings" `
+  -v "D:\docker\bililive-helper-go:/data" `
+  wuvjie/bililive-helper-go:latest
+```
+
+---
+
+### 开发者模式：源码本地构建
+
+如需对前端或后端代码进行二次开发，可克隆代码仓并在本地编译镜像：
+
+```bash
+git clone https://github.com/wuvjie/bililive-helper-go.git
+cd bililive-helper-go
+cp .env.example .env
+# 编辑 .env 配置后构建并启动
+docker compose up -d --build
 ```
 
 ---
@@ -113,8 +122,9 @@ wslc run -d `
 http://<宿主机IP>:5689
 ```
 
-- **初始化**：首次启动进入设置向导，设置管理员密码后即可登录。
-- **重置密码**：若遗忘密码，删除宿主机数据目录中的 `{DATA_DIR}/.credentials.json` 并重启容器，系统将重新进入设置向导。
+- **初始化向导**：系统无硬编码初始密码。首次启动访问网页时会自动进入初始化向导，由管理员在网页上自主设置登录密码（至少 6 位）。
+- **重置密码**：若遗忘密码，删除宿主机挂载数据目录中的 `{DATA_DIR}/.credentials.json` 文件并重启容器，系统将重新进入初始化设置向导。
+- **关于 .env 文件**：普通用户可直接在 `docker-compose.yml` 或 `docker run` 命令中填写实际挂载路径，无需额外创建 `.env` 文件；亦可按需创建 `.env` 文件进行路径变量抽离。
 
 ---
 
