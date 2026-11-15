@@ -294,3 +294,44 @@ func TestClassifyMergeFailure_OutputNormalSize(t *testing.T) {
 	}
 	t.Logf("normal-size output reason: %s", got)
 }
+
+func TestBuildDetail_SeparateConvertAndMergeSizes(t *testing.T) {
+	const mib = 1024 * 1024
+	const gib = 1024 * mib
+
+	t.Run("convert_only", func(t *testing.T) {
+		convertBytes := int64(256 * mib)
+		got := buildDetail(2, 0, 0, nil, convertBytes, 0)
+		want := "转换 2 个FLV (" + utils.FormatSize(convertBytes) + ")"
+		if got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("merge_only", func(t *testing.T) {
+		mergeBytes := int64(3 * gib)
+		got := buildDetail(0, 1, 0, nil, 0, mergeBytes)
+		want := "合并 1 场次 (" + utils.FormatSize(mergeBytes) + ")"
+		if got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("convert_and_merge_with_failure", func(t *testing.T) {
+		convertBytes := int64(128 * mib)
+		mergeBytes := int64(2 * gib)
+		reasons := map[string]int{"输出校验失败": 1}
+		got := buildDetail(1, 2, 1, reasons, convertBytes, mergeBytes)
+		want := "转换 1 个FLV (" + utils.FormatSize(convertBytes) + "), 合并 2 场次 (" + utils.FormatSize(mergeBytes) + "), 失败 1 项(输出校验失败 x1)"
+		if got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		if got := buildDetail(0, 0, 0, nil, 0, 0); got != "无待合并文件" {
+			t.Fatalf("got %q, want %q", got, "无待合并文件")
+		}
+	})
+}
+

@@ -48,6 +48,28 @@ export function formatRelativeTime(ts?: number, _tick?: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** Format "YYYY-MM-DD HH:mm[:ss]" with semantic day label: 今天 HH:mm / 昨天 HH:mm / MM-DD HH:mm / YYYY-MM-DD HH:mm */
+export function formatSemanticTime(timeStr?: string, now: Date = new Date()): string {
+  if (!timeStr) return "";
+  const match = timeStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);
+  if (!match) {
+    return timeStr.length >= 16 ? timeStr.slice(11, 16) : timeStr;
+  }
+  const [, yearStr, monthStr, dayStr, hhmm] = match;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetStart = new Date(year, month - 1, day);
+  const diffDays = Math.round((todayStart.getTime() - targetStart.getTime()) / 86400000);
+
+  if (diffDays === 0) return `今天 ${hhmm}`;
+  if (diffDays === 1) return `昨天 ${hhmm}`;
+  if (year === now.getFullYear()) return `${monthStr}-${dayStr} ${hhmm}`;
+  return `${yearStr}-${monthStr}-${dayStr} ${hhmm}`;
+}
+
 /** Clean raw detail text of operations log for concise display */
 export function cleanDetailText(raw: string, _task?: string): string {
   if (!raw) return "-";

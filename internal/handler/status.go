@@ -218,16 +218,24 @@ func (h *Handler) GetStreamers(c *gin.Context) {
 	ok(c, streamers)
 }
 
+// liveActiveWindow 判定主播是否正在录制的磁盘文件活跃时间窗口（与后台扫描器保持一致）。
+const liveActiveWindow = 5 * time.Minute
+
 // scanAllStreamers 一次性扫描所有主播目录，返回主播列表、待合并文件数和总大小。
-// 每个主播包含 name、files、size_bytes、size_gb 和 mtime（最近视频的修改时间戳，无文件时为 0）。
+// 每个主播包含 name、files、size_bytes、size_gb、mtime（最近视频时间戳）和 is_live（是否正在录制中）。
 func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
+	return h.scanAllStreamersAt(root, time.Now())
+}
+
+func (h *Handler) scanAllStreamersAt(root string, now time.Time) ([]gin.H, int, int64) {
 	type streamerInfo struct {
-		name         string
-		size         int64
-		count        int
-		pendingCount int
-		pendingSize  int64
-		latestTime   time.Time
+		name            string
+		size            int64
+		count           int
+		pendingCount    int
+		pendingSize     int64
+		latestTime      time.Time
+		latestWriteTime time.Time
 	}
 
 	dirs, err := fsutil.ScanStreamerDirs(root)
@@ -239,7 +247,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 	for _, dir := range dirs {
 		var totalSize, pendSize int64
 		var totalCount, pendCount int
-		var latest time.Time
+		var latest, latestWrite time.Time
 		for _, fe := range dir.Files {
 			if fe.IsDir() {
 				continue
@@ -254,7 +262,8 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			}
 			totalSize += info.Size()
 			totalCount++
-			fileTime := info.ModTime()
+			modTime := info.ModTime()
+			fileTime := modTime
 			if _, dt, ok := utils.ParseFilename(name); ok {
 				fileTime = dt
 			}
@@ -264,11 +273,16 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			if !utils.IsMergedFile(name) {
 				pendSize += info.Size()
 				pendCount++
+				// 直播状态必须基于磁盘真实写入时间 ModTime，避免被文件名里的开播时间覆盖导致开播超过 30 分钟熄灭
+				if modTime.After(latestWrite) {
+					latestWrite = modTime
+				}
 			}
 		}
 		infos = append(infos, streamerInfo{
 			name: dir.Name, size: totalSize, count: totalCount,
-			pendingCount: pendCount, pendingSize: pendSize, latestTime: latest,
+			pendingCount: pendCount, pendingSize: pendSize,
+			latestTime: latest, latestWriteTime: latestWrite,
 		})
 	}
 
@@ -282,9 +296,14 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 	for _, si := range infos {
 		totalPendingCount += si.pendingCount
 		totalPendingSize += si.pendingSize
+		isLive := !si.latestWriteTime.IsZero() && now.Sub(si.latestWriteTime) < liveActiveWindow
+		displayTime := si.latestTime
+		if isLive && si.latestWriteTime.After(displayTime) {
+			displayTime = si.latestWriteTime
+		}
 		var mtime int64
-		if !si.latestTime.IsZero() {
-			mtime = si.latestTime.Unix()
+		if !displayTime.IsZero() {
+			mtime = displayTime.Unix()
 		}
 		var rule config.StreamerRule
 		hasRule := false
@@ -298,6 +317,7 @@ func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
 			"size_bytes": si.size,
 			"size_gb":    round2(float64(si.size) / 1073741824),
 			"mtime":      mtime,
+			"is_live":    isLive,
 			"rule":       rule,
 			"has_rule":   hasRule,
 		})

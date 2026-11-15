@@ -58,7 +58,7 @@
                 :class="row.status === 'fail' ? 'dot-fail' : (row.status === 'partial' ? 'dot-warn' : 'dot-emerald')"
                 :title="row.status === 'fail' ? '执行失败' : (row.status === 'partial' ? '部分完成' : '执行成功')"
               ></span>
-              <span class="recent-time">{{ formatShortTime(row.time) }}</span>
+              <span class="recent-time" :title="row.time">{{ formatSemanticTime(row.time, currentNow) }}</span>
             </div>
           </div>
         </div>
@@ -68,17 +68,26 @@
 </template>
 
 <script setup lang="ts">
-import { cleanDetailText, formatHistoryDetail as formatDetail } from "@/utils/format";
+import { ref, onMounted, onUnmounted } from "vue";
+import { cleanDetailText, formatHistoryDetail as formatDetail, formatSemanticTime } from "@/utils/format";
 import type { HistoryRecord } from "@/api/types";
 
 defineProps<{
   recentHistory: HistoryRecord[];
 }>();
 
-function formatShortTime(t?: string): string {
-  if (!t || t.length < 16) return "";
-  return t.slice(11, 16);
-}
+const currentNow = ref(new Date());
+let timer: number | undefined;
+
+onMounted(() => {
+  timer = window.setInterval(() => {
+    currentNow.value = new Date();
+  }, 60_000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+});
 </script>
 
 <style scoped>
@@ -259,6 +268,8 @@ function formatShortTime(t?: string): string {
 .recent-time {
   font-size: 11px;
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   color: var(--stone);
 }
 </style>

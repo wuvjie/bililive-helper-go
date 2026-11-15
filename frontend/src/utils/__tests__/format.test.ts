@@ -5,6 +5,7 @@ import {
   formatDisplayDateTime,
   formatExactTime,
   formatRelativeTime,
+  formatSemanticTime,
   cleanDetailText,
   formatHistoryDetail
 } from "../format";
@@ -82,6 +83,36 @@ describe("format utilities", () => {
       const nowSec = Math.floor(Date.now() / 1000);
       const oldTs = nowSec - 86400 * 45;
       expect(formatRelativeTime(oldTs)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+  });
+
+  describe("formatSemanticTime", () => {
+    const fixedNow = new Date(2026, 10, 15, 20, 16, 0); // 2026-11-15 20:16:00
+
+    it("returns empty string for empty input", () => {
+      expect(formatSemanticTime("", fixedNow)).toBe("");
+      expect(formatSemanticTime(undefined, fixedNow)).toBe("");
+    });
+
+    it("formats today's time with 今天 prefix", () => {
+      expect(formatSemanticTime("2026-11-15 04:09:12", fixedNow)).toBe("今天 04:09");
+    });
+
+    it("formats yesterday's time with 昨天 prefix", () => {
+      expect(formatSemanticTime("2026-11-14 07:32:00", fixedNow)).toBe("昨天 07:32");
+    });
+
+    it("formats earlier date in the same year as MM-DD HH:mm", () => {
+      expect(formatSemanticTime("2026-11-12 19:26:45", fixedNow)).toBe("11-12 19:26");
+    });
+
+    it("formats date in a different year as YYYY-MM-DD HH:mm", () => {
+      expect(formatSemanticTime("2025-12-31 23:59:59", fixedNow)).toBe("2025-12-31 23:59");
+    });
+
+    it("handles month boundary correctly when today is day 1", () => {
+      const dec1 = new Date(2026, 11, 1, 9, 0, 0); // 2026-12-01
+      expect(formatSemanticTime("2026-11-30 22:15:00", dec1)).toBe("昨天 22:15");
     });
   });
 

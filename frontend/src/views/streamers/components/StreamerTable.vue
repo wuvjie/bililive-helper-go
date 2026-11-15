@@ -14,7 +14,7 @@
             <span
               class="live-status-dot"
               :class="isStreamerActive(row as StreamerInfo) ? 'dot-recording' : 'dot-idle'"
-              :title="isStreamerActive(row as StreamerInfo) ? '正在录制或近期有新文件' : '暂无新录像（空闲）'"
+              :title="isStreamerActive(row as StreamerInfo) ? '正在录制中（近 5 分钟内文件有持续写入）' : '暂无正在进行的录制（空闲）'"
             />
             <span class="streamer-name">{{ row.name }}</span>
             <span v-if="row.rule?.protected" class="badge-pill badge-protected">
@@ -164,8 +164,9 @@ defineEmits<{
 }>();
 
 function isStreamerActive(row: StreamerInfo): boolean {
+  if (typeof row.is_live === "boolean") return row.is_live;
   if (!row.mtime) return false;
-  return (Date.now() / 1000 - row.mtime) < 1800;
+  return (Date.now() / 1000 - row.mtime) < 300;
 }
 
 function sortMtime(a: StreamerInfo, b: StreamerInfo): number {

@@ -16,6 +16,7 @@ export interface StreamerInfo {
   size_bytes: number;
   size_gb: number;
   mtime: number;
+  is_live?: boolean;
   rule?: StreamerRule;
   has_rule?: boolean;
 }
