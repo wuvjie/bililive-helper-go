@@ -31,7 +31,7 @@
 | POST | `/api/config` | 保存配置（部分更新） |
 | GET | `/api/config/defaults` | 获取默认配置值 |
 | GET | `/api/config/export` | 导出纯净配置备份（含全局策略、调度参数、主播规则） |
-| POST | `/api/config/import` | 导入配置并覆盖恢复 |
+| POST | `/api/config/import` | 导入配置并覆盖恢复（含全局策略、定时调度与主播规则） |
 
 ## 定时调度
 
@@ -45,7 +45,7 @@
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/streamers` | 主播列表（文件数、磁盘占用、最新视频时间、规则信息） |
+| GET | `/api/streamers` | 主播列表（文件数、磁盘占用、最近录像时间、实时录制状态 `is_live`、个性化规则） |
 | GET | `/api/streamers/:name/files` | 指定主播的文件列表（按修改时间倒序） |
 | DELETE | `/api/streamers/:name/files` | 删除指定主播的单个录像文件（级联清理伴生弹幕与封面） |
 | GET | `/api/streamers/:name/play` | 在线视频点播预览（支持 HTTP Range 拖动播放） |
@@ -68,4 +68,4 @@
 | DELETE | `/api/history/:id` | 删除单条历史任务记录 |
 | POST | `/api/history/clear` | 清空全部历史任务记录 |
 | GET | `/api/history/export` | 导出全部历史记录 |
-| GET | `/api/logs/content/:task` | 操作日志内容（`log_id` 参数，返回最近 200 行或 raw 纯文本） |
+| GET | `/api/logs/content/:task` | 操作日志内容（`log_id` 参数，默认返回末尾 200 行，支持 `raw=true` 下载完整原始日志） |

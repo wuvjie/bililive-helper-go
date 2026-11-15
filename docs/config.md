@@ -79,7 +79,7 @@ PORT=5689
 | `MERGE_AGE_MINUTES` | int | 主播关播等待时间（分钟） | 30 |
 | `WHITELIST_KEYWORDS` | []string | 永久免删关键词白名单 | `["留存","纪念","高能","生日","勿删"]` |
 | `SAFE_MODE` | string | 免删保护期模式：`hours` 或 `days` | `hours` |
-| `SAFE_DAYS` | int | 免删保护天数（仅 days 模式） | 1 |
+| `SAFE_DAYS` | int | 免删保护天数（仅 days 模式） | 1（Web 控制台推荐预设为 3） |
 | `MAX_DELETE_PER_RUN` | int | 单次清理上限（个） | 50 |
 | `BACKUP_START_HOUR` | int | 每日避让时段开始小时（起止均为 0 表示关闭） | 0 |
 | `BACKUP_START_MINUTE` | int | 每日避让时段开始分钟 | 0 |
