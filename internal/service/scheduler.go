@@ -304,8 +304,8 @@ func (s *SchedulerService) GetStatus() model.ScheduleStatus {
 
 // SaveSchedule 保存调度配置到文件，并立即通知调度循环重新评估。
 func (s *SchedulerService) SaveSchedule(schedule model.ScheduleConfig) error {
-	schedule.MergeInterval = max(10, min(1440, schedule.MergeInterval))
-	schedule.CleanInterval = max(10, min(1440, schedule.CleanInterval))
+	schedule.MergeInterval = max(10, min(10080, schedule.MergeInterval))
+	schedule.CleanInterval = max(10, min(10080, schedule.CleanInterval))
 
 	file := s.config.GetScheduleFile()
 	data, err := json.MarshalIndent(schedule, "", "  ")

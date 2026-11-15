@@ -127,12 +127,14 @@ describe("format utilities", () => {
     });
 
     it("normalizes no-change config messages", () => {
-      expect(cleanDetailText("配置未改动")).toBe("重新应用当前配置 (无参数改动)");
-      expect(cleanDetailText("无变更")).toBe("重新应用当前配置 (无参数改动)");
+      expect(cleanDetailText("配置未改动")).toBe("重新应用当前配置（无参数变动）");
+      expect(cleanDetailText("配置未变更")).toBe("重新应用当前配置（无参数变动）");
+      expect(cleanDetailText("无变更")).toBe("重新应用当前配置（无参数变动）");
     });
 
     it("strips prefixes and formats punctuation and arrows", () => {
       expect(cleanDetailText("配置变更: 阈值 80 → 85, 周期 30")).toBe("阈值 80 → 85，周期 30");
+      expect(cleanDetailText("主播规则变更: 自动剪辑: 已启用 (00:05:00~结尾)")).toBe("自动剪辑: 已启用 (00:05:00~结尾)");
       expect(cleanDetailText("清理任务: 释放 1GB")).toBe("释放 1GB");
     });
   });

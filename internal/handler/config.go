@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -77,7 +78,7 @@ func (h *Handler) ExportConfig(c *gin.Context) {
 	schedule := h.scheduler.GetStatus()
 
 	ok(c, gin.H{
-		"version":     "2.0.3",
+		"version":     "2.0.4",
 		"exported_at": time.Now().Format(time.RFC3339),
 		"config":      cfg,
 		"schedule":    schedule,
@@ -112,6 +113,23 @@ func (h *Handler) ImportConfig(c *gin.Context) {
 		return
 	}
 
-	go h.history.Add("config", "", "success", fmt.Sprintf("配置已导入（%d 项）", len(cfgData)), "")
+	// 同步恢复定时调度配置（如备份文件中包含 schedule 字段）
+	scheduleRestored := false
+	if schedData, hasSched := data["schedule"].(map[string]interface{}); hasSched && h.scheduler != nil {
+		if schedJSON, err := json.Marshal(schedData); err == nil {
+			var sched model.ScheduleConfig
+			if err := json.Unmarshal(schedJSON, &sched); err == nil && (sched.MergeInterval > 0 || sched.CleanInterval > 0) {
+				if err := h.scheduler.SaveSchedule(sched); err == nil {
+					scheduleRestored = true
+				}
+			}
+		}
+	}
+
+	detail := fmt.Sprintf("配置已导入（%d 项）", len(cfgData))
+	if scheduleRestored {
+		detail = fmt.Sprintf("配置已导入（%d 项，含定时调度）", len(cfgData))
+	}
+	go h.history.Add("config", "", "success", detail, "")
 	okMsg(c, "配置导入成功")
 }

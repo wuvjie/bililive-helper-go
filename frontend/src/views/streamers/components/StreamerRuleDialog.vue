@@ -27,7 +27,7 @@
                 </el-tooltip>
               </span>
               <span class="status-pill" :class="formRule.trim_enabled ? 'pill-active' : 'pill-default'">
-                {{ formRule.trim_enabled ? '已开启自动剪辑' : '未开启' }}
+                {{ formRule.trim_enabled ? '已启用' : '未启用' }}
               </span>
             </div>
           </div>
@@ -341,7 +341,7 @@ const trimSemanticInfo = computed(() => {
   if (endSec !== null && endSec <= startSec) {
     return {
       isInvalid: true,
-      text: `出点时间 (${formRule.value.trim_end}) 必须晚于入点时间 (${formRule.value.trim_start || "00:00:00"})`,
+      text: `截取结束时间 (${formRule.value.trim_end}) 必须晚于截取起始时间 (${formRule.value.trim_start || "00:00:00"})`,
       durationText: "区间无效"
     };
   }

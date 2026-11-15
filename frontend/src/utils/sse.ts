@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import router from "@/router";
+import { useAuthStore } from "@/store/modules/auth";
 
 export interface SSELine {
   time: string;
@@ -54,11 +55,23 @@ export function useSSE() {
 
       if (!res.ok) {
         if (res.status === 401) {
+          useAuthStore().markUnauthenticated();
           router.push("/login");
           return;
         }
         const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
+        let errMsg = text;
+        if (text) {
+          try {
+            const parsed = JSON.parse(text);
+            if (parsed && typeof parsed === "object") {
+              errMsg = parsed.error || parsed.message || text;
+            }
+          } catch {
+            // 非 JSON 文本保留原始内容
+          }
+        }
+        throw new Error(errMsg || `HTTP ${res.status}`);
       }
 
       if (!res.body) {

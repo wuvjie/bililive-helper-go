@@ -114,7 +114,7 @@
               <el-dropdown-menu class="nav-dropdown-menu">
                 <div class="user-dropdown-header">
                   <div class="user-dropdown-title">系统管理员</div>
-                  <div class="user-dropdown-sub">版本 v2.0.3 (Release)</div>
+                  <div class="user-dropdown-sub">版本 v2.0.4 (Release)</div>
                 </div>
                 <el-dropdown-item command="change-password" divided>
                   <span class="dropdown-item-flex">
@@ -170,7 +170,7 @@
     <PasswordDialog v-model:visible="pwDialogVisible" v-model:saving="pwSaving" />
 
     <!-- Configuration backup & restore dialog -->
-    <BackupDialog v-model:visible="backupDialogVisible" />
+    <BackupDialog v-model:visible="backupDialogVisible" @imported="refreshPage" />
   </div>
 </template>
 
@@ -305,11 +305,13 @@ onMounted(() => {
   window.addEventListener("keydown", handleGlobalKeydown);
   appStore.applyTheme();
 });
+
+const removeAfterEach = router.afterEach(() => fetchDiskStatus());
+
 onUnmounted(() => {
   window.removeEventListener("keydown", handleGlobalKeydown);
+  removeAfterEach();
 });
-
-router.afterEach(() => fetchDiskStatus());
 </script>
 
 <style lang="scss" scoped>

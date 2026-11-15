@@ -184,7 +184,7 @@ func setupRouter(cfg *config.Config, h *handler.Handler) (*gin.Engine, func()) {
 	r.Use(sessions.Sessions("session", store))
 	r.Use(middleware.SecurityHeaders())
 
-	r.LoadHTMLFiles("templates/login.html")
+
 
 	// 注册所有路由（从 routes.go 集中管理）
 	cleanup := handler.RegisterRoutes(r, h, cfg)

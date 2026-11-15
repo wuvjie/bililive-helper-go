@@ -257,11 +257,23 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 				return items[i].Datetime.Before(items[j].Datetime)
 			})
 
-			// 对每个文件并发用 ffprobe 探测实际时长，计算结束时间
-			// 使用带缓冲 channel 作为 semaphore 限制并发数为 4
+			// 仅当同一 key 有多个文件且相邻文件开播时间相距 ≤ 12 小时时才用 ffprobe 探测实际时长，
+			// 避免孤立的单个 MP4 或跨天独立场次触发无意义的 ffprobe 子进程。
 			var wg sync.WaitGroup
 			sem := make(chan struct{}, 4)
 			for i := range items {
+				needProbe := false
+				if len(items) > 1 {
+					if i+1 < len(items) && items[i+1].Datetime.Sub(items[i].Datetime) <= 12*time.Hour {
+						needProbe = true
+					} else if i > 0 && items[i].Datetime.Sub(items[i-1].Datetime) <= 12*time.Hour {
+						needProbe = true
+					}
+				}
+				if !needProbe {
+					items[i].EndTime = items[i].Datetime
+					continue
+				}
 				wg.Add(1)
 				sem <- struct{}{} // 获取信号量槽位
 				go func(idx int) {
@@ -334,6 +346,11 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 						}
 						s.logger.Info(fmt.Sprintf("[%s] ⚠ %s → 输出文件损坏，将重新合并", entry.Name(), filepath.Base(actualOutputPath)))
 					}
+					continue
+				}
+
+				// 独立的单个 .mp4 无需转换或合并，直接跳过避免无意义的 ProbeHealth 调用
+				if len(batch) == 1 && strings.EqualFold(filepath.Ext(batch[0].Name), ".mp4") {
 					continue
 				}
 

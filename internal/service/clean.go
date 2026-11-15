@@ -89,9 +89,12 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 		setup.OpLog.Log(fmt.Sprintf("▶ %s 清理", setup.Tag))
 	}
 
-	needToFree := s.calculateNeedToFree(disk, cfg)
-	if needToFree > 0 {
-		progress(fmt.Sprintf("📊 预计需释放 %s 磁盘空间以达到停止阈值 %.0f%%", utils.FormatSize(needToFree), cfg.TargetThreshold))
+	var needToFree int64
+	if streamer == "" {
+		needToFree = s.calculateNeedToFree(disk, cfg)
+		if needToFree > 0 {
+			progress(fmt.Sprintf("📊 预计需释放 %s 磁盘空间以达到停止阈值 %.0f%%", utils.FormatSize(needToFree), cfg.TargetThreshold))
+		}
 	}
 
 	candidates, perStreamer := s.collectCandidates(root, streamer, cfg)
@@ -99,8 +102,10 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	// 按主播记录清理摘要日志
 	for name, info := range perStreamer {
 		setup.OpLog.Log(fmt.Sprintf("── %s ──", name))
-		if info.total <= cfg.MinKeepPerStreamer {
-			setup.OpLog.Log(fmt.Sprintf("ℹ [%s] 共 %d 个录像文件，全部保留（处于最少保留场次限制内，≤%d 场）", name, info.total, cfg.MinKeepPerStreamer))
+		if info.protected {
+			setup.OpLog.Log(fmt.Sprintf("ℹ [%s] 共 %d 个录像文件，全部保留（已开启主播免删保护）", name, info.total))
+		} else if info.total <= info.minKeep {
+			setup.OpLog.Log(fmt.Sprintf("ℹ [%s] 共 %d 个录像文件，全部保留（处于最少保留场次限制内，≤%d 场）", name, info.total, info.minKeep))
 		} else if info.skipped > 0 {
 			setup.OpLog.Log(fmt.Sprintf("ℹ [%s] 共 %d 个录像文件，%d 个待清理，%d 个跳过（受关键词白名单或免删保护期保护）", name, info.total, info.candidate, info.skipped))
 		} else {
@@ -122,10 +127,10 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	progress(fmt.Sprintf("ℹ 发现 %d 个待清理的候选录像文件", len(candidates)))
 
 	sort.Slice(candidates, func(i, j int) bool {
-		iMerged := utils.IsMergedFile(candidates[i].Name)
-		jMerged := utils.IsMergedFile(candidates[j].Name)
-		if iMerged != jMerged {
-			return iMerged
+		iCompleted := utils.IsMergedFile(candidates[i].Name) || strings.EqualFold(filepath.Ext(candidates[i].Name), ".mp4")
+		jCompleted := utils.IsMergedFile(candidates[j].Name) || strings.EqualFold(filepath.Ext(candidates[j].Name), ".mp4")
+		if iCompleted != jCompleted {
+			return iCompleted
 		}
 		return candidates[i].Mtime < candidates[j].Mtime
 	})
@@ -186,10 +191,25 @@ type streamerStats struct {
 	total     int
 	candidate int
 	skipped   int
+	minKeep   int
+	protected bool
+}
+
+func resolveStreamerCleanPolicy(cfg config.Config, streamerName string) (minKeep int, protected bool) {
+	minKeep = cfg.MinKeepPerStreamer
+	if rule, ok := cfg.StreamerRules[streamerName]; ok {
+		if rule.Protected {
+			return minKeep, true
+		}
+		if rule.MinKeep > 0 {
+			minKeep = rule.MinKeep
+		}
+	}
+	return minKeep, false
 }
 
 // collectCandidates 扫描所有主播目录，收集可清理的候选文件。
-// 返回候选文件列表和每个主播的统计信息（总数、候选数、跳过数）。
+// 返回候选文件列表和每个主播的统计信息（总数、候选数、跳过数及个性化策略）。
 func (s *CleanService) collectCandidates(root, streamer string, cfg config.Config) ([]candidateFile, map[string]streamerStats) {
 	var candidates []candidateFile
 	perStreamer := make(map[string]streamerStats)
@@ -212,10 +232,17 @@ func (s *CleanService) collectCandidates(root, streamer string, cfg config.Confi
 		candidates = append(candidates, streamerCandidates...)
 		after := len(candidates)
 		total := s.countVideos(dir.Path)
+		minKeep, protected := resolveStreamerCleanPolicy(cfg, dir.Name)
+		skipped := max(0, total-(after-before)-min(total, minKeep))
+		if protected {
+			skipped = total
+		}
 		perStreamer[dir.Name] = streamerStats{
 			total:     total,
 			candidate: after - before,
-			skipped:   max(0, total-(after-before)-min(total, cfg.MinKeepPerStreamer)),
+			skipped:   skipped,
+			minKeep:   minKeep,
+			protected: protected,
 		}
 	}
 	return candidates, perStreamer
@@ -237,17 +264,10 @@ func (s *CleanService) countVideos(folder string) int {
 
 // collectStreamerCandidates 收集单个主播目录下的可清理候选文件。
 // 应用保底数量、白名单过滤和安全期保护规则。
-// collectStreamerCandidates 收集指定主播目录下的候选清理文件。
-// 返回值替代原 *[]candidateFile 指针传参模式，数据流更清晰。
 func (s *CleanService) collectStreamerCandidates(folder, streamerName string, cfg config.Config) []candidateFile {
-	minKeep := cfg.MinKeepPerStreamer
-	if rule, ok := cfg.StreamerRules[streamerName]; ok {
-		if rule.Protected {
-			return nil // 免清理保护生效
-		}
-		if rule.MinKeep > 0 {
-			minKeep = rule.MinKeep
-		}
+	minKeep, protected := resolveStreamerCleanPolicy(cfg, streamerName)
+	if protected {
+		return nil // 免清理保护生效
 	}
 	wl := cfg.WhitelistKeywords
 

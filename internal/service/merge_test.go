@@ -302,7 +302,7 @@ func TestBuildDetail_SeparateConvertAndMergeSizes(t *testing.T) {
 	t.Run("convert_only", func(t *testing.T) {
 		convertBytes := int64(256 * mib)
 		got := buildDetail(2, 0, 0, nil, convertBytes, 0)
-		want := "转换 2 个FLV (" + utils.FormatSize(convertBytes) + ")"
+		want := "转换 2 个 FLV (" + utils.FormatSize(convertBytes) + ")"
 		if got != want {
 			t.Fatalf("got %q, want %q", got, want)
 		}
@@ -322,7 +322,7 @@ func TestBuildDetail_SeparateConvertAndMergeSizes(t *testing.T) {
 		mergeBytes := int64(2 * gib)
 		reasons := map[string]int{"输出校验失败": 1}
 		got := buildDetail(1, 2, 1, reasons, convertBytes, mergeBytes)
-		want := "转换 1 个FLV (" + utils.FormatSize(convertBytes) + "), 合并 2 场次 (" + utils.FormatSize(mergeBytes) + "), 失败 1 项(输出校验失败 x1)"
+		want := "转换 1 个 FLV (" + utils.FormatSize(convertBytes) + "), 合并 2 场次 (" + utils.FormatSize(mergeBytes) + "), 失败 1 项(输出校验失败 ×1)"
 		if got != want {
 			t.Fatalf("got %q, want %q", got, want)
 		}

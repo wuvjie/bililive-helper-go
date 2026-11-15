@@ -10,8 +10,8 @@
         </div>
         <span class="card-title-main">后台定时任务与执行状态</span>
         <span class="monitor-mode-tag" :class="isTaskRunning ? 'tag-running' : 'tag-in-service'">
-          <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : 'dot-in-service'"></span>
-          {{ isTaskRunning ? '正在执行任务' : '定时调度运行中' }}
+          <span class="status-pulse-dot" :class="isTaskRunning ? 'dot-active' : isAnyScheduleEnabled ? 'dot-in-service' : 'dot-disabled'"></span>
+          {{ isTaskRunning ? '正在执行任务' : isAnyScheduleEnabled ? '定时调度运行中' : '定时调度已停用' }}
         </span>
       </div>
       <router-link to="/tasks" class="card-header-action" title="前往任务中心查看实时执行日志">
@@ -32,7 +32,7 @@
         </div>
         <div class="runtime-subline">
           <span class="runtime-subtext">
-            {{ isTaskRunning ? '后台正在执行录像合并或磁盘清理任务，前往任务中心可查看实时执行日志' : '后台定时任务已就绪，将按设定的周期自动执行' }}
+            {{ isTaskRunning ? '后台正在执行录像合并或磁盘清理任务，前往任务中心可查看实时执行日志' : isAnyScheduleEnabled ? '后台定时任务已就绪，将按设定的周期自动执行' : '自动合并与自动清理均已停用，当前仅支持手动触发执行' }}
           </span>
         </div>
       </div>
@@ -41,7 +41,7 @@
         <div class="data-cell">
           <span class="data-label">自动合并周期</span>
           <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.merge_enabled }">
-            {{ detail?.schedule?.merge_enabled ? ('每 ' + (detail?.schedule?.merge_interval || 360) + ' 分钟') : '已暂停' }}
+            {{ detail?.schedule?.merge_enabled ? ('每 ' + (detail?.schedule?.merge_interval || 360) + ' 分钟') : '已停用' }}
           </span>
         </div>
         <div class="data-cell">
@@ -53,7 +53,7 @@
         <div class="data-cell">
           <span class="data-label">自动清理周期</span>
           <span class="mono-val" :class="{ 'val-disabled': !detail?.schedule?.clean_enabled }">
-            {{ detail?.schedule?.clean_enabled ? ('每 ' + (detail?.schedule?.clean_interval || 720) + ' 分钟') : '未开启' }}
+            {{ detail?.schedule?.clean_enabled ? ('每 ' + (detail?.schedule?.clean_interval || 720) + ' 分钟') : '已停用' }}
           </span>
         </div>
         <div class="data-cell">
@@ -84,6 +84,10 @@ const isTaskRunning = computed(() => {
   );
 });
 
+const isAnyScheduleEnabled = computed(() => {
+  return Boolean(props.detail?.schedule?.merge_enabled || props.detail?.schedule?.clean_enabled);
+});
+
 function formatNextTime(ts?: number): string {
   if (!ts || ts <= 0) return "未安排";
   const date = new Date(ts * 1000);
@@ -97,11 +101,11 @@ function formatNextTime(ts?: number): string {
   const timeStr = `${hours}:${mins}`;
 
   const isToday = date.toDateString() === now.toDateString();
-  if (isToday) return `今日 ${timeStr}`;
+  if (isToday) return `今天 ${timeStr}`;
 
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  if (date.toDateString() === tomorrow.toDateString()) return `明日 ${timeStr}`;
+  if (date.toDateString() === tomorrow.toDateString()) return `明天 ${timeStr}`;
 
   return `${date.getMonth() + 1}/${date.getDate()} ${timeStr}`;
 }
@@ -172,6 +176,9 @@ function formatNextTime(ts?: number): string {
 }
 .dot-in-service {
   background: #10b981;
+}
+.dot-disabled {
+  background: var(--stone, #9ca3af);
 }
 
 @keyframes schedPulse {

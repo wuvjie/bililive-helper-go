@@ -78,10 +78,10 @@ export function cleanDetailText(raw: string, _task?: string): string {
     const params = s.replace(/^调度已保存[:：]\s*/, "");
     return `重新应用当前调度（${params}，无参数变动）`;
   }
-  if (s === "配置未改动" || s === "无变更") {
-    return "重新应用当前配置 (无参数改动)";
+  if (s === "配置未改动" || s === "配置未变更" || s === "无变更") {
+    return "重新应用当前配置（无参数变动）";
   }
-  s = s.replace(/^(调度变更|配置变更|系统配置变更|合并任务|清理任务)[:：]\s*/, "");
+  s = s.replace(/^(调度变更|配置变更|系统配置变更|主播规则变更|合并任务|清理任务)[:：]\s*/, "");
   s = s.replace(/([^\s]+)\s*→\s*([^\s]+)/g, "$1 → $2");
   s = s.replace(/,\s*/g, "，");
   return s;

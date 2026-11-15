@@ -109,7 +109,7 @@ func AuthRequired(cfg *config.Config) gin.HandlerFunc {
 					c.Abort()
 					return
 				}
-				c.Redirect(http.StatusFound, "/login")
+				c.Redirect(http.StatusFound, "/#/login")
 				c.Abort()
 				return
 			}
@@ -135,7 +135,7 @@ func AuthRequired(cfg *config.Config) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		c.Redirect(http.StatusFound, "/login")
+		c.Redirect(http.StatusFound, "/#/login")
 		c.Abort()
 	}
 }

@@ -81,6 +81,7 @@ const props = defineProps<{
   visible: boolean;
   title: string;
   status: string;
+  task?: string;
   logId?: string;
   loading: boolean;
   content: string;
@@ -99,6 +100,7 @@ const filteredLogLines = computed<FormattedLogLine[]>(() => {
   if (!props.content) return [];
   const rawLines = props.content.split("\n");
   return rawLines.map(line => {
+    const stripped = line.replace(/^\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\]\s*/, "").trim();
     let typeClass = "line-info";
     if (/❌|错误|失败|error|failed|fatal/i.test(line)) {
       typeClass = "line-error";
@@ -106,7 +108,7 @@ const filteredLogLines = computed<FormattedLogLine[]>(() => {
       typeClass = "line-warn";
     } else if (/✅|完成|成功|success|done/i.test(line)) {
       typeClass = "line-success";
-    } else if (/^[─═=—\-\s]{3,}$/.test(line.trim())) {
+    } else if (/^[─═=—\-\s]{3,}$/.test(stripped)) {
       typeClass = "line-divider";
     } else if (/📊 结果摘要|▶ 开始/i.test(line)) {
       typeClass = "line-header";
@@ -115,13 +117,34 @@ const filteredLogLines = computed<FormattedLogLine[]>(() => {
   });
 });
 
-function downloadRawLog() {
-  const c = props.content;
-  if (!c) {
+async function downloadRawLog() {
+  let content = props.content;
+  if (props.task && props.logId) {
+    try {
+      const res = await fetch(
+        `/api/logs/content/${encodeURIComponent(props.task)}?log_id=${encodeURIComponent(props.logId)}&raw=true`,
+        { credentials: "same-origin" }
+      );
+      if (res.ok) {
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("application/json")) {
+          const parsed = await res.json();
+          if (parsed?.content) {
+            content = parsed.content;
+          }
+        } else {
+          content = await res.text();
+        }
+      }
+    } catch {
+      // 网络失败时回退使用已加载的日志预览内容
+    }
+  }
+  if (!content) {
     ElMessage.warning("暂无日志内容可供下载");
     return;
   }
-  const blob = new Blob([c], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

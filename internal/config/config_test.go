@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+	"sync"
 	"testing"
 )
 
@@ -233,6 +235,7 @@ func TestConfig_StreamerRules_ApplyFromJSON(t *testing.T) {
 // validConfig 返回一个能通过 Validate 的合法配置
 func validConfig() *Config {
 	return &Config{
+		mu:                 &sync.RWMutex{},
 		TriggerThreshold:   90.0,
 		TargetThreshold:    80.0,
 		MinKeepPerStreamer: 3,
@@ -247,5 +250,74 @@ func validConfig() *Config {
 		BackupStartMinute:  0,
 		BackupEndHour:      0,
 		BackupEndMinute:    0,
+	}
+}
+
+func TestDiffDTO(t *testing.T) {
+	oldDTO := ConfigDTO{
+		TriggerThreshold:   80,
+		TargetThreshold:    60,
+		MinKeepPerStreamer: 3,
+		SafeMode:           "hours",
+		SafeDays:           7,
+		SafeAgeMinutes:     120,
+		GapMinutes:         30,
+		MergeAgeMinutes:    30,
+		MaxDeletePerRun:    50,
+	}
+	newDTO := oldDTO
+	newDTO.TriggerThreshold = 85
+	newDTO.TargetThreshold = 65
+	newDTO.MinKeepPerStreamer = 5
+	newDTO.SafeMode = "days"
+	newDTO.SafeDays = 5
+	newDTO.SafeAgeMinutes = 7200
+	newDTO.GapMinutes = 45
+	newDTO.MergeAgeMinutes = 60
+	newDTO.MaxDeletePerRun = 30
+	newDTO.BackupStartHour = 2
+	newDTO.BackupEndHour = 8
+
+	diff := DiffDTO(oldDTO, newDTO)
+	expectedSubs := []string{
+		"触发阈值: 80%→85%",
+		"停止阈值: 60%→65%",
+		"最少保留场次: 3场→5场",
+		"免删保护期: 7天→5天",
+		"断流分段间隔: 30分钟→45分钟",
+		"关播等待时间: 30分钟→60分钟",
+		"单次清理上限: 50个→30个",
+		"避让时段: 0:00-0:00→2:00-8:00",
+	}
+	for _, sub := range expectedSubs {
+		if !strings.Contains(diff, sub) {
+			t.Errorf("DiffDTO 缺少期望内容 %q，实际输出: %s", sub, diff)
+		}
+	}
+	if strings.Contains(diff, "安全模式") || strings.Contains(diff, "7200") {
+		t.Errorf("DiffDTO 不应重复输出 SafeAgeMinutes 或 SafeMode，实际输出: %s", diff)
+	}
+}
+
+func TestDiffStreamerRule(t *testing.T) {
+	// 1. 新建开启自动剪辑与免删保护
+	d1 := DiffStreamerRule(StreamerRule{}, StreamerRule{
+		TrimEnabled: true,
+		TrimStart:   "00:05:00",
+		TrimEnd:     "",
+		Protected:   true,
+	}, false)
+	if !strings.Contains(d1, "自动剪辑: 已启用 (00:05:00~结尾)") || !strings.Contains(d1, "免删保护: 已启用") {
+		t.Errorf("新建规则变更摘要不符合预期: %s", d1)
+	}
+
+	// 2. 修改剪辑区间与关闭免删保护
+	d2 := DiffStreamerRule(
+		StreamerRule{TrimEnabled: true, TrimStart: "00:05:00", TrimEnd: "", Protected: true},
+		StreamerRule{TrimEnabled: true, TrimStart: "00:10:00", TrimEnd: "01:30:00", Protected: false},
+		true,
+	)
+	if !strings.Contains(d2, "剪辑区间: 00:05:00~结尾→00:10:00~01:30:00") || !strings.Contains(d2, "免删保护: 已停用") {
+		t.Errorf("更新规则变更摘要不符合预期: %s", d2)
 	}
 }

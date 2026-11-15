@@ -74,7 +74,7 @@
             sortable
           >
             <template #default="{ row }">
-              <el-tooltip :content="row.is_merged ? '已完成合并的完整录像成片' : '录制生成的原始分片文件，等待后台合并'" placement="top" :show-after="500">
+              <el-tooltip :content="row.is_merged ? '已完成合并或单场直录的完整录像成片' : '录制生成的原始分片文件，等待后台合并'" placement="top" :show-after="500">
                 <span class="file-status-badge" :class="row.is_merged ? 'status-merged' : 'status-raw'">
                   <span class="badge-dot"></span>
                   {{ row.is_merged ? '已合并成片' : '未合并分片' }}

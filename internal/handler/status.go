@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"bililive-helper-go/internal/config"
@@ -221,6 +222,57 @@ func (h *Handler) GetStreamers(c *gin.Context) {
 // liveActiveWindow 判定主播是否正在录制的磁盘文件活跃时间窗口（与后台扫描器保持一致）。
 const liveActiveWindow = 5 * time.Minute
 
+func videoSessionKey(name string) string {
+	if key, dt, ok := utils.ParseFilename(name); ok {
+		return key + "|" + dt.Format("2006-01-02")
+	}
+	return "raw|" + name
+}
+
+// buildStandaloneMP4Set 识别目录中已结束写入且无需合并的单场次独立 MP4 文件。
+// 这类文件通常是单分片 FLV 转换后的成片（不含 "-合并版" 后缀），满足：
+// 1) 扩展名为 .mp4 且未带 "-合并版" 标记；
+// 2) 磁盘最后修改时间已超出 liveActiveWindow；
+// 3) 同目录同场次不存在其他未合并视频文件。
+func buildStandaloneMP4Set(entries []os.DirEntry, now time.Time) map[string]bool {
+	sessionCount := make(map[string]int)
+	type mp4Candidate struct {
+		name       string
+		sessionKey string
+		modTime    time.Time
+	}
+	var candidates []mp4Candidate
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if !utils.IsVideoFile(name) || utils.IsMergedFile(name) {
+			continue
+		}
+		sk := videoSessionKey(name)
+		sessionCount[sk]++
+		if strings.EqualFold(filepath.Ext(name), ".mp4") {
+			if info, err := entry.Info(); err == nil && info != nil {
+				candidates = append(candidates, mp4Candidate{
+					name:       name,
+					sessionKey: sk,
+					modTime:    info.ModTime(),
+				})
+			}
+		}
+	}
+
+	standalone := make(map[string]bool)
+	for _, c := range candidates {
+		if sessionCount[c.sessionKey] == 1 && now.Sub(c.modTime) > liveActiveWindow {
+			standalone[c.name] = true
+		}
+	}
+	return standalone
+}
+
 // scanAllStreamers 一次性扫描所有主播目录，返回主播列表、待合并文件数和总大小。
 // 每个主播包含 name、files、size_bytes、size_gb、mtime（最近视频时间戳）和 is_live（是否正在录制中）。
 func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
@@ -248,6 +300,7 @@ func (h *Handler) scanAllStreamersAt(root string, now time.Time) ([]gin.H, int, 
 		var totalSize, pendSize int64
 		var totalCount, pendCount int
 		var latest, latestWrite time.Time
+		standaloneMP4s := buildStandaloneMP4Set(dir.Files, now)
 		for _, fe := range dir.Files {
 			if fe.IsDir() {
 				continue
@@ -270,9 +323,12 @@ func (h *Handler) scanAllStreamersAt(root string, now time.Time) ([]gin.H, int, 
 			if fileTime.After(latest) {
 				latest = fileTime
 			}
-			if !utils.IsMergedFile(name) {
+			isCompleted := utils.IsMergedFile(name) || standaloneMP4s[name]
+			if !isCompleted {
 				pendSize += info.Size()
 				pendCount++
+			}
+			if !utils.IsMergedFile(name) {
 				// 直播状态必须基于磁盘真实写入时间 ModTime，避免被文件名里的开播时间覆盖导致开播超过 30 分钟熄灭
 				if modTime.After(latestWrite) {
 					latestWrite = modTime
@@ -345,6 +401,7 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 
 	files := []gin.H{}
 	entries, _ := os.ReadDir(folder)
+	standaloneMP4s := buildStandaloneMP4Set(entries, time.Now())
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -368,7 +425,7 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 			"size":      info.Size(),
 			"size_str":  utils.FormatSize(info.Size()),
 			"mtime":     fileTime.Unix(),
-			"is_merged": utils.IsMergedFile(name),
+			"is_merged": utils.IsMergedFile(name) || standaloneMP4s[name],
 		})
 	}
 	// 按修改/录制时间倒序排列（最新的录像文件排在最前）
@@ -424,7 +481,8 @@ func (h *Handler) SaveStreamerRule(c *gin.Context) {
 	normRule.StartTime = ""
 	normRule.EndTime = ""
 
-	if oldRule, exists := h.config.GetStreamerRule(name); exists {
+	oldRule, exists := h.config.GetStreamerRule(name)
+	if exists {
 		if oldRule.Protected == normRule.Protected &&
 			oldRule.MinKeep == normRule.MinKeep &&
 			oldRule.TrimEnabled == normRule.TrimEnabled &&
@@ -440,7 +498,7 @@ func (h *Handler) SaveStreamerRule(c *gin.Context) {
 		fail(c, http.StatusInternalServerError, "保存主播规则失败")
 		return
 	}
-	h.history.Add("config", name, "success", "更新主播录像规则", "")
+	h.history.Add("config", name, "success", config.DiffStreamerRule(oldRule, normRule, exists), "")
 	ok(c, gin.H{"streamer": name, "rule": rule})
 }
 

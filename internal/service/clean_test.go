@@ -217,4 +217,13 @@ func TestCollectCandidates_RespectsStreamerRuleMinKeep(t *testing.T) {
 	if len(result) != 1 {
 		t.Errorf("期望自定义保底后产生 1 个候选，得到 %d", len(result))
 	}
+
+	candidates, perStreamer := svc.collectCandidates(dir, "", cfg)
+	if len(candidates) != 1 {
+		t.Errorf("collectCandidates 期望 1 个候选，得到 %d", len(candidates))
+	}
+	stats := perStreamer["streamer_custom_keep"]
+	if stats.total != 4 || stats.candidate != 1 || stats.minKeep != 3 || stats.skipped != 0 || stats.protected {
+		t.Errorf("streamer_custom_keep 统计异常: %+v", stats)
+	}
 }

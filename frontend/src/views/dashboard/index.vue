@@ -211,11 +211,17 @@ async function loadData(isInitial = false) {
   }
 }
 
+let isFirstActivation = true;
+
 onMounted(() => {
   loadData(true);
 });
 
 onActivated(() => {
+  if (isFirstActivation) {
+    isFirstActivation = false;
+    return;
+  }
   loadData(false);
 });
 </script>

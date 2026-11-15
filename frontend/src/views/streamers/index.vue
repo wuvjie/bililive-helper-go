@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, onActivated } from "vue";
+import { ref, computed, onUnmounted, onActivated, onDeactivated } from "vue";
 import { useRouter } from "vue-router";
 import { getStreamers, getStreamerFiles, saveStreamerRule, getVideoPlayUrl, deleteStreamerFile } from "@/api/status";
 import { Search } from "@element-plus/icons-vue";
@@ -227,20 +227,24 @@ async function loadData() {
   }
 }
 
-onMounted(() => {
-  loadData();
-  window.addEventListener("keydown", handleKeydown);
-  tickTimer = setInterval(() => { tick.value++; }, 60_000);
-});
-
-onUnmounted(() => {
+function cleanupListeners() {
   window.removeEventListener("keydown", handleKeydown);
-  if (tickTimer) clearInterval(tickTimer);
-});
+  if (tickTimer) {
+    clearInterval(tickTimer);
+    tickTimer = null;
+  }
+}
 
 onActivated(() => {
   loadData();
+  window.addEventListener("keydown", handleKeydown);
+  if (!tickTimer) {
+    tickTimer = setInterval(() => { tick.value++; }, 60_000);
+  }
 });
+
+onDeactivated(cleanupListeners);
+onUnmounted(cleanupListeners);
 </script>
 
 <style scoped>

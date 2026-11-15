@@ -435,34 +435,40 @@ func DiffDTO(old, new ConfigDTO) string {
 			changes = append(changes, fmt.Sprintf("%s: %s→%s", label, a, b))
 		}
 	}
-	addFloat := func(label string, a, b float64) {
+	addPct := func(label string, a, b float64) {
 		if a != b {
-			changes = append(changes, fmt.Sprintf("%s: %.0f→%.0f", label, a, b))
+			changes = append(changes, fmt.Sprintf("%s: %g%%→%g%%", label, a, b))
 		}
 	}
-	addInt := func(label string, a, b int) {
+	addUnitInt := func(label string, a, b int, unit string) {
 		if a != b {
-			changes = append(changes, fmt.Sprintf("%s: %d→%d", label, a, b))
+			changes = append(changes, fmt.Sprintf("%s: %d%s→%d%s", label, a, unit, b, unit))
 		}
 	}
 
 	addStr("目录", filepath.Base(old.TargetDir), filepath.Base(new.TargetDir))
-	addFloat("触发阈值", old.TriggerThreshold, new.TriggerThreshold)
-	addFloat("目标阈值", old.TargetThreshold, new.TargetThreshold)
-	addInt("保底数量", old.MinKeepPerStreamer, new.MinKeepPerStreamer)
-	addInt("安全期", old.SafeAgeMinutes, new.SafeAgeMinutes)
-	addInt("间隔", old.GapMinutes, new.GapMinutes)
-	addInt("合并等待", old.MergeAgeMinutes, new.MergeAgeMinutes)
-	addStr("安全模式", old.SafeMode, new.SafeMode)
-	addInt("安全期天数", old.SafeDays, new.SafeDays)
-	addInt("单次删除上限", old.MaxDeletePerRun, new.MaxDeletePerRun)
-	addInt("端口", old.Port, new.Port)
+	addPct("触发阈值", old.TriggerThreshold, new.TriggerThreshold)
+	addPct("停止阈值", old.TargetThreshold, new.TargetThreshold)
+	addUnitInt("最少保留场次", old.MinKeepPerStreamer, new.MinKeepPerStreamer, "场")
+	if new.SafeMode == "days" || old.SafeDays != new.SafeDays {
+		if old.SafeDays != new.SafeDays {
+			changes = append(changes, fmt.Sprintf("免删保护期: %d天→%d天", old.SafeDays, new.SafeDays))
+		} else if old.SafeMode != new.SafeMode {
+			changes = append(changes, fmt.Sprintf("免删保护期: %d分钟→%d天", old.SafeAgeMinutes, new.SafeDays))
+		}
+	} else if old.SafeAgeMinutes != new.SafeAgeMinutes {
+		changes = append(changes, fmt.Sprintf("免删保护期: %d分钟→%d分钟", old.SafeAgeMinutes, new.SafeAgeMinutes))
+	}
+	addUnitInt("断流分段间隔", old.GapMinutes, new.GapMinutes, "分钟")
+	addUnitInt("关播等待时间", old.MergeAgeMinutes, new.MergeAgeMinutes, "分钟")
+	addUnitInt("单次清理上限", old.MaxDeletePerRun, new.MaxDeletePerRun, "个")
+	addUnitInt("端口", old.Port, new.Port, "")
 	addStr("日志目录", filepath.Base(old.LogDir), filepath.Base(new.LogDir))
 
 	// 复合字段特殊处理
 	if old.BackupStartHour != new.BackupStartHour || old.BackupStartMinute != new.BackupStartMinute ||
 		old.BackupEndHour != new.BackupEndHour || old.BackupEndMinute != new.BackupEndMinute {
-		changes = append(changes, fmt.Sprintf("静默时段: %d:%02d-%d:%02d→%d:%02d-%d:%02d",
+		changes = append(changes, fmt.Sprintf("避让时段: %d:%02d-%d:%02d→%d:%02d-%d:%02d",
 			old.BackupStartHour, old.BackupStartMinute, old.BackupEndHour, old.BackupEndMinute,
 			new.BackupStartHour, new.BackupStartMinute, new.BackupEndHour, new.BackupEndMinute))
 	}
@@ -549,4 +555,47 @@ func (c *Config) ToDTOSnapshot() ConfigDTO {
 	var dto ConfigDTO
 	json.Unmarshal(data, &dto)
 	return dto
+}
+
+// DiffStreamerRule 比较单个主播规则变更，返回人类可读的变更描述。
+func DiffStreamerRule(oldRule, newRule StreamerRule, existed bool) string {
+	boolStr := func(b bool) string {
+		if b {
+			return "已启用"
+		}
+		return "已停用"
+	}
+	formatRange := func(r StreamerRule) string {
+		start := r.TrimStart
+		if start == "" {
+			start = "00:00:00"
+		}
+		end := r.TrimEnd
+		if end == "" {
+			end = "结尾"
+		}
+		return start + "~" + end
+	}
+	var parts []string
+	if !existed || oldRule.TrimEnabled != newRule.TrimEnabled {
+		if newRule.TrimEnabled {
+			parts = append(parts, fmt.Sprintf("自动剪辑: 已启用 (%s)", formatRange(newRule)))
+		} else if existed {
+			parts = append(parts, "自动剪辑: 已停用")
+		}
+	} else if newRule.TrimEnabled && (oldRule.TrimStart != newRule.TrimStart || oldRule.TrimEnd != newRule.TrimEnd) {
+		parts = append(parts, fmt.Sprintf("剪辑区间: %s→%s", formatRange(oldRule), formatRange(newRule)))
+	}
+	if !existed || oldRule.Protected != newRule.Protected {
+		if newRule.Protected || existed {
+			parts = append(parts, fmt.Sprintf("免删保护: %s", boolStr(newRule.Protected)))
+		}
+	}
+	if (!existed && newRule.MinKeep > 0) || (existed && oldRule.MinKeep != newRule.MinKeep) {
+		parts = append(parts, fmt.Sprintf("最少保留: %d场→%d场", oldRule.MinKeep, newRule.MinKeep))
+	}
+	if len(parts) == 0 {
+		return "更新主播录像规则"
+	}
+	return "主播规则变更: " + strings.Join(parts, ", ")
 }

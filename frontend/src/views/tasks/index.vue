@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onActivated, onDeactivated } from "vue";
+import { ref, computed, watch, onActivated, onDeactivated } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { getStreamers } from "@/api/status";
@@ -132,7 +132,6 @@ async function loadBaseData() {
   }
 }
 
-onMounted(loadBaseData);
 onActivated(loadBaseData);
 
 // 任务完成时刷新基础数据

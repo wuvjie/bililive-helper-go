@@ -96,3 +96,61 @@ func TestScanAllStreamersAt_LiveDetection(t *testing.T) {
 		t.Errorf("主播D is_live = true when only merged file is recent, want false")
 	}
 }
+
+func TestScanAllStreamersAt_StandaloneMP4(t *testing.T) {
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	h := &Handler{config: &cfg}
+
+	loc := time.FixedZone("CST", 8*3600)
+	now := time.Date(2026, 6, 1, 12, 0, 0, 0, loc)
+
+	writeVideo := func(streamer, filename string, size int, modTime time.Time) {
+		t.Helper()
+		dir := filepath.Join(root, streamer)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatalf("mkdir %s: %v", dir, err)
+		}
+		path := filepath.Join(dir, filename)
+		if err := os.WriteFile(path, make([]byte, size), 0644); err != nil {
+			t.Fatalf("write %s: %v", path, err)
+		}
+		if err := os.Chtimes(path, modTime, modTime); err != nil {
+			t.Fatalf("chtimes %s: %v", path, err)
+		}
+	}
+
+	// 单文件 FLV 转出的已完成 .mp4（超出 5 分钟活跃窗口、同场次仅 1 个文件）-> 计为成片，不算待合并分片
+	writeVideo("主播E", "[2026-06-01 09-00-00][1005][单场回放].mp4", 4096, now.Add(-15*time.Minute))
+
+	// 正在写入的 .mp4（在 5 分钟活跃窗口内）-> 仍处于录制/待处理状态且 is_live=true
+	writeVideo("主播F", "[2026-06-01 11-50-00][1006][直播直录].mp4", 2048, now.Add(-1*time.Minute))
+
+	// 同日同场次有多个 .mp4 分片（即使已停止写入 > 5 分钟）-> 仍需合并，均计入 pending
+	writeVideo("主播G", "[2026-06-01 08-00-00][1007][多分片].mp4", 1024, now.Add(-30*time.Minute))
+	writeVideo("主播G", "[2026-06-01 08-30-00][1007][多分片].mp4", 1024, now.Add(-20*time.Minute))
+
+	streamers, pendingCount, pendingSize := h.scanAllStreamersAt(root, now)
+	if len(streamers) != 3 {
+		t.Fatalf("expected 3 streamers, got %d", len(streamers))
+	}
+	if pendingCount != 3 {
+		t.Fatalf("expected pendingCount=3 (1 live mp4 + 2 multipart mp4), got %d", pendingCount)
+	}
+	if pendingSize != 2048+1024+1024 {
+		t.Fatalf("expected pendingSize=%d, got %d", 2048+1024+1024, pendingSize)
+	}
+
+	byName := make(map[string]map[string]any, len(streamers))
+	for _, s := range streamers {
+		name, _ := s["name"].(string)
+		byName[name] = s
+	}
+	if gotLive, _ := byName["主播E"]["is_live"].(bool); gotLive {
+		t.Errorf("主播E is_live = true for idle standalone mp4, want false")
+	}
+	if gotLive, _ := byName["主播F"]["is_live"].(bool); !gotLive {
+		t.Errorf("主播F is_live = false for active mp4, want true")
+	}
+}

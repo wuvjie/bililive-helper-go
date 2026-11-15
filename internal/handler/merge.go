@@ -191,24 +191,31 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 		return
 	}
 
+	newStatus := h.scheduler.GetStatus()
 	go func() {
+		boolLabel := func(b bool) string {
+			if b {
+				return "已启用"
+			}
+			return "已停用"
+		}
 		var changes []string
-		if oldStatus.MergeInterval != req.MergeInterval {
-			changes = append(changes, fmt.Sprintf("合并间隔: %d→%d分钟", oldStatus.MergeInterval, req.MergeInterval))
+		if oldStatus.MergeInterval != newStatus.MergeInterval {
+			changes = append(changes, fmt.Sprintf("合并周期: %d分钟→%d分钟", oldStatus.MergeInterval, newStatus.MergeInterval))
 		}
-		if oldStatus.CleanInterval != req.CleanInterval {
-			changes = append(changes, fmt.Sprintf("清理间隔: %d→%d分钟", oldStatus.CleanInterval, req.CleanInterval))
+		if oldStatus.CleanInterval != newStatus.CleanInterval {
+			changes = append(changes, fmt.Sprintf("清理周期: %d分钟→%d分钟", oldStatus.CleanInterval, newStatus.CleanInterval))
 		}
-		if oldStatus.MergeEnabled != req.MergeEnabled {
-			changes = append(changes, fmt.Sprintf("自动合并: %v→%v", oldStatus.MergeEnabled, req.MergeEnabled))
+		if oldStatus.MergeEnabled != newStatus.MergeEnabled {
+			changes = append(changes, fmt.Sprintf("自动合并: %s→%s", boolLabel(oldStatus.MergeEnabled), boolLabel(newStatus.MergeEnabled)))
 		}
-		if oldStatus.CleanEnabled != req.CleanEnabled {
-			changes = append(changes, fmt.Sprintf("自动清理: %v→%v", oldStatus.CleanEnabled, req.CleanEnabled))
+		if oldStatus.CleanEnabled != newStatus.CleanEnabled {
+			changes = append(changes, fmt.Sprintf("自动清理: %s→%s", boolLabel(oldStatus.CleanEnabled), boolLabel(newStatus.CleanEnabled)))
 		}
 		if backupChanged {
 			newCfg := h.config.ToDTO()
 			if oldCfg.BackupStartHour != newCfg.BackupStartHour || oldCfg.BackupStartMinute != newCfg.BackupStartMinute || oldCfg.BackupEndHour != newCfg.BackupEndHour || oldCfg.BackupEndMinute != newCfg.BackupEndMinute {
-				changes = append(changes, fmt.Sprintf("静默时段: %d:%02d-%d:%02d→%d:%02d-%d:%02d",
+				changes = append(changes, fmt.Sprintf("避让时段: %d:%02d-%d:%02d→%d:%02d-%d:%02d",
 					oldCfg.BackupStartHour, oldCfg.BackupStartMinute, oldCfg.BackupEndHour, oldCfg.BackupEndMinute,
 					newCfg.BackupStartHour, newCfg.BackupStartMinute, newCfg.BackupEndHour, newCfg.BackupEndMinute))
 			}
@@ -219,13 +226,13 @@ func (h *Handler) SaveSchedule(c *gin.Context) {
 			h.history.Add("schedule", "", "success", detail, "")
 		} else {
 			detail := fmt.Sprintf("调度已保存: 合并 %s/%d分钟, 清理 %s/%d分钟",
-				map[bool]string{true: "已启用", false: "已禁用"}[req.MergeEnabled], req.MergeInterval,
-				map[bool]string{true: "已启用", false: "已禁用"}[req.CleanEnabled], req.CleanInterval)
+				boolLabel(newStatus.MergeEnabled), newStatus.MergeInterval,
+				boolLabel(newStatus.CleanEnabled), newStatus.CleanInterval)
 			h.logger.Info(detail)
 			h.history.Add("schedule", "", "success", detail, "")
 		}
 	}()
-	ok(c, gin.H{"status": "success", "schedule": h.scheduler.GetStatus()})
+	ok(c, gin.H{"status": "success", "schedule": newStatus})
 }
 
 // SetupCheck 执行系统诊断检查：FFmpeg 可用性、目录权限、磁盘空间、文件统计。

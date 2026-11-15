@@ -170,6 +170,7 @@
       v-model:visible="logDialogVisible"
       :title="activeLogTitle"
       :status="activeLogStatus"
+      :task="activeLogTask"
       :log-id="activeLogId"
       :loading="logLoading"
       :content="logContent"
@@ -178,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated } from "vue";
+import { ref, onActivated, onDeactivated, onUnmounted } from "vue";
 import router from "@/router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
@@ -219,6 +220,7 @@ const logDialogVisible = ref(false);
 const logContent = ref("");
 const logLoading = ref(false);
 const activeLogTitle = ref("");
+const activeLogTask = ref("");
 const activeLogId = ref("");
 const activeLogStatus = ref("");
 
@@ -283,6 +285,7 @@ async function handleClearHistory() {
 
 async function viewLog(row: HistoryRecord) {
   if (!row.log_id) return;
+  activeLogTask.value = row.task;
   activeLogId.value = row.log_id;
   activeLogStatus.value = row.status;
   const taskName = row.task === "merge" ? "录像合并" : (row.task === "clean" ? "磁盘清理" : (row.task === "config" ? "系统配置" : "定时调度"));
@@ -301,13 +304,17 @@ async function viewLog(row: HistoryRecord) {
   }
 }
 
-onMounted(() => {
-  loadHistory(1);
+onActivated(() => {
+  loadHistory(currentPage.value);
   window.addEventListener("keydown", handleKeydown);
 });
 
-onActivated(() => {
-  loadHistory(currentPage.value);
+onDeactivated(() => {
+  window.removeEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
 });
 </script>
 

@@ -142,7 +142,7 @@ func classifyMergeFailure(folder, firstFile string) string {
 		} else if info.Size() < minValidFileSize {
 			return fmt.Sprintf("源文件过小(%s)", utils.FormatSize(info.Size()))
 		}
-		return "ffmpeg输出校验失败"
+		return "FFmpeg 输出校验失败"
 	}
 
 	// 输出存在但过小
@@ -400,7 +400,7 @@ func (s *MergeService) summarizeResults(ctx context.Context, root, streamer stri
 func buildDetail(convertDone, mergeDone, mergeFailed int, failedReasons map[string]int, convertBytes, mergeBytes int64) string {
 	var parts []string
 	if convertDone > 0 {
-		parts = append(parts, fmt.Sprintf("转换 %d 个FLV (%s)", convertDone, utils.FormatSize(convertBytes)))
+		parts = append(parts, fmt.Sprintf("转换 %d 个 FLV (%s)", convertDone, utils.FormatSize(convertBytes)))
 	}
 	if mergeDone > 0 {
 		parts = append(parts, fmt.Sprintf("合并 %d 场次 (%s)", mergeDone, utils.FormatSize(mergeBytes)))
@@ -408,7 +408,7 @@ func buildDetail(convertDone, mergeDone, mergeFailed int, failedReasons map[stri
 	if mergeFailed > 0 {
 		var failParts []string
 		for reason, cnt := range failedReasons {
-			failParts = append(failParts, fmt.Sprintf("%s x%d", reason, cnt))
+			failParts = append(failParts, fmt.Sprintf("%s ×%d", reason, cnt))
 		}
 		parts = append(parts, fmt.Sprintf("失败 %d 项(%s)", mergeFailed, strings.Join(failParts, ", ")))
 	}
@@ -518,6 +518,19 @@ func (s *MergeService) concatReencode(ctx context.Context, files []string, folde
 	} else {
 		outputSize = info.Size()
 		opLog.Log(fmt.Sprintf("✅ 重编码完成: %s", utils.FormatSize(outputSize)))
+		onProgress(fmt.Sprintf("✅ → %s (%s)", filepath.Base(outputPath), utils.FormatSize(outputSize)))
+	}
+
+	// 伴生弹幕文件对齐：使合并版视频自动拥有对应的 XML 弹幕文件
+	alignCompanionDanmaku(folder, files, outputPath)
+
+	// 重编码校验通过后删除原始文件（连带删除原分片的伴生文件）
+	for _, f := range files {
+		fullPath := filepath.Join(folder, f)
+		if err := utils.SafeUnlink(fullPath); err != nil {
+			opLog.Log(fmt.Sprintf("⚠ 删除源文件失败: %s (%v)", f, err))
+		}
+		CleanCompanionFiles(fullPath)
 	}
 	return outputSize, true
 }
@@ -829,10 +842,20 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 	}
 	end := strings.TrimSpace(rule.TrimEnd)
 
-	// 时长预检：若从头截取且设置了结束时间，检查视频时长是否本就小于结束时间
-	if (start == "0" || start == "00:00:00") && end != "" {
-		if endSec, err := ffmpeg.ParseTimeSeconds(end); err == nil && endSec > 0 {
-			if dur, err := ffmpeg.ProbeDuration(ctx, videoPath); err == nil && dur > 0 && dur <= endSec {
+	// 时长预检：检查视频总时长是否小于等于起始裁剪时间，或从头截取时是否小于等于截取上限
+	startSec, startErr := ffmpeg.ParseTimeSeconds(start)
+	endSec, endErr := ffmpeg.ParseTimeSeconds(end)
+	needDurationCheck := (startErr == nil && startSec > 0) || (end != "" && endErr == nil && endSec > 0)
+	if needDurationCheck {
+		if dur, durErr := ffmpeg.ProbeDuration(ctx, videoPath); durErr == nil && dur > 0 {
+			if startErr == nil && startSec > 0 && dur <= startSec {
+				if opLog != nil {
+					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪起始时间 (%s)，保留原视频", streamerName, dur, start))
+				}
+				onProgress(fmt.Sprintf("[%s] ℹ 视频时长短于裁剪起始时间，无需裁剪，保留完整视频", streamerName))
+				return true
+			}
+			if (start == "0" || start == "00:00:00" || (startErr == nil && startSec == 0)) && end != "" && endErr == nil && endSec > 0 && dur <= endSec {
 				if opLog != nil {
 					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 截取上限 (%s)，保留原视频", streamerName, dur, end))
 				}

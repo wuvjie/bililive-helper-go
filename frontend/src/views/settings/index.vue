@@ -357,11 +357,13 @@ async function handleSaveAll() {
     await Promise.all(tasks);
     ElMessage.success("系统配置已成功保存生效");
 
-    if (isPolicyDirty.value) {
+    const policyWasDirty = isPolicyDirty.value;
+    const scheduleWasDirty = isScheduleDirty.value;
+    if (policyWasDirty) {
       initialPolicySnapshot.value = serializePolicy(config.value);
     }
-    if (isScheduleDirty.value) {
-      initialScheduleSnapshot.value = serializeSchedule(scheduleForm, backupStart.value, backupEnd.value);
+    if (scheduleWasDirty) {
+      await loadScheduleData();
     }
   } catch (err: any) {
     ElMessage.error(err?.response?.data?.error || err?.message || "保存系统配置失败");
@@ -435,6 +437,8 @@ function confirmApplyPreset() {
   presetModalVisible.value = false;
 }
 
+let isFirstActivation = true;
+
 onMounted(() => {
   loadConfigData();
   loadScheduleData();
@@ -442,9 +446,15 @@ onMounted(() => {
 });
 
 onActivated(() => {
-  loadConfigData();
-  loadScheduleData();
-  loadDiskStatus();
+  if (isFirstActivation) {
+    isFirstActivation = false;
+    return;
+  }
+  if (!isFormDirty.value) {
+    loadConfigData();
+    loadScheduleData();
+    loadDiskStatus();
+  }
 });
 </script>
 

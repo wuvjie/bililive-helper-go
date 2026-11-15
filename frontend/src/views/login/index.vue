@@ -41,7 +41,7 @@
             </svg>
           </div>
           <h1 class="brand-title">Bililive Helper Go</h1>
-          <p class="brand-sub">录播自动合并与媒体管理平台</p>
+          <p class="brand-sub">直播录像自动合并与存储管理平台</p>
         </div>
 
         <!-- 登录表单 -->
