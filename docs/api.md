@@ -37,7 +37,7 @@
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/schedule` | 获取调度状态与静默时段 |
+| GET | `/api/schedule` | 获取调度状态与每日避让时段 |
 | POST | `/api/schedule` | 保存调度配置 |
 | POST | `/api/schedule/run/:task` | 手动触发任务（`merge` 或 `clean`） |
 

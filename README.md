@@ -2,7 +2,7 @@
 
 > 通用直播录像后处理工具：视频分片合并、磁盘清理、Web 管理控制台。
 
-[![Version](https://img.shields.io/badge/Version-v2.0.3-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-v2.0.4-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Docker Image](https://img.shields.io/badge/Docker%20Hub-wuvjie%2Fbililive--helper--go-blue?logo=docker)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
 [![Architecture](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen.svg)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
@@ -62,9 +62,13 @@ services:
       - TZ=Asia/Shanghai
 ```
 
-在配置文件所在目录下启动容器：
+在配置文件所在目录下启动或更新容器：
 ```bash
+# 首次启动
 docker compose up -d
+
+# 后续拉取新版本镜像并平滑重建容器（/data 与 /recordings 数据保留）
+docker compose pull && docker compose up -d
 ```
 
 ---
@@ -98,6 +102,12 @@ wslc run -d `
   -v "D:\docker\bililive-helper-go:/data" `
   -e TZ=Asia/Shanghai `
   wuvjie/bililive-helper-go:latest
+```
+
+后续在 `wslc` 中更新至最新版本时，先拉取新镜像、移除旧容器（挂载数据目录不变），再用上述相同参数重新运行：
+```powershell
+wslc pull wuvjie/bililive-helper-go:latest
+wslc stop bililive-helper-go; wslc remove bililive-helper-go
 ```
 
 ---

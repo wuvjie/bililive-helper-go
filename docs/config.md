@@ -72,19 +72,19 @@ PORT=5689
 |------|------|------|--------|
 | `TARGET_DIR` | string | 录制视频目录 | `/recordings` |
 | `TRIGGER_THRESHOLD` | float | 清理触发阈值（磁盘使用率 %） | 80 |
-| `TARGET_THRESHOLD` | float | 清理目标阈值（磁盘使用率 %） | 60 |
-| `MIN_KEEP_PER_STREAMER` | int | 每主播最少保留文件数 | 3 |
-| `SAFE_AGE_MINUTES` | int | 安全期（小时模式下的分钟数） | 120 |
-| `GAP_MINUTES` | int | 场次间隔（分钟） | 30 |
-| `MERGE_AGE_MINUTES` | int | 合并等待时间（分钟） | 30 |
-| `WHITELIST_KEYWORDS` | []string | 白名单关键词 | `["留存","纪念","高能","生日","勿删"]` |
-| `SAFE_MODE` | string | 安全期模式：`hours` 或 `days` | `hours` |
-| `SAFE_DAYS` | int | 安全期天数（仅 days 模式） | 1 |
-| `MAX_DELETE_PER_RUN` | int | 单次清理最大删除数 | 50 |
-| `BACKUP_START_HOUR` | int | 静默时段开始小时（起止均为 0 表示默认关闭） | 0 |
-| `BACKUP_START_MINUTE` | int | 静默时段开始分钟 | 0 |
-| `BACKUP_END_HOUR` | int | 静默时段结束小时（起止均为 0 表示默认关闭） | 0 |
-| `BACKUP_END_MINUTE` | int | 静默时段结束分钟 | 0 |
+| `TARGET_THRESHOLD` | float | 清理停止阈值（磁盘使用率 %） | 60 |
+| `MIN_KEEP_PER_STREAMER` | int | 每主播最少保留场次 | 3 |
+| `SAFE_AGE_MINUTES` | int | 免删保护期（小时模式下的分钟数） | 120 |
+| `GAP_MINUTES` | int | 直播断流分段间隔（分钟） | 30 |
+| `MERGE_AGE_MINUTES` | int | 主播关播等待时间（分钟） | 30 |
+| `WHITELIST_KEYWORDS` | []string | 永久免删关键词白名单 | `["留存","纪念","高能","生日","勿删"]` |
+| `SAFE_MODE` | string | 免删保护期模式：`hours` 或 `days` | `hours` |
+| `SAFE_DAYS` | int | 免删保护天数（仅 days 模式） | 1 |
+| `MAX_DELETE_PER_RUN` | int | 单次清理上限（个） | 50 |
+| `BACKUP_START_HOUR` | int | 每日避让时段开始小时（起止均为 0 表示关闭） | 0 |
+| `BACKUP_START_MINUTE` | int | 每日避让时段开始分钟 | 0 |
+| `BACKUP_END_HOUR` | int | 每日避让时段结束小时（起止均为 0 表示关闭） | 0 |
+| `BACKUP_END_MINUTE` | int | 每日避让时段结束分钟 | 0 |
 | `PORT` | int | 监听端口 | 5000 |
 | `SESSION_VERSION` | int | Session 版本号（改密时自动递增） | 0 |
 | `STREAMER_RULES` | object | 主播个性化规则（时段裁剪、独立保底数、免删保护） | `{}` |
