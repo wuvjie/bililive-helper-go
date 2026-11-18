@@ -7,7 +7,7 @@
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | `/api/login` | 登录，成功后在 Cookie 中设置 session token（带连续失败冷却保护） |
-| POST | `/api/logout` | 登出，清除 session Cookie 并使会话失效 |
+| GET | `/logout` | 登出，清除 session Cookie 并重定向至登录页 |
 | GET | `/api/auth/check` | 检查当前 session 是否有效 |
 | POST | `/api/auth/change-password` | 修改管理员登录密码（自动递增 session 版本） |
 | GET | `/api/setup/status` | 检查是否首次启动（未设置密码） |
@@ -68,4 +68,4 @@
 | DELETE | `/api/history/:id` | 删除单条历史任务记录 |
 | POST | `/api/history/clear` | 清空全部历史任务记录 |
 | GET | `/api/history/export` | 导出全部历史记录 |
-| GET | `/api/logs/content/:task` | 操作日志内容（`log_id` 参数，默认返回末尾 200 行，支持 `raw=true` 下载完整原始日志） |
+| GET | `/api/logs/content/:task` | 操作日志内容（`log_id` 参数，默认返回末尾 1000 行，支持 `raw=true` 下载完整原始日志） |
