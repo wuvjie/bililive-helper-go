@@ -287,7 +287,7 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 
   if (e.key === "/" && !isInput) {
     const searchInput = document.querySelector<HTMLInputElement>(
-      ".header-right .el-input__inner, .header-filters .el-input__inner, .terminal-filter-input"
+      ".search-input-wrap .el-input__inner, .header-right .el-input__inner, .header-right-tools .el-input__inner, .terminal-filter-input"
     );
     if (searchInput) {
       e.preventDefault();
@@ -466,7 +466,7 @@ onUnmounted(() => {
 
 .layout-navbar {
   height: 52px;
-  background: rgba(251, 251, 250, 0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex; align-items: center; justify-content: space-between;
@@ -511,7 +511,7 @@ onUnmounted(() => {
   &:hover {
     background: var(--highlight);
     color: var(--ink);
-    border-color: var(--faint);
+    border-color: var(--hairline-strong);
   }
 
   .hamburger-svg {
@@ -577,7 +577,7 @@ onUnmounted(() => {
 
   &:hover {
     background: var(--highlight);
-    border-color: var(--faint);
+    border-color: var(--hairline-strong);
   }
 }
 .user-pill-dot {
@@ -609,7 +609,7 @@ onUnmounted(() => {
 }
 .user-dropdown-sub {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--steel);
   font-family: var(--font-mono);
   margin-top: 2px;
 }
@@ -671,7 +671,7 @@ html.dark {
     border-right-color: var(--hairline);
   }
   .layout-navbar {
-    background: rgba(18, 18, 21, 0.85);
+    background: var(--glass-bg);
     border-bottom-color: var(--hairline);
   }
   .sidebar-bottom-toggle {

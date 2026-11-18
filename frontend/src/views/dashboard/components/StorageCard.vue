@@ -64,8 +64,9 @@ const props = defineProps<{
 
 const diskColor = computed(() => {
   const pct = props.detail?.disk?.usage_pct || 0;
-  if (pct >= 90) return "#d9730d";
-  return "#448361";
+  if (pct >= 95) return "var(--error, #e03131)";
+  if (pct >= 80) return "var(--warning, #d97706)";
+  return "var(--success, #059669)";
 });
 
 const totalRecordingsGB = computed(() => {

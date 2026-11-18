@@ -215,12 +215,6 @@ onUnmounted(() => {
   align-items: center;
 }
 
-.scope-global-text {
-  font-size: 12px;
-  color: var(--charcoal);
-  font-weight: 500;
-}
-
 .streamer-text {
   font-size: 12px;
   font-weight: 500;
@@ -271,5 +265,24 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--stone);
+}
+
+html.dark {
+  .tag-merge {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+  }
+  .tag-clean {
+    background: rgba(210, 153, 34, 0.15);
+    color: #fbbf24;
+  }
+  .tag-config {
+    background: rgba(88, 166, 255, 0.15);
+    color: #58a6ff;
+  }
+  .tag-schedule {
+    background: rgba(188, 140, 255, 0.15);
+    color: #bc8cff;
+  }
 }
 </style>

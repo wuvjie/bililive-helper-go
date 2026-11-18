@@ -254,7 +254,7 @@ async function handleExport() {
     URL.revokeObjectURL(url);
     ElMessage.success("配置备份已导出");
   } catch {
-    ElMessage.error("导出配置备份失败");
+    /* handled by interceptor */
   }
 }
 
@@ -268,7 +268,7 @@ async function handleCopy() {
       copiedRecently.value = false;
     }, 2000);
   } catch {
-    ElMessage.error("复制配置代码失败");
+    /* handled by interceptor */
   }
 }
 
@@ -350,8 +350,8 @@ async function handleApplyImport() {
     emit("imported");
     emit("update:visible", false);
     handleRemoveFile();
-  } catch (err: any) {
-    ElMessage.error(err?.response?.data?.error || err?.message || "导入配置失败");
+  } catch {
+    /* handled by interceptor */
   } finally {
     importing.value = false;
   }

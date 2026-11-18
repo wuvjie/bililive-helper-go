@@ -238,4 +238,19 @@ function formatDisplayTime(ts?: number): string {
     grid-template-columns: 1fr;
   }
 }
+
+html.dark {
+  .badge-emerald {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+  }
+  .badge-amber {
+    background: rgba(210, 153, 34, 0.15);
+    color: #fbbf24;
+  }
+  .badge-off {
+    background: rgba(139, 148, 158, 0.12);
+    color: #8b949e;
+  }
+}
 </style>

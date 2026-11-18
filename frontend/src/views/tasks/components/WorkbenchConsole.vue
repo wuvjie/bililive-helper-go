@@ -78,7 +78,7 @@
       >
         <template #title>
           <div class="term-title-wrapper">
-            <span class="tab-indicator dot-live" :class="{ 'pulse-dot': isRunning }" />
+            <span class="tab-indicator" :class="isRunning ? 'dot-live pulse-dot' : (lines.length > 0 ? 'dot-live' : 'dot-standby')" />
             <span class="term-title-text">实时执行日志</span>
             <span v-if="isRunning" class="term-badge-tag tag-running">任务执行中...</span>
             <span v-else class="term-badge-tag tag-idle">就绪待命</span>
@@ -294,6 +294,10 @@ html.dark .workbench-action-bar {
   background: #10b981;
 }
 
+.dot-standby {
+  background: var(--stone);
+}
+
 .pulse-dot {
   box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
   animation: livePulse 1.8s infinite;
@@ -373,5 +377,28 @@ html.dark .tag-idle {
 .ops-icon {
   width: 13px;
   height: 13px;
+}
+
+html.dark {
+  .btn-action-merge {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+    border-color: rgba(63, 185, 80, 0.35);
+    &:hover:not(:disabled) {
+      background: #059669;
+      border-color: #059669;
+      color: #ffffff;
+    }
+  }
+  .btn-action-clean {
+    background: rgba(210, 153, 34, 0.15);
+    color: #fbbf24;
+    border-color: rgba(210, 153, 34, 0.35);
+    &:hover:not(:disabled) {
+      background: #d97706;
+      border-color: #d97706;
+      color: #ffffff;
+    }
+  }
 }
 </style>

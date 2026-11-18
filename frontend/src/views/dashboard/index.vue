@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated } from "vue";
+import { ref, computed, onMounted, onActivated, onDeactivated, onUnmounted } from "vue";
 import { getStatusDetail, getStats } from "@/api/status";
 import { getHistory } from "@/api/history";
 import { setupCheck } from "@/api/setup";
@@ -144,8 +144,27 @@ const freedSpaceDisplay = computed(() => {
   return { val: (bytes / 1024).toFixed(0), unit: "KB" };
 });
 
+const nowTick = ref(new Date());
+let clockTimer: ReturnType<typeof setInterval> | null = null;
+
+function startClock() {
+  nowTick.value = new Date();
+  if (!clockTimer) {
+    clockTimer = setInterval(() => {
+      nowTick.value = new Date();
+    }, 60_000);
+  }
+}
+
+function stopClock() {
+  if (clockTimer) {
+    clearInterval(clockTimer);
+    clockTimer = null;
+  }
+}
+
 const greeting = computed(() => {
-  const now = new Date();
+  const now = nowTick.value;
   const h = now.getHours();
   const d = now.getDate();
 
@@ -192,20 +211,21 @@ const greeting = computed(() => {
 });
 
 const todayDate = computed(() =>
-  new Date().toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })
+  nowTick.value.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" })
 );
 
-async function loadData(isInitial = false) {
+async function loadData() {
   try {
-    const promises: Promise<any>[] = [
-      getStatusDetail(), getStats(), getHistory({ per_page: 5 })
-    ];
-    if (isInitial) promises.push(setupCheck());
-    const res = await Promise.allSettled(promises);
+    const res = await Promise.allSettled([
+      getStatusDetail(),
+      getStats(),
+      getHistory({ per_page: 5 }),
+      setupCheck()
+    ]);
     if (res[0].status === "fulfilled") detail.value = res[0].value;
     if (res[1].status === "fulfilled") stats.value = res[1].value;
     if (res[2].status === "fulfilled") recentHistory.value = res[2].value.items || [];
-    if (isInitial && res[3]?.status === "fulfilled") setup.value = res[3].value;
+    if (res[3].status === "fulfilled") setup.value = res[3].value;
   } finally {
     loading.value = false;
   }
@@ -214,16 +234,21 @@ async function loadData(isInitial = false) {
 let isFirstActivation = true;
 
 onMounted(() => {
-  loadData(true);
+  startClock();
+  loadData();
 });
 
 onActivated(() => {
+  startClock();
   if (isFirstActivation) {
     isFirstActivation = false;
     return;
   }
-  loadData(false);
+  loadData();
 });
+
+onDeactivated(stopClock);
+onUnmounted(stopClock);
 </script>
 
 <style scoped>

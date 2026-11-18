@@ -125,10 +125,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import type { StreamerFile } from "@/api/types";
 import UnderlineNav, { type UnderlineNavItem } from "@/components/common/UnderlineNav.vue";
-import { formatExactTime, formatDisplayDateTime, formatRelativeTime } from "@/utils/format";
+import { formatExactTime, formatRelativeTime } from "@/utils/format";
 
 const activeTab = ref<string>("all");
 
@@ -139,6 +139,15 @@ const props = defineProps<{
   loading: boolean;
   tick: number;
 }>();
+
+watch(
+  () => props.visible,
+  (val) => {
+    if (val) {
+      activeTab.value = "all";
+    }
+  }
+);
 
 const emit = defineEmits<{
   (e: "update:visible", val: boolean): void;
@@ -229,6 +238,16 @@ const displayFiles = computed(() => {
 .status-raw {
   background: rgba(148, 163, 184, 0.12);
   color: #64748b;
+}
+
+html.dark .status-merged {
+  background: rgba(63, 185, 80, 0.15);
+  color: #3fb950;
+}
+
+html.dark .status-raw {
+  background: rgba(139, 148, 158, 0.15);
+  color: #8b949e;
 }
 
 .drawer-file-actions {

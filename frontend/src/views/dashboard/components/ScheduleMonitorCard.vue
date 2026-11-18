@@ -24,7 +24,7 @@
         <div class="runtime-top">
           <span class="runtime-label">当前任务状态</span>
           <div class="runtime-state-indicator">
-            <span class="state-dot" :class="isTaskRunning ? 'dot-running' : 'dot-idle'"></span>
+            <span class="state-dot" :class="isTaskRunning ? 'dot-running' : (isAnyScheduleEnabled ? 'dot-idle' : 'dot-disabled')"></span>
             <span class="state-text" :class="{ 'text-running': isTaskRunning }">
               {{ isTaskRunning ? (detail?.schedule?.merge?.is_running ? '正在合并录像分片...' : '正在执行磁盘清理...') : '空闲就绪 · 暂无正在运行的任务' }}
             </span>
@@ -319,5 +319,14 @@ function formatNextTime(ts?: number): string {
 
 .val-disabled {
   color: var(--stone);
+}
+
+html.dark .tag-running {
+  background: rgba(63, 185, 80, 0.15);
+  color: #3fb950;
+}
+
+html.dark .text-running {
+  color: #3fb950;
 }
 </style>

@@ -49,7 +49,9 @@ onDeactivated(() => {
 const sse = useSSE();
 
 const currentTerminalTitle = computed(() => {
-  return sse.isRunning.value ? "实时任务执行日志（正在运行...）" : "实时任务执行日志（执行完成）";
+  if (sse.isRunning.value) return "实时任务执行日志（正在运行...）";
+  if (sse.lines.value.length > 0) return "实时任务执行日志（执行完成）";
+  return "实时任务执行日志（就绪待命）";
 });
 
 const currentEmptyText = computed(() => {

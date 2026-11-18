@@ -98,7 +98,7 @@
     <el-dialog
       v-model="presetModalVisible"
       :title="presetModalType === 'policy' ? '恢复录像合并与磁盘清理推荐预设' : '恢复定时任务与执行周期推荐预设'"
-      width="460px"
+      width="min(460px, 94vw)"
       destroy-on-close
       class="preset-dialog"
     >
@@ -243,8 +243,8 @@ async function loadConfigData() {
     const data = await getConfig();
     config.value = { ...data };
     initialPolicySnapshot.value = serializePolicy(data);
-  } catch (err: any) {
-    ElMessage.error(err?.response?.data?.error || err?.message || "获取全局策略失败");
+  } catch {
+    /* handled by interceptor */
   } finally {
     loading.value = false;
   }
@@ -280,8 +280,8 @@ async function loadScheduleData() {
     }
 
     initialScheduleSnapshot.value = serializeSchedule(scheduleForm, backupStart.value, backupEnd.value);
-  } catch (err: any) {
-    ElMessage.error(err?.response?.data?.error || err?.message || "获取定时调度失败");
+  } catch {
+    /* handled by interceptor */
   } finally {
     scheduleLoading.value = false;
   }
@@ -365,8 +365,8 @@ async function handleSaveAll() {
     if (scheduleWasDirty) {
       await loadScheduleData();
     }
-  } catch (err: any) {
-    ElMessage.error(err?.response?.data?.error || err?.message || "保存系统配置失败");
+  } catch {
+    /* handled by interceptor */
   } finally {
     saving.value = false;
   }

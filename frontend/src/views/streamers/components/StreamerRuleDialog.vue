@@ -2,7 +2,7 @@
   <el-dialog
     :model-value="visible"
     :title="`主播个性化规则 · ${streamer}`"
-    width="560px"
+    width="min(560px, 94vw)"
     destroy-on-close
     class="rule-dialog"
     @update:model-value="$emit('update:visible', $event)"
@@ -224,10 +224,19 @@ watch(
   (val) => {
     if (val) {
       if (props.rule) {
+        const hasConfiguredTrim = Boolean(
+          props.rule.trim_enabled ||
+          props.rule.trim_start ||
+          props.rule.trim_end ||
+          (props.rule as any).start_time ||
+          (props.rule as any).end_time
+        );
         formRule.value = {
           trim_enabled: !!props.rule.trim_enabled,
           trim_start: props.rule.trim_start || (props.rule as any).start_time || "00:00:00",
-          trim_end: props.rule.trim_end || (props.rule as any).end_time || "00:30:00",
+          trim_end: hasConfiguredTrim
+            ? (props.rule.trim_end ?? (props.rule as any).end_time ?? "")
+            : "00:30:00",
           min_keep: props.rule.min_keep || 0,
           protected: !!props.rule.protected
         };
@@ -248,12 +257,19 @@ watch(
 
 function parseSeconds(val?: string): number | null {
   if (!val || !val.trim()) return null;
-  const parts = val.trim().split(":").map(p => Number(p));
-  if (parts.some(n => isNaN(n) || n < 0)) return null;
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  if (parts.length === 1) return parts[0];
-  return null;
+  const cleaned = val.trim().replace(/：/g, ":");
+  const rawParts = cleaned.split(":");
+  if (rawParts.length !== 2 && rawParts.length !== 3) return NaN;
+  if (rawParts.some(p => !/^\d+$/.test(p.trim()))) return NaN;
+  const parts = rawParts.map(p => Number(p.trim()));
+  if (parts.length === 3) {
+    const [h, m, s] = parts;
+    if (m >= 60 || s >= 60) return NaN;
+    return h * 3600 + m * 60 + s;
+  }
+  const [m, s] = parts;
+  if (s >= 60) return NaN;
+  return m * 60 + s;
 }
 
 function formatFriendlyDuration(totalSec: number): string {
@@ -270,17 +286,22 @@ function formatFriendlyDuration(totalSec: number): string {
 
 function normalizeTimeString(val: string): string {
   if (!val || !val.trim()) return "";
-  const cleaned = val.trim();
+  const cleaned = val.trim().replace(/：/g, ":");
   const parts = cleaned.split(":").map(p => p.trim());
+  if (parts.some(p => !/^\d+$/.test(p))) return cleaned;
   if (parts.length === 3) {
-    const h = String(parseInt(parts[0], 10) || 0).padStart(2, "0");
-    const m = String(parseInt(parts[1], 10) || 0).padStart(2, "0");
-    const s = String(parseInt(parts[2], 10) || 0).padStart(2, "0");
-    return `${h}:${m}:${s}`;
+    const h = Number(parts[0]);
+    const m = Number(parts[1]);
+    const s = Number(parts[2]);
+    if (m >= 60 || s >= 60) return cleaned;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   } else if (parts.length === 2) {
-    const m = String(parseInt(parts[0], 10) || 0).padStart(2, "0");
-    const s = String(parseInt(parts[1], 10) || 0).padStart(2, "0");
-    return `00:${m}:${s}`;
+    const m = Number(parts[0]);
+    const s = Number(parts[1]);
+    if (s >= 60) return cleaned;
+    const h = Math.floor(m / 60);
+    const remM = m % 60;
+    return `${String(h).padStart(2, "0")}:${String(remM).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
   return cleaned;
 }
@@ -300,8 +321,10 @@ function normalizeTrimField(field: "trim_start" | "trim_end") {
 }
 
 const timelineSegments = computed(() => {
-  const startSec = parseSeconds(formRule.value.trim_start) ?? 0;
-  const endSec = parseSeconds(formRule.value.trim_end);
+  const rawStart = parseSeconds(formRule.value.trim_start);
+  const rawEnd = parseSeconds(formRule.value.trim_end);
+  const startSec = rawStart === null || Number.isNaN(rawStart) ? 0 : rawStart;
+  const endSec = rawEnd === null || Number.isNaN(rawEnd) ? null : rawEnd;
 
   const hasLeading = startSec > 0;
   const hasTrailing = endSec !== null && endSec > startSec;
@@ -335,8 +358,19 @@ const timelineSegments = computed(() => {
 });
 
 const trimSemanticInfo = computed(() => {
-  const startSec = parseSeconds(formRule.value.trim_start) ?? 0;
-  const endSec = parseSeconds(formRule.value.trim_end);
+  const rawStart = parseSeconds(formRule.value.trim_start);
+  const rawEnd = parseSeconds(formRule.value.trim_end);
+
+  if (Number.isNaN(rawStart) || (rawEnd !== null && Number.isNaN(rawEnd))) {
+    return {
+      isInvalid: true,
+      text: "时间格式无效，请按「时:分:秒」（如 01:30:00）或「分:秒」（如 05:00）格式输入，且分、秒需小于 60",
+      durationText: "格式错误"
+    };
+  }
+
+  const startSec = rawStart ?? 0;
+  const endSec = rawEnd;
 
   if (endSec !== null && endSec <= startSec) {
     return {
@@ -784,4 +818,24 @@ html.dark .timeline-ticks-row {
   white-space: nowrap;
 }
 
+html.dark .pill-exempt {
+  background: rgba(63, 185, 80, 0.15);
+  color: #3fb950;
+}
+
+@media (max-width: 520px) {
+  .time-inputs-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .time-range-sep {
+    margin-top: 0;
+    align-self: center;
+  }
+  .timeline-ticks-row {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+}
 </style>

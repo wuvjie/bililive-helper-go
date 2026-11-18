@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :model-value="visible" title="修改系统管理员密码" width="400px" destroy-on-close @update:model-value="$emit('update:visible', $event)">
+  <el-dialog :model-value="visible" title="修改系统管理员密码" width="min(400px, 92vw)" destroy-on-close @update:model-value="$emit('update:visible', $event)">
     <el-form label-position="top" @submit.prevent="handleSubmit">
       <el-form-item label="当前密码">
         <el-input v-model="form.old_password" type="password" show-password placeholder="请输入当前正在使用的密码" />

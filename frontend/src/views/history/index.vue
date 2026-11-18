@@ -179,12 +179,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onActivated, onDeactivated, onUnmounted } from "vue";
-import router from "@/router";
+import { ref, onActivated } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
 import { getHistory, getLogContent, clearHistory } from "@/api/history";
-import { formatBytes, cleanDetailText, formatHistoryDetail as formatDetail } from "@/utils/format";
+import { cleanDetailText, formatHistoryDetail as formatDetail } from "@/utils/format";
 import type { HistoryRecord } from "@/api/types";
 
 import UnderlineNav from "@/components/common/UnderlineNav.vue";
@@ -207,13 +206,6 @@ const taskPillItems = [
   { label: "系统配置", value: "config" },
   { label: "定时调度", value: "schedule" }
 ];
-
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
-    e.preventDefault();
-    streamerSearchRef.value?.focus();
-  }
-}
 
 // Log Modal State
 const logDialogVisible = ref(false);
@@ -256,7 +248,7 @@ async function loadHistory(page = 1) {
     totalItems.value = res.total || 0;
     totalPages.value = res.pages || 0;
   } catch {
-    ElMessage.error("获取操作日志失败");
+    /* handled by interceptor */
   } finally {
     loading.value = false;
   }
@@ -276,10 +268,8 @@ async function handleClearHistory() {
     await clearHistory();
     ElMessage.success("操作日志已全部清空");
     loadHistory(1);
-  } catch (err: any) {
-    if (err !== "cancel") {
-      ElMessage.error(err.message || "清空操作日志失败");
-    }
+  } catch {
+    /* user cancelled or handled by interceptor */
   }
 }
 
@@ -298,7 +288,7 @@ async function viewLog(row: HistoryRecord) {
     const res = await getLogContent(row.task, row.log_id);
     logContent.value = res.content || "";
   } catch {
-    ElMessage.error("获取详细日志失败");
+    /* handled by interceptor */
   } finally {
     logLoading.value = false;
   }
@@ -306,15 +296,6 @@ async function viewLog(row: HistoryRecord) {
 
 onActivated(() => {
   loadHistory(currentPage.value);
-  window.addEventListener("keydown", handleKeydown);
-});
-
-onDeactivated(() => {
-  window.removeEventListener("keydown", handleKeydown);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("keydown", handleKeydown);
 });
 </script>
 
@@ -542,5 +523,36 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+html.dark {
+  .type-merge {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+  }
+  .type-clean {
+    background: rgba(210, 153, 34, 0.15);
+    color: #fbbf24;
+  }
+  .type-config {
+    background: rgba(88, 166, 255, 0.15);
+    color: #58a6ff;
+  }
+  .type-schedule {
+    background: rgba(188, 140, 255, 0.15);
+    color: #bc8cff;
+  }
+  .dot-success {
+    color: #3fb950;
+    &::before {
+      background: #3fb950;
+    }
+  }
+  .dot-warn {
+    color: #fbbf24;
+    &::before {
+      background: #fbbf24;
+    }
+  }
 }
 </style>

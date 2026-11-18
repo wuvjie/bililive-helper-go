@@ -216,6 +216,21 @@ async function handleCopyContent() {
   color: #dc2626;
 }
 
+html.dark {
+  .status-ok {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+  }
+  .status-warn {
+    background: rgba(210, 153, 34, 0.15);
+    color: #fbbf24;
+  }
+  .status-fail {
+    background: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+  }
+}
+
 .modal-header-subrow {
   display: flex;
   align-items: center;

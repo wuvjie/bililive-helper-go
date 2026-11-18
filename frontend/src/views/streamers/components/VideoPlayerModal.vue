@@ -2,7 +2,7 @@
   <el-dialog
     :model-value="visible"
     :title="`录像播放预览 · ${fileName}`"
-    width="800px"
+    width="min(800px, 94vw)"
     destroy-on-close
     class="player-dialog"
     @update:model-value="$emit('update:visible', $event)"

@@ -116,7 +116,8 @@ router.onError((error, to) => {
     msg.includes("error loading dynamically imported module")
   ) {
     if (to?.fullPath) {
-      window.location.href = to.fullPath;
+      window.location.hash = `#${to.fullPath.replace(/^#/, "")}`;
+      window.location.reload();
     } else {
       window.location.reload();
     }

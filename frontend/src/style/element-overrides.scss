@@ -1,6 +1,6 @@
 // Element Plus — Notion ink-on-paper overrides
 :root {
-  --el-color-primary: #58a6ff;
+  --el-color-primary: #2563eb;
   --el-color-primary-light-3: #60a5fa;
   --el-color-primary-light-5: #93c5fd;
   --el-color-primary-light-7: #bfdbfe;
@@ -612,7 +612,7 @@ html.dark {
 
   // Explicit Card & Table Overrides in Dark Mode
   .el-card {
-    --el-card-bg-color: #18181b !important;
+    --el-card-bg-color: #161b22 !important;
     --el-card-border-color: #30363d !important;
     background-color: #161b22 !important;
     border-color: #30363d !important;
@@ -620,7 +620,7 @@ html.dark {
   }
   .el-card__header {
     border-bottom-color: #30363d !important;
-    color: #f4f4f5 !important;
+    color: #f0f6fc !important;
   }
   .el-card__body {
     color: #e4e4e7 !important;
@@ -630,17 +630,17 @@ html.dark {
   .el-table tr,
   .el-table th.el-table__cell,
   .el-table td.el-table__cell {
-    --el-table-bg-color: #18181b !important;
-    --el-table-tr-bg-color: #18181b !important;
-    --el-table-row-hover-bg-color: #1f1f23 !important;
+    --el-table-bg-color: #161b22 !important;
+    --el-table-tr-bg-color: #161b22 !important;
+    --el-table-row-hover-bg-color: #21262d !important;
     --el-table-border-color: rgba(255, 255, 255, 0.075) !important;
-    --el-table-header-bg-color: #18181b !important;
+    --el-table-header-bg-color: #161b22 !important;
     background-color: #161b22 !important;
     color: #e4e4e7 !important;
     border-color: rgba(255, 255, 255, 0.075) !important;
   }
   .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
-    background: #141416 !important;
+    background: #0d1117 !important;
   }
   .el-table__empty-block {
     background-color: #161b22 !important;
@@ -855,15 +855,15 @@ html.dark {
 }
 
     .el-input__wrapper {
-      background-color: #141416 !important;
-      box-shadow: 0 0 0 1px #27272a inset !important;
+      background-color: #0d1117 !important;
+      box-shadow: 0 0 0 1px #30363d inset !important;
       &:hover {
-        box-shadow: 0 0 0 1px #3f3f46 inset !important;
+        box-shadow: 0 0 0 1px #484f58 inset !important;
       
 }
 
       &.is-focus {
-        box-shadow: 0 0 0 1px #3b82f6 inset !important;
+        box-shadow: 0 0 0 1px #58a6ff inset !important;
       
 }
 
@@ -939,7 +939,7 @@ html.dark {
 
   // Descriptions in dark mode
   .el-descriptions {
-    --el-descriptions-item-bordered-label-background: #141416;
+    --el-descriptions-item-bordered-label-background: #0d1117;
   
 }
 
@@ -948,45 +948,45 @@ html.dark {
   .el-input__wrapper,
   .el-textarea__inner,
   .el-select__wrapper {
-    background-color: #141416 !important;
-    box-shadow: 0 0 0 1px #27272a inset !important;
-    color: #f4f4f5 !important;
+    background-color: #0d1117 !important;
+    box-shadow: 0 0 0 1px #30363d inset !important;
+    color: #f0f6fc !important;
     &:hover {
-      box-shadow: 0 0 0 1px #3f3f46 inset !important;
+      box-shadow: 0 0 0 1px #484f58 inset !important;
     }
 
     &.is-focus, &:focus, &.is-focused {
-      box-shadow: 0 0 0 1px #3b82f6 inset !important;
+      box-shadow: 0 0 0 1px #58a6ff inset !important;
     }
   }
 
   .el-input__inner,
   .el-select__selected-item {
-    color: #f4f4f5 !important;
+    color: #f0f6fc !important;
     &::placeholder {
-      color: #71717a !important;
+      color: #6e7681 !important;
     }
   }
 
   .el-select__placeholder {
-    color: #71717a !important;
+    color: #6e7681 !important;
   }
 
   // Dialog & Drawer & Collapse in dark mode
   .el-dialog {
-    --el-dialog-bg-color: #18181b !important;
+    --el-dialog-bg-color: #161b22 !important;
     background-color: #161b22 !important;
     border-color: #30363d !important;
     color: #e4e4e7 !important;
   }
 
   .el-dialog__title {
-    color: #f4f4f5 !important;
+    color: #f0f6fc !important;
   }
 
   .el-dialog__header {
-    border-bottom: 1px solid #27272a !important;
-    color: #f4f4f5 !important;
+    border-bottom: 1px solid #30363d !important;
+    color: #f0f6fc !important;
   }
 
   .el-dialog__body {
@@ -994,7 +994,7 @@ html.dark {
   }
 
   .el-dialog__footer {
-    border-top: 1px solid #27272a !important;
+    border-top: 1px solid #30363d !important;
   }
 
   .el-message-box {
@@ -1009,23 +1009,23 @@ html.dark {
 
   .el-drawer,
   .el-drawer__body {
-    background-color: #141416 !important;
+    background-color: #161b22 !important;
     color: #e4e4e7 !important;
   }
 
   .el-drawer__title {
-    color: #f4f4f5 !important;
+    color: #f0f6fc !important;
   }
 
   .el-drawer__header {
-    border-bottom: 1px solid #27272a !important;
-    color: #f4f4f5 !important;
+    border-bottom: 1px solid #30363d !important;
+    color: #f0f6fc !important;
     margin-bottom: 0 !important;
     padding-bottom: 16px !important;
   }
 
   .el-drawer__footer {
-    border-top: 1px solid #27272a !important;
+    border-top: 1px solid #30363d !important;
   }
 
   .el-collapse {
@@ -1357,29 +1357,6 @@ a:focus:not(:focus-visible) {
   
 }
 
-
-}
-
-
-/* ==== Extended Palette ==== */
-:root {
-  /* Brand primary variants */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-active: #1e40af;
-  --primary-disabled: rgba(37,99,235,0.2);
-
-  /* Semantic colors */
-  --success: #48b06b;
-  --success-hover: #3a945b;
-  --warning: #f59e0b;
-  --warning-hover: #d97706;
-  --danger: #e03131;
-  --danger-hover: #c81e1e;
-
-  /* Dark‑mode foregrounds */
-  --text-on-dark: #e0e0e0;
-  --text-on-dark-muted: #b0b0b0;
 
 }
 

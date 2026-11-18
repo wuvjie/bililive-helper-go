@@ -108,13 +108,6 @@ const loading = ref(true);
 const searchInputRef = ref();
 const searchQuery = ref("");
 
-function handleKeydown(e: KeyboardEvent) {
-  if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
-    e.preventDefault();
-    searchInputRef.value?.focus();
-  }
-}
-
 const totalFiles = computed(() => streamers.value.reduce((acc, s) => acc + (s.files || 0), 0));
 const totalSizeGB = computed(() => (streamers.value.reduce((acc, s) => acc + (s.size_gb || 0), 0)).toFixed(1));
 
@@ -147,8 +140,8 @@ async function handleSaveRule(rule: StreamerRule) {
       target.rule = { ...rule };
       target.has_rule = true;
     }
-  } catch (err: any) {
-    ElMessage.error(err.message || "保存规则失败");
+  } catch {
+    /* handled by interceptor */
   } finally {
     savingRule.value = false;
   }
@@ -168,7 +161,7 @@ async function openDrawer(row: StreamerInfo) {
     const files = await getStreamerFiles(row.name);
     drawerFiles.value = (files || []).slice().sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
   } catch {
-    ElMessage.error("获取文件列表失败");
+    /* handled by interceptor */
   } finally {
     drawerLoading.value = false;
   }
@@ -189,10 +182,8 @@ async function handleDeleteFile(row: StreamerFile) {
     ElMessage.success("录像文件已删除");
     drawerFiles.value = drawerFiles.value.filter(f => f.name !== row.name);
     loadData();
-  } catch (err: any) {
-    if (err !== "cancel") {
-      ElMessage.error(err.message || "删除文件失败");
-    }
+  } catch {
+    /* user cancelled or handled by interceptor */
   }
 }
 
@@ -221,14 +212,13 @@ async function loadData() {
     const list = await getStreamers();
     streamers.value = list || [];
   } catch {
-    ElMessage.error("获取主播列表失败");
+    /* handled by interceptor */
   } finally {
     loading.value = false;
   }
 }
 
 function cleanupListeners() {
-  window.removeEventListener("keydown", handleKeydown);
   if (tickTimer) {
     clearInterval(tickTimer);
     tickTimer = null;
@@ -237,7 +227,6 @@ function cleanupListeners() {
 
 onActivated(() => {
   loadData();
-  window.addEventListener("keydown", handleKeydown);
   if (!tickTimer) {
     tickTimer = setInterval(() => { tick.value++; }, 60_000);
   }
