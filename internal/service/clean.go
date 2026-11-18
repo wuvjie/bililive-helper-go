@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"bililive-helper-go/internal/config"
@@ -31,6 +32,7 @@ type CleanService struct {
 	logger  *zap.Logger
 	history *HistoryService
 	locker  StreamerLockChecker // 可选，为 nil 时跳过锁检查
+	runMu   sync.Mutex          // 防止定时清理与手动清理并发冲突
 }
 
 // NewCleanService 创建清理服务实例。
@@ -49,6 +51,11 @@ type CleanResult struct {
 // 单主播模式：仅清理指定主播的文件。
 // 参数 streamer 为空表示全局清理；onProgress 用于 SSE 进度回调。
 func (s *CleanService) Run(ctx context.Context, streamer string, onProgress ProgressFunc) (*CleanResult, string, error) {
+	if !s.runMu.TryLock() {
+		return nil, "", fmt.Errorf("磁盘清理任务正在执行中，请稍后再试")
+	}
+	defer s.runMu.Unlock()
+
 	start := time.Now()
 
 	setup, err := PrepareTask(s.config, s.logger, "clean_log", "clean", "清理", streamer, onProgress)

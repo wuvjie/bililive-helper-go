@@ -321,3 +321,29 @@ func TestDiffStreamerRule(t *testing.T) {
 		t.Errorf("更新规则变更摘要不符合预期: %s", d2)
 	}
 }
+
+func TestConfig_CredentialsPersistence(t *testing.T) {
+	dir := t.TempDir()
+	cfg := DefaultConfig()
+	cfg.LogDir = dir
+	cfg.ConfigFile = dir + "/config.json"
+	cfg.Password = "secret-pass-123"
+	cfg.SecretKey = "0123456789abcdef0123456789abcdef"
+
+	if err := cfg.SaveCredential(); err != nil {
+		t.Fatalf("SaveCredential 失败: %v", err)
+	}
+
+	reloaded := DefaultConfig()
+	reloaded.LogDir = dir
+	pwd, key := reloaded.LoadCredentials()
+	if pwd != cfg.Password {
+		t.Errorf("恢复密码不匹配: got %q, want %q", pwd, cfg.Password)
+	}
+	if key != cfg.SecretKey {
+		t.Errorf("恢复 SecretKey 不匹配: got %q, want %q", key, cfg.SecretKey)
+	}
+	if reloaded.LoadCredential() != cfg.Password {
+		t.Errorf("LoadCredential 兼容读取失败: got %q, want %q", reloaded.LoadCredential(), cfg.Password)
+	}
+}

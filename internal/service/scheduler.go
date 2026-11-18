@@ -194,19 +194,41 @@ func (s *SchedulerService) runDueTasks() {
 // RunTask 手动触发指定任务（merge 或 clean）。
 // 如果任务正在运行中返回错误。
 func (s *SchedulerService) RunTask(task string) error {
-	if task != "merge" && task != "clean" {
-		return fmt.Errorf("无效任务: %s", task)
-	}
-	s.mu.Lock()
-	if s.running[task] {
-		s.mu.Unlock()
+	if !s.TryAcquireTask(task) {
+		if task != "merge" && task != "clean" {
+			return fmt.Errorf("无效任务: %s", task)
+		}
 		return fmt.Errorf("%s 正在运行中", task)
 	}
-	s.running[task] = true
+	taskName := map[string]string{"merge": "合并", "clean": "清理"}[task]
+	s.logger.Info(fmt.Sprintf("▶ 手动触发调度 → %s", taskName))
+	s.mu.Lock()
 	s.wg.Add(1)
 	s.mu.Unlock()
 	go s.runTask(task)
 	return nil
+}
+
+// TryAcquireTask 尝试占用指定任务类型的执行状态，防止手动与定时任务并发冲突。
+func (s *SchedulerService) TryAcquireTask(task string) bool {
+	if task != "merge" && task != "clean" {
+		return false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.running[task] {
+		return false
+	}
+	s.running[task] = true
+	return true
+}
+
+// ReleaseTask 释放指定任务类型的执行状态并更新最近执行时间。
+func (s *SchedulerService) ReleaseTask(task string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.running[task] = false
+	s.lastRun[task] = time.Now()
 }
 
 // runTask 执行调度任务并在完成后更新状态。
@@ -215,14 +237,9 @@ func (s *SchedulerService) runTask(task string) {
 		if r := recover(); r != nil {
 			s.logger.Error("调度任务 panic", zap.String("task", task), zap.Any("panic", r))
 		}
-		s.mu.Lock()
-		s.running[task] = false
-		s.lastRun[task] = time.Now()
-		s.mu.Unlock()
+		s.ReleaseTask(task)
 		s.wg.Done()
 	}()
-
-	s.logger.Info(fmt.Sprintf("▶ 调度触发 → %s", map[string]string{"merge": "合并", "clean": "清理"}[task]))
 
 	switch task {
 	case "merge":
@@ -355,7 +372,7 @@ func (s *SchedulerService) loadSchedule() model.ScheduleConfig {
 		return defaultSchedule
 	}
 	// 与 SaveSchedule 一致的边界校验，防止手动编辑或旧版本写入的无效值
-	schedule.MergeInterval = max(10, min(1440, schedule.MergeInterval))
-	schedule.CleanInterval = max(10, min(1440, schedule.CleanInterval))
+	schedule.MergeInterval = max(10, min(10080, schedule.MergeInterval))
+	schedule.CleanInterval = max(10, min(10080, schedule.CleanInterval))
 	return schedule
 }

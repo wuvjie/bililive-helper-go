@@ -49,8 +49,6 @@ WORKDIR /app
 
 COPY --from=builder /app/bililive-helper-go .
 COPY --from=frontend-builder /app/templates ./templates
-# login.html is a server-side template not built by Vite — copy from source
-COPY --from=builder /app/templates/login.html ./templates/login.html
 
 EXPOSE 5000
 CMD ["./bililive-helper-go"]

@@ -448,6 +448,7 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 
 	if err := ffmpeg.ValidateOutput(ctx, mp4Path); err != nil {
 		opLog.Log(fmt.Sprintf("❌ MP4 输出校验失败: %v，保留原始文件", err))
+		onProgress(fmt.Sprintf("❌ MP4 输出校验失败，保留 %s", filepath.Base(flvPath)))
 		utils.SafeUnlink(mp4Path) // 清理校验失败的部分输出
 		return 0, false
 	}
@@ -750,10 +751,12 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 
 	folder := filepath.Join(cfg.TargetDir, streamer)
 	if cfg.IsBackupWindow() {
-		return opLog.LogID(), fmt.Errorf("当前处于静默时段（%d:%02d-%d:%02d），合并暂停", cfg.BackupStartHour, cfg.BackupStartMinute, cfg.BackupEndHour, cfg.BackupEndMinute)
+		opLog.Discard()
+		return "", fmt.Errorf("当前处于静默时段（%d:%02d-%d:%02d），合并暂停", cfg.BackupStartHour, cfg.BackupStartMinute, cfg.BackupEndHour, cfg.BackupEndMinute)
 	}
 	if _, err := os.Stat(folder); os.IsNotExist(err) {
-		return opLog.LogID(), fmt.Errorf("目录不存在")
+		opLog.Discard()
+		return "", fmt.Errorf("目录不存在")
 	}
 
 	if onProgress == nil {
@@ -766,7 +769,8 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	var skipped []string
 	for _, f := range files {
 		if !utils.ValidateFilename(f) {
-			return opLog.LogID(), fmt.Errorf("非法文件名: %s", f)
+			opLog.Discard()
+			return "", fmt.Errorf("非法文件名: %s", f)
 		}
 		path := filepath.Join(folder, f)
 		if info, err := os.Stat(path); err == nil {
@@ -778,10 +782,11 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	}
 
 	if len(validFiles) < 2 {
+		opLog.Discard()
 		if len(skipped) > 0 {
-			return opLog.LogID(), fmt.Errorf("有效文件不足2个（%d 个文件已不存在，请刷新文件列表）", len(skipped))
+			return "", fmt.Errorf("有效文件不足2个（%d 个文件已不存在，请刷新文件列表）", len(skipped))
 		}
-		return opLog.LogID(), fmt.Errorf("有效文件不足2个")
+		return "", fmt.Errorf("有效文件不足2个")
 	}
 
 	// 磁盘空间前置检查：确保可用空间满足 TS 转换峰值
@@ -789,7 +794,8 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	if diskErr == nil {
 		needed := (totalInputBytes * 3) + tsMergeHeadroomBytes
 		if int64(disk.Free) < needed {
-			return opLog.LogID(), fmt.Errorf("磁盘空间不足：需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
+			opLog.Discard()
+			return "", fmt.Errorf("磁盘空间不足：需要 %.1f GB 可用以应对 TS 转换峰值，当前仅 %.1f GB",
 				float64(needed)/oneGB, float64(disk.Free)/oneGB)
 		}
 	}
@@ -810,7 +816,8 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 		}
 	}
 	if !hasOriginal {
-		return opLog.LogID(), fmt.Errorf("所选文件全部是合并版，请至少选择一个原始文件")
+		opLog.Discard()
+		return "", fmt.Errorf("所选文件全部是合并版，请至少选择一个原始文件")
 	}
 
 	start := time.Now()

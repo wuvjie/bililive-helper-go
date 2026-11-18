@@ -29,7 +29,15 @@ func (h *Handler) RunMerge(c *gin.Context) {
 		return
 	}
 
+	if h.scheduler != nil && !h.scheduler.TryAcquireTask("merge") {
+		failConflict(c, "合并任务正在执行中，请稍后再试")
+		return
+	}
+
 	h.runSSE(c, "merge", func(ctx context.Context, onProgress func(string)) string {
+		if h.scheduler != nil {
+			defer h.scheduler.ReleaseTask("merge")
+		}
 		result, logID, err := h.merge.Run(ctx, req.Streamer, onProgress)
 		if err != nil {
 			h.logger.Error("合并失败", zap.Error(err), zap.String("logID", logID))
@@ -99,7 +107,15 @@ func (h *Handler) RunClean(c *gin.Context) {
 		return
 	}
 
+	if h.scheduler != nil && !h.scheduler.TryAcquireTask("clean") {
+		failConflict(c, "磁盘清理任务正在执行中，请稍后再试")
+		return
+	}
+
 	h.runSSE(c, "clean", func(ctx context.Context, onProgress func(string)) string {
+		if h.scheduler != nil {
+			defer h.scheduler.ReleaseTask("clean")
+		}
 		result, logID, err := h.clean.Run(ctx, req.Streamer, onProgress)
 		if err != nil {
 			h.logger.Error("清理失败", zap.Error(err), zap.String("logID", logID))

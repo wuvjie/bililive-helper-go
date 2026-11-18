@@ -327,7 +327,7 @@ func (s *HistoryService) DeleteRecord(id string) error {
 	return nil
 }
 
-// ClearAllRecords 清空全部历史记录。
+// ClearAllRecords 清空全部历史记录并清理磁盘上的操作日志文件。
 func (s *HistoryService) ClearAllRecords() error {
 	s.ensureLoadedSafe()
 	s.mu.Lock()
@@ -335,5 +335,20 @@ func (s *HistoryService) ClearAllRecords() error {
 
 	s.cache = []model.HistoryRecord{}
 	s.saveRecords(s.cache)
+
+	if s.config != nil && s.config.LogDir != "" {
+		for _, sub := range []string{"merge_log", "clean_log"} {
+			dir := filepath.Join(s.config.LogDir, sub)
+			entries, err := os.ReadDir(dir)
+			if err != nil {
+				continue
+			}
+			for _, e := range entries {
+				if !e.IsDir() && strings.HasPrefix(e.Name(), "op_") && strings.HasSuffix(e.Name(), ".log") {
+					_ = os.Remove(filepath.Join(dir, e.Name()))
+				}
+			}
+		}
+	}
 	return nil
 }

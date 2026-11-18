@@ -237,6 +237,12 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	h.hashedPassword = hashed
 	h.passwordMu.Unlock()
 
+	session := sessions.Default(c)
+	if session.Get("authenticated") == true {
+		session.Set("session_version", h.config.Snapshot().SessionVersion)
+		_ = session.Save()
+	}
+
 	okMsg(c, "密码已更新")
 }
 

@@ -5,14 +5,13 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync/atomic"
-	"time"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
 // runSSE 同步执行 fn 并通过 Server-Sent Events 流式传输进度消息。
-// 进度更新会合并 — 每次 tick/notify 只发送最新消息，避免消息积压。
+// 使用有界缓冲队列按序推送日志并过滤连续重复行，确保结束摘要明细不被覆盖吞行；
 // 客户端断开时自动取消 fn 的 context，避免 goroutine 泄漏。
 func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Context, onProgress func(string)) string) {
 	c.Header("Content-Type", "text/event-stream")
@@ -20,13 +19,34 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 	c.Header("Connection", "keep-alive")
 	c.Header("X-Accel-Buffering", "no")
 
-	var latest atomic.Value
-	notify := make(chan struct{}, 1)
+	msgCh := make(chan string, 256)
+	var prodMu sync.Mutex
+	var lastQueued string
+
 	onProgress := func(msg string) {
-		latest.Store(msg)
+		if msg == "" {
+			return
+		}
+		prodMu.Lock()
+		if msg == lastQueued {
+			prodMu.Unlock()
+			return
+		}
+		lastQueued = msg
+		prodMu.Unlock()
+
 		select {
-		case notify <- struct{}{}:
+		case msgCh <- msg:
 		default:
+			// 队列满时丢弃最旧一条消息，保证最新状态与摘要不丢失
+			select {
+			case <-msgCh:
+			default:
+			}
+			select {
+			case msgCh <- msg:
+			default:
+			}
 		}
 	}
 
@@ -44,36 +64,35 @@ func (h *Handler) runSSE(c *gin.Context, task string, fn func(ctx context.Contex
 		done <- fn(ctx, onProgress)
 	}()
 
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
+	var lastRawSent string
+	sendMsg := func(rawMsg string) {
+		if rawMsg == "" || rawMsg == lastRawSent {
+			return
+		}
+		lastRawSent = rawMsg
+		encoded := strings.ReplaceAll(rawMsg, "\n", "\ndata: ")
+		fmt.Fprintf(c.Writer, "data: %s\n\n", encoded)
+		c.Writer.Flush()
+	}
 
-	var lastSent string
 	for {
 		select {
 		case <-ctx.Done():
-			cancel() // 确保 fn 收到取消信号
+			cancel()
 			return
-		case <-notify:
-			if v := latest.Load(); v != nil {
-				if msg := v.(string); msg != "" && msg != lastSent {
-					msg = strings.ReplaceAll(msg, "\n", "\ndata: ")
-					fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
-					c.Writer.Flush()
-					lastSent = msg
-				}
-			}
-		case <-ticker.C:
-			if v := latest.Load(); v != nil {
-				if msg := v.(string); msg != "" && msg != lastSent {
-					msg = strings.ReplaceAll(msg, "\n", "\ndata: ")
-					fmt.Fprintf(c.Writer, "data: %s\n\n", msg)
-					c.Writer.Flush()
-					lastSent = msg
-				}
-			}
+		case msg := <-msgCh:
+			sendMsg(msg)
 		case result := <-done:
-			result = strings.ReplaceAll(result, "\n", "\ndata: ")
-			fmt.Fprintf(c.Writer, "data: %s\n\n", result)
+			for {
+				select {
+				case msg := <-msgCh:
+					sendMsg(msg)
+				default:
+					goto sendFinal
+				}
+			}
+		sendFinal:
+			sendMsg(result)
 			fmt.Fprintf(c.Writer, "data: [END]\n\n")
 			c.Writer.Flush()
 			return

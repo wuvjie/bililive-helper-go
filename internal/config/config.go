@@ -145,26 +145,34 @@ func Load() (*Config, []string) {
 	cfg.ConfigFile = filepath.Join(cfg.LogDir, "config.json")
 
 	// 首次运行自动生成随机凭据（无配置文件且无环境变量时）
-	firstRun := false
+	savedPwd, savedKey := cfg.LoadCredentials()
+	passwordGenerated := false
+	needSaveCred := false
 	if cfg.Password == "" {
-		cfg.Password = cfg.LoadCredential()
+		cfg.Password = savedPwd
 	}
 	if cfg.Password == "" {
 		cfg.Password = utils.RandomHex(12) // 24-char hex string (~96 bits of entropy)
-		firstRun = true
+		passwordGenerated = true
+		needSaveCred = true
+	}
+	if cfg.SecretKey == "" {
+		cfg.SecretKey = savedKey
 	}
 	if cfg.SecretKey == "" {
 		cfg.SecretKey = utils.RandomHex(16) // 32-char hex string (~128 bits of entropy)
-		firstRun = true
+		needSaveCred = true
 	}
-	if firstRun {
+	if passwordGenerated {
 		fmt.Printf("═══ 首次启动 ═══\n")
 		fmt.Printf("登录密码: %s\n", cfg.Password)
 		fmt.Printf("请登录后及时修改密码\n")
 		fmt.Printf("═══════════════\n")
-		// 持久化自动生成的密码，使其在重启后仍然有效
+	}
+	if needSaveCred {
+		// 持久化自动生成的凭据与会话密钥，使其在重启后仍然有效
 		if err := cfg.SaveCredential(); err != nil {
-			warnings = append(warnings, fmt.Sprintf("密码持久化失败: %v", err))
+			warnings = append(warnings, fmt.Sprintf("凭据持久化失败: %v", err))
 		}
 	}
 	return &cfg, warnings
@@ -224,11 +232,18 @@ func (c *Config) Validate() error {
 // IsBackupWindow 判断当前时间是否在静默时段内。
 // 支持跨午夜的时段配置（如 22:30 - 06:15）。
 func (c *Config) IsBackupWindow() bool {
-	now := time.Now()
-	cur := now.Hour()*60 + now.Minute()
+	if c.mu != nil {
+		c.mu.RLock()
+		defer c.mu.RUnlock()
+	}
 	start := c.BackupStartHour*60 + c.BackupStartMinute
 	end := c.BackupEndHour*60 + c.BackupEndMinute
-	if start <= end {
+	if start == end {
+		return false
+	}
+	now := time.Now()
+	cur := now.Hour()*60 + now.Minute()
+	if start < end {
 		return cur >= start && cur < end
 	}
 	// 跨午夜时段（如 22:30 - 06:15）
@@ -240,9 +255,15 @@ func (c *Config) IsBackupWindow() bool {
 func (c *Config) Apply(fn func() error) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	// 快照用于回滚（深拷贝切片避免别名问题）
+	// 快照用于回滚（深拷贝切片与 map 避免别名问题）
 	old := *c
 	old.WhitelistKeywords = append([]string(nil), c.WhitelistKeywords...)
+	if c.StreamerRules != nil {
+		old.StreamerRules = make(map[string]StreamerRule, len(c.StreamerRules))
+		for k, v := range c.StreamerRules {
+			old.StreamerRules[k] = v
+		}
+	}
 	if err := fn(); err != nil {
 		*c = old
 		return err
@@ -276,29 +297,40 @@ func (c *Config) GetCredentialFile() string {
 	return filepath.Join(c.LogDir, ".credentials.json")
 }
 
-// LoadCredential 从凭据文件读取持久化的密码。
-// 凭据文件不存在时返回空字符串。
-func (c *Config) LoadCredential() string {
+type credentialFile struct {
+	Password  string `json:"password"`
+	SecretKey string `json:"secret_key,omitempty"`
+}
+
+// LoadCredentials 从凭据文件读取持久化的密码和会话签名密钥。
+// 凭据文件不存在或解析失败时返回空字符串。
+func (c *Config) LoadCredentials() (string, string) {
 	file := c.GetCredentialFile()
 	data, err := os.ReadFile(file)
 	if err != nil {
-		return ""
+		return "", ""
 	}
-	var cred struct {
-		Password string `json:"password"`
-	}
+	var cred credentialFile
 	if err := json.Unmarshal(data, &cred); err != nil {
-		return ""
+		return "", ""
 	}
-	return cred.Password
+	return cred.Password, cred.SecretKey
 }
 
-// SaveCredential 将当前密码持久化到凭据文件。
+// LoadCredential 从凭据文件读取持久化的密码。
+// 凭据文件不存在时返回空字符串。
+func (c *Config) LoadCredential() string {
+	pwd, _ := c.LoadCredentials()
+	return pwd
+}
+
+// SaveCredential 将当前密码和会话密钥持久化到凭据文件。
 func (c *Config) SaveCredential() error {
 	file := c.GetCredentialFile()
-	data, err := json.Marshal(struct {
-		Password string `json:"password"`
-	}{Password: c.Password})
+	data, err := json.Marshal(credentialFile{
+		Password:  c.Password,
+		SecretKey: c.SecretKey,
+	})
 	if err != nil {
 		return err
 	}
