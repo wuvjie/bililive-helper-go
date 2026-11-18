@@ -127,14 +127,16 @@ func TestEdge04_AllMergeTiersFailPreservesSourceFiles(t *testing.T) {
 	}
 }
 
-// Edge 5: 主播裁剪边界场景（视频短于 TrimStart、短于 TrimEnd、以及反向起止时间安全回退保留原片）。
+// Edge 5: 主播裁剪边界场景（视频短于 TrimStart、Start=0 或 Start>0 时总时长不足 TrimEnd、以及反向起止时间安全回退保留原片）。
 func TestEdge05_TrimRuleEdgeCases(t *testing.T) {
 	requireFFmpegTools(t)
 	root, _, svc := newScenarioEnv(t, func(c *config.Config) {
 		c.StreamerRules = map[string]config.StreamerRule{
-			"S_ShortStart": {TrimEnabled: true, TrimStart: "00:00:10"},
-			"S_ShortEnd":   {TrimEnabled: true, TrimStart: "00:00:00", TrimEnd: "00:00:10"},
-			"S_BadRange":   {TrimEnabled: true, TrimStart: "00:00:04", TrimEnd: "00:00:02"},
+			"S_ShortStart":          {TrimEnabled: true, TrimStart: "00:00:10"},
+			"S_ShortEnd":            {TrimEnabled: true, TrimStart: "00:00:00", TrimEnd: "00:00:10"},
+			"S_NonZeroShortEnd":     {TrimEnabled: true, TrimStart: "00:00:02", TrimEnd: "00:00:10"},
+			"S_NonZeroExactEnd":     {TrimEnabled: true, TrimStart: "00:00:02", TrimEnd: "00:00:05"},
+			"S_BadRange":            {TrimEnabled: true, TrimStart: "00:00:04", TrimEnd: "00:00:02"},
 		}
 	})
 	oldTime := time.Now().Add(-2 * time.Hour)
@@ -146,6 +148,8 @@ func TestEdge05_TrimRuleEdgeCases(t *testing.T) {
 	}{
 		{"S_ShortStart", "2", true},
 		{"S_ShortEnd", "2", true},
+		{"S_NonZeroShortEnd", "5", true}, // 5s <= 10s (即便 start=2s < 5s，仍不足截止点 10s，绝不裁片头)
+		{"S_NonZeroExactEnd", "5", true}, // 5s <= 5s (恰好等于截止点，同样整段保留)
 		{"S_BadRange", "5", false},
 	}
 
@@ -164,6 +168,9 @@ func TestEdge05_TrimRuleEdgeCases(t *testing.T) {
 		newInfo, _ := os.Stat(mp4)
 		if newInfo.Size() != origInfo.Size() {
 			t.Errorf("%s: expected original video bytes preserved (%d vs %d)", tc.streamer, newInfo.Size(), origInfo.Size())
+		}
+		if ffmpeg.IsVideoTrimmed(context.Background(), mp4) {
+			t.Errorf("%s: skipped/invalid video must not carry bh_trimmed metadata", tc.streamer)
 		}
 	}
 }

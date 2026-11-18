@@ -44,24 +44,13 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%ds", int(d.Seconds()))
 }
 
-type mp4CheckFingerprint struct {
-	size    int64
-	mtime   int64
-	ruleSig string
-}
-
-func ruleFingerprint(rule config.StreamerRule) string {
-	return fmt.Sprintf("%v|%s|%s", rule.TrimEnabled, strings.TrimSpace(rule.TrimStart), strings.TrimSpace(rule.TrimEnd))
-}
-
 // MergeService 提供录制文件合并功能。
-// 使用 per-streamer 锁防止同一主播的并发合并，支持 FLV 转 MP4、多文件 TS 拼接和重编码 fallback。
+// 使用 per-streamer 锁防止同一主播的并发合并，支持 FLV/TS 转 MP4、多文件拼接和重编码 fallback。
 type MergeService struct {
 	config        *config.Config
 	logger        *zap.Logger
 	history       *HistoryService
 	streamerLocks sync.Map // streamer name -> *streamerLock
-	checkedMP4s   sync.Map // abs/full path -> mp4CheckFingerprint，避免单分片 MP4 重复触发 ffprobe
 }
 
 // streamerLock 用于 per-streamer 粒度的合并锁，防止同一主播并发合并。
@@ -267,7 +256,7 @@ func (s *MergeService) Run(ctx context.Context, streamer string, onProgress Prog
 	return &MergeResult{Done: done, Failed: mergeFailed, TotalGB: totalGB}, setup.LogID, nil
 }
 
-// runConversions 执行所有单文件转换/裁剪任务（FLV/TS→MP4 或单 MP4 按规则裁剪）。返回完成数和实际生成成片总字节数。
+// runConversions 执行所有 FLV/TS → MP4 格式转换任务（并在转换后按需执行主播裁剪规则）。返回完成数和实际生成成片总字节数。
 func (s *MergeService) runConversions(ctx context.Context, convertTasks []convertTask, cfg config.Config, onProgress ProgressFunc, opLog *OpLogger) (int, int64) {
 	done := 0
 	var totalBytes int64
@@ -285,13 +274,8 @@ func (s *MergeService) runConversions(ctx context.Context, convertTasks []conver
 		if fi, err := os.Stat(ct.FlvPath); err == nil {
 			flvSize = fi.Size()
 		}
-		isTrimOnly := ct.FlvPath == ct.Mp4Path
-		if isTrimOnly {
-			onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪 MP4: %s (%s)", streamerName, filepath.Base(ct.Mp4Path), utils.FormatSize(flvSize)))
-		} else {
-			extLabel := strings.ToUpper(strings.TrimPrefix(filepath.Ext(ct.FlvPath), "."))
-			onProgress(fmt.Sprintf("[%s] 🔄 正在转换 %s → MP4: %s (%s)", streamerName, extLabel, filepath.Base(ct.FlvPath), utils.FormatSize(flvSize)))
-		}
+		extLabel := strings.ToUpper(strings.TrimPrefix(filepath.Ext(ct.FlvPath), "."))
+		onProgress(fmt.Sprintf("[%s] 🔄 正在转换 %s → MP4: %s (%s)", streamerName, extLabel, filepath.Base(ct.FlvPath), utils.FormatSize(flvSize)))
 		convertStart := time.Now()
 		if outBytes, ok := s.convertFlvToMp4(ctx, ct.FlvPath, ct.Mp4Path, onProgress, opLog); ok {
 			elapsed := time.Since(convertStart)
@@ -301,19 +285,13 @@ func (s *MergeService) runConversions(ctx context.Context, convertTasks []conver
 				effectiveBytes = flvSize
 			}
 			totalBytes += effectiveBytes
-			if isTrimOnly {
-				onProgress(fmt.Sprintf("[%s] ✂ ✅ 单分片裁剪完成: %s (%s，耗时 %s)", streamerName, filepath.Base(ct.Mp4Path), utils.FormatSize(effectiveBytes), formatDuration(elapsed)))
-			} else if outBytes > 0 {
+			if outBytes > 0 {
 				onProgress(fmt.Sprintf("[%s] ✅ 格式转换完成: %s (%s，耗时 %s)", streamerName, filepath.Base(ct.Mp4Path), utils.FormatSize(outBytes), formatDuration(elapsed)))
 			} else {
 				onProgress(fmt.Sprintf("[%s] ✅ %s (%s)", streamerName, filepath.Base(ct.Mp4Path), formatDuration(elapsed)))
 			}
 		} else {
-			if isTrimOnly {
-				onProgress(fmt.Sprintf("[%s] ⚠ 单分片裁剪未生效", streamerName))
-			} else {
-				onProgress(fmt.Sprintf("[%s] ❌ 格式转换失败", streamerName))
-			}
+			onProgress(fmt.Sprintf("[%s] ❌ 格式转换失败", streamerName))
 		}
 	}
 	return done, totalBytes
@@ -447,7 +425,7 @@ func buildDetail(convertDone, mergeDone, mergeFailed int, failedReasons map[stri
 	return strings.Join(parts, ", ")
 }
 
-// convertFlvToMp4 将单个 FLV/TS 文件无损转封装为 MP4，或在源/目标同为 MP4 时仅执行主播裁剪规则。
+// convertFlvToMp4 将单个 FLV/TS 文件无损转封装为 MP4。
 // 转换成功后保留原始录制时间，执行主播裁剪规则，并返回最终成片字节数。
 func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path string, onProgress ProgressFunc, opLog *OpLogger) (int64, bool) {
 	// 转换前读取原始录制时间戳与修改时间
@@ -463,16 +441,6 @@ func (s *MergeService) convertFlvToMp4(ctx context.Context, flvPath, mp4Path str
 	}
 
 	streamerName := filepath.Base(filepath.Dir(mp4Path))
-
-	// 若输入输出为同一 MP4 文件，则属于单分片 MP4 裁剪任务，跳过转封装与删源步骤
-	if flvPath == mp4Path {
-		trimmed := s.applyStreamerTrim(ctx, streamerName, mp4Path, flvMtime, onProgress, opLog)
-		var outputSize int64
-		if info, err := os.Stat(mp4Path); err == nil {
-			outputSize = info.Size()
-		}
-		return outputSize, trimmed
-	}
 
 	// 检查磁盘空间
 	disk, diskErr := utils.GetDiskUsage(filepath.Dir(flvPath))
@@ -932,24 +900,44 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 	}
 	end := strings.TrimSpace(rule.TrimEnd)
 
-	// 时长预检：检查视频总时长是否小于等于起始裁剪时间，或从头截取时是否小于等于截取上限
 	startSec, startErr := ffmpeg.ParseTimeSeconds(start)
 	endSec, endErr := ffmpeg.ParseTimeSeconds(end)
-	needDurationCheck := (startErr == nil && startSec > 0) || (end != "" && endErr == nil && endSec > 0)
+
+	// 先校验裁剪起止时间是否合法，防止无效区间误命中时长不足跳过分支
+	if startErr != nil || startSec < 0 {
+		if opLog != nil {
+			opLog.Log(fmt.Sprintf("⚠ [%s] 无效裁剪起始时间 (%s)，已安全保留原完整视频", streamerName, start))
+		}
+		onProgress(fmt.Sprintf("[%s] ⚠ 裁剪规则无效，已保留原完整视频", streamerName))
+		return false
+	}
+	if end != "" && (endErr != nil || endSec <= 0 || endSec <= startSec) {
+		if opLog != nil {
+			opLog.Log(fmt.Sprintf("⚠ [%s] 无效裁剪时段 [%s - %s]，已安全保留原完整视频", streamerName, start, end))
+		}
+		onProgress(fmt.Sprintf("[%s] ⚠ 裁剪规则无效，已保留原完整视频", streamerName))
+		return false
+	}
+
+	// 时长预检：
+	// 1. 视频总时长 <= 裁剪起始时间，无需裁剪；
+	// 2. 配置了结束时间点（无论 start 是否为 00:00:00）且视频总时长 <= 规则截止点（如不足 00:35:00），
+	//    整段保留原视频，避免把本就短于目标截止点的录像切掉片头后更短。
+	needDurationCheck := startSec > 0 || (end != "" && endSec > 0)
 	if needDurationCheck {
 		if dur, durErr := ffmpeg.ProbeDuration(ctx, videoPath); durErr == nil && dur > 0 {
-			if startErr == nil && startSec > 0 && dur <= startSec {
+			if startSec > 0 && dur <= startSec {
 				if opLog != nil {
-					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪起始时间 (%s)，保留原视频", streamerName, dur, start))
+					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪起始时间 (%s)，保留原完整视频", streamerName, dur, start))
 				}
 				onProgress(fmt.Sprintf("[%s] ℹ 视频时长短于裁剪起始时间，无需裁剪，保留完整视频", streamerName))
 				return true
 			}
-			if (start == "0" || start == "00:00:00" || (startErr == nil && startSec == 0)) && end != "" && endErr == nil && endSec > 0 && dur <= endSec {
+			if end != "" && endSec > 0 && dur <= endSec {
 				if opLog != nil {
-					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 截取上限 (%s)，保留原视频", streamerName, dur, end))
+					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪截止时间 (%s)，保留原完整视频", streamerName, dur, end))
 				}
-				onProgress(fmt.Sprintf("[%s] ℹ 视频时长短于设定时段，无需裁剪，保留完整视频", streamerName))
+				onProgress(fmt.Sprintf("[%s] ℹ 视频时长不足规则截止时间（%s），无需裁剪，保留完整视频", streamerName, end))
 				return true
 			}
 		}
@@ -984,12 +972,9 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 	}
 
 	// 同步裁剪/平移同名 XML 弹幕时间轴，使成片与弹幕保持一致
-	trimStartSec := 0.0
-	if startErr == nil && startSec > 0 {
-		trimStartSec = startSec
-	}
+	trimStartSec := startSec
 	trimEndSec := 0.0
-	if end != "" && endErr == nil && endSec > 0 {
+	if end != "" && endSec > 0 {
 		trimEndSec = endSec
 	}
 	trimCompanionDanmaku(videoPath, trimStartSec, trimEndSec)
@@ -1000,11 +985,6 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 	}
 
 	if info, err := os.Stat(videoPath); err == nil {
-		s.checkedMP4s.Store(videoPath, mp4CheckFingerprint{
-			size:    info.Size(),
-			mtime:   info.ModTime().UnixNano(),
-			ruleSig: ruleFingerprint(rule),
-		})
 		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s，大小: %s）", streamerName, trimDesc, utils.FormatSize(info.Size())))
 	} else {
 		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s）", streamerName, trimDesc))

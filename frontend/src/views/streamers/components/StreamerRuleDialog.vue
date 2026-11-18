@@ -22,7 +22,7 @@
               </svg>
               <span class="rule-title">
                 <span>录像自动剪辑与截取</span>
-                <el-tooltip content="在视频分片合并后，自动截取并保留指定时间段内的内容（采用快速无损剪辑，不改变画质）" placement="top" :show-after="300">
+                <el-tooltip content="仅在分片合并或 FLV/TS 转 MP4 过程中执行无损剪辑；总时长不足截止点时整段保留，不回溯修改已有独立 MP4" placement="top" :show-after="300">
                   <span class="label-help-ico">?</span>
                 </el-tooltip>
               </span>

@@ -315,15 +315,20 @@ func TestScenario07_MixedAudioReencodeFinalize(t *testing.T) {
 	}
 }
 
-// Scenario 8: 单文件多形态处理（单 FLV、单 TS、非标命名 FLV 转 MP4，以及单 MP4 原地裁剪与二次运行幂等性）
-func TestScenario08_SingleFilesConvertAndMP4TrimIdempotent(t *testing.T) {
+// Scenario 8: 单文件多形态处理（单 FLV/TS/非标 FLV 转 MP4 与随转换裁剪幂等性，且历史独立 MP4 绝不被回溯裁剪）
+func TestScenario08_SingleFilesConvertAndSkipLegacyMP4(t *testing.T) {
 	requireFFmpegTools(t)
 	root, _, svc := newScenarioEnv(t, func(c *config.Config) {
 		c.StreamerRules = map[string]config.StreamerRule{
-			"主播S8_MP4": {
+			"主播S8_FLVTrim": {
 				TrimEnabled: true,
 				TrimStart:   "00:00:01",
-				TrimEnd:     "00:00:04",
+				TrimEnd:     "00:00:03",
+			},
+			"主播S8_LegacyMP4": {
+				TrimEnabled: true,
+				TrimStart:   "00:00:01",
+				TrimEnd:     "00:00:03",
 			},
 		}
 	})
@@ -332,18 +337,23 @@ func TestScenario08_SingleFilesConvertAndMP4TrimIdempotent(t *testing.T) {
 	dFlv := filepath.Join(root, "主播S8_FLV")
 	dTS := filepath.Join(root, "主播S8_TS")
 	dRaw := filepath.Join(root, "主播S8_Raw")
-	dMP4 := filepath.Join(root, "主播S8_MP4")
-	for _, d := range []string{dFlv, dTS, dRaw, dMP4} {
+	dFlvTrim := filepath.Join(root, "主播S8_FLVTrim")
+	dLegacyMP4 := filepath.Join(root, "主播S8_LegacyMP4")
+	for _, d := range []string{dFlv, dTS, dRaw, dFlvTrim, dLegacyMP4} {
 		os.MkdirAll(d, 0755)
 	}
 
 	createCodecClip(t, filepath.Join(dFlv, "[2026-06-01 10-00-00][主播S8_FLV][单FLV]001.flv"), "flv", "libx264", true, "2", oldTime)
 	createCodecClip(t, filepath.Join(dTS, "[2026-06-01 11-00-00][主播S8_TS][单TS]001.ts"), "mpegts", "libx264", true, "2", oldTime)
 	createCodecClip(t, filepath.Join(dRaw, "custom_stream_2026.flv"), "flv", "libx264", true, "2", oldTime)
-	trimMP4 := filepath.Join(dMP4, "[2026-06-01 12-00-00][主播S8_MP4][单MP4裁剪].mp4")
-	createCodecClip(t, trimMP4, "mp4", "libx264", true, "5", oldTime)
+	createCodecClip(t, filepath.Join(dFlvTrim, "[2026-06-01 11-30-00][主播S8_FLVTrim][转封装带裁剪]001.flv"), "flv", "libx264", true, "6", oldTime)
 
-	// 首次运行：3 个转封装 + 1 个单 MP4 裁剪 = 4 项
+	// 历史已处理的独立 MP4（故意不带 bh_trimmed 元数据），即使对应主播启用了裁剪规则也绝不能被回溯重裁
+	legacyMP4 := filepath.Join(dLegacyMP4, "[2026-06-01 12-00-00][主播S8_LegacyMP4][历史成片].mp4")
+	createCodecClip(t, legacyMP4, "mp4", "libx264", true, "6", oldTime)
+	legacyOrigInfo, _ := os.Stat(legacyMP4)
+
+	// 首次运行：仅 4 个实际 FLV/TS 转封装任务，历史独立 MP4 不入队
 	res1, _, err := svc.Run(context.Background(), "", func(string) {})
 	if err != nil || res1.Done != 4 || res1.Failed != 0 {
 		t.Fatalf("first Run unexpected: res=%+v err=%v", res1, err)
@@ -353,16 +363,25 @@ func TestScenario08_SingleFilesConvertAndMP4TrimIdempotent(t *testing.T) {
 	assertClipValid(t, filepath.Join(dTS, "[2026-06-01 11-00-00][主播S8_TS][单TS]001.mp4"), 1.5)
 	assertClipValid(t, filepath.Join(dRaw, "custom_stream_2026.mp4"), 1.5)
 
-	// 单 MP4 裁剪验证：带 bh_trimmed 元数据且时长缩短（原 5s -> 裁剪区间 1s~4s <= 3.5s）
-	assertClipValid(t, trimMP4, 2.0)
-	if !ffmpeg.IsVideoTrimmed(context.Background(), trimMP4) {
-		t.Fatal("expected bh_trimmed metadata after single MP4 trim")
+	// 单 FLV 转 MP4 过程中执行了裁剪（原 6s -> 裁剪区间 1s~3s，含关键帧对齐后 <= 4.0s，带 bh_trimmed 元数据）
+	trimmedOut := filepath.Join(dFlvTrim, "[2026-06-01 11-30-00][主播S8_FLVTrim][转封装带裁剪]001.mp4")
+	assertClipValid(t, trimmedOut, 1.5)
+	if !ffmpeg.IsVideoTrimmed(context.Background(), trimmedOut) {
+		t.Fatal("expected bh_trimmed metadata after FLV conversion with trim")
 	}
-	if dur, _ := ffmpeg.ProbeDuration(context.Background(), trimMP4); dur > 3.6 {
-		t.Fatalf("trimmed duration = %.2fs, expected <= 3.6s", dur)
+	if dur, _ := ffmpeg.ProbeDuration(context.Background(), trimmedOut); dur > 4.0 {
+		t.Fatalf("trimmed duration = %.2fs, expected <= 4.0s", dur)
 	}
 
-	// 二次扫描运行：必须完全幂等，Done == 0，不重复裁剪
+	// 历史独立 MP4 必须毫发无损（大小、时长未变，无 bh_trimmed）
+	if legacyCurInfo, err := os.Stat(legacyMP4); err != nil || legacyCurInfo.Size() != legacyOrigInfo.Size() {
+		t.Fatalf("legacy standalone MP4 was unexpectedly modified: orig=%d cur=%v err=%v", legacyOrigInfo.Size(), legacyCurInfo, err)
+	}
+	if ffmpeg.IsVideoTrimmed(context.Background(), legacyMP4) {
+		t.Fatal("legacy standalone MP4 must not be retroactively trimmed")
+	}
+
+	// 二次扫描运行：必须完全幂等，Done == 0，不重复转换也不回溯裁剪
 	res2, _, err := svc.Run(context.Background(), "", func(string) {})
 	if err != nil || res2.Done != 0 || res2.Failed != 0 {
 		t.Fatalf("second Run expected Done=0 (idempotent), got res=%+v err=%v", res2, err)

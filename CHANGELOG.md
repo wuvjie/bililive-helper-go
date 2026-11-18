@@ -4,6 +4,12 @@
 
 文档格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范，版本号遵循 [语义化版本 (Semantic Versioning)](https://semver.org/lang/zh-CN/spec/v2.0.0.html)。
 
+## [v2.0.7] - 2026-11-18
+
+### Fixed
+- **严禁回溯裁剪历史独立 `.mp4` 文件**：移除 `v2.0.6` 引入的独立 `.mp4` 自动扫描入队裁剪机制（`enqueueSingleMP4Trim` / `checkSingleMP4Trim`），恢复与 `v2.0.5` 一致的安全边界——裁剪规则仅随 **FLV/TS 转封装为 MP4** 或 **多分片合并为 `-合并版.mp4`** 流程触发，不再回头修改目录中任何已生成的独立成片或历史录像（彻底根治旧录像无 `bh_trimmed` 标签导致被二次裁剪的问题）。
+- **补全非零起点裁剪时的总时长不足保护**：修正 `applyStreamerTrim` 时长预检仅在 `TrimStart == 0` 时校验 `TrimEnd` 的漏洞；现优先校验规则区间合法性，且当规则配置了结束时间点（如 `00:05:00 ~ 00:35:00`）时，**只要视频总时长不超过截止时间点（`dur <= endSec`）即整段跳过不裁剪**，避免本就不足规则时长的录像被强行切掉片头而变得更短。
+
 ## [v2.0.6] - 2026-11-18
 
 ### Added

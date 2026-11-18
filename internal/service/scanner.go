@@ -118,39 +118,6 @@ func stabilityWaitDuration(modTime time.Time) time.Duration {
 	return 5 * time.Second
 }
 
-// shouldTrimVideo 预判单个 MP4 文件是否确实需要按主播规则裁剪，避免无需裁剪的文件每轮扫描都入队。
-func shouldTrimVideo(ctx context.Context, videoPath string, rule config.StreamerRule) bool {
-	if !rule.TrimEnabled {
-		return false
-	}
-	start := strings.TrimSpace(rule.TrimStart)
-	if start == "" {
-		start = "00:00:00"
-	}
-	end := strings.TrimSpace(rule.TrimEnd)
-	startSec, startErr := ffmpeg.ParseTimeSeconds(start)
-	endSec, endErr := ffmpeg.ParseTimeSeconds(end)
-
-	hasStartTrim := startErr == nil && startSec > 0
-	hasEndTrim := end != "" && endErr == nil && endSec > 0
-	if !hasStartTrim && !hasEndTrim {
-		return false
-	}
-	if hasStartTrim && hasEndTrim && endSec <= startSec {
-		return false
-	}
-
-	if dur, err := ffmpeg.ProbeDuration(ctx, videoPath); err == nil && dur > 0 {
-		if hasStartTrim && dur <= startSec {
-			return false
-		}
-		if !hasStartTrim && hasEndTrim && dur <= endSec {
-			return false
-		}
-	}
-	return true
-}
-
 // getVideoFiles 返回目录中所有非已合并的视频文件及其解析元数据。
 // 具有自愈能力：当同名 .flv/.ts 与 .mp4 共存时，通过 QuickProbe 验证 .mp4 是否真正完整；
 // 若 .mp4 有效则清理冗余原片，若 .mp4 已损坏则清理半成品并保留完好原片重新转换；
@@ -402,22 +369,6 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 			if mergeAgeMin <= 0 {
 				mergeAgeMin = defaultMergeAgeMinutes
 			}
-			streamerRule, hasRule := cfg.StreamerRules[entry.Name()]
-
-			enqueueSingleMP4Trim := func(fileName string) {
-				if !hasRule || !streamerRule.TrimEnabled {
-					return
-				}
-				mp4Path := filepath.Join(folder, fileName)
-				if ct, active, waiting, ok := s.checkSingleMP4Trim(ctx, folder, entry.Name(), key, mp4Path, streamerRule, mergeAgeMin); ok {
-					convertTasks = append(convertTasks, ct)
-					s.logger.Info(fmt.Sprintf("[%s] ✂ %s → 单分片 MP4 符合裁剪规则，加入裁剪队列", entry.Name(), fileName))
-				} else if active {
-					streamerActive = true
-				} else if waiting {
-					streamerWaitingSafety = true
-				}
-			}
 
 			for _, batch := range batches {
 				// 检查对应默认输出路径是否存在损坏的半成品文件；
@@ -442,10 +393,8 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 					}
 				}
 
-				// 独立的单个 .mp4：未启用裁剪规则时直接跳过（避免无意义 ProbeHealth 调用）；
-				// 已启用裁剪规则时纳入裁剪检测，确保单文件直录也受主播裁剪规则控制。
+				// 独立的单个 .mp4（已是成品或已转换录像）：直接跳过，仅在 FLV/TS 转封装或多分片合并时触发裁剪
 				if len(batch) == 1 && strings.EqualFold(filepath.Ext(batch[0].Name), ".mp4") {
-					enqueueSingleMP4Trim(batch[0].Name)
 					continue
 				}
 
@@ -510,9 +459,8 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 						}
 						convertTasks = append(convertTasks, convertTask{FlvPath: srcPath, Mp4Path: mp4Path, Folder: folder, Name: entry.Name()})
 						s.logger.Info(fmt.Sprintf("[%s] 🔄 %s → 待转换 %s → MP4", entry.Name(), singleName, strings.ToUpper(strings.TrimPrefix(ext, "."))))
-					} else if ext == ".mp4" {
-						enqueueSingleMP4Trim(singleName)
 					}
+					// 单个有效 .mp4 无需转换或合并，静默跳过
 					continue
 				}
 
@@ -594,42 +542,4 @@ func (s *MergeService) scanTasks(ctx context.Context, root, streamer string, cfg
 		wg.Wait()
 	}
 	return tasks, convertTasks, stats
-}
-
-// checkSingleMP4Trim 检查单个 MP4 是否满足主播个性化裁剪入队条件。
-// 通过 checkedMP4s 指纹缓存（大小 + mtime + 裁剪规则）避免已裁剪或无需裁剪的独立 MP4 在每轮扫描时重复拉起 ffprobe。
-func (s *MergeService) checkSingleMP4Trim(ctx context.Context, folder, streamerName, batchKey, mp4Path string, rule config.StreamerRule, mergeAgeMin float64) (task convertTask, active bool, waiting bool, ok bool) {
-	info, err := os.Stat(mp4Path)
-	if err != nil || info.Size() < minValidFileSize {
-		return convertTask{}, false, false, false
-	}
-
-	fp := mp4CheckFingerprint{
-		size:    info.Size(),
-		mtime:   info.ModTime().UnixNano(),
-		ruleSig: ruleFingerprint(rule),
-	}
-	if cached, hit := s.checkedMP4s.Load(mp4Path); hit && cached == fp {
-		return convertTask{}, false, false, false
-	}
-
-	if isStreamActive(folder, batchKey) {
-		return convertTask{}, true, false, false
-	}
-	if time.Since(info.ModTime()).Minutes() < mergeAgeMin {
-		return convertTask{}, false, true, false
-	}
-	if !ffmpeg.ProbeHealth(ctx, mp4Path) {
-		return convertTask{}, false, false, false
-	}
-	if ffmpeg.IsVideoTrimmed(ctx, mp4Path) || !shouldTrimVideo(ctx, mp4Path, rule) {
-		s.checkedMP4s.Store(mp4Path, fp)
-		return convertTask{}, false, false, false
-	}
-	return convertTask{
-		FlvPath: mp4Path,
-		Mp4Path: mp4Path,
-		Folder:  folder,
-		Name:    streamerName,
-	}, false, false, true
 }

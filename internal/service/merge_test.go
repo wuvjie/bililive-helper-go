@@ -503,18 +503,26 @@ func TestIntegration_MergeDirectConcatDedupAndSingleTrim(t *testing.T) {
 		t.Fatalf("merged2 ValidateOutput failed: %v", err)
 	}
 
-	// 3. 单分片 .mp4 原地裁剪保留 mtime 且打上 bh_trimmed 元数据
-	singleMP4 := filepath.Join(streamerFolder, "[2026-06-01 15-00-00][主播E2E][单场直录].mp4")
-	createValidTestClip(t, singleMP4, "mp4", "3", oldTime)
-	outBytes, ok := svc.convertFlvToMp4(ctx, singleMP4, singleMP4, noopProgress, nil)
+	// 3. 单分片 .flv 转 MP4 过程中同步按规则裁剪，保留 mtime 并写入 bh_trimmed 元数据；已有独立历史 .mp4 不被二次入队
+	singleFLV := filepath.Join(streamerFolder, "[2026-06-01 15-00-00][主播E2E][单场转封装].flv")
+	singleMP4 := filepath.Join(streamerFolder, "[2026-06-01 15-00-00][主播E2E][单场转封装].mp4")
+	createValidTestClip(t, singleFLV, "flv", "3", oldTime)
+	outBytes, ok := svc.convertFlvToMp4(ctx, singleFLV, singleMP4, noopProgress, nil)
 	if !ok || outBytes <= 0 {
-		t.Fatalf("single MP4 trim failed: ok=%v bytes=%d", ok, outBytes)
+		t.Fatalf("single FLV->MP4 with trim failed: ok=%v bytes=%d", ok, outBytes)
 	}
 	if !ffmpeg.IsVideoTrimmed(ctx, singleMP4) {
-		t.Errorf("expected IsVideoTrimmed=true after single MP4 trim")
+		t.Errorf("expected IsVideoTrimmed=true after FLV->MP4 conversion with trim")
 	}
 	if fi, err := os.Stat(singleMP4); err != nil || fi.ModTime().Unix() != oldTime.Unix() {
 		t.Errorf("expected single MP4 mtime preserved (%v), got %v (err=%v)", oldTime, fi.ModTime(), err)
+	}
+
+	legacyMP4 := filepath.Join(streamerFolder, "[2026-06-01 18-00-00][主播E2E][历史成片].mp4")
+	createValidTestClip(t, legacyMP4, "mp4", "5", oldTime)
+	scanMergeTasks, scanConvertTasks, _ := svc.scanTasks(ctx, root, "主播E2E", cfg)
+	if len(scanMergeTasks) != 0 || len(scanConvertTasks) != 0 {
+		t.Fatalf("expected scanTasks to skip existing standalone/merged MP4s, got merge=%+v convert=%+v", scanMergeTasks, scanConvertTasks)
 	}
 }
 

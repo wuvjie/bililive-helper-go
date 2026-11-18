@@ -162,7 +162,7 @@ func createValidTestClip(t *testing.T, path, format string, durationSec string, 
 	}
 }
 
-func TestIntegration_ScanTasks_TitleChangeDuplicateSingleTSRawAndTrimMP4(t *testing.T) {
+func TestIntegration_ScanTasks_TitleChangeDuplicateSingleTSRawAndSkipStandaloneMP4(t *testing.T) {
 	requireFFmpegTools(t)
 	root := t.TempDir()
 	cfg := config.DefaultConfig()
@@ -173,6 +173,7 @@ func TestIntegration_ScanTasks_TitleChangeDuplicateSingleTSRawAndTrimMP4(t *test
 		"streamer_mp4_trim": {
 			TrimEnabled: true,
 			TrimStart:   "00:00:01",
+			TrimEnd:     "00:00:03",
 		},
 	}
 
@@ -201,11 +202,11 @@ func TestIntegration_ScanTasks_TitleChangeDuplicateSingleTSRawAndTrimMP4(t *test
 	createValidTestClip(t, filepath.Join(sConvert, "[2026-06-01 12-00-00][主播C][TS场]001.ts"), "mpegts", "2", oldTime)
 	createValidTestClip(t, filepath.Join(sConvert, "custom_recording.flv"), "flv", "2", oldTime)
 
-	// 4. 开启裁剪规则的单分片 .mp4 应加入裁剪队列（FlvPath == Mp4Path）
+	// 4. 已有独立 .mp4（无 bh_trimmed 标记、且未参与合并/转换），即便启用裁剪规则也不得被回溯入队裁剪
 	sTrim := filepath.Join(root, "streamer_mp4_trim")
 	os.MkdirAll(sTrim, 0755)
-	trimMP4 := filepath.Join(sTrim, "[2026-06-01 14-00-00][主播D][开播裁剪].mp4")
-	createValidTestClip(t, trimMP4, "mp4", "3", oldTime)
+	legacyMP4 := filepath.Join(sTrim, "[2026-06-01 14-00-00][主播D][历史成片].mp4")
+	createValidTestClip(t, legacyMP4, "mp4", "5", oldTime)
 
 	tasks, convertTasks, _ := svc.scanTasks(context.Background(), root, "", cfg)
 
@@ -220,52 +221,45 @@ func TestIntegration_ScanTasks_TitleChangeDuplicateSingleTSRawAndTrimMP4(t *test
 		t.Fatalf("expected 2 mergeTasks (title-change + same-prefix), got %d: %+v", len(tasks), tasks)
 	}
 
-	// 验证 single TS + non-standard FLV + single MP4 trim 共 3 个 convertTasks
-	if len(convertTasks) != 3 {
-		t.Fatalf("expected 3 convertTasks (ts, raw flv, trim mp4), got %d: %+v", len(convertTasks), convertTasks)
+	// 验证仅 single TS + non-standard FLV 共 2 个 convertTasks，独立 .mp4 不得入队
+	if len(convertTasks) != 2 {
+		t.Fatalf("expected 2 convertTasks (ts, raw flv) without standalone mp4, got %d: %+v", len(convertTasks), convertTasks)
 	}
-	hasTrimTask := false
 	for _, ct := range convertTasks {
-		if ct.FlvPath == trimMP4 && ct.Mp4Path == trimMP4 {
-			hasTrimTask = true
+		if ct.FlvPath == legacyMP4 || ct.Mp4Path == legacyMP4 {
+			t.Fatalf("standalone existing mp4 %s must not be queued for retroactive trim", legacyMP4)
 		}
-	}
-	if !hasTrimTask {
-		t.Fatalf("expected single MP4 trim task for %s, got %+v", trimMP4, convertTasks)
 	}
 }
 
-func TestIntegration_CheckSingleMP4Trim_FingerprintCache(t *testing.T) {
+func TestIntegration_ScanTasks_StandaloneMP4SkippedEvenWithoutTrimMetadata(t *testing.T) {
 	requireFFmpegTools(t)
 	root := t.TempDir()
-	folder := filepath.Join(root, "主播指纹")
+	folder := filepath.Join(root, "历史成片主播")
 	os.MkdirAll(folder, 0755)
-	oldTime := time.Now().Add(-2 * time.Hour)
-	mp4Path := filepath.Join(folder, "[2026-06-01 10-00-00][主播指纹][短视频].mp4")
-	createValidTestClip(t, mp4Path, "mp4", "3", oldTime)
+	oldTime := time.Now().Add(-48 * time.Hour)
+
+	legacySingle := filepath.Join(folder, "[2026-06-01 10-00-00][历史成片主播][历史1].mp4")
+	legacyMerged := filepath.Join(folder, "[2026-06-02 10-00-00][历史成片主播][历史2]-合并版.mp4")
+	createValidTestClip(t, legacySingle, "mp4", "6", oldTime)
+	createValidTestClip(t, legacyMerged, "mp4", "6", oldTime)
 
 	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	cfg.StreamerRules = map[string]config.StreamerRule{
+		"历史成片主播": {
+			TrimEnabled: true,
+			TrimStart:   "00:00:01",
+			TrimEnd:     "00:00:04",
+		},
+	}
 	svc := &MergeService{config: &cfg, logger: zap.NewNop()}
 
-	// 1. 起始裁剪 5s > 视频时长 3s -> 无需裁剪且写入 checkedMP4s 缓存
-	ruleLong := config.StreamerRule{TrimEnabled: true, TrimStart: "00:00:05"}
-	if _, _, _, ok := svc.checkSingleMP4Trim(context.Background(), folder, "主播指纹", "[主播指纹]", mp4Path, ruleLong, 30); ok {
-		t.Fatal("expected short video not queued for trim when start > duration")
+	tasks, convertTasks, stats := svc.scanTasks(context.Background(), root, "", cfg)
+	if len(tasks) != 0 || len(convertTasks) != 0 {
+		t.Fatalf("expected 0 tasks/convertTasks for standalone historical MP4s, got tasks=%+v convertTasks=%+v", tasks, convertTasks)
 	}
-	if _, cached := svc.checkedMP4s.Load(mp4Path); !cached {
-		t.Fatal("expected checkedMP4s cache entry to be populated")
-	}
-
-	// 2. 相同指纹下，即使传入已取消 context 也不再调用 ffprobe（直接缓存命中返回 false）
-	cancelledCtx, cancel := context.WithCancel(context.Background())
-	cancel()
-	if _, _, _, ok := svc.checkSingleMP4Trim(cancelledCtx, folder, "主播指纹", "[主播指纹]", mp4Path, ruleLong, 30); ok {
-		t.Fatal("expected cached fingerprint to skip trim without probing")
-	}
-
-	// 3. 当主播修改裁剪规则后，ruleSig 变化应使缓存失效并重新入队裁剪
-	ruleShort := config.StreamerRule{TrimEnabled: true, TrimStart: "00:00:01"}
-	if _, _, _, ok := svc.checkSingleMP4Trim(context.Background(), folder, "主播指纹", "[主播指纹]", mp4Path, ruleShort, 30); !ok {
-		t.Fatal("expected changed rule to invalidate fingerprint cache and enqueue trim")
+	if stats.UpToDate != 1 {
+		t.Fatalf("expected UpToDate=1, got %+v", stats)
 	}
 }
