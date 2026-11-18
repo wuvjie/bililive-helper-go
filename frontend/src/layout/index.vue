@@ -74,8 +74,8 @@
         </div>
         <div class="navbar-right">
           <!-- 主题切换按钮：明亮 / 暗黑 -->
-          <el-tooltip :content="appStore.isDark ? '切换至明亮模式' : '切换至暗黑模式'" placement="bottom">
-            <button class="nav-btn-icon theme-toggle-btn" @click="appStore.toggleTheme" :title="appStore.isDark ? '浅色模式' : '深色模式'">
+          <el-tooltip :content="appStore.isDark ? '切换至明亮模式' : '切换至暗黑模式'" placement="bottom" :enterable="false">
+            <button class="nav-btn-icon theme-toggle-btn" @click="(e: MouseEvent) => { appStore.toggleTheme(); (e.currentTarget as HTMLElement | null)?.blur(); }" :title="appStore.isDark ? '浅色模式' : '深色模式'">
               <!-- 浅色模式下显示月亮图标（点击切暗黑） -->
               <svg v-if="!appStore.isDark" class="nav-svg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -114,7 +114,7 @@
               <el-dropdown-menu class="nav-dropdown-menu">
                 <div class="user-dropdown-header">
                   <div class="user-dropdown-title">系统管理员</div>
-                  <div class="user-dropdown-sub">版本 v2.0.5 (Release)</div>
+                  <div class="user-dropdown-sub">版本 v2.0.6 (Release)</div>
                 </div>
                 <el-dropdown-item command="change-password" divided>
                   <span class="dropdown-item-flex">
@@ -180,7 +180,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAppStore } from "@/store/modules/app";
 import { logout } from "@/api/auth";
 import { getStatusDetail } from "@/api/status";
-import { Monitor, User, Operation, Document, Setting, Refresh, FullScreen } from "@element-plus/icons-vue";
+import { Monitor, User, Operation, Document, Setting } from "@element-plus/icons-vue";
 import PasswordDialog from "./components/PasswordDialog.vue";
 import BackupDialog from "./components/BackupDialog.vue";
 import DiskAlert from "./components/DiskAlert.vue";
@@ -632,6 +632,13 @@ onUnmounted(() => {
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (max-width: 1100px) {
+  .layout-content {
+    padding: 16px;
+    padding-bottom: 36px;
+  }
+}
 
 @media (max-width: 768px) {
   .layout-sidebar {

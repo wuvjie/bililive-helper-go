@@ -19,6 +19,15 @@ func IsVideoFile(name string) bool {
 	return ext == ".mp4" || ext == ".flv" || ext == ".ts"
 }
 
+// IsTempVideoArtifact 判断文件名是否为隐藏文件或处理过程产生的临时视频残留（如 .tmp.ts、.trim.mp4），
+// 避免在扫描、清理或状态统计时将其误认为正式录像文件。
+func IsTempVideoArtifact(name string) bool {
+	lower := strings.ToLower(name)
+	return strings.HasPrefix(lower, ".") ||
+		strings.HasSuffix(lower, ".tmp.ts") ||
+		strings.HasSuffix(lower, ".trim.mp4")
+}
+
 // ValidateFilename 校验文件名安全性，防止路径穿越攻击。
 // 拒绝空名、"."、".."、包含路径分隔符、管道符或空字节的文件名。
 func ValidateFilename(filename string) bool {

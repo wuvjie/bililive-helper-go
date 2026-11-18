@@ -186,3 +186,24 @@ func TestParseFilename_DifferentExtensions(t *testing.T) {
 		})
 	}
 }
+
+func TestStreamerKeyFromKey(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{name: "standard key", input: "[user1][title1]", want: "[user1]"},
+		{name: "chinese streamer and changed title", input: "[主播A][下半场打游戏]", want: "[主播A]"},
+		{name: "single bracket only", input: "[user1]", want: "[user1]"},
+		{name: "raw key without bracket", input: "raw|video.flv", want: "raw|video.flv"},
+		{name: "empty", input: "", want: ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := StreamerKeyFromKey(tt.input); got != tt.want {
+				t.Errorf("StreamerKeyFromKey(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}

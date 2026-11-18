@@ -2,6 +2,7 @@ package utils
 
 import (
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -36,4 +37,14 @@ func ParseFilename(name string) (string, time.Time, bool) {
 		return "", time.Time{}, false
 	}
 	return matches[3], dt, true
+}
+
+// StreamerKeyFromKey 从 ParseFilename 返回的 key（格式 "[主播名][房间标题]"）中提取第一个方括号段 "[主播名]"。
+// 用于按主播维度而非标题维度聚类同一场次直播，防止主播中途修改标题导致分片无法合并。
+// 若不含 "]" 则原样返回 key。
+func StreamerKeyFromKey(key string) string {
+	if idx := strings.Index(key, "]"); idx >= 0 {
+		return key[:idx+1]
+	}
+	return key
 }

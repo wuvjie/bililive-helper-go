@@ -4,6 +4,30 @@
 
 文档格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范，版本号遵循 [语义化版本 (Semantic Versioning)](https://semver.org/lang/zh-CN/spec/v2.0.0.html)。
 
+## [v2.0.6] - 2026-11-18
+
+### Added
+- **伴生文件处理模块独立解耦**：新增 `internal/service/companion.go`，将弹幕（`.xml` / `.ass`）与封面（`.jpg` / `.png`）的检索、对齐重命名及清理逻辑独立封装，提高模块内聚度并杜绝分段合并时伴生文件的遗漏。
+- **全套场景与边缘回归测试集**：新增 `internal/service/merge_scenarios_test.go`（涵盖 13 种典型合并与并发场景）、`internal/service/merge_edge_cases_test.go`（覆盖断流、空文件、损坏分片与重编码回退等 10 种边界用例）以及 `internal/ffmpeg/ffmpeg_logic_test.go`，全面筑牢后端音视频后处理核心逻辑的质量底线。
+
+### Changed
+- **前端样式体系梳理与原子类提炼**：统一 `frontend/src/style/index.scss` 中的 13 个 Primer 设计令牌；在 `frontend/src/style/_components.scss` 中提炼通用原子类；对 `frontend/src/style/element-overrides.scss` 进行深度去重与格式化（精简约 300 行冗余规则）；清理多处业务组件中重复的 dark-mode 样式覆盖与无用导入。
+- **多视口表格响应式与自适应对齐（宽屏零侵入）**：
+  - **主播管理表**：恢复数值列固定宽度，剩余空间 100% 留给主播名列；支持免删保护与时段裁剪徽章在窄屏下自动换至名称下方且完全自适应单元格内部，彻底消除操作按钮贴边与裁切；
+  - **操作日志表**：恢复时间戳列宽（150px）以完整展示不折行且无截断的时间，收紧排序图标宽度并彻底解决「执行状态」表头末尾省略号截断（`...`）与「查看日志」按钮溢出问题；
+  - **窄桌面自适应内边距**：新增 `@media (max-width: 1100px)` 媒体查询将内容区横向内边距收紧至 16px，兼顾 1440×900 宽屏开阔度与 971×729 窄屏零溢出。
+- **视觉排版与微交互细节优化**：
+  - **仪表盘卡片**：精简副文案（「近 7 天日均体积增长估算」与「已释放 ... 磁盘空间」）并微调内边距，根治副文本省略号裁切；监控与趋势卡片标题启用弹性包裹与词组不折行，宽屏整齐单行对齐、窄屏自然两行换行；
+  - **磁盘清理策略阈值条**：磁盘清理进度条在 `<= 26%` 宽度分段内自适应切换为紧凑文案 `超额清理 (${triggerVal}%~100%)`，彻底解决 80% 触发阈值下的文字溢出；
+  - **主播剪辑规则弹窗**：时段提示语优化为单行展示且无孤字折行，弹窗沉降后保持完全纯色实体不透底；
+  - **顶栏主题切换**：修正悬浮提示（Tooltip）穿透与失焦状态，消除切换深色模式后 Tooltip 残留滞留界面的问题。
+
+### Refactored
+- **后端扫描器与合并清理流水线重构**：
+  - 移除冗余的 `internal/ffmpeg/executor.go`，统一 FFmpeg 命令执行流水线与参数校验；
+  - 重构 `internal/service/scanner.go`，优化分片批次识别、断流会话分组与主播活跃状态判定；
+  - 重构 `internal/service/merge.go` 与 `internal/service/clean.go`，增强错误捕获、并发安全保护与清理计数精确度。
+
 ## [v2.0.5] - 2026-11-18
 
 ### Security

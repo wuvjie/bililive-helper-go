@@ -6,10 +6,29 @@ import (
 	"bililive-helper-go/internal/config"
 	"bililive-helper-go/internal/service"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type cachedStreamerRow struct {
+	Name      string
+	Files     int
+	SizeBytes int64
+	SizeGB    float64
+	Mtime     int64
+	IsLive    bool
+}
+
+type streamerScanCache struct {
+	mu           sync.RWMutex
+	root         string
+	fetchedAt    time.Time
+	rows         []cachedStreamerRow
+	pendingCount int
+	pendingSize  int64
+}
 
 // Handler 持有所有 HTTP 处理器的依赖。
 // 包含配置、日志、各业务服务实例，以及 bcrypt 哈希后的密码（运行时比对用）。
@@ -23,6 +42,14 @@ type Handler struct {
 	passwordMu     sync.RWMutex
 	hashedPassword string
 	setupMu        sync.Mutex // protects SetupInit against concurrent initialization
+	scanCache      streamerScanCache
+}
+
+// InvalidateStreamerCache 使主播目录扫描缓存失效，在合并/清理/删片完成后调用以保证数据即时刷新。
+func (h *Handler) InvalidateStreamerCache() {
+	h.scanCache.mu.Lock()
+	h.scanCache.fetchedAt = time.Time{}
+	h.scanCache.mu.Unlock()
 }
 
 // NewHandler 创建一个新的 Handler 实例。

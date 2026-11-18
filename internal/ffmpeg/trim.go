@@ -59,14 +59,26 @@ func TrimVideo(ctx context.Context, input, output, startTime, endTime string) er
 		startTime = "00:00:00"
 	}
 
+	startSec, startErr := ParseTimeSeconds(startTime)
+	endSec, endErr := ParseTimeSeconds(endTime)
 	args := []string{"-nostdin"}
 	if startTime != "" && startTime != "0" && startTime != "00:00:00" {
 		args = append(args, "-ss", startTime)
 	}
 	if endTime != "" {
-		args = append(args, "-to", endTime)
+		if endErr != nil || endSec <= 0 {
+			return fmt.Errorf("无效裁剪结束时间: %s", endTime)
+		}
+		if startErr == nil && endSec <= startSec {
+			return fmt.Errorf("裁剪结束时间 (%s) 必须大于开始时间 (%s)", endTime, startTime)
+		}
+		if startErr == nil && startSec > 0 {
+			args = append(args, "-t", fmt.Sprintf("%.3f", endSec-startSec))
+		} else {
+			args = append(args, "-to", endTime)
+		}
 	}
-	args = append(args, "-i", input, "-c", "copy", "-avoid_negative_ts", "make_zero", "-y", "-loglevel", "error", output)
+	args = append(args, "-i", input, "-c", "copy", "-avoid_negative_ts", "make_zero", "-metadata", "comment=bh_trimmed", "-y", "-loglevel", "error", output)
 
 	err := Run(ctx, Options{Args: args})
 	if err != nil {

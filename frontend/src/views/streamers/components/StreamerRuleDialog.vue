@@ -408,7 +408,7 @@ const trimSemanticInfo = computed(() => {
     const diff = endSec - startSec;
     return {
       isInvalid: false,
-      text: `选定时段：从 ${formRule.value.trim_start} 截取至 ${formRule.value.trim_end}，剪除首尾多余部分`,
+      text: `选定时段：从 ${formRule.value.trim_start} 至 ${formRule.value.trim_end}，剪除首尾多余部分`,
       durationText: `有效时长 ${formatFriendlyDuration(diff)}`
     };
   }
@@ -486,45 +486,6 @@ function handleSave() {
   font-weight: 600;
   color: var(--charcoal);
   letter-spacing: -0.1px;
-}
-
-.label-help-ico {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  font-size: 10px;
-  font-weight: 600;
-  background: var(--hairline);
-  color: var(--slate);
-  cursor: help;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
-.label-help-ico:hover {
-  background: var(--primary);
-  color: #ffffff;
-}
-
-.status-pill {
-  font-size: 11px;
-  padding: 1px 7px;
-  border-radius: var(--r-full);
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.pill-exempt {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-}
-
-.pill-default {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.05));
-  color: var(--stone);
 }
 
 /* Expandable Time Trimming Area */
@@ -654,22 +615,14 @@ html.dark .trim-helper-note.is-invalid {
 .rule-section-icon {
   width: 15px;
   height: 15px;
-  color: var(--color-accent-fg, #0969da);
+  color: var(--color-accent-fg);
   flex-shrink: 0;
 }
 
-html.dark .rule-section-icon {
-  color: #58a6ff;
-}
-
 .pill-active {
-  background: rgba(9, 105, 218, 0.1);
-  color: #0969da;
-}
-
-html.dark .pill-active {
-  background: rgba(56, 139, 253, 0.15);
-  color: #58a6ff;
+  background: color-mix(in srgb, var(--color-accent-fg) 12%, transparent);
+  color: var(--color-accent-fg);
+  border-color: transparent;
 }
 
 /* Film Strip Timeline Track */
@@ -806,21 +759,12 @@ html.dark .seg-tail-open {
   justify-content: space-between;
   padding: 0 4px;
   font-size: 10.5px;
-  color: var(--color-fg-muted, #57606a);
+  color: var(--color-fg-muted);
   font-family: var(--font-mono, monospace);
-}
-
-html.dark .timeline-ticks-row {
-  color: #8b949e;
 }
 
 .tick-node {
   white-space: nowrap;
-}
-
-html.dark .pill-exempt {
-  background: rgba(63, 185, 80, 0.15);
-  color: #3fb950;
 }
 
 @media (max-width: 520px) {

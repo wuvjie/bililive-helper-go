@@ -39,6 +39,7 @@ func (h *Handler) RunMerge(c *gin.Context) {
 			defer h.scheduler.ReleaseTask("merge")
 		}
 		result, logID, err := h.merge.Run(ctx, req.Streamer, onProgress)
+		h.InvalidateStreamerCache()
 		if err != nil {
 			h.logger.Error("合并失败", zap.Error(err), zap.String("logID", logID))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
@@ -88,6 +89,7 @@ func (h *Handler) ManualMerge(c *gin.Context) {
 func (h *Handler) runManualMergeSSE(c *gin.Context, streamer string, files []string, label string) {
 	h.runSSE(c, "merge", func(ctx context.Context, onProgress func(string)) string {
 		logID, err := h.merge.ManualMerge(ctx, streamer, files, onProgress)
+		h.InvalidateStreamerCache()
 		if err != nil {
 			h.logger.Error(label+"失败", zap.Error(err), zap.String("logID", logID))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
@@ -117,6 +119,7 @@ func (h *Handler) RunClean(c *gin.Context) {
 			defer h.scheduler.ReleaseTask("clean")
 		}
 		result, logID, err := h.clean.Run(ctx, req.Streamer, onProgress)
+		h.InvalidateStreamerCache()
 		if err != nil {
 			h.logger.Error("清理失败", zap.Error(err), zap.String("logID", logID))
 			return fmt.Sprintf("❌ 错误: %s", err.Error())
@@ -305,7 +308,7 @@ func (h *Handler) SetupCheck(c *gin.Context) {
 				if fe.IsDir() {
 					continue
 				}
-				if utils.IsVideoFile(fe.Name()) {
+				if utils.IsVideoFile(fe.Name()) && !utils.IsTempVideoArtifact(fe.Name()) {
 					checks["video_count"] = checks["video_count"].(int) + 1
 					if info, err := fe.Info(); err == nil {
 						totalSize += float64(info.Size())

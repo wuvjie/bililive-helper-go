@@ -253,3 +253,22 @@ func TestMakeMP4Name(t *testing.T) {
 		})
 	}
 }
+
+func TestIsTempVideoArtifact(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		{name: ".hidden.mp4", want: true},
+		{name: "video.mp4.tmp.ts", want: true},
+		{name: "video.mp4.trim.mp4", want: true},
+		{name: "normal.mp4", want: false},
+		{name: "normal.ts", want: false},
+		{name: "[2026-06-01 10-00-00][a][b]001.flv", want: false},
+	}
+	for _, tt := range tests {
+		if got := IsTempVideoArtifact(tt.name); got != tt.want {
+			t.Errorf("IsTempVideoArtifact(%q) = %v, want %v", tt.name, got, tt.want)
+		}
+	}
+}

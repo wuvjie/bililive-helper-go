@@ -31,10 +31,11 @@
   --el-font-family: var(--font-sans);
   --el-font-size-base: 14px;
 
+  --transition-enter: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-leave: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-
-// ── Cards ──
+// ── Cards & Dialogs ──
 .el-card {
   --el-card-bg-color: var(--surface-card);
   --el-card-border-color: var(--hairline);
@@ -44,13 +45,11 @@
   box-shadow: var(--shadow-card) !important;
   border-radius: var(--r-md) !important;
 
+  &.is-hover-shadow:hover {
+    box-shadow: var(--shadow-card-hover) !important;
+  }
 }
 
-.el-card.is-hover-shadow:hover { box-shadow: var(--shadow-card-hover) !important; 
-}
-
-
-// ── Dialogs ──
 .el-dialog {
   --el-dialog-bg-color: var(--surface-card);
   background-color: var(--surface-card) !important;
@@ -58,50 +57,50 @@
   border: 1px solid var(--hairline);
   border-radius: var(--r-md) !important;
   box-shadow: 0 16px 48px -8px rgba(15, 15, 15, 0.12) !important;
-
 }
-
 
 // ── Tables (minimal borders, warm hover) ──
 .el-table {
   --el-table-bg-color: var(--surface-card);
   --el-table-tr-bg-color: var(--surface-card);
-  background-color: var(--surface-card) !important;
-  color: var(--charcoal);
   --el-table-header-bg-color: transparent;
   --el-table-row-hover-bg-color: #f7f6f3;
   --el-table-border-color: #eeeeee;
   --el-table-header-text-color: #787671;
   --el-table-text-color: #37352f;
+  background-color: var(--surface-card) !important;
+  color: var(--charcoal);
   font-size: 13px;
 
+  th.el-table__cell {
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  td.el-table__cell {
+    padding: 14px 0;
+  }
+
+  .action-cell {
+    min-width: 150px;
+    white-space: nowrap;
+    color: var(--steel);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
 }
 
-.el-table th.el-table__cell {
-  font-weight: 500;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-
-}
-
-.el-table td.el-table__cell {
-  padding: 14px 0;
-
-}
-
-
-// ── Left-side tabs (Notion sidebar-menu style) ──
+// ── Tabs & Menu ──
 .el-tabs--left {
   .el-tabs__header.is-left {
     margin-right: 0;
     .el-tabs__nav-wrap.is-left {
       padding: 4px 0;
-    
-}
-
-  
-}
+    }
+  }
 
   .el-tabs__item {
     height: 34px;
@@ -113,68 +112,54 @@
     font-size: 14px;
     color: var(--steel);
     transition: background 0.1s, color 0.1s;
+
     &.is-active {
       background: var(--highlight);
       color: var(--ink);
       font-weight: 500;
-    
-}
+    }
 
     &:hover {
       background: var(--highlight);
       color: var(--charcoal);
-    
-}
-
-  
-}
+    }
+  }
 
   .el-tabs__active-bar {
     display: none;
-  
+  }
 }
 
-
-}
-
-
-// ── Regular tabs ──
 .el-tabs__item {
   color: var(--steel);
-  &.is-active { color: var(--ink); font-weight: 500; 
-}
-
-  &:hover { color: var(--charcoal); 
-}
-
-
+  &.is-active {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  &:hover {
+    color: var(--charcoal);
+  }
 }
 
 .el-tabs__active-bar {
   background-color: var(--ink);
-
 }
 
-
-// ── Menu ──
 .el-menu {
   --el-menu-bg-color: transparent;
   --el-menu-hover-bg-color: #f1f1ef;
   --el-menu-active-color: #0a0a0a;
   --el-menu-text-color: #787671;
   --el-menu-item-height: 36px;
-
 }
 
-
-// ── Inputs (充足内边距与舒适呼吸感，告别文字紧贴边框) ──
+// ── Inputs ──
 .el-input {
   --el-input-bg-color: #ffffff;
   --el-input-border-color: #d3d1cb;
   --el-input-hover-border-color: #a4a097;
   --el-input-focus-border-color: #2f80ed;
   --el-input-text-color: #37352f;
-
 }
 
 .el-input__wrapper {
@@ -182,17 +167,19 @@
   border-radius: var(--r-sm) !important;
   box-shadow: 0 0 0 1px #d3d1cb inset;
   transition: all 0.15s ease;
-
 }
 
 .el-input--small .el-input__wrapper {
   padding: 2px 10px !important;
-
 }
 
 .el-input__inner {
   padding-left: 2px;
+}
 
+.el-input__prefix .el-icon,
+.el-input__suffix .el-icon {
+  color: var(--steel);
 }
 
 // Kill purple/blue focus ring on all input variants
@@ -201,16 +188,13 @@
 .el-textarea.is-focus .el-textarea__inner,
 .el-select .el-input.is-focus .el-input__inner {
   box-shadow: 0 0 0 1px #2f80ed inset !important;
-
 }
 
-
-// ── Buttons ──
+// ── Buttons & 4-Tier Matrix ──
 .el-button {
   border-radius: var(--r-sm) !important;
   font-weight: 500;
   font-size: 14px;
-
 }
 
 .el-button--primary {
@@ -218,28 +202,26 @@
   border-color: var(--primary) !important;
   color: var(--on-primary) !important;
 
+  &:hover {
+    background: var(--primary-pressed) !important;
+    border-color: var(--primary-pressed) !important;
+    color: var(--on-primary) !important;
+  }
 }
 
-.el-button--primary:hover {
-  background: var(--primary-pressed) !important;
-  border-color: var(--primary-pressed) !important;
-  color: var(--on-primary) !important;
-
-}
-
-
-/* ── 4-Tier Button Matrix (Spec-Aligned) ── */
 .btn-tier-1 {
   @extend .el-button--primary;
   background: var(--primary) !important;
   border-color: var(--primary) !important;
   color: var(--on-primary) !important;
   box-shadow: 0 1px 2px rgba(37, 99, 235, 0.18);
+
   &:hover {
     background: var(--primary-hover) !important;
     border-color: var(--primary-hover) !important;
     box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 25%, transparent) !important;
   }
+
   &:active {
     background: var(--primary-pressed) !important;
     border-color: var(--primary-pressed) !important;
@@ -252,11 +234,13 @@
   border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent) !important;
   color: var(--primary) !important;
   font-weight: 500;
+
   &:hover {
     background: color-mix(in srgb, var(--primary) 14%, transparent) !important;
     border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
     color: var(--primary-hover) !important;
   }
+
   &:active {
     background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
   }
@@ -268,6 +252,7 @@
   border: 1px solid var(--hairline-strong) !important;
   color: var(--charcoal) !important;
   font-weight: 500;
+
   &:hover {
     background: var(--highlight) !important;
     color: var(--ink) !important;
@@ -281,11 +266,14 @@
   border: 1px solid transparent !important;
   color: var(--steel) !important;
   font-weight: 500;
+
   &:hover {
     background: var(--highlight) !important;
     color: var(--ink) !important;
   }
-  &.is-danger, &.btn-tier-4-danger {
+
+  &.is-danger,
+  &.btn-tier-4-danger {
     color: var(--error) !important;
     &:hover {
       background: color-mix(in srgb, var(--error) 10%, transparent) !important;
@@ -294,66 +282,39 @@
   }
 }
 
-/* ── Motion & Animation Variables ── */
-:root {
-  --transition-enter: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-leave: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.el-dialog, .el-drawer, .el-popper, .el-select-dropdown {
-  transition: var(--transition-enter);
-}
-
-/* ── Icon Utility Classes (Spec 4-Tier Scale) ── */
-.icon-micro    { width: 12px; height: 12px; }
+// ── Icon Utility Classes ──
+.icon-micro { width: 12px; height: 12px; }
 .icon-standard { width: 15px; height: 15px; }
-.icon-medium   { width: 18px; height: 18px; }
-.icon-macro    { width: 24px; height: 24px; }
+.icon-medium { width: 18px; height: 18px; }
+.icon-macro { width: 24px; height: 24px; }
 
-/* ── Table Action Column Rules ── */
-.el-table .action-cell {
-  min-width: 150px;
-  white-space: nowrap;
-  color: var(--steel);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-// ── Progress (desaturated green, warm track) ──
+// ── Controls (Progress, Slider, Descriptions, Breadcrumb, Pagination, Stepper, Switch, Select) ──
 .el-progress {
   --el-progress-border-radius: var(--r-xs);
   .el-progress-bar__outer {
     background-color: #f1f1ef;
-  
+  }
 }
 
-
-}
-
-
-// ── Slider (thin track, ink thumb) ──
 .el-slider {
   --el-slider-runway-bg-color: #e5e5ea;
   --el-slider-main-bg-color: #2563eb;
   --el-slider-height: 4px;
+
   .el-slider__runway {
     height: 4px;
     border-radius: 2px;
-  
-}
+  }
 
   .el-slider__bar {
     height: 4px;
     border-radius: 2px;
     background-color: #2563eb;
-  
-}
+  }
 
   .el-slider__button-wrapper {
     top: -16px;
-  
-}
+  }
 
   .el-slider__button {
     width: 16px;
@@ -362,49 +323,32 @@
     background-color: #ffffff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.15s;
+
     &:hover {
       box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
-    
+    }
+  }
 }
 
-  
-}
-
-
-}
-
-
-// ── Descriptions ──
 .el-descriptions {
   --el-descriptions-item-bordered-label-background: #f7f6f3;
-
 }
 
-
-// ── Breadcrumb ──
 .el-breadcrumb {
   --el-breadcrumb-text-color: #a4a097;
   --el-breadcrumb-last-text-color: #37352f;
   .el-breadcrumb__separator {
     margin: 0 8px;
     color: #c7c7cc;
-  
+  }
 }
 
-
-}
-
-
-// ── Pagination ──
 .el-pagination {
   --el-pagination-bg-color: transparent;
   --el-pagination-button-bg-color: #ffffff;
   --el-pagination-hover-color: #1c1c1e;
-
 }
 
-
-// ── Input Number (rounded buttons, warm gray) ──
 .el-input-number {
   .el-input-number__decrease,
   .el-input-number__increase {
@@ -412,74 +356,54 @@
     background-color: #f7f6f3 !important;
     border-color: var(--hairline) !important;
     color: var(--slate) !important;
+
     &:hover {
       color: var(--ink) !important;
       background-color: var(--highlight) !important;
-    
-}
-
-  
-}
+    }
+  }
 
   .el-input__wrapper {
     border-radius: var(--r-sm) !important;
-  
+  }
 }
 
-
-}
-
-
-// ── Switch (inactive = subtle gray, active = system primary) ──
 .el-switch {
   --el-switch-off-color: #e2e8f0;
   --el-switch-on-color: #2563eb;
   .el-switch__core {
     border-radius: 12px;
-  
+  }
 }
 
-
-}
-
-
-// ── Select (consistent font) ──
 .el-select {
   .el-input__inner {
     font-size: 13px;
     color: var(--charcoal);
-  
+
+    &::placeholder {
+      color: var(--stone);
+      font-size: 13px;
+    }
+  }
 }
 
-  .el-input__inner::placeholder {
-    color: var(--stone);
-    font-size: 13px;
-  
-}
-
-
-}
-
-
-// 统一约束 Element Plus 下拉菜单项字号，根治弹层字号(14px)大于外层表单标签(13px)的层级倒挂问题
+// 统一约束 Element Plus 下拉菜单项字号
 .el-select-dropdown__item {
   font-size: 13px !important;
   height: 32px !important;
   line-height: 32px !important;
   padding: 0 12px !important;
   text-align: left !important;
-
 }
 
 .el-select-dropdown.is-multiple .el-select-dropdown__item {
   height: 32px !important;
   line-height: 32px !important;
-
 }
 
 .el-select-dropdown .el-select-dropdown__item.is-selected {
   font-weight: 600;
-
 }
 
 .el-select--small .el-select-dropdown__item,
@@ -490,92 +414,109 @@
   height: 28px !important;
   line-height: 28px !important;
   padding: 0 10px !important;
-
 }
 
-
-// ── Time Picker icon (thinner stroke) ──
-.el-input__prefix .el-icon,
-.el-input__suffix .el-icon {
-  color: var(--steel);
-
+// ── Motion, Loading & Accessibility ──
+.el-popper,
+.el-select-dropdown {
+  transition: var(--transition-enter);
 }
 
+.el-dialog,
+.el-drawer {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
 
-// Element Plus Dark Mode Overrides
+.el-dialog-fade-leave-active,
+.el-drawer-fade-leave-active {
+  transition-duration: 0.16s !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1) !important;
+}
+
+.el-loading-mask {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background-color: rgba(251, 251, 250, 0.65);
+  transition: opacity 0.2s ease;
+}
+
+.el-loading-spinner {
+  .circular {
+    width: 32px;
+    height: 32px;
+  }
+  .path {
+    stroke: var(--ink);
+    stroke-width: 3.5;
+  }
+}
+
+input,
+textarea,
+.el-input__wrapper,
+.el-textarea__inner {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+.el-button:focus-visible,
+.el-switch:focus-visible,
+.el-tabs__item:focus-visible,
+.el-checkbox:focus-visible,
+.el-radio:focus-visible {
+  outline: 2px solid var(--hairline-focus, #2563eb) !important;
+  outline-offset: 2px !important;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+@media (forced-colors: active) {
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  a:focus-visible,
+  .el-button:focus-visible,
+  .el-switch:focus-visible,
+  .el-tabs__item:focus-visible,
+  .el-checkbox:focus-visible,
+  .el-radio:focus-visible,
+  input:focus,
+  textarea:focus,
+  .el-input.is-focus .el-input__wrapper,
+  .el-textarea.is-focus .el-textarea__inner,
+  .el-select.is-focus .el-select__wrapper {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// 移动端 iOS Safari 防视口自动放大基准
+@media (max-width: 640px) {
+  .el-input__inner,
+  .el-textarea__inner,
+  .el-select .el-input__inner {
+    font-size: 16px !important;
+  }
+}
+
+// ── Element Plus Dark Mode Overrides ──
 html.dark {
-  // Buttons in dark mode (Button Matrix)
-  .btn-tier-2 {
-    background: color-mix(in srgb, var(--primary) 14%, transparent) !important;
-    border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
-    color: var(--link) !important;
-    &:hover {
-      background: color-mix(in srgb, var(--primary) 22%, transparent) !important;
-      color: #ffffff !important;
-    }
-  }
-  .btn-tier-3 {
-    background: #161b22 !important;
-    border-color: #30363d !important;
-    color: #e4e4e7 !important;
-    &:hover {
-      background: #27272a !important;
-      border-color: #3f3f46 !important;
-      color: #f4f4f5 !important;
-    }
-  }
-  .btn-tier-4 {
-    color: #a1a1aa !important;
-    &:hover {
-      background: #222226 !important;
-      color: #f4f4f5 !important;
-    }
-  }
-
-  // 表格在暗黑模式下柔化边框噪点
-  .el-table {
-    th.el-table__cell.is-leaf,
-    td.el-table__cell {
-      border-bottom-color: rgba(255, 255, 255, 0.075) !important;
-    
-}
-
-    &::before,
-    .el-table__inner-wrapper::before {
-      background-color: rgba(255, 255, 255, 0.075) !important;
-    
-}
-
-  
-}
-
-
-  // 下拉选择器在暗黑模式下的色彩与选项高亮
-  .el-select-dropdown {
-    background-color: #161b22 !important;
-    border-color: #30363d !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-  
-}
-
-  .el-select-dropdown__item {
-    color: #e4e4e7 !important;
-    &.hover, &:hover {
-      background-color: #21262d !important;
-      color: #ffffff !important;
-    
-}
-
-    &.is-selected {
-      color: #60a5fa !important;
-      background-color: rgba(59, 130, 246, 0.12) !important;
-    
-}
-
-  
-}
-
-
   --el-color-primary: #58a6ff;
   --el-color-primary-light-3: #3b82f6;
   --el-color-primary-light-5: #60a5fa;
@@ -597,12 +538,9 @@ html.dark {
   --el-fill-color: #21262d;
   --el-fill-color-light: #161b22;
   --el-fill-color-lighter: #161b22;
-
   --el-card-bg-color: #161b22;
   --el-card-border-color: #30363d;
-
   --el-dialog-bg-color: #161b22;
-
   --el-table-bg-color: #161b22;
   --el-table-tr-bg-color: #161b22;
   --el-table-row-hover-bg-color: #21262d;
@@ -610,20 +548,15 @@ html.dark {
   --el-table-header-text-color: #8b949e;
   --el-table-text-color: #c9d1d9;
 
-  // Explicit Card & Table Overrides in Dark Mode
   .el-card {
-    --el-card-bg-color: #161b22 !important;
-    --el-card-border-color: #30363d !important;
-    background-color: #161b22 !important;
-    border-color: #30363d !important;
     color: #e4e4e7 !important;
-  }
-  .el-card__header {
-    border-bottom-color: #30363d !important;
-    color: #f0f6fc !important;
-  }
-  .el-card__body {
-    color: #e4e4e7 !important;
+    &__header {
+      border-bottom-color: #30363d !important;
+      color: #f0f6fc !important;
+    }
+    &__body {
+      color: #e4e4e7 !important;
+    }
   }
 
   .el-table,
@@ -639,6 +572,14 @@ html.dark {
     color: #e4e4e7 !important;
     border-color: rgba(255, 255, 255, 0.075) !important;
   }
+
+  .el-table {
+    &::before,
+    .el-table__inner-wrapper::before {
+      background-color: rgba(255, 255, 255, 0.075) !important;
+    }
+  }
+
   .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
     background: #0d1117 !important;
   }
@@ -649,78 +590,110 @@ html.dark {
     color: #a1a1aa !important;
   }
 
+  .el-select-dropdown {
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .el-select-dropdown__item {
+    color: #e4e4e7 !important;
+    &.hover,
+    &:hover {
+      background-color: #21262d !important;
+      color: #ffffff !important;
+    }
+    &.is-selected {
+      color: #60a5fa !important;
+      background-color: rgba(59, 130, 246, 0.12) !important;
+    }
+  }
+
   .el-tabs__item {
     color: var(--steel);
     &:hover {
       background: var(--highlight);
       color: var(--charcoal);
-    
-}
-
+    }
     &.is-active {
       background: var(--highlight);
       color: var(--ink);
-    
-}
-
-  
-}
-
+    }
+  }
 
   .el-loading-mask {
     background-color: rgba(9, 9, 11, 0.7) !important;
-  
-}
+  }
 
-  // Buttons in dark mode (Sapphire Blue CTA eliminates blinding white glare)
+  .btn-tier-2 {
+    background: color-mix(in srgb, var(--primary) 14%, transparent) !important;
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent) !important;
+    color: var(--link) !important;
+    &:hover {
+      background: color-mix(in srgb, var(--primary) 22%, transparent) !important;
+      color: #ffffff !important;
+    }
+  }
+
+  .btn-tier-3 {
+    background: #161b22 !important;
+    border-color: #30363d !important;
+    color: #e4e4e7 !important;
+    &:hover {
+      background: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #f4f4f5 !important;
+    }
+  }
+
+  .btn-tier-4 {
+    color: #a1a1aa !important;
+    &:hover {
+      background: #222226 !important;
+      color: #f4f4f5 !important;
+    }
+  }
+
   .el-button--primary {
     background: #2563eb !important;
     border-color: #3b82f6 !important;
     color: #ffffff !important;
     font-weight: 500 !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+
     &:hover {
       background: #1d4ed8 !important;
       border-color: #2563eb !important;
       color: #ffffff !important;
-    
-}
-
+    }
     &:active {
       background: #1e40af !important;
-    
-}
-
-    &.is-disabled, &:disabled {
+    }
+    &.is-disabled,
+    &:disabled {
       background: #1e293b !important;
       border-color: #334155 !important;
       color: #64748b !important;
-    
-}
-
-  
-}
+    }
+  }
 
   .el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--success):not(.el-button--warning) {
     background-color: #161b22 !important;
     border-color: #30363d !important;
     color: #e4e4e7 !important;
+
     &:hover {
       background-color: #27272a !important;
       border-color: #3f3f46 !important;
       color: #f4f4f5 !important;
-    
-}
-
-    &.is-disabled, &:disabled {
+    }
+    &.is-disabled,
+    &:disabled {
       background-color: #141416 !important;
       border-color: #222226 !important;
       color: #52525b !important;
-    
-}
-
-  
-}
+    }
+  }
 
   .el-button--success {
     background-color: rgba(52, 211, 153, 0.15) !important;
@@ -730,11 +703,8 @@ html.dark {
       background-color: #059669 !important;
       border-color: #059669 !important;
       color: #ffffff !important;
-    
-}
-
-  
-}
+    }
+  }
 
   .el-button--warning {
     background-color: rgba(251, 191, 36, 0.15) !important;
@@ -744,11 +714,8 @@ html.dark {
       background-color: #b45309 !important;
       border-color: #b45309 !important;
       color: #ffffff !important;
-    
-}
-
-  
-}
+    }
+  }
 
   .el-button--danger {
     background-color: rgba(239, 68, 68, 0.15) !important;
@@ -758,39 +725,25 @@ html.dark {
       background-color: #ef4444 !important;
       border-color: #ef4444 !important;
       color: #ffffff !important;
-    
-}
+    }
+  }
 
-  
-}
-
-
-  // Sliders in dark mode
   .el-slider {
     --el-slider-runway-bg-color: #27272a !important;
     --el-slider-main-bg-color: #3b82f6 !important;
     .el-slider__runway {
       background-color: #27272a !important;
-    
-}
-
+    }
     .el-slider__bar {
       background-color: #3b82f6 !important;
-    
-}
-
+    }
     .el-slider__button {
       border: 2px solid #3b82f6 !important;
       background-color: #ffffff !important;
       box-shadow: 0 0 8px rgba(59, 130, 246, 0.4) !important;
-    
-}
+    }
+  }
 
-  
-}
-
-
-  // Switches in dark mode
   .el-switch {
     --el-switch-off-color: #27272a;
     --el-switch-on-color: #3b82f6;
@@ -799,39 +752,21 @@ html.dark {
       border-color: #3f3f46 !important;
       .el-switch__action {
         background-color: #a1a1aa !important;
-      
-}
-
-    
-}
-
+      }
+    }
     &.is-checked .el-switch__core {
       background-color: #3b82f6 !important;
       border-color: #3b82f6 !important;
       .el-switch__action {
         background-color: #ffffff !important;
-      
-}
+      }
+    }
+  }
 
-    
-}
+  .el-progress .el-progress-bar__outer {
+    background-color: #27272a !important;
+  }
 
-  
-}
-
-
-  // Progress bars in dark mode
-  .el-progress {
-    .el-progress-bar__outer {
-      background-color: #27272a !important;
-    
-}
-
-  
-}
-
-
-  // Steppers (Input Number) in dark mode — eliminate blinding white +/- boxes
   .el-input-number {
     .el-input-number__decrease,
     .el-input-number__increase {
@@ -841,110 +776,15 @@ html.dark {
       &:hover {
         background-color: #27272a !important;
         color: #f4f4f5 !important;
-      
-}
-
+      }
       &.is-disabled {
         background-color: #141416 !important;
         border-color: #222226 !important;
         color: #52525b !important;
-      
-}
+      }
+    }
+  }
 
-    
-}
-
-    .el-input__wrapper {
-      background-color: #0d1117 !important;
-      box-shadow: 0 0 0 1px #30363d inset !important;
-      &:hover {
-        box-shadow: 0 0 0 1px #484f58 inset !important;
-      
-}
-
-      &.is-focus {
-        box-shadow: 0 0 0 1px #58a6ff inset !important;
-      
-}
-
-    
-}
-
-  
-}
-
-
-  // Time Picker Panel in dark mode
-  .el-time-panel {
-    background-color: #161b22 !important;
-    border-color: #30363d !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
-    .el-time-panel__content::after,
-    .el-time-panel__content::before {
-      border-color: #30363d !important;
-    
-}
-
-    .el-time-panel__footer {
-      border-color: #30363d !important;
-    
-}
-
-    .el-time-spinner__item {
-      color: #a1a1aa !important;
-      &:hover:not(.is-disabled):not(.is-active) {
-        background: #27272a !important;
-        color: #f4f4f5 !important;
-      
-}
-
-      &.is-active:not(.is-disabled) {
-        color: #ffffff !important;
-        font-weight: 600;
-      
-}
-
-    
-}
-
-    .el-time-panel__btn {
-      color: #a1a1aa !important;
-      &.confirm {
-        color: #60a5fa !important;
-        font-weight: 600;
-      
-}
-
-    
-}
-
-  
-}
-
-
-  // Light poppers / tooltips in dark mode
-  .el-popper.is-light {
-    background-color: #1c1c20 !important;
-    border-color: #30363d !important;
-    color: #e4e4e7 !important;
-    .el-popper__arrow::before {
-      background-color: #1c1c20 !important;
-      border-color: #30363d !important;
-    
-}
-
-  
-}
-
-
-  // Descriptions in dark mode
-  .el-descriptions {
-    --el-descriptions-item-bordered-label-background: #0d1117;
-  
-}
-
-
-  // Inputs & Selects in dark mode
   .el-input__wrapper,
   .el-textarea__inner,
   .el-select__wrapper {
@@ -954,8 +794,9 @@ html.dark {
     &:hover {
       box-shadow: 0 0 0 1px #484f58 inset !important;
     }
-
-    &.is-focus, &:focus, &.is-focused {
+    &.is-focus,
+    &:focus,
+    &.is-focused {
       box-shadow: 0 0 0 1px #58a6ff inset !important;
     }
   }
@@ -972,29 +813,61 @@ html.dark {
     color: #6e7681 !important;
   }
 
-  // Dialog & Drawer & Collapse in dark mode
-  .el-dialog {
-    --el-dialog-bg-color: #161b22 !important;
+  .el-time-panel {
     background-color: #161b22 !important;
     border-color: #30363d !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+
+    .el-time-panel__content::after,
+    .el-time-panel__content::before,
+    .el-time-panel__footer {
+      border-color: #30363d !important;
+    }
+
+    .el-time-spinner__item {
+      color: #a1a1aa !important;
+      &:hover:not(.is-disabled):not(.is-active) {
+        background: #27272a !important;
+        color: #f4f4f5 !important;
+      }
+      &.is-active:not(.is-disabled) {
+        color: #ffffff !important;
+        font-weight: 600;
+      }
+    }
+
+    .el-time-panel__btn {
+      color: #a1a1aa !important;
+      &.confirm {
+        color: #60a5fa !important;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .el-popper.is-light {
+    background-color: #1c1c20 !important;
+    border-color: #30363d !important;
     color: #e4e4e7 !important;
+    .el-popper__arrow::before {
+      background-color: #1c1c20 !important;
+      border-color: #30363d !important;
+    }
   }
 
-  .el-dialog__title {
-    color: #f0f6fc !important;
+  .el-descriptions {
+    --el-descriptions-item-bordered-label-background: #0d1117;
   }
 
-  .el-dialog__header {
-    border-bottom: 1px solid #30363d !important;
-    color: #f0f6fc !important;
-  }
-
-  .el-dialog__body {
+  .el-dialog {
     color: #e4e4e7 !important;
-  }
-
-  .el-dialog__footer {
-    border-top: 1px solid #30363d !important;
+    &__title { color: #f0f6fc !important; }
+    &__header {
+      border-bottom: 1px solid #30363d !important;
+      color: #f0f6fc !important;
+    }
+    &__body { color: #e4e4e7 !important; }
+    &__footer { border-top: 1px solid #30363d !important; }
   }
 
   .el-message-box {
@@ -1007,25 +880,20 @@ html.dark {
     }
   }
 
-  .el-drawer,
-  .el-drawer__body {
-    background-color: #161b22 !important;
-    color: #e4e4e7 !important;
-  }
-
-  .el-drawer__title {
-    color: #f0f6fc !important;
-  }
-
-  .el-drawer__header {
-    border-bottom: 1px solid #30363d !important;
-    color: #f0f6fc !important;
-    margin-bottom: 0 !important;
-    padding-bottom: 16px !important;
-  }
-
-  .el-drawer__footer {
-    border-top: 1px solid #30363d !important;
+  .el-drawer {
+    &,
+    &__body {
+      background-color: #161b22 !important;
+      color: #e4e4e7 !important;
+    }
+    &__title { color: #f0f6fc !important; }
+    &__header {
+      border-bottom: 1px solid #30363d !important;
+      color: #f0f6fc !important;
+      margin-bottom: 0 !important;
+      padding-bottom: 16px !important;
+    }
+    &__footer { border-top: 1px solid #30363d !important; }
   }
 
   .el-collapse {
@@ -1044,35 +912,27 @@ html.dark {
     color: #e4e4e7 !important;
   }
 
-
-  // Dropdowns in dark mode
   .el-dropdown-menu {
     background: #161b22 !important;
     border-color: #30363d !important;
     .el-dropdown-menu__item {
       color: #e4e4e7 !important;
-      &:hover, &:focus {
+      &:hover,
+      &:focus {
         background: #27272a !important;
         color: #ffffff !important;
-      
-}
-
+      }
       &.divided {
         border-top-color: #27272a !important;
-      
-}
+      }
+    }
+  }
 
-    
-}
-
-  
-}
-
-
-  // Pagination in dark mode
   .el-pagination {
     --el-pagination-hover-color: #f4f4f5;
-    .btn-prev, .btn-next, .el-pager li {
+    .btn-prev,
+    .btn-next,
+    .el-pager li {
       background-color: #161b22 !important;
       color: #a1a1aa !important;
       border: 1px solid #27272a !important;
@@ -1080,149 +940,16 @@ html.dark {
       &:hover {
         color: #ffffff !important;
         border-color: #3f3f46 !important;
-      
-}
-
+      }
       &.is-active {
         background-color: #27272a !important;
         color: #f4f4f5 !important;
         border-color: #3f3f46 !important;
         font-weight: 600;
-      
+      }
+    }
+  }
 }
-
-    
-}
-
-  
-}
-
-
-
-}
-
-
-.el-loading-mask {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background-color: rgba(251, 251, 250, 0.65);
-  transition: opacity 0.2s ease;
-
-}
-
-.el-loading-spinner .circular {
-  width: 32px;
-  height: 32px;
-
-}
-
-.el-loading-spinner .path {
-  stroke: var(--ink);
-  stroke-width: 3.5;
-
-}
-
-
-
-// 键盘可访问性与输入控件聚焦隔离铁律 (Input Focus Isolation vs. Keyboard Focus Ring)
-// 文本输入控件绝对禁用外部 outline 粗框，仅依靠 1px 优雅内嵌阴影与边框高亮
-input,
-textarea,
-.el-input__wrapper,
-.el-textarea__inner {
-  outline: none !important;
-  outline-offset: 0 !important;
-
-}
-
-
-// 仅在纯键盘导航聚焦时，对无边框交互元素展现 2px 双层聚焦外框
-button:focus-visible,
-[role="button"]:focus-visible,
-a:focus-visible,
-.el-button:focus-visible,
-.el-switch:focus-visible,
-.el-tabs__item:focus-visible,
-.el-checkbox:focus-visible,
-.el-radio:focus-visible {
-  outline: 2px solid var(--hairline-focus, #2563eb) !important;
-  outline-offset: 2px !important;
-
-}
-
-
-// Windows 高对比度模式下确保键盘焦点与输入框不丢失 (WCAG 2.4.7 Forced Colors Safeguard)
-@media (forced-colors: active) {
-  button:focus-visible,
-  [role="button"]:focus-visible,
-  a:focus-visible,
-  .el-button:focus-visible,
-  .el-switch:focus-visible,
-  .el-tabs__item:focus-visible,
-  .el-checkbox:focus-visible,
-  .el-radio:focus-visible,
-  input:focus,
-  textarea:focus,
-  .el-input.is-focus .el-input__wrapper,
-  .el-textarea.is-focus .el-textarea__inner,
-  .el-select.is-focus .el-select__wrapper {
-    outline: 2px solid Highlight !important;
-    outline-offset: 2px !important;
-  
-}
-
-
-}
-
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible) {
-  outline: none !important;
-
-}
-
-
-// 物理动效降级兼容 (Accessibility Reduced Motion)
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  
-}
-
-
-}
-
-
-
-// 物理动效：进出场差异化（出场比入场快 30% 黄金法则）
-.el-dialog,
-.el-drawer {
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
-
-}
-
-.el-dialog-fade-leave-active,
-.el-drawer-fade-leave-active {
-  transition-duration: 0.16s !important;
-  transition-timing-function: cubic-bezier(0.4, 0, 1, 1) !important;
-
-}
-
-
-// 移动端 iOS Safari 防视口自动放大基准 (Font size >= 16px on < 640px)
-@media (max-width: 640px) {
-  .el-input__inner,
-  .el-textarea__inner,
-  .el-select .el-input__inner {
-    font-size: 16px !important;
-  
-}
-
-
-}
-
 
 // ── 终端控制栏历史归档下拉选择器（全场景强穿透深色隔离）──
 .history-quick-select {
@@ -1236,16 +963,13 @@ a:focus:not(:focus-visible) {
 
   .el-select__wrapper,
   .el-input__wrapper {
-    background-color: #161b22 !important;
     background: #161b22 !important;
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
     height: 28px !important;
     min-height: 28px !important;
     line-height: 26px !important;
     border-radius: var(--r-sm, 4px) !important;
-  
-}
-
+  }
 
   .el-select__placeholder,
   .el-select__selected-item,
@@ -1255,26 +979,19 @@ a:focus:not(:focus-visible) {
     color: #e4e4e7 !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
-  
-}
-
+  }
 
   .el-select__caret,
   .el-select__suffix,
   .el-icon {
     color: #a1a1aa !important;
-  
+  }
 }
 
-
-}
-
-
-// 终端历史归档下拉弹出层（全场景暗黑沉浸隔离，彻底根除浅色/白底漏洞）
+// 终端历史归档下拉弹出层（全场景暗黑沉浸隔离）
 .el-popper.history-select-popper,
 .history-select-popper {
   background: #161b22 !important;
-  background-color: #161b22 !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
   --el-bg-color-overlay: #18181b !important;
@@ -1294,69 +1011,45 @@ a:focus:not(:focus-visible) {
   .el-scrollbar__wrap,
   .el-select-dropdown__list {
     background: #161b22 !important;
-    background-color: #161b22 !important;
-  
-}
-
+  }
 
   .el-popper__arrow::before {
     background: #161b22 !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
-  
-}
-
+  }
 
   .el-select-dropdown__empty {
     color: #a1a1aa !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
     background: transparent !important;
-  
-}
-
+  }
 
   .el-select-dropdown__item {
     background: transparent !important;
-    background-color: transparent !important;
     color: #e4e4e7 !important;
     font-size: 12px !important;
     font-family: var(--font-mono) !important;
 
-    // 普通未选中项悬浮态
     &.hover,
     &:hover,
     &.is-hovering {
       background: rgba(255, 255, 255, 0.08) !important;
-      background-color: rgba(255, 255, 255, 0.08) !important;
       color: #ffffff !important;
-    
-}
+    }
 
-
-    // 已选中态（无论鼠标是否悬浮，绝不允许出现白底）
     &.is-selected,
     &.selected {
       background: rgba(59, 130, 246, 0.16) !important;
-      background-color: rgba(59, 130, 246, 0.16) !important;
       color: #60a5fa !important;
       font-weight: 600 !important;
 
-      // 已选中项悬浮态
       &.hover,
       &:hover,
       &.is-hovering {
         background: rgba(59, 130, 246, 0.28) !important;
-        background-color: rgba(59, 130, 246, 0.28) !important;
         color: #93c5fd !important;
-      
+      }
+    }
+  }
 }
-
-    
-}
-
-  
-}
-
-
-}
-

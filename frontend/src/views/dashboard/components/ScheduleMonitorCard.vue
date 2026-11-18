@@ -123,7 +123,10 @@ function formatNextTime(ts?: number): string {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 32px;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
+  height: auto;
   margin-bottom: 16px;
   box-sizing: border-box;
 }
@@ -131,7 +134,9 @@ function formatNextTime(ts?: number): string {
 .card-title-left {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
 }
 
 .card-title-main {
@@ -140,6 +145,8 @@ function formatNextTime(ts?: number): string {
   color: var(--charcoal);
   letter-spacing: -0.2px;
   line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .monitor-mode-tag {
@@ -151,6 +158,8 @@ function formatNextTime(ts?: number): string {
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-pulse-dot {
@@ -194,6 +203,8 @@ function formatNextTime(ts?: number): string {
   text-decoration: none;
   transition: opacity 0.15s ease;
   line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .card-header-action:hover {
   text-decoration: underline;

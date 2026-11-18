@@ -362,17 +362,12 @@ async function handleApplyImport() {
 /* Segmented Control 顶部分段切换器 */
 .backup-tab-nav {
   display: flex;
-  background: var(--color-canvas-subtle, #f6f8fa);
-  border: 1px solid var(--color-border-subtle, #d0d7de);
+  background: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 6px;
   padding: 3px;
   gap: 3px;
   margin-bottom: 16px;
-}
-
-html.dark .backup-tab-nav {
-  background: #21262d;
-  border-color: #30363d;
 }
 
 .tab-nav-btn {
@@ -387,38 +382,24 @@ html.dark .backup-tab-nav {
   border-radius: 5px;
   border: none;
   background: transparent;
-  color: var(--color-fg-muted, #57606a);
+  color: var(--color-fg-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover:not(.active) {
-    color: var(--color-fg-default, #24292f);
+    color: var(--color-fg-default);
   }
 
   &.active {
-    background: var(--color-canvas-default, #ffffff);
-    color: var(--color-fg-default, #24292f);
+    background: var(--color-canvas-default);
+    color: var(--ink);
     font-weight: 600;
-    box-shadow: 0 1px 2px rgba(27, 31, 36, 0.08);
+    box-shadow: var(--shadow-xs);
   }
 
   .tab-icon {
     width: 14px;
     height: 14px;
-  }
-}
-
-html.dark .tab-nav-btn {
-  color: #8b949e;
-
-  &:hover:not(.active) {
-    color: #c9d1d9;
-  }
-
-  &.active {
-    background: #30363d;
-    color: #f0f6fc;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -445,37 +426,6 @@ html.dark .tab-nav-btn {
   letter-spacing: -0.2px;
 }
 
-.help-question-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border-subtle, #d0d7de);
-  color: var(--color-fg-muted, #57606a);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: help;
-  user-select: none;
-  line-height: 1;
-
-  &:hover {
-    border-color: var(--color-accent-fg, #0969da);
-    color: var(--color-accent-fg, #0969da);
-  }
-}
-
-html.dark .help-question-icon {
-  border-color: #30363d;
-  color: #8b949e;
-
-  &:hover {
-    border-color: #58a6ff;
-    color: #58a6ff;
-  }
-}
-
 /* 导出资产卡片 */
 .export-asset-card {
   display: flex;
@@ -491,8 +441,8 @@ html.dark .help-question-icon {
   width: 38px;
   height: 38px;
   border-radius: 6px;
-  background: color-mix(in srgb, #0969da 10%, transparent);
-  color: #0969da;
+  background: color-mix(in srgb, var(--color-accent-fg) 12%, transparent);
+  color: var(--color-accent-fg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -502,11 +452,6 @@ html.dark .help-question-icon {
     width: 20px;
     height: 20px;
   }
-}
-
-html.dark .asset-icon-box {
-  background: rgba(56, 139, 253, 0.15);
-  color: #58a6ff;
 }
 
 .asset-meta-info {
@@ -537,41 +482,7 @@ html.dark .asset-icon-box {
   }
 }
 
-.btn-action-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  font-size: 12.5px;
-  font-weight: 500;
-  border-radius: 6px;
-  color: #ffffff;
-  background: var(--color-accent-emphasis, #0969da);
-  border: 1px solid rgba(27, 31, 36, 0.15);
-  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1);
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: #0860ca;
-  }
-
-  .btn-svg {
-    width: 14px;
-    height: 14px;
-  }
-}
-
-html.dark .btn-action-primary {
-  background: #1f6feb;
-  border-color: rgba(240, 246, 252, 0.1);
-
-  &:hover {
-    background: #388bfd;
-  }
-}
-
+.btn-action-primary,
 .btn-action-secondary {
   display: inline-flex;
   align-items: center;
@@ -581,43 +492,40 @@ html.dark .btn-action-primary {
   font-size: 12.5px;
   font-weight: 500;
   border-radius: 6px;
-  color: var(--color-btn-text, #24292f);
-  background: var(--color-btn-bg, #ffffff);
-  border: 1px solid var(--color-btn-border, #d0d7de);
-  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
   cursor: pointer;
   transition: all 0.15s ease;
-
-  &:hover {
-    background: var(--color-btn-hover-bg, #f3f4f6);
-    border-color: var(--color-btn-hover-border, #d0d7de);
-    color: var(--color-accent-fg, #0969da);
-  }
 
   .btn-svg {
     width: 14px;
     height: 14px;
   }
+}
 
-  .copied-check {
-    color: #1a7f37;
+.btn-action-primary {
+  color: #ffffff;
+  background: var(--color-accent-emphasis);
+  border: 1px solid rgba(27, 31, 36, 0.15);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1);
+
+  &:hover {
+    background: var(--color-accent-emphasis-hover);
   }
 }
 
-html.dark .btn-action-secondary {
-  color: #c9d1d9;
-  background: #21262d;
-  border-color: #30363d;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+.btn-action-secondary {
+  color: var(--color-btn-text);
+  background: var(--color-btn-bg);
+  border: 1px solid var(--color-btn-border);
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
 
   &:hover {
-    background: #30363d;
-    border-color: #8b949e;
-    color: #58a6ff;
+    background: var(--color-btn-hover-bg);
+    border-color: var(--color-btn-hover-border);
+    color: var(--color-accent-fg);
   }
 
   .copied-check {
-    color: #3fb950;
+    color: var(--success);
   }
 }
 
@@ -627,7 +535,7 @@ html.dark .btn-action-secondary {
   align-items: center;
   gap: 14px;
   padding: 16px 18px;
-  border: 1.5px dashed var(--color-border-subtle, #d0d7de);
+  border: 1.5px dashed var(--color-border-subtle);
   border-radius: 6px;
   background: var(--surface-card);
   cursor: pointer;
@@ -636,18 +544,8 @@ html.dark .btn-action-secondary {
 
   &:hover,
   &.is-dragover {
-    border-color: var(--color-accent-fg, #0969da);
-    background: var(--color-canvas-subtle, #f6f8fa);
-  }
-}
-
-html.dark .dropzone-box {
-  border-color: #30363d;
-
-  &:hover,
-  &.is-dragover {
-    border-color: #58a6ff;
-    background: #21262d;
+    border-color: var(--color-accent-fg);
+    background: var(--color-canvas-subtle);
   }
 }
 
@@ -655,24 +553,18 @@ html.dark .dropzone-box {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--color-canvas-subtle, #f6f8fa);
-  border: 1px solid var(--hairline);
+  background: var(--color-canvas-subtle);
+  border: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--stone);
+  color: var(--color-fg-muted);
 
   .dropzone-svg {
     width: 18px;
     height: 18px;
   }
-}
-
-html.dark .dropzone-icon-wrap {
-  background: #21262d;
-  border-color: #30363d;
-  color: #8b949e;
 }
 
 .dropzone-content {
@@ -688,13 +580,9 @@ html.dark .dropzone-icon-wrap {
 }
 
 .dropzone-browse-link {
-  color: var(--color-accent-fg, #0969da);
+  color: var(--color-accent-fg);
   font-weight: 500;
   margin-left: 4px;
-}
-
-html.dark .dropzone-browse-link {
-  color: #58a6ff;
 }
 
 .dropzone-secondary-text {
@@ -718,7 +606,7 @@ html.dark .dropzone-browse-link {
   height: 32px;
   border-radius: 6px;
   background: rgba(16, 185, 129, 0.12);
-  color: #059669;
+  color: var(--success);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -749,7 +637,7 @@ html.dark .dropzone-browse-link {
 
 .file-status {
   font-size: 11px;
-  color: #059669;
+  color: var(--success);
   font-weight: 500;
 }
 
@@ -790,7 +678,7 @@ html.dark .dropzone-browse-link {
 
   &:hover {
     background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
+    color: var(--error);
   }
 
   svg {
@@ -814,13 +702,13 @@ html.dark .dropzone-browse-link {
   border: none;
   padding: 0;
   font-size: 12px;
-  color: var(--color-fg-muted, #57606a);
+  color: var(--color-fg-muted);
   cursor: pointer;
   width: fit-content;
   user-select: none;
 
   &:hover {
-    color: var(--color-fg-default, #24292f);
+    color: var(--color-fg-default);
   }
 
   .toggle-svg {
@@ -831,14 +719,6 @@ html.dark .dropzone-browse-link {
     &.rotate-open {
       transform: rotate(180deg);
     }
-  }
-}
-
-html.dark .toggle-paste-btn {
-  color: #8b949e;
-
-  &:hover {
-    color: #c9d1d9;
   }
 }
 
@@ -854,7 +734,7 @@ html.dark .toggle-paste-btn {
   min-height: 90px;
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid var(--color-border-subtle, #d0d7de);
+  border: 1px solid var(--color-border-subtle);
   background: var(--surface-card);
   color: var(--charcoal);
   font-family: var(--font-mono);
@@ -864,15 +744,7 @@ html.dark .toggle-paste-btn {
 
   &:focus {
     outline: none;
-    border-color: var(--color-accent-fg, #0969da);
-  }
-}
-
-html.dark .backup-textarea {
-  border-color: #30363d;
-
-  &:focus {
-    border-color: #58a6ff;
+    border-color: var(--color-accent-fg);
   }
 }
 
@@ -890,7 +762,7 @@ html.dark .backup-textarea {
   padding: 2px 4px;
 
   &:hover {
-    color: #dc2626;
+    color: var(--error);
   }
 }
 
@@ -904,7 +776,7 @@ html.dark .backup-textarea {
 
 .status-ready-text {
   font-size: 12px;
-  color: #059669;
+  color: var(--success);
   font-weight: 500;
 }
 

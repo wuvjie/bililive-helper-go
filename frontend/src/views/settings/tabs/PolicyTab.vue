@@ -105,7 +105,7 @@
                   <span class="seg-label" v-if="strokePct > 12">计划释放空间 ({{ strokePct }}%)</span>
                 </div>
                 <div class="track-segment seg-warn" :style="{ width: `${100 - triggerVal}%` }">
-                  <span class="seg-label" v-if="(100 - triggerVal) > 15">超额清理区间 ({{ triggerVal }}% ~ 100%)</span>
+                  <span class="seg-label" v-if="(100 - triggerVal) > 15">{{ (100 - triggerVal) > 26 ? `超额清理区间 (${triggerVal}% ~ 100%)` : `超额清理 (${triggerVal}%~100%)` }}</span>
                 </div>
               </div>
             </div>
@@ -419,57 +419,17 @@ function removeTag(idx: number) {
 </script>
 
 <style scoped>
-.settings-tab-pane {
+/* 通用卡片底板 */
+.rule-card,
+.metric-card,
+.protect-card,
+.whitelist-card {
+  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md, 6px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-/* GitHub Primer Box Model */
-.primer-box {
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--hairline, #e5e3df);
-  border-radius: var(--r-md, 6px);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-
-.primer-box-header {
-  padding: 12px 18px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
-  border-bottom: 1px solid var(--hairline, #e5e3df);
-}
-
-.box-header-title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.box-header-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.icon-blue {
-  color: var(--primary, #2563eb);
-}
-
-.icon-amber {
-  color: var(--warning, #d97706);
-}
-
-.box-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink, #1a1a1a);
-  margin: 0;
-  line-height: 1.3;
-}
-
-.primer-box-body {
-  padding: 0;
+  transition: all 0.15s ease;
 }
 
 /* Box 1: 录像合并规则对称双卡网格 */
@@ -481,14 +441,8 @@ function removeTag(idx: number) {
 }
 
 .rule-card {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
-  border: 1px solid var(--hairline, #e5e3df);
-  border-radius: var(--r-md, 6px);
   padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
   gap: 10px;
-  transition: all 0.15s ease;
 }
 
 .rule-card-header {
@@ -500,12 +454,12 @@ function removeTag(idx: number) {
 .rule-card-title {
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--ink, #1a1a1a);
+  color: var(--ink);
 }
 
 .rule-card-desc {
   font-size: 12px;
-  color: var(--steel, #787671);
+  color: var(--steel);
   line-height: 1.45;
   margin: 0;
   min-height: 34px;
@@ -522,17 +476,6 @@ function removeTag(idx: number) {
 
 .stepper-compact {
   width: 130px;
-}
-
-.unit-text {
-  font-size: 13px;
-  color: var(--slate, #5d5b54);
-  font-weight: 500;
-}
-
-.interval-hint {
-  font-size: 12px;
-  color: var(--steel, #787671);
 }
 
 /* 磁盘清理控制台专有样式 */
@@ -623,14 +566,8 @@ function removeTag(idx: number) {
 }
 
 .metric-card {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
-  border: 1px solid var(--hairline, #e5e3df);
-  border-radius: var(--r-md, 6px);
   padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
   gap: 4px;
-  transition: all 0.15s ease;
 }
 
 .metric-card.card-warn {
@@ -786,14 +723,8 @@ function removeTag(idx: number) {
 }
 
 .protect-card {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
-  border: 1px solid var(--hairline, #e5e3df);
-  border-radius: var(--r-md, 6px);
   padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
-  transition: all 0.15s ease;
 }
 
 .protect-card-title {
@@ -821,12 +752,7 @@ function removeTag(idx: number) {
 
 /* 保护白名单微卡 */
 .whitelist-card {
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
-  border: 1px solid var(--hairline, #e5e3df);
-  border-radius: var(--r-md, 6px);
   padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 

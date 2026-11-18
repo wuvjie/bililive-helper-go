@@ -163,8 +163,10 @@ function getNetDiffClass(day: DayStats): string {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  height: 32px;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  min-height: 32px;
+  height: auto;
   margin-bottom: 16px;
   box-sizing: border-box;
 }

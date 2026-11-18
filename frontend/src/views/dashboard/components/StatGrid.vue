@@ -43,7 +43,7 @@
         <span class="stat-value">{{ stats?.daily_output_gb ? stats.daily_output_gb.toFixed(1) : '0.0' }}</span>
         <span class="stat-unit">GB/天</span>
       </div>
-      <span class="stat-sub">按近 7 天录像体积日均增长估算</span>
+      <span class="stat-sub">近 7 天日均体积增长估算</span>
     </div>
 
     <!-- Card 5: 磁盘空间预计可用 (容量安全) -->
@@ -64,7 +64,7 @@
         <span class="stat-unit">次</span>
       </div>
       <span class="stat-sub">
-        已累计释放 {{ freedSpaceDisplay.val }} {{ freedSpaceDisplay.unit }} 磁盘空间
+        已释放 {{ freedSpaceDisplay.val }} {{ freedSpaceDisplay.unit }} 磁盘空间
       </span>
     </div>
   </div>
@@ -114,7 +114,7 @@ const runwayDisplay = computed(() => {
 
 .stat-card {
   position: relative;
-  padding: 14px 16px;
+  padding: 14px 13px;
   border-radius: var(--r-md);
   background: var(--surface-card, #ffffff);
   border: 1px solid var(--hairline);
@@ -181,7 +181,7 @@ const runwayDisplay = computed(() => {
 }
 
 .stat-sub {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--stone);
   margin-top: 4px;
   white-space: nowrap;

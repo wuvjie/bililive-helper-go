@@ -267,65 +267,6 @@ const windowStatusTitle = computed(() => {
 </script>
 
 <style scoped>
-.settings-tab-pane {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* GitHub Primer Box Model */
-.primer-box {
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--hairline, #e5e3df);
-  border-radius: var(--r-md, 6px);
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-
-.primer-box-header {
-  padding: 12px 18px;
-  background: var(--surface-secondary, rgba(0, 0, 0, 0.02));
-  border-bottom: 1px solid var(--hairline, #e5e3df);
-}
-
-.box-header-title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.box-header-title-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.box-header-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.icon-blue {
-  color: var(--primary, #2563eb);
-}
-
-.icon-purple {
-  color: #8b5cf6;
-}
-
-.box-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink, #1a1a1a);
-  margin: 0;
-  line-height: 1.3;
-}
-
-.primer-box-body {
-  padding: 0;
-}
-
 /* 定时任务对称双列网格 */
 .schedule-task-grid {
   display: grid;
@@ -336,18 +277,18 @@ const windowStatusTitle = computed(() => {
 
 .schedule-task-card {
   background: var(--surface-secondary, rgba(0, 0, 0, 0.015));
-  border: 1px solid var(--hairline, #e5e3df);
+  border: 1px solid var(--hairline);
   border-radius: var(--r-md, 6px);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   transition: all 0.15s ease;
-}
 
-.schedule-task-card.task-disabled {
-  opacity: 0.6;
-  background: var(--surface, #fbfbfa);
+  &.task-disabled {
+    opacity: 0.6;
+    background: var(--surface);
+  }
 }
 
 .task-card-header {
@@ -370,37 +311,17 @@ const windowStatusTitle = computed(() => {
 .task-card-title {
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--charcoal, #37352f);
+  color: var(--charcoal);
 }
 
 .task-card-desc {
   font-size: 12px;
-  color: var(--steel, #787671);
+  color: var(--steel);
   line-height: 1.45;
   margin: 0;
   min-height: 34px;
   display: flex;
   align-items: center;
-}
-
-.status-pill {
-  font-size: 11px;
-  font-weight: 500;
-  padding: 1px 7px;
-  border-radius: var(--r-full, 9999px);
-  line-height: 1.3;
-}
-
-.pill-active {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--success, #059669);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-
-.pill-inactive {
-  background: var(--surface, #f4f3f0);
-  color: var(--stone, #a4a097);
-  border: 1px solid var(--hairline, #e5e3df);
 }
 
 .task-card-body {
@@ -411,7 +332,7 @@ const windowStatusTitle = computed(() => {
 
 .field-label-sm {
   font-size: 12px;
-  color: var(--steel, #787671);
+  color: var(--steel);
   font-weight: 500;
 }
 
@@ -426,20 +347,12 @@ const windowStatusTitle = computed(() => {
   width: 120px;
 }
 
-.unit-text {
-  font-size: 13px;
-  color: var(--slate, #5d5b54);
-  font-weight: 500;
-}
-
 .interval-hint {
-  font-size: 12px;
-  color: var(--steel, #787671);
   white-space: nowrap;
   display: inline-block;
   min-width: 140px;
   font-variant-numeric: tabular-nums;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 /* 避让时间窗口网格 */

@@ -41,6 +41,21 @@
   --warning: #d97706;
   --error: #e03131;
 
+  // GitHub Primer semantic tokens (auto-adapted in html.dark)
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-border-subtle: #d0d7de;
+  --color-fg-default: #24292f;
+  --color-fg-muted: #57606a;
+  --color-accent-fg: #0969da;
+  --color-accent-emphasis: #0969da;
+  --color-accent-emphasis-hover: #0860ca;
+  --color-btn-text: #24292f;
+  --color-btn-bg: #ffffff;
+  --color-btn-border: #d0d7de;
+  --color-btn-hover-bg: #f3f4f6;
+  --color-btn-hover-border: #d0d7de;
+
   // Pastel tints (kept for stat cards)
   --tint-peach: #ffe8d4;
   --tint-mint: #d9f3e1;
@@ -159,6 +174,20 @@ html.dark {
   --success: #3fb950;
   --warning: #d29922;
   --error: #f85149;
+
+  --color-canvas-default: #30363d;
+  --color-canvas-subtle: #21262d;
+  --color-border-subtle: #30363d;
+  --color-fg-default: #c9d1d9;
+  --color-fg-muted: #8b949e;
+  --color-accent-fg: #58a6ff;
+  --color-accent-emphasis: #1f6feb;
+  --color-accent-emphasis-hover: #388bfd;
+  --color-btn-text: #c9d1d9;
+  --color-btn-bg: #21262d;
+  --color-btn-border: #30363d;
+  --color-btn-hover-bg: #30363d;
+  --color-btn-hover-border: #8b949e;
 
   --tint-peach: rgba(251, 146, 60, 0.12);
   --tint-mint: rgba(63, 185, 80, 0.12);

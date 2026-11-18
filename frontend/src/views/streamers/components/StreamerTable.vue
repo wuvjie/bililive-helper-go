@@ -8,7 +8,7 @@
       class="streamer-table"
       :default-sort="{ prop: 'size_gb', order: 'descending' }"
     >
-      <el-table-column prop="name" label="主播" min-width="260" show-overflow-tooltip sortable>
+      <el-table-column prop="name" label="主播" min-width="148" sortable>
         <template #default="{ row }">
           <div class="streamer-name-cell">
             <span
@@ -39,7 +39,7 @@
       <el-table-column
         prop="files"
         label="录像文件数量"
-        width="140"
+        width="110"
         align="right"
         header-align="right"
         sortable
@@ -61,7 +61,7 @@
       <el-table-column
         prop="size_gb"
         label="磁盘占用"
-        width="125"
+        width="84"
         align="right"
         header-align="right"
         sortable
@@ -78,7 +78,7 @@
       <el-table-column
         prop="mtime"
         label="最近录像时间"
-        width="160"
+        width="122"
         align="right"
         header-align="right"
         sortable
@@ -104,7 +104,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="225" align="left" header-align="left">
+      <el-table-column label="操作" width="186" align="left" header-align="left">
         <template #default="{ row }">
           <div class="action-btn-group">
             <button class="ghost-action" @click="$emit('open-drawer', row as StreamerInfo)" title="查看该主播全部录像文件">
@@ -182,7 +182,8 @@ function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
 .streamer-name-cell {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   min-width: 0;
 }
 
@@ -215,8 +216,7 @@ function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
   font-weight: 600;
   color: var(--charcoal);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .col-header-tip {
@@ -224,6 +224,22 @@ function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
   color: var(--slate);
   font-weight: 500;
   white-space: nowrap;
+}
+
+:deep(.el-table .cell) {
+  padding: 0 8px;
+}
+
+:deep(.el-table .caret-wrapper) {
+  width: 16px;
+}
+
+@media (max-width: 1100px) {
+  .badge-pill {
+    font-size: 11px;
+    padding: 1px 6px;
+    gap: 3px;
+  }
 }
 
 :deep(.el-table__header-wrapper th .cell) {
@@ -234,7 +250,7 @@ function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
 .action-btn-group {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   white-space: nowrap;
   flex-wrap: nowrap;
 }
@@ -243,8 +259,8 @@ function sortMtime(a: StreamerInfo, b: StreamerInfo): number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 3px;
+  padding: 4px 5px;
   height: 28px;
   border-radius: var(--r-sm);
   font-size: 12px;

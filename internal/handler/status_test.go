@@ -154,3 +154,102 @@ func TestScanAllStreamersAt_StandaloneMP4(t *testing.T) {
 		t.Errorf("主播F is_live = false for active mp4, want true")
 	}
 }
+
+func TestScanAllStreamersAt_TitleChangeSameDayMP4Pending(t *testing.T) {
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	h := &Handler{config: &cfg}
+
+	loc := time.FixedZone("CST", 8*3600)
+	now := time.Date(2026, 6, 1, 12, 0, 0, 0, loc)
+	dir := filepath.Join(root, "主播改标题")
+	os.MkdirAll(dir, 0755)
+	for _, fn := range []string{
+		"[2026-06-01 08-00-00][1008][上半场聊天].mp4",
+		"[2026-06-01 09-00-00][1008][下半场游戏].mp4",
+	} {
+		p := filepath.Join(dir, fn)
+		os.WriteFile(p, make([]byte, 1024), 0644)
+		os.Chtimes(p, now.Add(-30*time.Minute), now.Add(-30*time.Minute))
+	}
+
+	_, pendingCount, pendingSize := h.scanAllStreamersAt(root, now)
+	if pendingCount != 2 || pendingSize != 2048 {
+		t.Fatalf("同日改标题多分片应均计入 pending: got count=%d size=%d, want 2/2048", pendingCount, pendingSize)
+	}
+}
+
+func TestScanAllStreamers_CacheAndInvalidate(t *testing.T) {
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	h := &Handler{config: &cfg}
+
+	dir := filepath.Join(root, "主播缓存")
+	os.MkdirAll(dir, 0755)
+	os.WriteFile(filepath.Join(dir, "video1.mp4"), make([]byte, 1024), 0644)
+
+	streamers, pend, _ := h.scanAllStreamers(root)
+	if len(streamers) != 1 || pend != 1 {
+		t.Fatalf("initial scan got streamers=%d pend=%d, want 1/1", len(streamers), pend)
+	}
+
+	// TTL 内写入新文件应命中缓存
+	os.WriteFile(filepath.Join(dir, "video2.mp4"), make([]byte, 1024), 0644)
+	_, pendCached, _ := h.scanAllStreamers(root)
+	if pendCached != 1 {
+		t.Fatalf("expected cached pend=1 within TTL, got %d", pendCached)
+	}
+
+	// 使缓存失效后应立即反映最新文件数量
+	h.InvalidateStreamerCache()
+	_, pendAfterInvalidate, _ := h.scanAllStreamers(root)
+	if pendAfterInvalidate != 2 {
+		t.Fatalf("expected pend=2 after InvalidateStreamerCache, got %d", pendAfterInvalidate)
+	}
+}
+
+func TestScanAllStreamersAt_SameDayMultiStandaloneAndCrossMidnight(t *testing.T) {
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	h := &Handler{config: &cfg}
+
+	loc := time.FixedZone("CST", 8*3600)
+	now := time.Date(2026, 6, 2, 12, 0, 0, 0, loc)
+
+	// 1. 同日早晚两场单分片转换完成的 MP4（10:00 与 20:00，相距 10h > 3h）-> 均为独立成片，pendingCount 必须为 0
+	s1 := filepath.Join(root, "同日两场单分片")
+	os.MkdirAll(s1, 0755)
+	for _, fn := range []string{
+		"[2026-06-01 10-00-00][2001][早场]001.mp4",
+		"[2026-06-01 20-00-00][2001][晚场]001.mp4",
+	} {
+		p := filepath.Join(s1, fn)
+		os.WriteFile(p, make([]byte, 2048), 0644)
+		os.Chtimes(p, now.Add(-10*time.Hour), now.Add(-10*time.Hour))
+	}
+
+	_, pend1, _ := h.scanAllStreamersAt(root, now)
+	if pend1 != 0 {
+		t.Fatalf("同日早晚两场单分片 MP4 不应虚报待合并: got pendingCount=%d, want 0", pend1)
+	}
+
+	// 2. 跨午夜分片直录 MP4（23:40 与次日 00:15，相距 35m <= 3h）-> 属于同一未合并场次，pendingCount 必须为 2
+	s2 := filepath.Join(root, "跨午夜连续分片")
+	os.MkdirAll(s2, 0755)
+	for _, fn := range []string{
+		"[2026-06-01 23-40-00][2002][熬夜]001.mp4",
+		"[2026-06-02 00-15-00][2002][熬夜]002.mp4",
+	} {
+		p := filepath.Join(s2, fn)
+		os.WriteFile(p, make([]byte, 1024), 0644)
+		os.Chtimes(p, now.Add(-10*time.Hour), now.Add(-10*time.Hour))
+	}
+
+	_, pend2, pendSize2 := h.scanAllStreamersAt(root, now)
+	if pend2 != 2 || pendSize2 != 2048 {
+		t.Fatalf("跨午夜连续 MP4 分片应均计入 pending: got count=%d size=%d, want 2/2048", pend2, pendSize2)
+	}
+}

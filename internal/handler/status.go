@@ -77,19 +77,36 @@ func (h *Handler) Stats(c *gin.Context) {
 	yesterday := now.AddDate(0, 0, -1).Format("2006-01-02")
 	month := now.Format("2006-01")
 
+	type dayStat struct {
+		Date       string `json:"date"`
+		MergeCount int    `json:"merge_count"`
+		MergeBytes int64  `json:"merge_bytes"`
+		CleanCount int    `json:"clean_count"`
+		CleanBytes int64  `json:"clean_bytes"`
+	}
+	dailyStats := make([]dayStat, 7)
+	dailyIndex := make(map[string]int, 7)
+	for i := 6; i >= 0; i-- {
+		d := now.AddDate(0, 0, -i).Format("2006-01-02")
+		idx := 6 - i
+		dailyStats[idx] = dayStat{Date: d}
+		dailyIndex[d] = idx
+	}
+
 	var todayMerge, todayClean, yesterdayMerge, yesterdayClean, monthMerge, monthClean, totalClean, totalMerge int
 	var todayMergeBytes, todayCleanBytes, yesterdayMergeBytes, yesterdayCleanBytes, monthMergeBytes, monthCleanBytes, totalCleanBytes, totalMergeBytes int64
 
 	for _, r := range records {
+		isEffective := r.Status == "success" || r.Status == "partial"
 		// 有效清理：状态成功且实际产生了磁盘释放（排除未达水位无文件删除的空跑扫描）
-		isEffectiveClean := r.Task == "clean" && (r.Status == "success" || r.Status == "partial") && (r.FreedBytes > 0 || r.FilesCount > 0)
+		isEffectiveClean := r.Task == "clean" && isEffective && (r.FreedBytes > 0 || r.FilesCount > 0)
+		// 有效合并：状态成功/部分成功且实际发生了分片合并或产出体积（排除无待合并文件的空跑扫描）
+		isEffectiveMerge := r.Task == "merge" && isEffective && (r.MergedBytes > 0 || r.FilesCount > 0)
+
 		if isEffectiveClean {
 			totalClean++
 			totalCleanBytes += r.FreedBytes
 		}
-
-		// 有效合并：状态成功/部分成功且实际发生了分片合并或产出体积（排除无待合并文件的空跑扫描）
-		isEffectiveMerge := r.Task == "merge" && (r.Status == "success" || r.Status == "partial") && (r.MergedBytes > 0 || r.FilesCount > 0)
 		if isEffectiveMerge {
 			totalMerge++
 			totalMergeBytes += r.MergedBytes
@@ -131,39 +148,14 @@ func (h *Handler) Stats(c *gin.Context) {
 				monthCleanBytes += r.FreedBytes
 			}
 		}
-	}
-
-	// 构建近 7 天每日统计
-	type dayStat struct {
-		Date       string `json:"date"`
-		MergeCount int    `json:"merge_count"`
-		MergeBytes int64  `json:"merge_bytes"`
-		CleanCount int    `json:"clean_count"`
-		CleanBytes int64  `json:"clean_bytes"`
-	}
-	dailyStats := make([]dayStat, 7)
-	for i := 6; i >= 0; i-- {
-		d := now.AddDate(0, 0, -i).Format("2006-01-02")
-		dailyStats[6-i] = dayStat{Date: d}
-	}
-	for _, r := range records {
-		if len(r.Time) < 10 {
-			continue
-		}
-		recordDay := r.Time[:10]
-		isEffectiveMerge := r.Task == "merge" && (r.Status == "success" || r.Status == "partial") && (r.MergedBytes > 0 || r.FilesCount > 0)
-		isEffectiveClean := r.Task == "clean" && (r.Status == "success" || r.Status == "partial") && (r.FreedBytes > 0 || r.FilesCount > 0)
-
-		for i := range dailyStats {
-			if dailyStats[i].Date == recordDay {
-				if isEffectiveMerge {
-					dailyStats[i].MergeCount++
-					dailyStats[i].MergeBytes += r.MergedBytes
-				}
-				if isEffectiveClean {
-					dailyStats[i].CleanCount++
-					dailyStats[i].CleanBytes += r.FreedBytes
-				}
+		if idx, ok := dailyIndex[recordDay]; ok {
+			if isEffectiveMerge {
+				dailyStats[idx].MergeCount++
+				dailyStats[idx].MergeBytes += r.MergedBytes
+			}
+			if isEffectiveClean {
+				dailyStats[idx].CleanCount++
+				dailyStats[idx].CleanBytes += r.FreedBytes
 			}
 		}
 	}
@@ -222,61 +214,139 @@ func (h *Handler) GetStreamers(c *gin.Context) {
 // liveActiveWindow 判定主播是否正在录制的磁盘文件活跃时间窗口（与后台扫描器保持一致）。
 const liveActiveWindow = 5 * time.Minute
 
-func videoSessionKey(name string) string {
-	if key, dt, ok := utils.ParseFilename(name); ok {
-		return key + "|" + dt.Format("2006-01-02")
-	}
-	return "raw|" + name
-}
+// streamerCacheTTL 状态/主播列表扫盘结果的短时内存缓存有效期，降低 NAS/机械硬盘频繁唤醒频率。
+const streamerCacheTTL = 5 * time.Second
 
 // buildStandaloneMP4Set 识别目录中已结束写入且无需合并的单场次独立 MP4 文件。
-// 这类文件通常是单分片 FLV 转换后的成片（不含 "-合并版" 后缀），满足：
-// 1) 扩展名为 .mp4 且未带 "-合并版" 标记；
-// 2) 磁盘最后修改时间已超出 liveActiveWindow；
-// 3) 同目录同场次不存在其他未合并视频文件。
+// 按主播分组后根据文件名时间顺序聚簇（相邻 <= 3 小时视为同一场次），
+// 既避免“同一天早晚两场单分片被误判待合并”，也避免“跨午夜连续分片被误判已完成”。
 func buildStandaloneMP4Set(entries []os.DirEntry, now time.Time) map[string]bool {
-	sessionCount := make(map[string]int)
-	type mp4Candidate struct {
-		name       string
-		sessionKey string
-		modTime    time.Time
+	const clusterGap = 3 * time.Hour
+
+	type parsedVideo struct {
+		name        string
+		streamerKey string
+		dt          time.Time
+		modTime     time.Time
+		isMP4       bool
 	}
-	var candidates []mp4Candidate
+	byStreamer := make(map[string][]parsedVideo)
+	standalone := make(map[string]bool)
 
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
 		name := entry.Name()
-		if !utils.IsVideoFile(name) || utils.IsMergedFile(name) {
+		if !utils.IsVideoFile(name) || utils.IsMergedFile(name) || utils.IsTempVideoArtifact(name) {
 			continue
 		}
-		sk := videoSessionKey(name)
-		sessionCount[sk]++
-		if strings.EqualFold(filepath.Ext(name), ".mp4") {
-			if info, err := entry.Info(); err == nil && info != nil {
-				candidates = append(candidates, mp4Candidate{
-					name:       name,
-					sessionKey: sk,
-					modTime:    info.ModTime(),
-				})
-			}
+		info, err := entry.Info()
+		if err != nil || info == nil {
+			continue
 		}
+		isMP4 := strings.EqualFold(filepath.Ext(name), ".mp4")
+		key, dt, ok := utils.ParseFilename(name)
+		if !ok {
+			// 非标准命名文件各自独立成簇（仅检测活跃写入窗口）
+			if isMP4 && now.Sub(info.ModTime()) > liveActiveWindow {
+				standalone[name] = true
+			}
+			continue
+		}
+		sk := utils.StreamerKeyFromKey(key)
+		byStreamer[sk] = append(byStreamer[sk], parsedVideo{
+			name:        name,
+			streamerKey: sk,
+			dt:          dt,
+			modTime:     info.ModTime(),
+			isMP4:       isMP4,
+		})
 	}
 
-	standalone := make(map[string]bool)
-	for _, c := range candidates {
-		if sessionCount[c.sessionKey] == 1 && now.Sub(c.modTime) > liveActiveWindow {
-			standalone[c.name] = true
+	for _, items := range byStreamer {
+		sort.SliceStable(items, func(i, j int) bool {
+			if items[i].dt.Equal(items[j].dt) {
+				return items[i].name < items[j].name
+			}
+			return items[i].dt.Before(items[j].dt)
+		})
+		clusterStart := 0
+		for i := 1; i <= len(items); i++ {
+			if i == len(items) || items[i].dt.Sub(items[i-1].dt) > clusterGap {
+				if i-clusterStart == 1 {
+					only := items[clusterStart]
+					if only.isMP4 && now.Sub(only.modTime) > liveActiveWindow {
+						standalone[only.name] = true
+					}
+				}
+				clusterStart = i
+			}
 		}
 	}
 	return standalone
 }
 
-// scanAllStreamers 一次性扫描所有主播目录，返回主播列表、待合并文件数和总大小。
-// 每个主播包含 name、files、size_bytes、size_gb、mtime（最近视频时间戳）和 is_live（是否正在录制中）。
+func (h *Handler) attachRulesToCachedRows(rows []cachedStreamerRow) []gin.H {
+	streamers := make([]gin.H, 0, len(rows))
+	for _, r := range rows {
+		var rule config.StreamerRule
+		hasRule := false
+		if cfgRule, ok := h.config.GetStreamerRule(r.Name); ok {
+			rule = cfgRule
+			hasRule = true
+		}
+		streamers = append(streamers, gin.H{
+			"name":       r.Name,
+			"files":      r.Files,
+			"size_bytes": r.SizeBytes,
+			"size_gb":    r.SizeGB,
+			"mtime":      r.Mtime,
+			"is_live":    r.IsLive,
+			"rule":       rule,
+			"has_rule":   hasRule,
+		})
+	}
+	return streamers
+}
+
+// scanAllStreamers 扫描所有主播目录并返回主播列表、待合并文件数和总大小。
+// 内置 5 秒 TTL 内存快照缓存以减少轮询导致的机械硬盘唤醒；命中缓存时实时读取最新的主播个性化规则。
 func (h *Handler) scanAllStreamers(root string) ([]gin.H, int, int64) {
-	return h.scanAllStreamersAt(root, time.Now())
+	now := time.Now()
+	h.scanCache.mu.RLock()
+	if h.scanCache.root == root && !h.scanCache.fetchedAt.IsZero() && now.Sub(h.scanCache.fetchedAt) < streamerCacheTTL {
+		rows := make([]cachedStreamerRow, len(h.scanCache.rows))
+		copy(rows, h.scanCache.rows)
+		pendingCount := h.scanCache.pendingCount
+		pendingSize := h.scanCache.pendingSize
+		h.scanCache.mu.RUnlock()
+		return h.attachRulesToCachedRows(rows), pendingCount, pendingSize
+	}
+	h.scanCache.mu.RUnlock()
+
+	streamers, pendingCount, pendingSize := h.scanAllStreamersAt(root, now)
+	rows := make([]cachedStreamerRow, 0, len(streamers))
+	for _, s := range streamers {
+		rows = append(rows, cachedStreamerRow{
+			Name:      s["name"].(string),
+			Files:     s["files"].(int),
+			SizeBytes: s["size_bytes"].(int64),
+			SizeGB:    s["size_gb"].(float64),
+			Mtime:     s["mtime"].(int64),
+			IsLive:    s["is_live"].(bool),
+		})
+	}
+
+	h.scanCache.mu.Lock()
+	h.scanCache.root = root
+	h.scanCache.fetchedAt = now
+	h.scanCache.rows = rows
+	h.scanCache.pendingCount = pendingCount
+	h.scanCache.pendingSize = pendingSize
+	h.scanCache.mu.Unlock()
+
+	return streamers, pendingCount, pendingSize
 }
 
 func (h *Handler) scanAllStreamersAt(root string, now time.Time) ([]gin.H, int, int64) {
@@ -306,7 +376,7 @@ func (h *Handler) scanAllStreamersAt(root string, now time.Time) ([]gin.H, int, 
 				continue
 			}
 			name := fe.Name()
-			if !utils.IsVideoFile(name) {
+			if !utils.IsVideoFile(name) || utils.IsTempVideoArtifact(name) {
 				continue
 			}
 			info, _ := fe.Info()
@@ -407,7 +477,7 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 			continue
 		}
 		name := entry.Name()
-		if !utils.IsVideoFile(name) {
+		if !utils.IsVideoFile(name) || utils.IsTempVideoArtifact(name) {
 			continue
 		}
 		info, err := entry.Info()
@@ -562,6 +632,7 @@ func (h *Handler) DeleteStreamerFile(c *gin.Context) {
 
 	// 级联清理同名伴生文件（XML 弹幕、封面图、元数据等），防止产生孤儿文件
 	service.CleanCompanionFiles(fullPath)
+	h.InvalidateStreamerCache()
 
 	// 记录到操作历史，并计入 clean 任务以计入累计释放磁盘空间
 	detail := fmt.Sprintf("手动删除视频: %s (%s)", file, utils.FormatSize(fileSize))

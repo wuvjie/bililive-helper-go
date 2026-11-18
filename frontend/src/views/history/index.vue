@@ -56,13 +56,13 @@
           class="history-table"
           :tooltip-options="{ enterable: false, showAfter: 500, placement: 'top' }"
         >
-          <el-table-column prop="time" label="记录时间" width="175" sortable>
+          <el-table-column prop="time" label="记录时间" width="150" sortable>
             <template #default="{ row }">
               <span class="mono-time">{{ row.time }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="task" label="操作类型" width="125" align="center" header-align="center" sortable>
+          <el-table-column prop="task" label="操作类型" width="94" align="center" header-align="center" sortable>
             <template #default="{ row }">
               <span class="type-label">
                 <span class="task-type-pill" :class="'type-' + row.task">
@@ -86,38 +86,35 @@
                   <svg v-else class="task-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  <span>{{ row.task === 'merge' ? '录像合并' : row.task === 'clean' ? '磁盘清理' : row.task === 'config' ? '系统配置' : '定时调度' }}</span>
+                  <span>{{ getTaskLabel(row.task) }}</span>
                 </span>
               </span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="streamer" label="关联主播" width="145" show-overflow-tooltip sortable>
+          <el-table-column prop="streamer" label="关联主播" min-width="92" show-overflow-tooltip sortable>
             <template #default="{ row }">
-              <span v-if="row.task === 'config' || row.task === 'schedule'" class="scope-global-text">系统全局</span>
-              <span v-else-if="!row.streamer || row.streamer === '全局'" class="scope-global-text">所有主播</span>
-              <span v-else class="streamer-name-text">{{ row.streamer }}</span>
+              <span :class="formatTaskScope(row).isGlobal ? 'scope-global-text' : 'streamer-name-text'">
+                {{ formatTaskScope(row).text }}
+              </span>
             </template>
           </el-table-column>
 
-          <el-table-column label="执行详情" min-width="260">
+          <el-table-column label="执行详情" min-width="122">
             <template #default="{ row }">
               <span class="detail-text">{{ cleanDetailText(row.detail || formatDetail(row as HistoryRecord), row.task) }}</span>
             </template>
           </el-table-column>
 
-          <el-table-column prop="status" label="执行状态" width="105" align="center" header-align="center" sortable>
+          <el-table-column prop="status" label="执行状态" width="96" align="center" header-align="center" sortable>
             <template #default="{ row }">
-              <span
-                class="status-dot-text"
-                :class="row.status === 'success' ? 'dot-success' : (row.status === 'partial' ? 'dot-warn' : 'dot-fail')"
-              >
-                {{ row.status === 'success' ? '成功' : (row.status === 'partial' ? '部分完成' : '失败') }}
+              <span class="status-dot-text" :class="getStatusMeta(row.status).dotClass">
+                {{ getStatusMeta(row.status).label }}
               </span>
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="110" align="center" header-align="center">
+          <el-table-column label="操作" width="80" align="center" header-align="center">
             <template #default="{ row }">
               <div class="row-actions-group">
                 <button
@@ -199,6 +196,37 @@ const filterTask = ref<string | number>("");
 const filterStreamer = ref("");
 const streamerSearchRef = ref();
 
+const TASK_LABEL_MAP: Record<string, string> = {
+  merge: "录像合并",
+  clean: "磁盘清理",
+  config: "系统配置",
+  schedule: "定时调度"
+};
+
+const STATUS_META_MAP: Record<string, { label: string; dotClass: string }> = {
+  success: { label: "成功", dotClass: "dot-success" },
+  partial: { label: "部分完成", dotClass: "dot-warn" },
+  fail: { label: "失败", dotClass: "dot-fail" }
+};
+
+function getTaskLabel(task: string): string {
+  return TASK_LABEL_MAP[task] || "定时调度";
+}
+
+function getStatusMeta(status: string) {
+  return STATUS_META_MAP[status] || STATUS_META_MAP.fail;
+}
+
+function formatTaskScope(row: { task?: string; streamer?: string }): { text: string; isGlobal: boolean } {
+  if (row.task === "config" || row.task === "schedule") {
+    return { text: "系统全局", isGlobal: true };
+  }
+  if (!row.streamer || row.streamer === "全局") {
+    return { text: "所有主播", isGlobal: true };
+  }
+  return { text: row.streamer, isGlobal: false };
+}
+
 const taskPillItems = [
   { label: "全部日志", value: "" },
   { label: "录像合并", value: "merge" },
@@ -278,9 +306,9 @@ async function viewLog(row: HistoryRecord) {
   activeLogTask.value = row.task;
   activeLogId.value = row.log_id;
   activeLogStatus.value = row.status;
-  const taskName = row.task === "merge" ? "录像合并" : (row.task === "clean" ? "磁盘清理" : (row.task === "config" ? "系统配置" : "定时调度"));
-  const streamerName = (!row.streamer || row.streamer === "全局") ? (row.task === "config" || row.task === "schedule" ? "系统全局" : "所有主播") : row.streamer;
-  activeLogTitle.value = `[${taskName}] ${streamerName} · ${row.time}`;
+  const taskName = getTaskLabel(row.task);
+  const scopeName = formatTaskScope(row).text;
+  activeLogTitle.value = `[${taskName}] ${scopeName} · ${row.time}`;
   logDialogVisible.value = true;
   logLoading.value = true;
   logContent.value = "";
@@ -403,10 +431,24 @@ onActivated(() => {
   overflow-x: auto;
 }
 
+:deep(.el-table .cell) {
+  padding: 0 8px;
+}
+
+:deep(.el-table .caret-wrapper) {
+  width: 16px;
+}
+
+:deep(.el-table__header-wrapper th .cell) {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+}
+
 .mono-time {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--slate);
+  white-space: nowrap;
 }
 
 .task-type-pill {
@@ -456,6 +498,7 @@ onActivated(() => {
   gap: 5px;
   font-size: 12px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-dot-text::before {
@@ -502,7 +545,7 @@ onActivated(() => {
 .row-action-btn {
   display: inline-flex;
   align-items: center;
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: var(--r-xs);
   font-size: 12px;
   font-weight: 500;
@@ -511,6 +554,7 @@ onActivated(() => {
   color: var(--primary);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .row-action-btn:hover {

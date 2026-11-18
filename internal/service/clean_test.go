@@ -1,8 +1,10 @@
 package service
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -225,5 +227,167 @@ func TestCollectCandidates_RespectsStreamerRuleMinKeep(t *testing.T) {
 	stats := perStreamer["streamer_custom_keep"]
 	if stats.total != 4 || stats.candidate != 1 || stats.minKeep != 3 || stats.skipped != 0 || stats.protected {
 		t.Errorf("streamer_custom_keep 统计异常: %+v", stats)
+	}
+}
+
+func TestCollectCandidates_PendingRawDoesNotDisplaceCompletedMinKeep(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = dir
+	cfg.MinKeepPerStreamer = 2
+	cfg.MergeAgeMinutes = 30
+	cfg.SafeAgeMinutes = 0
+	cfg.SafeMode = "hours"
+	cfg.WhitelistKeywords = nil
+
+	streamerDir := filepath.Join(dir, "streamer_mixed")
+	os.MkdirAll(streamerDir, 0755)
+
+	oldTime := time.Now().Add(-72 * time.Hour)
+	for _, name := range []string{
+		"[2026-05-01 20-00-00][s][t1]-合并版.mp4",
+		"[2026-05-02 20-00-00][s][t2]-合并版.mp4",
+	} {
+		p := filepath.Join(streamerDir, name)
+		os.WriteFile(p, make([]byte, 2000), 0644)
+		os.Chtimes(p, oldTime, oldTime)
+	}
+
+	// 新下播的 4 个待合并 .flv 分片（距今 5 分钟，处于 30 分钟等待期内）
+	recentTime := time.Now().Add(-5 * time.Minute)
+	for _, name := range []string{
+		"[2026-05-05 20-00-00][s][t3]001.flv",
+		"[2026-05-05 20-00-00][s][t3]002.flv",
+		"[2026-05-05 20-00-00][s][t3]003.flv",
+		"[2026-05-05 20-00-00][s][t3]004.flv",
+	} {
+		p := filepath.Join(streamerDir, name)
+		os.WriteFile(p, make([]byte, 2000), 0644)
+		os.Chtimes(p, recentTime, recentTime)
+	}
+
+	svc := &CleanService{config: &cfg, logger: zap.NewNop()}
+	candidates, _ := svc.collectCandidates(dir, "", cfg)
+	if len(candidates) != 0 {
+		t.Fatalf("未合并的等待期内分片不应挤占已完成 .mp4 的 minKeep 名额，期望 0 候选，得到 %d: %+v", len(candidates), candidates)
+	}
+}
+
+func TestCollectCandidates_StaleRawSegmentsKeepCompletedMinKeepProtected(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = dir
+	cfg.MinKeepPerStreamer = 2
+	cfg.MergeAgeMinutes = 30
+	cfg.SafeAgeMinutes = 60
+	cfg.SafeMode = "hours"
+	cfg.WhitelistKeywords = nil
+
+	streamerDir := filepath.Join(dir, "streamer_stale_raw")
+	os.MkdirAll(streamerDir, 0755)
+
+	oldMP4 := time.Now().Add(-96 * time.Hour)
+	for _, name := range []string{
+		"[2026-05-01 20-00-00][s][t1]-合并版.mp4",
+		"[2026-05-02 20-00-00][s][t2]-合并版.mp4",
+	} {
+		p := filepath.Join(streamerDir, name)
+		os.WriteFile(p, make([]byte, 2000), 0644)
+		os.Chtimes(p, oldMP4, oldMP4)
+	}
+
+	// 超出等待期的遗留未合并 .flv（48 小时前）不应顶替并导致已完成成片被删
+	staleRaw := time.Now().Add(-48 * time.Hour)
+	for _, name := range []string{
+		"[2026-05-03 20-00-00][s][stale]001.flv",
+		"[2026-05-03 20-00-00][s][stale]002.flv",
+	} {
+		p := filepath.Join(streamerDir, name)
+		os.WriteFile(p, make([]byte, 2000), 0644)
+		os.Chtimes(p, staleRaw, staleRaw)
+	}
+
+	svc := &CleanService{config: &cfg, logger: zap.NewNop()}
+	candidates, _ := svc.collectCandidates(dir, "", cfg)
+	if len(candidates) != 2 {
+		t.Fatalf("期望仅 2 个遗留 .flv 成为候选，得到 %d: %+v", len(candidates), candidates)
+	}
+	for _, c := range candidates {
+		if filepath.Ext(c.Name) != ".flv" {
+			t.Errorf("已完成成片 %s 不应先于未合并遗留分片被淘汰", c.Name)
+		}
+	}
+}
+
+func TestCleanService_DeleteFiles_MaxDeleteCompanionAndActiveSkip(t *testing.T) {
+	dir := t.TempDir()
+	streamerDir := filepath.Join(dir, "streamer_del")
+	os.MkdirAll(streamerDir, 0755)
+
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = dir
+	cfg.MaxDeletePerRun = 2
+
+	svc := &CleanService{config: &cfg, logger: zap.NewNop()}
+
+	// 创建一个正在持续写入的文件（应被 1 秒双快照跳过不删）
+	growingPath := filepath.Join(streamerDir, "growing.mp4")
+	os.WriteFile(growingPath, make([]byte, 1024), 0644)
+	doneWriting := make(chan struct{})
+	go func() {
+		defer close(doneWriting)
+		f, err := os.OpenFile(growingPath, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return
+		}
+		defer f.Close()
+		for i := 0; i < 12; i++ {
+			time.Sleep(120 * time.Millisecond)
+			_, _ = f.Write(make([]byte, 256))
+		}
+	}()
+
+	// 创建 3 个静态旧文件及其伴生文件（MaxDeletePerRun=2 应仅删前 2 个并级联清伴生）
+	static1 := filepath.Join(streamerDir, "old1.mp4")
+	static2 := filepath.Join(streamerDir, "old2.mp4")
+	static3 := filepath.Join(streamerDir, "old3.mp4")
+	for _, p := range []string{static1, static2, static3} {
+		os.WriteFile(p, make([]byte, 2048), 0644)
+		os.WriteFile(strings.TrimSuffix(p, ".mp4")+".xml", []byte("<i/>"), 0644)
+		os.WriteFile(strings.TrimSuffix(p, ".mp4")+".cover.jpg", []byte("jpg"), 0644)
+	}
+
+	candidates := []candidateFile{
+		{Path: growingPath, Name: "growing.mp4", Size: 1024, Mtime: 100},
+		{Path: static1, Name: "old1.mp4", Size: 2048, Mtime: 200},
+		{Path: static2, Name: "old2.mp4", Size: 2048, Mtime: 300},
+		{Path: static3, Name: "old3.mp4", Size: 2048, Mtime: 400},
+	}
+
+	deleted, freed, truncated := svc.deleteFiles(context.Background(), candidates, 0, cfg, func(string) {})
+	<-doneWriting
+
+	if deleted != 2 || freed != 4096 || !truncated {
+		t.Fatalf("unexpected deleteFiles summary: deleted=%d freed=%d truncated=%v", deleted, freed, truncated)
+	}
+	if _, err := os.Stat(growingPath); err != nil {
+		t.Errorf("actively writing file should NOT be deleted: %v", err)
+	}
+	for _, p := range []string{static1, static2} {
+		if _, err := os.Stat(p); !os.IsNotExist(err) {
+			t.Errorf("expected %s to be deleted", p)
+		}
+		if _, err := os.Stat(strings.TrimSuffix(p, ".mp4") + ".xml"); !os.IsNotExist(err) {
+			t.Errorf("expected companion xml of %s to be cascade deleted", p)
+		}
+		if _, err := os.Stat(strings.TrimSuffix(p, ".mp4") + ".cover.jpg"); !os.IsNotExist(err) {
+			t.Errorf("expected companion cover of %s to be cascade deleted", p)
+		}
+	}
+	if _, err := os.Stat(static3); err != nil {
+		t.Errorf("expected old3.mp4 to remain untouched after hitting MaxDeletePerRun: %v", err)
+	}
+	if _, err := os.Stat(strings.TrimSuffix(static3, ".mp4") + ".xml"); err != nil {
+		t.Errorf("expected companion xml of old3.mp4 to remain untouched: %v", err)
 	}
 }

@@ -134,12 +134,10 @@ func (s *CleanService) Run(ctx context.Context, streamer string, onProgress Prog
 	progress(fmt.Sprintf("ℹ 发现 %d 个待清理的候选录像文件", len(candidates)))
 
 	sort.Slice(candidates, func(i, j int) bool {
-		iCompleted := utils.IsMergedFile(candidates[i].Name) || strings.EqualFold(filepath.Ext(candidates[i].Name), ".mp4")
-		jCompleted := utils.IsMergedFile(candidates[j].Name) || strings.EqualFold(filepath.Ext(candidates[j].Name), ".mp4")
-		if iCompleted != jCompleted {
-			return iCompleted
+		if candidates[i].Mtime != candidates[j].Mtime {
+			return candidates[i].Mtime < candidates[j].Mtime
 		}
-		return candidates[i].Mtime < candidates[j].Mtime
+		return candidates[i].Name < candidates[j].Name
 	})
 
 	deleted, freed, truncated := s.deleteFiles(ctx, candidates, needToFree, cfg, progress)
@@ -262,7 +260,7 @@ func (s *CleanService) countVideos(folder string) int {
 		return 0
 	}
 	for _, entry := range entries {
-		if !entry.IsDir() && utils.IsVideoFile(entry.Name()) {
+		if !entry.IsDir() && utils.IsVideoFile(entry.Name()) && !utils.IsTempVideoArtifact(entry.Name()) {
 			count++
 		}
 	}
@@ -270,7 +268,8 @@ func (s *CleanService) countVideos(folder string) int {
 }
 
 // collectStreamerCandidates 收集单个主播目录下的可清理候选文件。
-// 应用保底数量、白名单过滤和安全期保护规则。
+// 优先剔除处于待合并保护期内的未合并原片（不参与清理也不占用成片的 minKeep 保底名额），
+// 再按场次维度保留最新的 minKeep 个场次，最后应用白名单与安全期过滤。
 func (s *CleanService) collectStreamerCandidates(folder, streamerName string, cfg config.Config) []candidateFile {
 	minKeep, protected := resolveStreamerCleanPolicy(cfg, streamerName)
 	if protected {
@@ -278,63 +277,149 @@ func (s *CleanService) collectStreamerCandidates(folder, streamerName string, cf
 	}
 	wl := cfg.WhitelistKeywords
 
-	var videos []candidateFile
 	entries, err := os.ReadDir(folder)
 	if err != nil {
 		return nil
 	}
+
+	now := time.Now()
+	mergeAgeMin := cfg.MergeAgeMinutes
+	if mergeAgeMin <= 0 {
+		mergeAgeMin = defaultMergeAgeMinutes
+	}
+	mergeProtectWindow := time.Duration(mergeAgeMin) * time.Minute
+
+	type cleanUnit struct {
+		isCompleted bool
+		streamerKey string
+		files       []candidateFile
+		maxMtime    int64
+	}
+
+	var completedUnits []cleanUnit
+	var staleRawFiles []candidateFile
 
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
 		name := entry.Name()
-		if !utils.IsVideoFile(name) {
+		if !utils.IsVideoFile(name) || utils.IsTempVideoArtifact(name) {
 			continue
 		}
-		// 包含已合并文件（它们也会被清理）
 		info, err := entry.Info()
 		if err != nil {
 			continue
 		}
-		fileTime := info.ModTime()
-		if _, dt, ok := utils.ParseFilename(name); ok {
-			fileTime = dt
+
+		ext := strings.ToLower(filepath.Ext(name))
+		isCompleted := utils.IsMergedFile(name) || ext == ".mp4"
+
+		// 未合并原片（.flv / .ts）若在合并静置保护窗口内，视为正在等待合并/转封装，
+		// 直接跳过：既不得删除，也不挤占已完成录像的 minKeep 保底名额。
+		if !isCompleted && now.Sub(info.ModTime()) < mergeProtectWindow {
+			continue
 		}
-		videos = append(videos, candidateFile{
+
+		fileTime := info.ModTime()
+		sKey := ""
+		if parsedKey, dt, ok := utils.ParseFilename(name); ok {
+			fileTime = dt
+			sKey = utils.StreamerKeyFromKey(parsedKey)
+		}
+
+		cf := candidateFile{
 			Path:  filepath.Join(folder, name),
 			Name:  name,
 			Size:  info.Size(),
 			Mtime: fileTime.Unix(),
-		})
-	}
-
-	sort.Slice(videos, func(i, j int) bool {
-		return videos[i].Mtime < videos[j].Mtime
-	})
-
-	if len(videos) <= minKeep {
-		return nil
-	}
-	videos = videos[:len(videos)-minKeep]
-
-	var result []candidateFile
-	for _, v := range videos {
-		if utils.ContainsAny(v.Name, wl) || utils.ContainsAny(streamerName, wl) {
-			continue
 		}
-		if cfg.SafeMode == "days" {
-			cutoff := time.Now().AddDate(0, 0, -cfg.SafeDays)
-			if time.Unix(v.Mtime, 0).After(cutoff) {
-				continue
+
+		if isCompleted {
+			completedUnits = append(completedUnits, cleanUnit{
+				isCompleted: true,
+				streamerKey: sKey,
+				files:       []candidateFile{cf},
+				maxMtime:    cf.Mtime,
+			})
+		} else {
+			staleRawFiles = append(staleRawFiles, cf)
+		}
+	}
+
+	// 将已超出合并等待期的历史未合并分片（.flv / .ts）按场次时间间隔聚类（同主播 2 小时内视作同一场次），
+	// 避免单场多个碎片各自占用 1 个 minKeep 场次名额。
+	sort.Slice(staleRawFiles, func(i, j int) bool {
+		return staleRawFiles[i].Mtime < staleRawFiles[j].Mtime
+	})
+	var rawUnits []cleanUnit
+	const rawSessionGapSec = int64(2 * 3600)
+	for _, rf := range staleRawFiles {
+		sKey := ""
+		if parsedKey, _, ok := utils.ParseFilename(rf.Name); ok {
+			sKey = utils.StreamerKeyFromKey(parsedKey)
+		}
+		if len(rawUnits) > 0 && rawUnits[len(rawUnits)-1].streamerKey == sKey &&
+			rf.Mtime-rawUnits[len(rawUnits)-1].maxMtime <= rawSessionGapSec {
+			last := &rawUnits[len(rawUnits)-1]
+			last.files = append(last.files, rf)
+			if rf.Mtime > last.maxMtime {
+				last.maxMtime = rf.Mtime
 			}
 		} else {
-			cutoff := time.Now().Add(-time.Duration(cfg.SafeAgeMinutes) * time.Minute)
-			if time.Unix(v.Mtime, 0).After(cutoff) {
+			rawUnits = append(rawUnits, cleanUnit{
+				isCompleted: false,
+				streamerKey: sKey,
+				files:       []candidateFile{rf},
+				maxMtime:    rf.Mtime,
+			})
+		}
+	}
+
+	// 优先以已完成成片（.mp4 / -合并版）满足 minKeep 保底名额；
+	// 仅当成片数量不足 minKeep 时，才用较新的历史未合并场次补足保底名额，
+	// 确保未合并分片永远不会将旧的完整成片挤出保底区。
+	sort.Slice(completedUnits, func(i, j int) bool {
+		return completedUnits[i].maxMtime < completedUnits[j].maxMtime
+	})
+	sort.Slice(rawUnits, func(i, j int) bool {
+		return rawUnits[i].maxMtime < rawUnits[j].maxMtime
+	})
+
+	var reclaimableUnits []cleanUnit
+	if len(completedUnits) > minKeep {
+		reclaimableUnits = append(reclaimableUnits, completedUnits[:len(completedUnits)-minKeep]...)
+	}
+	remainingKeep := minKeep - len(completedUnits)
+	if remainingKeep < 0 {
+		remainingKeep = 0
+	}
+	if len(rawUnits) > remainingKeep {
+		reclaimableUnits = append(reclaimableUnits, rawUnits[:len(rawUnits)-remainingKeep]...)
+	}
+	sort.Slice(reclaimableUnits, func(i, j int) bool {
+		return reclaimableUnits[i].maxMtime < reclaimableUnits[j].maxMtime
+	})
+
+	var result []candidateFile
+	for _, u := range reclaimableUnits {
+		for _, v := range u.files {
+			if utils.ContainsAny(v.Name, wl) || utils.ContainsAny(streamerName, wl) {
 				continue
 			}
+			if cfg.SafeMode == "days" {
+				cutoff := now.AddDate(0, 0, -cfg.SafeDays)
+				if time.Unix(v.Mtime, 0).After(cutoff) {
+					continue
+				}
+			} else {
+				cutoff := now.Add(-time.Duration(cfg.SafeAgeMinutes) * time.Minute)
+				if time.Unix(v.Mtime, 0).After(cutoff) {
+					continue
+				}
+			}
+			result = append(result, v)
 		}
-		result = append(result, v)
 	}
 	return result
 }
@@ -419,17 +504,4 @@ func (s *CleanService) deleteFiles(ctx context.Context, candidates []candidateFi
 	}
 
 	return deleted, freed, truncated
-}
-
-// CleanCompanionFiles 级联清理与视频同名的伴生文件（XML 弹幕、封面图、元数据等）。
-func CleanCompanionFiles(videoPath string) {
-	ext := filepath.Ext(videoPath)
-	base := strings.TrimSuffix(videoPath, ext)
-	companions := []string{".xml", ".cover.jpg", ".json", ".nfo"}
-	for _, cExt := range companions {
-		cPath := base + cExt
-		if _, err := os.Stat(cPath); err == nil {
-			_ = utils.SafeUnlink(cPath)
-		}
-	}
 }
