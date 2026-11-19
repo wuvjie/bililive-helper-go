@@ -136,7 +136,7 @@ func (s *MergeService) getVideoFiles(ctx context.Context, folder string) []video
 			continue
 		}
 		name := entry.Name()
-		if !utils.IsVideoFile(name) || utils.IsMergedFile(name) || utils.IsTempVideoArtifact(name) {
+		if !utils.IsVideoFile(name) || utils.IsProcessedFile(name) || utils.IsTempVideoArtifact(name) {
 			continue
 		}
 		ext := strings.ToLower(filepath.Ext(name))
@@ -175,7 +175,7 @@ func (s *MergeService) getVideoFiles(ctx context.Context, folder string) []video
 			continue
 		}
 		name := entry.Name()
-		if !utils.IsVideoFile(name) || utils.IsTempVideoArtifact(name) || utils.IsMergedFile(name) || brokenMP4s[name] {
+		if !utils.IsVideoFile(name) || utils.IsTempVideoArtifact(name) || utils.IsProcessedFile(name) || brokenMP4s[name] {
 			continue
 		}
 
@@ -228,7 +228,7 @@ func isStreamActive(folder string, batchKey string) bool {
 			continue
 		}
 		name := entry.Name()
-		if !utils.IsVideoFile(name) || utils.IsMergedFile(name) || utils.IsTempVideoArtifact(name) {
+		if !utils.IsVideoFile(name) || utils.IsProcessedFile(name) || utils.IsTempVideoArtifact(name) {
 			continue
 		}
 		if !strings.Contains(name, matchToken) {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -523,6 +524,173 @@ func TestIntegration_MergeDirectConcatDedupAndSingleTrim(t *testing.T) {
 	scanMergeTasks, scanConvertTasks, _ := svc.scanTasks(ctx, root, "主播E2E", cfg)
 	if len(scanMergeTasks) != 0 || len(scanConvertTasks) != 0 {
 		t.Fatalf("expected scanTasks to skip existing standalone/merged MP4s, got merge=%+v convert=%+v", scanMergeTasks, scanConvertTasks)
+	}
+}
+
+func TestManualTrimFile_ValidationAndLocking(t *testing.T) {
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	cfg.LogDir = t.TempDir()
+	logger := zap.NewNop()
+	history := NewHistoryService(&cfg, logger)
+	svc := NewMergeService(&cfg, logger, history)
+
+	streamer := "测试主播"
+	folder := filepath.Join(root, streamer)
+	if err := os.MkdirAll(folder, 0755); err != nil {
+		t.Fatal(err)
+	}
+	mp4Name := "[2026-11-18 10-00-00][测试主播][测试]001.mp4"
+	if err := os.WriteFile(filepath.Join(folder, mp4Name), make([]byte, 4096), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		name      string
+		streamer  string
+		file      string
+		start     string
+		end       string
+		mode      string
+		wantErrIs error
+	}{
+		{"invalid streamer traversal", "../evil", mp4Name, "00:00:01", "00:00:05", "copy", ErrTrimBadRequest},
+		{"invalid file traversal", streamer, "../evil.mp4", "00:00:01", "00:00:05", "copy", ErrTrimBadRequest},
+		{"non-mp4 rejected", streamer, "raw.flv", "00:00:01", "00:00:05", "copy", ErrTrimBadRequest},
+		{"temp artifact rejected", streamer, "video.mp4.trim.mp4", "00:00:01", "00:00:05", "copy", ErrTrimBadRequest},
+		{"bad mode rejected", streamer, mp4Name, "00:00:01", "00:00:05", "overwrite", ErrTrimBadRequest},
+		{"empty range rejected", streamer, mp4Name, "00:00:00", "", "copy", ErrTrimBadRequest},
+		{"end before start rejected", streamer, mp4Name, "00:05:00", "00:01:00", "copy", ErrTrimBadRequest},
+		{"missing file returns not found", streamer, "missing.mp4", "00:00:01", "00:00:05", "copy", ErrTrimNotFound},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := svc.ManualTrimFile(context.Background(), tc.streamer, tc.file, tc.start, tc.end, tc.mode)
+			if !errors.Is(err, tc.wantErrIs) {
+				t.Fatalf("ManualTrimFile() err = %v, want errors.Is(_, %v)", err, tc.wantErrIs)
+			}
+		})
+	}
+
+	// 验证主播锁定冲突返回 ErrTrimConflict
+	ok, sl := svc.tryLockStreamer(streamer)
+	if !ok {
+		t.Fatal("failed to acquire test streamer lock")
+	}
+	defer svc.unlockStreamer(sl)
+
+	_, err := svc.ManualTrimFile(context.Background(), streamer, mp4Name, "00:00:01", "00:00:05", "copy")
+	if !errors.Is(err, ErrTrimConflict) {
+		t.Fatalf("expected ErrTrimConflict while streamer locked, got %v", err)
+	}
+}
+
+func TestIntegration_ManualTrimFile_CopyReplaceAndScannerIsolation(t *testing.T) {
+	requireFFmpegTools(t)
+	ctx := context.Background()
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	cfg.LogDir = filepath.Join(t.TempDir(), "logs")
+	logger := zap.NewNop()
+	history := NewHistoryService(&cfg, logger)
+	svc := NewMergeService(&cfg, logger, history)
+
+	streamer := "主播Manual"
+	folder := filepath.Join(root, streamer)
+	if err := os.MkdirAll(folder, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	oldTime := time.Now().Add(-3 * time.Hour).Truncate(time.Second)
+	srcName := "[2026-11-18 10-00-00][主播Manual][存量回放]001.mp4"
+	srcPath := filepath.Join(folder, srcName)
+	createValidTestClip(t, srcPath, "mp4", "6", oldTime)
+
+	srcBase := strings.TrimSuffix(srcPath, ".mp4")
+	xmlBody := `<?xml version="1.0" encoding="utf-8"?><i>
+<d p="1.000,1,25,16777215,1,0,a,0">early</d>
+<d p="3.250,1,25,16777215,1,0,b,0">middle</d>
+<d p="5.500,1,25,16777215,1,0,c,0">late</d>
+</i>`
+	if err := os.WriteFile(srcBase+".xml", []byte(xmlBody), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(srcBase+".cover.jpg", []byte("coverdata"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. copy 模式剪辑 [00:00:02 - 00:00:05]
+	resCopy, err := svc.ManualTrimFile(ctx, streamer, srcName, "00:00:02", "00:00:05", "copy")
+	if err != nil {
+		t.Fatalf("copy mode ManualTrimFile failed: %v", err)
+	}
+	wantCopyName := "[2026-11-18 10-00-00][主播Manual][存量回放]001-剪辑版.mp4"
+	if resCopy.OutputFile != wantCopyName || !resCopy.DanmakuSynced || resCopy.LogID == "" {
+		t.Fatalf("unexpected copy result: %+v", resCopy)
+	}
+	copyPath := filepath.Join(folder, wantCopyName)
+	if err := ffmpeg.ValidateOutput(ctx, copyPath); err != nil {
+		t.Fatalf("copy output ValidateOutput failed: %v", err)
+	}
+	if !ffmpeg.IsVideoTrimmed(ctx, copyPath) {
+		t.Errorf("expected IsVideoTrimmed=true on copy output")
+	}
+	if ffmpeg.IsVideoTrimmed(ctx, srcPath) {
+		t.Errorf("source video must remain untouched (no bh_trimmed) in copy mode")
+	}
+	if fi, err := os.Stat(copyPath); err != nil || fi.ModTime().Unix() != oldTime.Unix() {
+		t.Errorf("expected mtime preserved (%v), got %v (err=%v)", oldTime, fi.ModTime(), err)
+	}
+	// 验证副本伴生封面和移位弹幕
+	copyBase := strings.TrimSuffix(copyPath, ".mp4")
+	if _, err := os.Stat(copyBase + ".cover.jpg"); err != nil {
+		t.Errorf("expected companion cover copied to %s: %v", copyBase+".cover.jpg", err)
+	}
+	trimmedXML, err := os.ReadFile(copyBase + ".xml")
+	if err != nil || strings.Contains(string(trimmedXML), ">early</d>") || !strings.Contains(string(trimmedXML), `p="1.250,`) || strings.Contains(string(trimmedXML), ">late</d>") {
+		t.Fatalf("unexpected trimmed copy XML: err=%v content=%s", err, string(trimmedXML))
+	}
+
+	// 2. 关键安全不变量：原片与 -剪辑版.mp4 并存（同时间戳前缀），scanTasks 绝对不能将其合成为 -合并版.mp4！
+	mergeTasks, convertTasks, _ := svc.scanTasks(ctx, root, streamer, cfg)
+	if len(mergeTasks) != 0 || len(convertTasks) != 0 {
+		t.Fatalf("CRITICAL: scanner must NOT queue original + -剪辑版.mp4 for merge/convert! got merge=%+v convert=%+v", mergeTasks, convertTasks)
+	}
+
+	// 3. 再次 copy 剪辑同名源文件，应自动去重为 -剪辑版-2.mp4
+	resCopy2, err := svc.ManualTrimFile(ctx, streamer, srcName, "00:00:01", "00:00:03", "copy")
+	if err != nil {
+		t.Fatalf("second copy trim failed: %v", err)
+	}
+	if resCopy2.OutputFile != "[2026-11-18 10-00-00][主播Manual][存量回放]001-剪辑版-2.mp4" {
+		t.Fatalf("expected deduplicated -剪辑版-2.mp4, got %s", resCopy2.OutputFile)
+	}
+
+	// 4. 时长边界校验：起始时间 >= 总时长，或 00:00:00 ~ >= 总时长 均返回 ErrTrimBadRequest
+	if _, err := svc.ManualTrimFile(ctx, streamer, srcName, "00:00:10", "", "replace"); !errors.Is(err, ErrTrimBadRequest) {
+		t.Fatalf("expected ErrTrimBadRequest when start >= duration, got %v", err)
+	}
+	if _, err := svc.ManualTrimFile(ctx, streamer, srcName, "00:00:00", "00:00:10", "replace"); !errors.Is(err, ErrTrimBadRequest) {
+		t.Fatalf("expected ErrTrimBadRequest when end >= duration with start=0, got %v", err)
+	}
+
+	// 5. replace 模式原地裁剪并验证历史记录与日志落盘
+	resRep, err := svc.ManualTrimFile(ctx, streamer, srcName, "00:00:01", "00:00:04", "replace")
+	if err != nil {
+		t.Fatalf("replace mode ManualTrimFile failed: %v", err)
+	}
+	if resRep.OutputFile != srcName {
+		t.Fatalf("expected output_file=%s, got %s", srcName, resRep.OutputFile)
+	}
+	if !ffmpeg.IsVideoTrimmed(ctx, srcPath) {
+		t.Errorf("expected IsVideoTrimmed=true on replaced file")
+	}
+	records, total := history.GetRecords("merge", streamer, 1, 10)
+	if total < 3 || len(records) < 3 {
+		t.Fatalf("expected at least 3 history records recorded, got total=%d", total)
 	}
 }
 

@@ -156,6 +156,32 @@ func alignCompanionDanmaku(folder string, files []string, concatOutputPath strin
 	}
 }
 
+// HasCompanionDanmaku 检查视频是否存在非空的同名 XML 弹幕文件。
+func HasCompanionDanmaku(videoPath string) bool {
+	xmlPath := strings.TrimSuffix(videoPath, filepath.Ext(videoPath)) + ".xml"
+	info, err := os.Stat(xmlPath)
+	return err == nil && !info.IsDir() && info.Size() > 0
+}
+
+// CopyCompanionFiles 将源视频的伴生文件（弹幕 XML、封面、元数据）复制到新成片路径旁。
+// 仅在目标伴生文件尚不存在时写入，避免覆盖已有文件。
+func CopyCompanionFiles(srcVideoPath, dstVideoPath string) {
+	if srcVideoPath == dstVideoPath {
+		return
+	}
+	srcBase := strings.TrimSuffix(srcVideoPath, filepath.Ext(srcVideoPath))
+	dstBase := strings.TrimSuffix(dstVideoPath, filepath.Ext(dstVideoPath))
+	for _, cExt := range []string{".xml", ".cover.jpg", ".json", ".nfo"} {
+		target := dstBase + cExt
+		if _, err := os.Stat(target); err == nil {
+			continue
+		}
+		if data, err := os.ReadFile(srcBase + cExt); err == nil {
+			_ = os.WriteFile(target, data, 0644)
+		}
+	}
+}
+
 // CleanCompanionFiles 级联清理与视频同名的伴生文件（XML 弹幕、封面图、元数据等）。
 func CleanCompanionFiles(videoPath string) {
 	ext := filepath.Ext(videoPath)

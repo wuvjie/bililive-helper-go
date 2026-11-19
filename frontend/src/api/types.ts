@@ -132,6 +132,41 @@ export interface StreamerFile {
   size_str: string;
   mtime: number;
   is_merged: boolean;
+  is_trimmed_file?: boolean;
+}
+
+export interface StreamerFileProbe {
+  file: string;
+  size: number;
+  size_str: string;
+  duration_sec: number;
+  probe_ok: boolean;
+  is_trimmed: boolean;
+  is_trimmed_file: boolean;
+  has_danmaku: boolean;
+}
+
+export type ManualTrimMode = "copy" | "replace";
+
+export interface ManualTrimPayload {
+  file: string;
+  trim_start: string;
+  trim_end: string;
+  mode: ManualTrimMode;
+}
+
+export interface ManualTrimResult {
+  file: string;
+  output_file: string;
+  mode: ManualTrimMode;
+  start: string;
+  end: string;
+  source_size: number;
+  output_size: number;
+  output_size_str: string;
+  duration_sec: number;
+  danmaku_synced: boolean;
+  log_id: string;
 }
 
 export interface SetupCheck {

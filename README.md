@@ -2,7 +2,7 @@
 
 > 通用直播录像后处理工具：视频分片合并、磁盘清理、Web 管理控制台。
 
-[![Version](https://img.shields.io/badge/Version-v2.0.7-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-v2.0.8-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Docker Image](https://img.shields.io/badge/Docker%20Hub-wuvjie%2Fbililive--helper--go-blue?logo=docker)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
 [![Architecture](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen.svg)](https://hub.docker.com/r/wuvjie/bililive-helper-go)
@@ -22,7 +22,7 @@
 
 - **分片拼接**：监控录像目录，将录制生成的 FLV/TS 分片无损拼接为 MP4，自动对齐重命名关联的 XML 弹幕与封面文件并保留时间戳。
 - **磁盘清理**：磁盘使用率达到设定阈值时按天数清理旧录像，级联删除弹幕与封面，支持按主播设置免删保护。
-- **主播管理**：支持按主播设置录像时段裁剪与保留规则，支持在网页端直接预览播放录像。
+- **主播管理**：支持按主播设置录像时段裁剪与保留规则，支持在网页端直接预览播放录像与按需无损剪辑存量 MP4 单文件。
 - **控制台**：提供 Web 界面查看磁盘容量、运行实时任务终端、回查操作日志及切换深色模式。
 - **环境集成**：镜像内置 FFmpeg，支持 Docker Compose、原生 Docker CLI 与 Windows WSL。
 

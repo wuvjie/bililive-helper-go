@@ -2,7 +2,7 @@
   <el-drawer
     :model-value="visible"
     :title="`录像文件列表 · ${streamer}`"
-    size="min(660px, 90vw)"
+    size="min(700px, 92vw)"
     destroy-on-close
     @update:model-value="$emit('update:visible', $event)"
   >
@@ -67,17 +67,30 @@
           <el-table-column
             prop="is_merged"
             label="状态"
-            width="104"
+            width="108"
             resizable
             align="center"
             header-align="center"
             sortable
           >
             <template #default="{ row }">
-              <el-tooltip :content="row.is_merged ? '已完成合并或单场直录的完整录像成片' : '录制生成的原始分片文件，等待后台合并'" placement="top" :show-after="500">
-                <span class="file-status-badge" :class="row.is_merged ? 'status-merged' : 'status-raw'">
+              <el-tooltip
+                :content="
+                  row.is_trimmed_file
+                    ? '手动剪辑生成的时间段副本，已与后台自动合并隔离'
+                    : row.is_merged
+                      ? '已完成合并或单场直录的完整录像成片'
+                      : '录制生成的原始分片文件，等待后台合并'
+                "
+                placement="top"
+                :show-after="500"
+              >
+                <span
+                  class="file-status-badge"
+                  :class="row.is_trimmed_file ? 'status-trimmed' : row.is_merged ? 'status-merged' : 'status-raw'"
+                >
                   <span class="badge-dot"></span>
-                  {{ row.is_merged ? '已合并成片' : '未合并分片' }}
+                  {{ row.is_trimmed_file ? '手动剪辑版' : row.is_merged ? '已合并成片' : '未合并分片' }}
                 </span>
               </el-tooltip>
             </template>
@@ -85,7 +98,7 @@
 
           <el-table-column
             label="操作"
-            width="140"
+            width="192"
             resizable
             align="center"
             header-align="center"
@@ -95,6 +108,21 @@
                 <button class="play-btn-sm" @click="$emit('play', row as StreamerFile)" title="在浏览器中播放预览">
                   <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   <span>播放</span>
+                </button>
+                <button
+                  v-if="isMp4File(row.name)"
+                  class="play-btn-sm btn-trim-video"
+                  @click="$emit('trim', row as StreamerFile)"
+                  title="按起止时间无损剪辑该 MP4 文件"
+                >
+                  <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="6" cy="6" r="3" />
+                    <circle cx="6" cy="18" r="3" />
+                    <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                    <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                    <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                  </svg>
+                  <span>剪辑</span>
                 </button>
                 <button class="play-btn-sm btn-del-video" @click="$emit('delete', row as StreamerFile)" title="从磁盘永久删除该录像文件">
                   <svg class="btn-svg-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -152,8 +180,13 @@ watch(
 const emit = defineEmits<{
   (e: "update:visible", val: boolean): void;
   (e: "play", file: StreamerFile): void;
+  (e: "trim", file: StreamerFile): void;
   (e: "delete", file: StreamerFile): void;
 }>();
+
+function isMp4File(name: string): boolean {
+  return /\.mp4$/i.test(name);
+}
 
 const mergedCount = computed(() => props.files.filter(f => f.is_merged).length);
 const rawCount = computed(() => props.files.filter(f => !f.is_merged).length);
@@ -276,6 +309,30 @@ html.dark .status-raw {
   background: var(--highlight);
   border-color: var(--charcoal);
   color: var(--ink);
+}
+
+.btn-trim-video:hover {
+  background: color-mix(in srgb, var(--color-accent-fg) 10%, transparent);
+  border-color: var(--color-accent-fg);
+  color: var(--color-accent-fg);
+}
+
+.status-trimmed {
+  background: rgba(9, 105, 218, 0.1);
+  color: #0969da;
+}
+
+.status-trimmed .badge-dot {
+  background: #0969da;
+}
+
+html.dark .status-trimmed {
+  background: rgba(56, 139, 253, 0.16);
+  color: #58a6ff;
+}
+
+html.dark .status-trimmed .badge-dot {
+  background: #58a6ff;
 }
 
 .btn-del-video:hover {

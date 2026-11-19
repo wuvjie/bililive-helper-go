@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 	"time"
 
 	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/ffmpeg"
 	"bililive-helper-go/internal/fsutil"
 	"bililive-helper-go/internal/service"
 	"bililive-helper-go/internal/utils"
@@ -238,7 +241,7 @@ func buildStandaloneMP4Set(entries []os.DirEntry, now time.Time) map[string]bool
 			continue
 		}
 		name := entry.Name()
-		if !utils.IsVideoFile(name) || utils.IsMergedFile(name) || utils.IsTempVideoArtifact(name) {
+		if !utils.IsVideoFile(name) || utils.IsProcessedFile(name) || utils.IsTempVideoArtifact(name) {
 			continue
 		}
 		info, err := entry.Info()
@@ -393,12 +396,12 @@ func (h *Handler) scanAllStreamersAt(root string, now time.Time) ([]gin.H, int, 
 			if fileTime.After(latest) {
 				latest = fileTime
 			}
-			isCompleted := utils.IsMergedFile(name) || standaloneMP4s[name]
+			isCompleted := utils.IsProcessedFile(name) || standaloneMP4s[name]
 			if !isCompleted {
 				pendSize += info.Size()
 				pendCount++
 			}
-			if !utils.IsMergedFile(name) {
+			if !utils.IsProcessedFile(name) {
 				// 直播状态必须基于磁盘真实写入时间 ModTime，避免被文件名里的开播时间覆盖导致开播超过 30 分钟熄灭
 				if modTime.After(latestWrite) {
 					latestWrite = modTime
@@ -495,7 +498,8 @@ func (h *Handler) GetStreamerFiles(c *gin.Context) {
 			"size":      info.Size(),
 			"size_str":  utils.FormatSize(info.Size()),
 			"mtime":     fileTime.Unix(),
-			"is_merged": utils.IsMergedFile(name) || standaloneMP4s[name],
+			"is_merged":       utils.IsProcessedFile(name) || standaloneMP4s[name],
+			"is_trimmed_file": utils.IsTrimmedFile(name),
 		})
 	}
 	// 按修改/录制时间倒序排列（最新的录像文件排在最前）
@@ -596,6 +600,97 @@ func (h *Handler) PlayStreamerVideo(c *gin.Context) {
 	c.Header("Content-Disposition", "inline; filename="+filepath.Base(file))
 	http.ServeFile(c.Writer, c.Request, fullPath)
 }
+
+// ProbeStreamerFile 探测指定录像文件的元数据（实际时长、是否含 bh_trimmed 裁剪标记及伴生弹幕状态）。
+// 用于手动单文件剪辑弹窗的预检提示。
+func (h *Handler) ProbeStreamerFile(c *gin.Context) {
+	streamer := c.Param("name")
+	file := c.Query("file")
+	if !utils.ValidateFilename(streamer) || !utils.ValidateFilename(file) {
+		failBadRequest(c, "参数包含非法字符")
+		return
+	}
+	if !utils.IsVideoFile(file) || utils.IsTempVideoArtifact(file) {
+		failBadRequest(c, "仅支持探测有效视频文件")
+		return
+	}
+
+	cfg := h.config.Snapshot()
+	folder := filepath.Join(cfg.TargetDir, streamer)
+	fullPath := filepath.Join(folder, file)
+	absFolder, err1 := filepath.Abs(folder)
+	absPath, err2 := filepath.Abs(fullPath)
+	if err1 != nil || err2 != nil || !strings.HasPrefix(absPath, absFolder+string(os.PathSeparator)) {
+		failBadRequest(c, "文件路径越界")
+		return
+	}
+
+	info, err := os.Stat(fullPath)
+	if err != nil || info.IsDir() {
+		failNotFound(c, "目标视频文件不存在")
+		return
+	}
+
+	probeCtx, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
+
+	dur, durErr := ffmpeg.ProbeDuration(probeCtx, fullPath)
+	if durErr != nil || dur < 0 {
+		dur = 0
+	}
+	isTrimmed := ffmpeg.IsVideoTrimmed(probeCtx, fullPath)
+
+	ok(c, gin.H{
+		"file":            file,
+		"size":            info.Size(),
+		"size_str":        utils.FormatSize(info.Size()),
+		"duration_sec":    math.Round(dur*10) / 10,
+		"probe_ok":        durErr == nil && dur > 0,
+		"is_trimmed":      isTrimmed,
+		"is_trimmed_file": utils.IsTrimmedFile(file),
+		"has_danmaku":     service.HasCompanionDanmaku(fullPath),
+	})
+}
+
+// ManualTrimStreamerFile 对指定主播的单个 .mp4 录像执行按需手动无损剪辑。
+// 仅用户显式调用时触发，完全隔离于定时自动扫描任务。
+func (h *Handler) ManualTrimStreamerFile(c *gin.Context) {
+	streamer := c.Param("name")
+	if !utils.ValidateFilename(streamer) {
+		failBadRequest(c, "主播名包含非法字符")
+		return
+	}
+
+	var req struct {
+		File      string `json:"file" binding:"required"`
+		TrimStart string `json:"trim_start"`
+		TrimEnd   string `json:"trim_end"`
+		Mode      string `json:"mode"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		failBadRequest(c, "请求参数错误: "+err.Error())
+		return
+	}
+
+	res, err := h.merge.ManualTrimFile(c.Request.Context(), streamer, req.File, req.TrimStart, req.TrimEnd, req.Mode)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrTrimNotFound):
+			failNotFound(c, err.Error())
+		case errors.Is(err, service.ErrTrimConflict):
+			failConflict(c, err.Error())
+		case errors.Is(err, service.ErrTrimBadRequest):
+			failBadRequest(c, err.Error())
+		default:
+			failInternal(c, "手动剪辑失败: "+err.Error())
+		}
+		return
+	}
+
+	h.InvalidateStreamerCache()
+	ok(c, res)
+}
+
 // DeleteStreamerFile 删除指定主播的单个录像文件（防路径穿越 + 记录释放空间历史）。
 func (h *Handler) DeleteStreamerFile(c *gin.Context) {
 	streamer := c.Param("name")

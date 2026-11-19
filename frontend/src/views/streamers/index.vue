@@ -77,7 +77,17 @@
       :loading="drawerLoading"
       :tick="tick"
       @play="handlePlay"
+      @trim="openTrimDialog"
       @delete="handleDeleteFile"
+    />
+
+    <!-- 单文件手动剪辑弹窗 -->
+    <ManualTrimDialog
+      v-model:visible="trimDialogVisible"
+      :streamer="drawerStreamer"
+      :file="trimTargetFile"
+      :rule="drawerStreamerRule"
+      @trimmed="handleManualTrimSuccess"
     />
 
     <!-- 在线视频播放预览弹窗 -->
@@ -100,6 +110,7 @@ import type { StreamerInfo, StreamerFile, StreamerRule } from "@/api/types";
 import StreamerTable from "./components/StreamerTable.vue";
 import StreamerDrawer from "./components/StreamerDrawer.vue";
 import StreamerRuleDialog from "./components/StreamerRuleDialog.vue";
+import ManualTrimDialog from "./components/ManualTrimDialog.vue";
 import VideoPlayerModal from "./components/VideoPlayerModal.vue";
 
 const router = useRouter();
@@ -153,18 +164,22 @@ const drawerLoading = ref(false);
 const drawerStreamer = ref("");
 const drawerFiles = ref<StreamerFile[]>([]);
 
-async function openDrawer(row: StreamerInfo) {
-  drawerStreamer.value = row.name;
-  drawerVisible.value = true;
+async function reloadDrawerFiles(name: string) {
   drawerLoading.value = true;
   try {
-    const files = await getStreamerFiles(row.name);
+    const files = await getStreamerFiles(name);
     drawerFiles.value = (files || []).slice().sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
   } catch {
     /* handled by interceptor */
   } finally {
     drawerLoading.value = false;
   }
+}
+
+async function openDrawer(row: StreamerInfo) {
+  drawerStreamer.value = row.name;
+  drawerVisible.value = true;
+  await reloadDrawerFiles(row.name);
 }
 
 async function handleDeleteFile(row: StreamerFile) {
@@ -200,6 +215,27 @@ function handlePlay(file: StreamerFile) {
   playFileName.value = file.name;
   playUrl.value = getVideoPlayUrl(drawerStreamer.value, file.name);
   playerVisible.value = true;
+}
+
+// 手动单文件无损剪辑
+const trimDialogVisible = ref(false);
+const trimTargetFile = ref<StreamerFile | null>(null);
+const drawerStreamerRule = computed(() => streamers.value.find(s => s.name === drawerStreamer.value)?.rule);
+
+function openTrimDialog(file: StreamerFile) {
+  if (!/\.mp4$/i.test(file.name)) {
+    ElMessage.info("仅支持对 .mp4 成片或独立单文件执行手动剪辑");
+    return;
+  }
+  trimTargetFile.value = file;
+  trimDialogVisible.value = true;
+}
+
+async function handleManualTrimSuccess() {
+  if (drawerStreamer.value) {
+    await reloadDrawerFiles(drawerStreamer.value);
+  }
+  await loadData();
 }
 
 // tick 相对时间驱动

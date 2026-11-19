@@ -1,5 +1,14 @@
 import { get, post, del } from "@/utils/http";
-import type { DetailResponse, StatsResponse, StreamerInfo, StreamerFile, StreamerRule } from "./types";
+import type {
+  DetailResponse,
+  StatsResponse,
+  StreamerInfo,
+  StreamerFile,
+  StreamerFileProbe,
+  StreamerRule,
+  ManualTrimPayload,
+  ManualTrimResult
+} from "./types";
 
 export function getStatusDetail() {
   return get<DetailResponse>("/status/detail");
@@ -15,6 +24,22 @@ export function getStreamers() {
 
 export function getStreamerFiles(name: string) {
   return get<StreamerFile[]>(`/streamers/${encodeURIComponent(name)}/files`, undefined, { timeout: 30000 });
+}
+
+export function probeStreamerFile(name: string, file: string) {
+  return get<StreamerFileProbe>(
+    `/streamers/${encodeURIComponent(name)}/files/probe`,
+    { file },
+    { timeout: 20000 }
+  );
+}
+
+export function manualTrimStreamerFile(name: string, data: ManualTrimPayload) {
+  return post<ManualTrimResult>(
+    `/streamers/${encodeURIComponent(name)}/files/trim`,
+    data,
+    { timeout: 300000 }
+  );
 }
 
 export function getStreamerRule(name: string) {

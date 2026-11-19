@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -886,6 +887,250 @@ func (s *MergeService) ManualMerge(ctx context.Context, streamer string, files [
 	return opLog.LogID(), fmt.Errorf("合并失败")
 }
 
+var (
+	// ErrTrimBadRequest 表示手动剪辑参数无效、格式不合法或区间无意义（对应 HTTP 400）。
+	ErrTrimBadRequest = errors.New("无效的剪辑请求")
+	// ErrTrimNotFound 表示目标主播或视频文件不存在（对应 HTTP 404）。
+	ErrTrimNotFound = errors.New("目标视频文件不存在")
+	// ErrTrimConflict 表示目标主播当前被任务锁定或文件仍在写入中（对应 HTTP 409）。
+	ErrTrimConflict = errors.New("文件或主播任务冲突")
+)
+
+// ManualTrimResult 保存单文件按需手动剪辑的结果与统计信息。
+type ManualTrimResult struct {
+	File          string  `json:"file"`
+	OutputFile    string  `json:"output_file"`
+	Mode          string  `json:"mode"`
+	Start         string  `json:"start"`
+	End           string  `json:"end"`
+	SourceSize    int64   `json:"source_size"`
+	OutputSize    int64   `json:"output_size"`
+	OutputSizeStr string  `json:"output_size_str"`
+	DurationSec   float64 `json:"duration_sec"`
+	DanmakuSynced bool    `json:"danmaku_synced"`
+	LogID         string  `json:"log_id"`
+}
+
+type validatedTrimRange struct {
+	start    string
+	end      string
+	startSec float64
+	endSec   float64
+	desc     string
+}
+
+// parseAndValidateTrimRange 解析并校验裁剪起止时间串，返回归一化后的区间参数。
+func parseAndValidateTrimRange(rawStart, rawEnd string) (validatedTrimRange, error) {
+	start := strings.TrimSpace(rawStart)
+	if start == "" {
+		start = "00:00:00"
+	}
+	end := strings.TrimSpace(rawEnd)
+
+	startSec, startErr := ffmpeg.ParseTimeSeconds(start)
+	endSec, endErr := ffmpeg.ParseTimeSeconds(end)
+
+	if startErr != nil || startSec < 0 {
+		return validatedTrimRange{}, fmt.Errorf("%w: 无效裁剪起始时间 (%s)", ErrTrimBadRequest, start)
+	}
+	if end != "" && (endErr != nil || endSec <= 0 || endSec <= startSec) {
+		return validatedTrimRange{}, fmt.Errorf("%w: 裁剪结束时间 (%s) 必须晚于起始时间 (%s)", ErrTrimBadRequest, end, start)
+	}
+
+	endLabel := "结束"
+	if end != "" {
+		endLabel = end
+	}
+	return validatedTrimRange{
+		start:    start,
+		end:      end,
+		startSec: startSec,
+		endSec:   endSec,
+		desc:     fmt.Sprintf("[%s - %s]", start, endLabel),
+	}, nil
+}
+
+// resolveUniqueTrimOutputPath 为另存副本模式生成不与现有文件冲突的输出路径（...-剪辑版.mp4）。
+func resolveUniqueTrimOutputPath(folder, sourceFile string) string {
+	stem := utils.MakeTrimOutputStem(sourceFile)
+	cand := filepath.Join(folder, stem+".mp4")
+	if _, err := os.Stat(cand); os.IsNotExist(err) {
+		return cand
+	}
+	for i := 2; i < 1000; i++ {
+		cand = filepath.Join(folder, fmt.Sprintf("%s-%d.mp4", stem, i))
+		if _, err := os.Stat(cand); os.IsNotExist(err) {
+			return cand
+		}
+	}
+	return filepath.Join(folder, fmt.Sprintf("%s-%d.mp4", stem, time.Now().UnixNano()))
+}
+
+// executeVideoTrim 执行 FFmpeg 无损剪辑、伴生弹幕时间轴同步及修改时间保留。
+// 若 copyCompanions 为 true（另存副本模式），会先将源文件的弹幕/封面复制到目标路径旁再执行时间轴平移。
+func executeVideoTrim(ctx context.Context, srcPath, dstPath string, origMtime time.Time, tr validatedTrimRange, copyCompanions bool) (bool, error) {
+	trimmedTmp := dstPath + ".trim.mp4"
+	defer utils.SafeUnlink(trimmedTmp)
+
+	if err := ffmpeg.TrimVideo(ctx, srcPath, trimmedTmp, tr.start, tr.end); err != nil {
+		return false, err
+	}
+	if err := fsutil.ReplaceFile(trimmedTmp, dstPath); err != nil {
+		return false, fmt.Errorf("写入剪辑成片失败: %w", err)
+	}
+	if copyCompanions {
+		CopyCompanionFiles(srcPath, dstPath)
+	}
+	hasDanmaku := HasCompanionDanmaku(dstPath)
+	trimEndSec := 0.0
+	if tr.end != "" && tr.endSec > 0 {
+		trimEndSec = tr.endSec
+	}
+	trimCompanionDanmaku(dstPath, tr.startSec, trimEndSec)
+	if !origMtime.IsZero() {
+		_ = os.Chtimes(dstPath, origMtime, origMtime)
+	}
+	return hasDanmaku, nil
+}
+
+// ManualTrimFile 对指定主播的单个历史/成片 .mp4 文件执行按需手动剪辑。
+// 与后台定时扫描完全隔离，仅在用户显式请求时执行；支持 "copy"（另存为 -剪辑版.mp4）与 "replace"（覆盖原文件）。
+func (s *MergeService) ManualTrimFile(ctx context.Context, streamer, file, rawStart, rawEnd, mode string) (*ManualTrimResult, error) {
+	mode = strings.TrimSpace(strings.ToLower(mode))
+	if mode == "" {
+		mode = "copy"
+	}
+	if mode != "copy" && mode != "replace" {
+		return nil, fmt.Errorf("%w: 不支持的保存方式 (%s)，仅支持 copy 或 replace", ErrTrimBadRequest, mode)
+	}
+	if !utils.ValidateFilename(streamer) || !utils.ValidateFilename(file) {
+		return nil, fmt.Errorf("%w: 主播名或文件名包含非法字符", ErrTrimBadRequest)
+	}
+	if !strings.EqualFold(filepath.Ext(file), ".mp4") || utils.IsTempVideoArtifact(file) {
+		return nil, fmt.Errorf("%w: 仅支持对 .mp4 格式视频文件执行手动剪辑", ErrTrimBadRequest)
+	}
+
+	tr, err := parseAndValidateTrimRange(rawStart, rawEnd)
+	if err != nil {
+		return nil, err
+	}
+	if tr.startSec == 0 && tr.end == "" {
+		return nil, fmt.Errorf("%w: 请至少设置剪辑起始时间或结束时间", ErrTrimBadRequest)
+	}
+
+	ok, sl := s.tryLockStreamer(streamer)
+	if !ok {
+		return nil, fmt.Errorf("%w: 主播「%s」当前正在执行合并或剪辑任务，请稍后重试", ErrTrimConflict, streamer)
+	}
+	defer s.unlockStreamer(sl)
+
+	cfg := s.config.Snapshot()
+	folder := filepath.Join(cfg.TargetDir, streamer)
+	videoPath := filepath.Join(folder, file)
+	absFolder, absErr1 := filepath.Abs(folder)
+	absVideo, absErr2 := filepath.Abs(videoPath)
+	if absErr1 != nil || absErr2 != nil || !strings.HasPrefix(absVideo, absFolder+string(os.PathSeparator)) {
+		return nil, fmt.Errorf("%w: 文件路径越界", ErrTrimBadRequest)
+	}
+
+	srcInfo, err := os.Stat(videoPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("%w: %s", ErrTrimNotFound, file)
+		}
+		return nil, fmt.Errorf("读取视频文件失败: %w", err)
+	}
+	if srcInfo.IsDir() {
+		return nil, fmt.Errorf("%w: 目标路径是目录而非视频文件", ErrTrimBadRequest)
+	}
+	if srcInfo.Size() < 1024 {
+		return nil, fmt.Errorf("%w: 视频文件过小或已损坏，无法剪辑", ErrTrimBadRequest)
+	}
+
+	if time.Since(srcInfo.ModTime()) < 2*time.Minute && isFileBeingWritten(ctx, videoPath, 800*time.Millisecond) {
+		return nil, fmt.Errorf("%w: 文件当前仍在写入中，请等待录制或合并完成后再试", ErrTrimConflict)
+	}
+
+	if dur, durErr := ffmpeg.ProbeDuration(ctx, videoPath); durErr == nil && dur > 0 {
+		if dur <= tr.startSec {
+			return nil, fmt.Errorf("%w: 视频总时长 (%.1f秒) 不足剪辑起始时间 (%s)", ErrTrimBadRequest, dur, tr.start)
+		}
+		if tr.startSec == 0 && tr.end != "" && tr.endSec >= dur {
+			return nil, fmt.Errorf("%w: 剪辑截止时间 (%s) 已覆盖视频完整时长 (%.1f秒)，无需剪辑", ErrTrimBadRequest, tr.end, dur)
+		}
+	}
+
+	startedAt := time.Now()
+	opLog, logErr := NewOpLogger(filepath.Join(cfg.LogDir, "merge_log"), "merge")
+	if logErr != nil {
+		opLog = nil
+	} else {
+		defer opLog.Close()
+	}
+
+	dstPath := videoPath
+	copyCompanions := false
+	modeLabel := "覆盖原文件"
+	if mode == "copy" {
+		dstPath = resolveUniqueTrimOutputPath(folder, file)
+		copyCompanions = true
+		modeLabel = "另存副本"
+	}
+	outFile := filepath.Base(dstPath)
+
+	if opLog != nil {
+		opLog.Log(fmt.Sprintf("▶ [%s] 手动单文件剪辑: %s | 区间 %s | 模式: %s", streamer, file, tr.desc, modeLabel))
+	}
+
+	danmakuSynced, trimErr := executeVideoTrim(ctx, videoPath, dstPath, srcInfo.ModTime(), tr, copyCompanions)
+	if trimErr != nil {
+		if opLog != nil {
+			opLog.Log(fmt.Sprintf("❌ [%s] 手动剪辑失败: %v", streamer, trimErr))
+		}
+		if s.history != nil {
+			s.history.Add("merge", streamer, "fail", fmt.Sprintf("手动剪辑 %s 失败: %v", file, trimErr), opLog.LogID())
+		}
+		return nil, trimErr
+	}
+
+	outInfo, statErr := os.Stat(dstPath)
+	outSize := int64(0)
+	if statErr == nil {
+		outSize = outInfo.Size()
+	}
+	outDur, _ := ffmpeg.ProbeDuration(ctx, dstPath)
+
+	var freedBytes int64
+	if mode == "replace" && srcInfo.Size() > outSize {
+		freedBytes = srcInfo.Size() - outSize
+	}
+
+	elapsed := time.Since(startedAt).Seconds()
+	logID := opLog.LogID()
+	detail := fmt.Sprintf("手动剪辑 %s (%s, %s): %s → %s", file, tr.desc, modeLabel, utils.FormatSize(srcInfo.Size()), utils.FormatSize(outSize))
+	if opLog != nil {
+		opLog.Log(fmt.Sprintf("✅ [%s] 手动剪辑完成: %s → %s (%s -> %s, 成片时长 %.1f秒, 弹幕同步: %v)",
+			streamer, file, outFile, utils.FormatSize(srcInfo.Size()), utils.FormatSize(outSize), outDur, danmakuSynced))
+	}
+	if s.history != nil {
+		s.history.AddWithStats("merge", streamer, "success", 1, freedBytes, outSize, elapsed, detail, logID)
+	}
+
+	return &ManualTrimResult{
+		File:          file,
+		OutputFile:    outFile,
+		Mode:          mode,
+		Start:         tr.start,
+		End:           tr.end,
+		SourceSize:    srcInfo.Size(),
+		OutputSize:    outSize,
+		OutputSizeStr: utils.FormatSize(outSize),
+		DurationSec:   outDur,
+		DanmakuSynced: danmakuSynced,
+		LogID:         logID,
+	}, nil
+}
+
 // applyStreamerTrim 检查并执行针对指定主播的视频时段裁剪规则。
 // 若成功裁剪，将原子替换原视频并恢复时间戳；若失败或无需截取，安全保留原视频。
 func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, videoPath string, originalMtime time.Time, onProgress ProgressFunc, opLog *OpLogger) bool {
@@ -894,26 +1139,10 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 		return false
 	}
 
-	start := strings.TrimSpace(rule.TrimStart)
-	if start == "" {
-		start = "00:00:00"
-	}
-	end := strings.TrimSpace(rule.TrimEnd)
-
-	startSec, startErr := ffmpeg.ParseTimeSeconds(start)
-	endSec, endErr := ffmpeg.ParseTimeSeconds(end)
-
-	// 先校验裁剪起止时间是否合法，防止无效区间误命中时长不足跳过分支
-	if startErr != nil || startSec < 0 {
+	tr, err := parseAndValidateTrimRange(rule.TrimStart, rule.TrimEnd)
+	if err != nil {
 		if opLog != nil {
-			opLog.Log(fmt.Sprintf("⚠ [%s] 无效裁剪起始时间 (%s)，已安全保留原完整视频", streamerName, start))
-		}
-		onProgress(fmt.Sprintf("[%s] ⚠ 裁剪规则无效，已保留原完整视频", streamerName))
-		return false
-	}
-	if end != "" && (endErr != nil || endSec <= 0 || endSec <= startSec) {
-		if opLog != nil {
-			opLog.Log(fmt.Sprintf("⚠ [%s] 无效裁剪时段 [%s - %s]，已安全保留原完整视频", streamerName, start, end))
+			opLog.Log(fmt.Sprintf("⚠ [%s] %v，已安全保留原完整视频", streamerName, err))
 		}
 		onProgress(fmt.Sprintf("[%s] ⚠ 裁剪规则无效，已保留原完整视频", streamerName))
 		return false
@@ -923,39 +1152,29 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 	// 1. 视频总时长 <= 裁剪起始时间，无需裁剪；
 	// 2. 配置了结束时间点（无论 start 是否为 00:00:00）且视频总时长 <= 规则截止点（如不足 00:35:00），
 	//    整段保留原视频，避免把本就短于目标截止点的录像切掉片头后更短。
-	needDurationCheck := startSec > 0 || (end != "" && endSec > 0)
+	needDurationCheck := tr.startSec > 0 || (tr.end != "" && tr.endSec > 0)
 	if needDurationCheck {
 		if dur, durErr := ffmpeg.ProbeDuration(ctx, videoPath); durErr == nil && dur > 0 {
-			if startSec > 0 && dur <= startSec {
+			if tr.startSec > 0 && dur <= tr.startSec {
 				if opLog != nil {
-					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪起始时间 (%s)，保留原完整视频", streamerName, dur, start))
+					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪起始时间 (%s)，保留原完整视频", streamerName, dur, tr.start))
 				}
 				onProgress(fmt.Sprintf("[%s] ℹ 视频时长短于裁剪起始时间，无需裁剪，保留完整视频", streamerName))
 				return true
 			}
-			if end != "" && endSec > 0 && dur <= endSec {
+			if tr.end != "" && tr.endSec > 0 && dur <= tr.endSec {
 				if opLog != nil {
-					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪截止时间 (%s)，保留原完整视频", streamerName, dur, end))
+					opLog.Log(fmt.Sprintf("[%s] 视频时长 (%.1f秒) ≤ 裁剪截止时间 (%s)，保留原完整视频", streamerName, dur, tr.end))
 				}
-				onProgress(fmt.Sprintf("[%s] ℹ 视频时长不足规则截止时间（%s），无需裁剪，保留完整视频", streamerName, end))
+				onProgress(fmt.Sprintf("[%s] ℹ 视频时长不足规则截止时间（%s），无需裁剪，保留完整视频", streamerName, tr.end))
 				return true
 			}
 		}
 	}
 
-	trimDesc := fmt.Sprintf("[%s - %s]", start, func() string {
-		if end == "" {
-			return "结束"
-		}
-		return end
-	}())
-	onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪: %s", streamerName, trimDesc))
+	onProgress(fmt.Sprintf("[%s] ✂ 正在按规则裁剪: %s", streamerName, tr.desc))
 
-	trimmedTmp := videoPath + ".trim.mp4"
-	defer utils.SafeUnlink(trimmedTmp)
-
-	err := ffmpeg.TrimVideo(ctx, videoPath, trimmedTmp, start, end)
-	if err != nil {
+	if _, err := executeVideoTrim(ctx, videoPath, videoPath, originalMtime, tr, false); err != nil {
 		if opLog != nil {
 			opLog.Log(fmt.Sprintf("⚠ [%s] 视频裁剪未生效或失败: %v，已安全保留原完整视频", streamerName, err))
 		}
@@ -963,31 +1182,10 @@ func (s *MergeService) applyStreamerTrim(ctx context.Context, streamerName, vide
 		return false
 	}
 
-	// 裁剪成功：替换原文件
-	if err := fsutil.ReplaceFile(trimmedTmp, videoPath); err != nil {
-		if opLog != nil {
-			opLog.Log(fmt.Sprintf("❌ [%s] 替换裁剪文件失败: %v", streamerName, err))
-		}
-		return false
-	}
-
-	// 同步裁剪/平移同名 XML 弹幕时间轴，使成片与弹幕保持一致
-	trimStartSec := startSec
-	trimEndSec := 0.0
-	if end != "" && endSec > 0 {
-		trimEndSec = endSec
-	}
-	trimCompanionDanmaku(videoPath, trimStartSec, trimEndSec)
-
-	// 恢复时间戳
-	if !originalMtime.IsZero() {
-		_ = os.Chtimes(videoPath, originalMtime, originalMtime)
-	}
-
 	if info, err := os.Stat(videoPath); err == nil {
-		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s，大小: %s）", streamerName, trimDesc, utils.FormatSize(info.Size())))
+		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s，大小: %s）", streamerName, tr.desc, utils.FormatSize(info.Size())))
 	} else {
-		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s）", streamerName, trimDesc))
+		onProgress(fmt.Sprintf("[%s] ✂ ✅ 裁剪完成（%s）", streamerName, tr.desc))
 	}
 	return true
 }

@@ -1,13 +1,23 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"bililive-helper-go/internal/config"
+	"bililive-helper-go/internal/service"
 	"bililive-helper-go/internal/utils"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 func TestScanAllStreamersAt_LiveDetection(t *testing.T) {
@@ -251,5 +261,158 @@ func TestScanAllStreamersAt_SameDayMultiStandaloneAndCrossMidnight(t *testing.T)
 	_, pend2, pendSize2 := h.scanAllStreamersAt(root, now)
 	if pend2 != 2 || pendSize2 != 2048 {
 		t.Fatalf("跨午夜连续 MP4 分片应均计入 pending: got count=%d size=%d, want 2/2048", pend2, pendSize2)
+	}
+}
+
+func TestScanAllStreamersAt_TrimmedCopyNotMergedAndNotLive(t *testing.T) {
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	h := &Handler{config: &cfg}
+
+	loc := time.FixedZone("CST", 8*3600)
+	now := time.Date(2026, 6, 2, 12, 0, 0, 0, loc)
+
+	sDir := filepath.Join(root, "剪辑副本主播")
+	if err := os.MkdirAll(sDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	orig := filepath.Join(sDir, "[2026-06-01 10-00-00][3001][直播标题]001.mp4")
+	trimmed := filepath.Join(sDir, "[2026-06-01 10-00-00][3001][直播标题]001-剪辑版.mp4")
+	_ = os.WriteFile(orig, make([]byte, 2048), 0644)
+	_ = os.WriteFile(trimmed, make([]byte, 1024), 0644)
+	_ = os.Chtimes(orig, now.Add(-12*time.Hour), now.Add(-12*time.Hour))
+	// 模拟刚刚生成的剪辑副本，不得误触发主播在线绿点或待合并计数
+	_ = os.Chtimes(trimmed, now.Add(-30*time.Second), now.Add(-30*time.Second))
+
+	streamers, pend, _ := h.scanAllStreamersAt(root, now)
+	if pend != 0 {
+		t.Fatalf("原片与 -剪辑版.mp4 同时间戳并存时 pendingCount 必须为 0，实际=%d", pend)
+	}
+	if len(streamers) != 1 {
+		t.Fatalf("expected 1 streamer, got %d", len(streamers))
+	}
+	if isLive, _ := streamers[0]["is_live"].(bool); isLive {
+		t.Fatalf("生成 -剪辑版.mp4 不应触发 is_live=true")
+	}
+}
+
+func TestHandler_ProbeAndManualTrimEndpoints(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	root := t.TempDir()
+	cfg := config.DefaultConfig()
+	cfg.TargetDir = root
+	cfg.LogDir = filepath.Join(t.TempDir(), "logs")
+	logger := zap.NewNop()
+	history := service.NewHistoryService(&cfg, logger)
+	merge := service.NewMergeService(&cfg, logger, history)
+	h := &Handler{config: &cfg, logger: logger, merge: merge, history: history}
+
+	r := gin.New()
+	r.GET("/api/streamers/:name/files/probe", h.ProbeStreamerFile)
+	r.POST("/api/streamers/:name/files/trim", h.ManualTrimStreamerFile)
+
+	streamer := "测试接口主播"
+	sDir := filepath.Join(root, streamer)
+	if err := os.MkdirAll(sDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. 路径穿越被拒绝 (400)
+	req := httptest.NewRequest(http.MethodGet, "/api/streamers/"+url.PathEscape(streamer)+"/files/probe?file=../bad.mp4", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 on path traversal probe, got %d (%s)", w.Code, w.Body.String())
+	}
+
+	// 2. 文件不存在返回 404
+	req = httptest.NewRequest(http.MethodGet, "/api/streamers/"+url.PathEscape(streamer)+"/files/probe?file=missing.mp4", nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 on missing file probe, got %d (%s)", w.Code, w.Body.String())
+	}
+
+	// 3. 若环境具备 ffmpeg/ffprobe，端到端测试 probe + trim API
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		return
+	}
+	if _, err := exec.LookPath("ffprobe"); err != nil {
+		return
+	}
+
+	srcName := "[2026-11-18 12-00-00][测试接口主播][接口回放]001.mp4"
+	srcPath := filepath.Join(sDir, srcName)
+	cmd := exec.Command("ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc=duration=6:size=160x120:rate=10",
+		"-f", "lavfi", "-i", "sine=frequency=440:duration=6",
+		"-c:v", "libx264", "-preset", "ultrafast", "-c:a", "aac", srcPath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("create fixture failed: %v\n%s", err, string(out))
+	}
+	oldTime := time.Now().Add(-10 * time.Minute)
+	_ = os.Chtimes(srcPath, oldTime, oldTime)
+	_ = os.WriteFile(filepath.Join(sDir, "[2026-11-18 12-00-00][测试接口主播][接口回放]001.xml"),
+		[]byte(`<i><d p="2.500,1,25,16777215,1,0,u,0">hi</d></i>`), 0644)
+
+	// Probe 校验
+	probeURL := "/api/streamers/" + url.PathEscape(streamer) + "/files/probe?file=" + url.QueryEscape(srcName)
+	req = httptest.NewRequest(http.MethodGet, probeURL, nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("probe expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var probeResp struct {
+		ProbeOK     bool    `json:"probe_ok"`
+		DurationSec float64 `json:"duration_sec"`
+		IsTrimmed   bool    `json:"is_trimmed"`
+		HasDanmaku  bool    `json:"has_danmaku"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &probeResp); err != nil {
+		t.Fatal(err)
+	}
+	if !probeResp.ProbeOK || probeResp.DurationSec < 5.5 || probeResp.IsTrimmed || !probeResp.HasDanmaku {
+		t.Fatalf("unexpected probe response: %+v", probeResp)
+	}
+
+	// Trim POST 请求校验 (copy 模式)
+	payload, _ := json.Marshal(map[string]string{
+		"file":       srcName,
+		"trim_start": "00:00:01",
+		"trim_end":   "00:00:04",
+		"mode":       "copy",
+	})
+	req = httptest.NewRequest(http.MethodPost, "/api/streamers/"+url.PathEscape(streamer)+"/files/trim", bytes.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("trim expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var trimResp service.ManualTrimResult
+	if err := json.Unmarshal(w.Body.Bytes(), &trimResp); err != nil {
+		t.Fatal(err)
+	}
+	wantOut := "[2026-11-18 12-00-00][测试接口主播][接口回放]001-剪辑版.mp4"
+	if trimResp.OutputFile != wantOut || !trimResp.DanmakuSynced || trimResp.LogID == "" {
+		t.Fatalf("unexpected trim HTTP response: %+v", trimResp)
+	}
+
+	// 验证裁剪副本 Probe 返回 is_trimmed=true 且 is_trimmed_file=true
+	probeCopyURL := "/api/streamers/" + url.PathEscape(streamer) + "/files/probe?file=" + url.QueryEscape(wantOut)
+	req = httptest.NewRequest(http.MethodGet, probeCopyURL, nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("probe copy expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var probeCopy struct {
+		IsTrimmed     bool `json:"is_trimmed"`
+		IsTrimmedFile bool `json:"is_trimmed_file"`
+	}
+	_ = json.Unmarshal(w.Body.Bytes(), &probeCopy)
+	if !probeCopy.IsTrimmed || !probeCopy.IsTrimmedFile {
+		t.Fatalf("expected trimmed metadata & filename flags true, got %+v", probeCopy)
 	}
 }

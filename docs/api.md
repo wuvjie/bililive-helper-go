@@ -47,6 +47,8 @@
 |------|------|------|
 | GET | `/api/streamers` | 主播列表（文件数、磁盘占用、最近录像时间、实时录制状态 `is_live`、个性化规则） |
 | GET | `/api/streamers/:name/files` | 指定主播的文件列表（按修改时间倒序） |
+| GET | `/api/streamers/:name/files/probe` | 探测单个录像文件元数据（时长、`bh_trimmed` 标记、伴生弹幕存在状态） |
+| POST | `/api/streamers/:name/files/trim` | 手动剪辑单个 `.mp4` 录像（支持 `copy` 另存 `-剪辑版.mp4` 或 `replace` 覆盖原文件，自动同步伴生弹幕时间轴） |
 | DELETE | `/api/streamers/:name/files` | 删除指定主播的单个录像文件（级联清理伴生弹幕与封面） |
 | GET | `/api/streamers/:name/play` | 在线视频点播预览（支持 HTTP Range 拖动播放） |
 | GET | `/api/streamers/:name/rule` | 获取指定主播的个性化规则（起止裁剪与免删保护） |

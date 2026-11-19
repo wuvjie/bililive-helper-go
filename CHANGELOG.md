@@ -4,6 +4,18 @@
 
 文档格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范，版本号遵循 [语义化版本 (Semantic Versioning)](https://semver.org/lang/zh-CN/spec/v2.0.0.html)。
 
+## [v2.0.8] - 2026-11-19
+
+### Added
+- **存量 MP4 单文件按需手动无损剪辑**：在「主播管理 → 查看录像」抽屉中，所有 `.mp4` 成片与独立单文件操作列新增 **「剪辑」** 入口（`ManualTrimDialog.vue`），支持显式按起止时间做 FFmpeg 无损剪辑，同时严格保持后台定时任务不自动回溯裁剪存量 `.mp4`。
+  - **元数据预检与防护（`GET /api/streamers/:name/files/probe`）**：打开剪辑弹窗自动探测真实总时长、伴生 `.xml` 弹幕状态及是否已含 `bh_trimmed` / `-剪辑版` 标记；对已剪辑过的视频展示二次剪辑风险提示，并对超出视频总时长的区间进行校验提示。
+  - **双保存模式与伴生文件同步（`POST /api/streamers/:name/files/trim`）**：支持 **另存为副本**（输出唯一 `...-剪辑版.mp4`，重名自动递增 `-剪辑版-2.mp4`，复制封面并按裁剪区间平移 `.xml` 弹幕时间轴）及 **覆盖原文件**（`fsutil.ReplaceFile` 原子替换并保留原始录制时间 `mtime`）；支持套用该主播已设置的裁剪时段预设并实时联动胶片时间轴预览。
+  - **自动任务与状态隔离**：新增 `utils.IsTrimmedFile` / `utils.IsProcessedFile` 识别 `-剪辑版` 文件；扫描器（`scanner.go`）与状态统计（`status.go`）跳过 `-剪辑版` 文件，确保同一场次下原片与 `-剪辑版.mp4` 并存时不会被后台误判为多段分片二次合并，也不错误触发主播在线绿点，同时支持在抽屉显示蓝色 `手动剪辑版` 标识并在「操作日志」留存完整执行日志。
+
+### Changed
+- **公共时间区间工具重构**：将时间格式解析、标准化、时长友好格式化及动态时间轴计算逻辑从 `StreamerRuleDialog.vue` 抽取至 `frontend/src/utils/trim.ts`，供主播规则弹窗与手动剪辑弹窗共用。
+- **文档更新**：同步更新 `docs/api.md`（补充 `/api/streamers/:name/files/probe` 与 `/api/streamers/:name/files/trim` 接口说明）及 `README.md` 功能介绍。
+
 ## [v2.0.7] - 2026-11-18
 
 ### Fixed

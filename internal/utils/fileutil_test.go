@@ -272,3 +272,43 @@ func TestIsTempVideoArtifact(t *testing.T) {
 		}
 	}
 }
+
+func TestIsTrimmedAndProcessedFile(t *testing.T) {
+	tests := []struct {
+		name        string
+		trimmed     bool
+		processed   bool
+	}{
+		{"[2026-11-18][u][t]-剪辑版.mp4", true, true},
+		{"[2026-11-18][u][t]-剪辑版-2.mp4", true, true},
+		{"[2026-11-18][u][t]-合并版.mp4", false, true},
+		{"[2026-11-18][u][t]001.mp4", false, false},
+		{"raw.flv", false, false},
+	}
+	for _, tt := range tests {
+		if got := IsTrimmedFile(tt.name); got != tt.trimmed {
+			t.Errorf("IsTrimmedFile(%q) = %v, want %v", tt.name, got, tt.trimmed)
+		}
+		if got := IsProcessedFile(tt.name); got != tt.processed {
+			t.Errorf("IsProcessedFile(%q) = %v, want %v", tt.name, got, tt.processed)
+		}
+	}
+}
+
+func TestMakeTrimOutputStem(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"[2026-11-18 10-00-00][u][t]001.mp4", "[2026-11-18 10-00-00][u][t]001-剪辑版"},
+		{"[2026-11-18 10-00-00][u][t]-合并版.mp4", "[2026-11-18 10-00-00][u][t]-剪辑版"},
+		{"[2026-11-18 10-00-00][u][t]-剪辑版.mp4", "[2026-11-18 10-00-00][u][t]-剪辑版"},
+		{"[2026-11-18 10-00-00][u][t]-剪辑版-3.mp4", "[2026-11-18 10-00-00][u][t]-剪辑版"},
+		{"plain.mp4", "plain-剪辑版"},
+	}
+	for _, tt := range tests {
+		if got := MakeTrimOutputStem(tt.input); got != tt.want {
+			t.Errorf("MakeTrimOutputStem(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}

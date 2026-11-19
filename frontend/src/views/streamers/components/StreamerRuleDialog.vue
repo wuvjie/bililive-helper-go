@@ -196,6 +196,11 @@
 import { ref, computed, watch } from "vue";
 import { ElMessage } from "element-plus";
 import type { StreamerRule } from "@/api/types";
+import {
+  computeTimelineSegments,
+  describeTrimRange,
+  normalizeTimeString
+} from "@/utils/trim";
 
 const props = defineProps<{
   visible: boolean;
@@ -255,57 +260,6 @@ watch(
   { immediate: true }
 );
 
-function parseSeconds(val?: string): number | null {
-  if (!val || !val.trim()) return null;
-  const cleaned = val.trim().replace(/：/g, ":");
-  const rawParts = cleaned.split(":");
-  if (rawParts.length !== 2 && rawParts.length !== 3) return NaN;
-  if (rawParts.some(p => !/^\d+$/.test(p.trim()))) return NaN;
-  const parts = rawParts.map(p => Number(p.trim()));
-  if (parts.length === 3) {
-    const [h, m, s] = parts;
-    if (m >= 60 || s >= 60) return NaN;
-    return h * 3600 + m * 60 + s;
-  }
-  const [m, s] = parts;
-  if (s >= 60) return NaN;
-  return m * 60 + s;
-}
-
-function formatFriendlyDuration(totalSec: number): string {
-  if (totalSec <= 0) return "0 秒";
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  const parts: string[] = [];
-  if (h > 0) parts.push(`${h} 小时`);
-  if (m > 0) parts.push(`${m} 分钟`);
-  if (s > 0 && h === 0) parts.push(`${s} 秒`);
-  return parts.join(" ") || "0 秒";
-}
-
-function normalizeTimeString(val: string): string {
-  if (!val || !val.trim()) return "";
-  const cleaned = val.trim().replace(/：/g, ":");
-  const parts = cleaned.split(":").map(p => p.trim());
-  if (parts.some(p => !/^\d+$/.test(p))) return cleaned;
-  if (parts.length === 3) {
-    const h = Number(parts[0]);
-    const m = Number(parts[1]);
-    const s = Number(parts[2]);
-    if (m >= 60 || s >= 60) return cleaned;
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  } else if (parts.length === 2) {
-    const m = Number(parts[0]);
-    const s = Number(parts[1]);
-    if (s >= 60) return cleaned;
-    const h = Math.floor(m / 60);
-    const remM = m % 60;
-    return `${String(h).padStart(2, "0")}:${String(remM).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  }
-  return cleaned;
-}
-
 function normalizeTrimField(field: "trim_start" | "trim_end") {
   if (field === "trim_start") {
     if (!formRule.value.trim_start || !formRule.value.trim_start.trim()) {
@@ -320,105 +274,13 @@ function normalizeTrimField(field: "trim_start" | "trim_end") {
   }
 }
 
-const timelineSegments = computed(() => {
-  const rawStart = parseSeconds(formRule.value.trim_start);
-  const rawEnd = parseSeconds(formRule.value.trim_end);
-  const startSec = rawStart === null || Number.isNaN(rawStart) ? 0 : rawStart;
-  const endSec = rawEnd === null || Number.isNaN(rawEnd) ? null : rawEnd;
+const timelineSegments = computed(() =>
+  computeTimelineSegments(formRule.value.trim_start, formRule.value.trim_end)
+);
 
-  const hasLeading = startSec > 0;
-  const hasTrailing = endSec !== null && endSec > startSec;
-  const isUntilEnd = endSec === null;
-
-  let leadingGrow = 1;
-  let retainedGrow = 3.5;
-  let trailingGrow = 1;
-
-  if (hasLeading && hasTrailing) {
-    const diff = Math.max(1, endSec - startSec);
-    leadingGrow = Math.max(1, Math.min(2.5, Math.round((startSec / diff) * 2)));
-    retainedGrow = 4;
-    trailingGrow = 1.2;
-  } else if (hasLeading && isUntilEnd) {
-    leadingGrow = 1.2;
-    retainedGrow = 4;
-  } else if (!hasLeading && hasTrailing) {
-    retainedGrow = 4;
-    trailingGrow = 1.8;
-  }
-
-  return {
-    hasLeading,
-    hasTrailing,
-    isUntilEnd,
-    leadingGrow,
-    retainedGrow,
-    trailingGrow
-  };
-});
-
-const trimSemanticInfo = computed(() => {
-  const rawStart = parseSeconds(formRule.value.trim_start);
-  const rawEnd = parseSeconds(formRule.value.trim_end);
-
-  if (Number.isNaN(rawStart) || (rawEnd !== null && Number.isNaN(rawEnd))) {
-    return {
-      isInvalid: true,
-      text: "时间格式无效，请按「时:分:秒」（如 01:30:00）或「分:秒」（如 05:00）格式输入，且分、秒需小于 60",
-      durationText: "格式错误"
-    };
-  }
-
-  const startSec = rawStart ?? 0;
-  const endSec = rawEnd;
-
-  if (endSec !== null && endSec <= startSec) {
-    return {
-      isInvalid: true,
-      text: `截取结束时间 (${formRule.value.trim_end}) 必须晚于截取起始时间 (${formRule.value.trim_start || "00:00:00"})`,
-      durationText: "区间无效"
-    };
-  }
-
-  if (startSec === 0 && endSec === null) {
-    return {
-      isInvalid: false,
-      text: "全场保留：不执行裁剪，完整保留全场录播内容",
-      durationText: "全场保留"
-    };
-  }
-
-  if (startSec > 0 && endSec === null) {
-    return {
-      isInvalid: false,
-      text: `跳过前段：自动截除前 ${formatFriendlyDuration(startSec)}，后续内容保留至录像结尾`,
-      durationText: `跳过前 ${formatFriendlyDuration(startSec)}`
-    };
-  }
-
-  if (startSec === 0 && endSec !== null) {
-    return {
-      isInvalid: false,
-      text: `保留前段：仅截取前 ${formatFriendlyDuration(endSec)} 内容，后续部分自动剪除`,
-      durationText: `时长 ${formatFriendlyDuration(endSec)}`
-    };
-  }
-
-  if (startSec > 0 && endSec !== null) {
-    const diff = endSec - startSec;
-    return {
-      isInvalid: false,
-      text: `选定时段：从 ${formRule.value.trim_start} 至 ${formRule.value.trim_end}，剪除首尾多余部分`,
-      durationText: `有效时长 ${formatFriendlyDuration(diff)}`
-    };
-  }
-
-  return {
-    isInvalid: false,
-    text: "自定义裁剪时段",
-    durationText: ""
-  };
-});
+const trimSemanticInfo = computed(() =>
+  describeTrimRange(formRule.value.trim_start, formRule.value.trim_end)
+);
 
 function handleSave() {
   if (formRule.value.trim_enabled && trimSemanticInfo.value.isInvalid) {
